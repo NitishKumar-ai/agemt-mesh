@@ -1,5 +1,4 @@
 import os
-import uuid
 import logging
 from dbos import DBOS
 
@@ -12,17 +11,18 @@ def init_db():
     with DBOS.transaction():
         DBOS.sql_session.execute(
             "CREATE TABLE IF NOT EXISTS agent_runs ("
-            "run_id TEXT PRIMARY KEY, "
+            "id SERIAL PRIMARY KEY, "
+            "run_id TEXT, "
             "step TEXT, "
-            "status TEXT"
+            "status TEXT, "
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
             ")"
         )
 
-@DBOS.step()
+@DBOS.transaction()
 def update_status(run_id: str, step: str, status: str):
     DBOS.sql_session.execute(
-        "INSERT INTO agent_runs (run_id, step, status) VALUES (%s, %s, %s) "
-        "ON CONFLICT (run_id) DO UPDATE SET step = EXCLUDED.step, status = EXCLUDED.status",
+        "INSERT INTO agent_runs (run_id, step, status) VALUES (%s, %s, %s)",
         [run_id, step, status]
     )
     logger.info(f"Run {run_id} - Step: {step}, Status: {status}")
@@ -47,7 +47,7 @@ def review_step(execution: str) -> str:
 
 @DBOS.workflow()
 def agent_loop(prompt: str) -> str:
-    run_id = str(uuid.uuid4())
+    run_id = DBOS.workflow_id
     
     update_status(run_id, "plan", "running")
     plan = plan_step(prompt)
