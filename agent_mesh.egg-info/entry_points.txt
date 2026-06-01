@@ -1,0 +1,2 @@
+[console_scripts]
+agent-mesh = agent_mesh.cli:app

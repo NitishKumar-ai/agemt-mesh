@@ -1,0 +1,5 @@
+# Agent Mesh OS Rules
+
+- Use `DBOS.step` for any operation that talks to an external LLM API or service, so it is durably recorded and retried on failure.
+- Ensure all DBOS state changes (writing to custom application tables) are done inside `@DBOS.transaction` or `@DBOS.step` that handles Postgres safely.
+- Follow the 3-pass loop: Plan -> Execute -> Review.
