@@ -162,6 +162,40 @@ class CommitGuardAgent(BaseAgent):
     def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
         super().__init__("CommitGuardAgent", tenant_id, model_provider)
 
+    @DBOS.step(retries=3)
+    def execute(self, plan: Plan) -> Result:
+        logger.info(f"[{self.agent_id}] Generating and executing code in E2B...")
+        
+        prompt = f"Write ONLY executable Python code to accomplish the following plan: {plan.steps}. Do not include markdown formatting or explanations. If you need libraries, assume they are available or use built-ins."
+        code = call_llm(prompt, model_provider=self.model_provider)
+        
+        if code.startswith("```"):
+            code = "\n".join(code.split("\n")[1:-1])
+            
+        self.write_event("code_generated", {"code": code})
+        
+        try:
+            from e2b_code_interpreter import CodeInterpreter
+            with CodeInterpreter() as sandbox:
+                execution = sandbox.notebook.exec_cell(code)
+                
+                output = ""
+                if execution.text:
+                    output += execution.text + "\n"
+                if execution.error:
+                    output += f"Error: {execution.error.name} - {execution.error.value}\n"
+                for result in execution.results:
+                    if result.text:
+                        output += result.text + "\n"
+                
+                result_obj = Result(data={"code": code, "output": output.strip()})
+        except Exception as e:
+            logger.error(f"E2B Execution failed: {e}")
+            result_obj = Result(data={"code": code, "output": f"Execution failed: {str(e)}"})
+            
+        self.write_event("execution_completed", result_obj.model_dump())
+        return result_obj
+
 @DBOS.workflow()
 def agent_loop(context: str) -> str:
     researcher = ResearchAgent(model_provider="anthropic")
