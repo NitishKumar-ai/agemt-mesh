@@ -17,7 +17,6 @@ def version():
 
 @app.command()
 def init(
-    with_dashboard: bool = typer.Option(False, "--with-dashboard", help="Include Streamlit dashboard"),
     with_observability: bool = typer.Option(False, "--with-observability", help="Include LLM observability stub (logging)")
 ):
     console.print("[bold cyan]Initializing Agent Mesh OS...[/bold cyan]")
@@ -28,7 +27,7 @@ def init(
     collisions = [
         "main.py", "docker-compose.yml", "requirements.txt", 
         "demo.py", ".env.example", ".cursorrules", 
-        "dashboard.py", "tests/test_agent.py", "agent-mesh.service"
+        "api.py", "dashboard.html", "tests/test_agent.py", "agent-mesh.service"
     ]
     existing_files = [f for f in collisions if (target_dir / f).exists()]
     if existing_files:
@@ -46,14 +45,15 @@ def init(
             shutil.copy(TEMPLATE_DIR / ".cursorrules", target_dir / ".cursorrules")
             shutil.copy(TEMPLATE_DIR / "agent-mesh.service", target_dir / "agent-mesh.service")
             
+            shutil.copy(TEMPLATE_DIR / "api.py", target_dir / "api.py")
+            shutil.copy(TEMPLATE_DIR / "dashboard.html", target_dir / "dashboard.html")
+            
             # Tests
             os.makedirs(target_dir / "tests", exist_ok=True)
             shutil.copy(TEMPLATE_DIR / "tests" / "test_agent.py", target_dir / "tests" / "test_agent.py")
 
             # Dynamic requirements
             reqs = (TEMPLATE_DIR / "requirements.txt").read_text()
-            if with_dashboard:
-                reqs += "\nstreamlit>=1.20.0\nstreamlit-autorefresh>=1.0.0\npandas>=2.0.0\n"
             (target_dir / "requirements.txt").write_text(reqs)
 
             # Dynamic main.py
@@ -66,18 +66,13 @@ def init(
                     main_py += '\nprint("Observability enabled: Logging all LLM prompts to console.")\n'
             (target_dir / "main.py").write_text(main_py)
 
-            # Dashboard
-            if with_dashboard:
-                shutil.copy(TEMPLATE_DIR / "dashboard.py", target_dir / "dashboard.py")
-
         console.print("\n[bold green]✅ Agent Mesh project scaffolded successfully![/bold green]")
         console.print("\n[bold]Next steps:[/bold]")
         console.print("  1. mv .env.example .env")
         console.print("  2. docker-compose up -d")
         console.print("  3. pip install -r requirements.txt")
-        console.print("  4. python demo.py")
-        if with_dashboard:
-            console.print("  5. streamlit run dashboard.py")
+        console.print("  4. python demo.py  # Run CLI demo")
+        console.print("  5. uvicorn api:app --reload  # Run web dashboard")
         console.print("\n[cyan]Mission control ready. Happy building![/cyan]")
 
     except PermissionError as e:
