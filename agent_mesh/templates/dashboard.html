@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommitGuard | Agent Mesh OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-primary-light: #0066CC;
+  --color-primary-dark: #2997FF;
+  --color-bg-light: #F5F5F7;
+  --color-panel-light: #FFFFFF;
+  --color-text-light: #1D1D1F;
+  --color-muted-light: #86868B;
+  --color-border-light: #E5E5EA;
+  --color-bg-dark: #000000;
+  --color-panel-dark: #1C1C1E;
+  --color-text-dark: #F5F5F7;
+  --color-muted-dark: #86868B;
+  --color-border-dark: #38383A;
+  
+  --color-success: #34C759;
+  --color-warning: #FF9F0A;
+  --color-error: #FF3B30;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  
+  --bg: var(--color-bg-light);
+  --panel: var(--color-panel-light);
+  --text: var(--color-text-light);
+  --muted: var(--color-muted-light);
+  --border: var(--color-border-light);
+  --primary: var(--color-primary-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--color-bg-dark);
+    --panel: var(--color-panel-dark);
+    --text: var(--color-text-dark);
+    --muted: var(--color-muted-dark);
+    --border: var(--color-border-dark);
+    --primary: var(--color-primary-dark);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* LEFT SIDEBAR: AGENT ROSTER & WORKFLOWS */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  flex-shrink: 0;
+}
+
+.sidebar h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin: 0 0 16px 8px;
+}
+
+.agent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.agent-item:hover { background-color: rgba(0, 0, 0, 0.05); }
+@media (prefers-color-scheme: dark) { .agent-item:hover { background-color: rgba(255, 255, 255, 0.05); } }
+.agent-item.active { background-color: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+.agent-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+.agent-avatar.coder { background: #AF52DE; }
+.agent-info { flex: 1; }
+.agent-name { font-size: 14px; font-weight: 500; }
+.agent-status { font-size: 12px; color: var(--success); }
+.agent-status.idle { color: var(--muted); }
+
+/* MAIN WORKSPACE: CHAT & LOGS */
+.main-workspace {
+  flex: 1;
+  background-color: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allows text truncation */
+}
+
+.header {
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  justify-content: space-between;
+}
+
+.header-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px;}
+.badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--color-error);
+}
+
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.message {
+  display: flex;
+  gap: 16px;
+  max-width: 800px;
+}
+
+.msg-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
+}
+.msg-avatar.user { background: var(--muted); }
+.msg-avatar.res { background: var(--primary); color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
+.msg-avatar.code { background: #AF52DE; color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
+
+.msg-content { flex: 1; }
+.msg-author { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;}
+.msg-time { font-size: 12px; color: var(--muted); font-weight: 400; }
+.msg-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.code-block {
+  margin-top: 12px;
+  background: #1C1C1E;
+  color: #F5F5F7;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow-x: auto;
+  border: 1px solid #38383A;
+}
+
+.input-area {
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.input-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+}
+.input-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  font-family: var(--font-sans);
+}
+
+/* RIGHT SIDEBAR: SANDBOX & TARGET */
+.target-pane {
+  width: 400px;
+  background-color: var(--bg);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.pane-header {
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pane-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.target-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.target-card h3 { margin: 0 0 12px 0; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.target-card p { margin: 0 0 8px 0; font-size: 14px; }
+
+/* Pretext container */
+[data-pretext] { display: block; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>Agent Mesh</h2>
+  
+  <div class="agent-item active">
+    <div class="agent-avatar">O</div>
+    <div class="agent-info">
+      <div class="agent-name">Orchestrator</div>
+      <div class="agent-status">Active — Managing 2</div>
+    </div>
+  </div>
+
+  <div class="agent-item">
+    <div class="agent-avatar res">R</div>
+    <div class="agent-info">
+      <div class="agent-name">Researcher</div>
+      <div class="agent-status" style="color: var(--primary);">Analyzing target</div>
+    </div>
+  </div>
+
+  <div class="agent-item">
+    <div class="agent-avatar coder">C</div>
+    <div class="agent-info">
+      <div class="agent-name">Coder (E2B)</div>
+      <div class="agent-status idle">Idle</div>
+    </div>
+  </div>
+</div>
+
+<div class="main-workspace">
+  <div class="header">
+    <div class="header-title">
+      Operation: CommitGuard DBOS Exploit
+      <div class="badge">Target Compromised</div>
+    </div>
+    <div style="font-size: 14px; color: var(--muted);">Workflow PID: 4092</div>
+  </div>
+
+  <div class="feed">
+    <div class="message">
+      <div class="msg-avatar user"></div>
+      <div class="msg-content">
+        <div class="msg-author">You <span class="msg-time">2:00 PM</span></div>
+        <div class="msg-body" data-pretext contenteditable="true">Launch an autonomous audit against the target environment. Find any SQLi or deserialization vectors, and attempt to extract records.</div>
+      </div>
+    </div>
+
+    <div class="message">
+      <div class="msg-avatar res">R</div>
+      <div class="msg-content">
+        <div class="msg-author">Researcher <span class="msg-time">2:01 PM</span></div>
+        <div class="msg-body" data-pretext contenteditable="true">I am running Semgrep rulesets against the target repository structure.</div>
+        <div class="code-block" style="color: #27C93F;">
+          [SUCCESS] Semgrep found 3 potential vulnerabilities.<br>
+          -> src/db.py:L42 - Unsanitized SQL query input<br>
+          -> src/api/routes.py:L112 - Unsafe deserialization
+        </div>
+      </div>
+    </div>
+
+    <div class="message">
+      <div class="msg-avatar code">C</div>
+      <div class="msg-content">
+        <div class="msg-author">Coder <span class="msg-time">2:02 PM</span></div>
+        <div class="msg-body" data-pretext contenteditable="true">I received the context. I'll write an exploit script for the SQL injection in `db.py` and run it within the E2B sandbox.</div>
+        <div class="code-block" contenteditable="true">
+<span style="color: #AF52DE;">import</span> requests
+
+payload = <span style="color: #FFBD2E;">"1' OR '1'='1"</span>
+res = requests.post(<span style="color: #FFBD2E;">"http://target:8080/api/users"</span>, data={"id": payload})
+<span style="color: #AF52DE;">print</span>(res.json())
+        </div>
+      </div>
+    </div>
+
+    <div class="message">
+      <div class="msg-avatar code">C</div>
+      <div class="msg-content">
+        <div class="msg-author">Coder <span class="msg-time">2:03 PM</span></div>
+        <div class="msg-body" data-pretext contenteditable="true">The exploit succeeded. The target database returned 42 user records including hashed credentials.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-box">
+      <input type="text" placeholder="Send a message to the Agent Mesh..." />
+    </div>
+  </div>
+</div>
+
+<div class="target-pane">
+  <div class="pane-header">E2B Sandbox State</div>
+  <div class="pane-content">
+    <div class="target-card">
+      <h3>Target System</h3>
+      <p><strong>Host:</strong> target-env-49b2</p>
+      <p><strong>Status:</strong> <span style="color: var(--color-error); font-weight: 600;">Breached</span></p>
+      <p><strong>Vectors:</strong> SQLi</p>
+    </div>
+
+    <div class="target-card">
+      <h3>Extracted Data Preview</h3>
+      <div class="code-block" style="margin-top: 0; background: var(--bg); border: 1px solid var(--border); color: var(--text);">
+[
+  {
+    "id": 1,
+    "email": "admin@target.local",
+    "hash": "$2b$12$xyZ..."
+  },
+  {
+    "id": 2,
+    "email": "dev@target.local",
+    "hash": "$2b$12$abC..."
+  }
+]
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@1.0.0-beta.0'
+
+await document.fonts.ready;
+const elements = document.querySelectorAll('[data-pretext]');
+const prepared = new Map();
+
+for (const el of elements) {
+  const text = el.textContent || '';
+  const font = getComputedStyle(el).font;
+  prepared.set(el, prepare(text, font));
+}
+
+function relayout() {
+  for (const [el, handle] of prepared) {
+    const computed = getComputedStyle(el);
+    let lineHeight = parseFloat(computed.lineHeight);
+    if (isNaN(lineHeight)) {
+      lineHeight = parseFloat(computed.fontSize) * 1.6;
+    }
+    const { height } = layout(handle, el.clientWidth, lineHeight);
+    el.style.height = `${height}px`;
+  }
+}
+
+new ResizeObserver(() => relayout()).observe(document.body);
+relayout();
+
+for (const el of elements) {
+  if (el.contentEditable === 'true') {
+    new MutationObserver(() => {
+      const text = el.textContent || '';
+      const font = getComputedStyle(el).font;
+      prepared.set(el, prepare(text, font));
+      relayout();
+    }).observe(el, { characterData: true, subtree: true, childList: true });
+  }
+}
+</script>
+</body>
+</html>
