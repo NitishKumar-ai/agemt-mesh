@@ -28,7 +28,7 @@ def init(
     collisions = [
         "main.py", "docker-compose.yml", "requirements.txt", 
         "demo.py", ".env.example", ".cursorrules", 
-        "dashboard.py", "tests/test_agent.py"
+        "dashboard.py", "tests/test_agent.py", "agent-mesh.service"
     ]
     existing_files = [f for f in collisions if (target_dir / f).exists()]
     if existing_files:
@@ -44,6 +44,7 @@ def init(
             shutil.copy(TEMPLATE_DIR / ".env.example", target_dir / ".env.example")
             shutil.copy(TEMPLATE_DIR / "demo.py", target_dir / "demo.py")
             shutil.copy(TEMPLATE_DIR / ".cursorrules", target_dir / ".cursorrules")
+            shutil.copy(TEMPLATE_DIR / "agent-mesh.service", target_dir / "agent-mesh.service")
             
             # Tests
             os.makedirs(target_dir / "tests", exist_ok=True)

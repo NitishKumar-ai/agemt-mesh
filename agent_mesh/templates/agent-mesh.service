@@ -1,0 +1,17 @@
+[Unit]
+Description=Agent Mesh Worker
+After=network.target redis.service postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/agent-mesh
+Environment="DBOS_DB_URL=postgresql://postgres:postgres@localhost:5432/postgres"
+Environment="REDIS_HOST=localhost"
+ExecStart=/opt/agent-mesh/.venv/bin/python main.py
+Restart=always
+RestartSec=3
+WatchdogSec=60
+
+[Install]
+WantedBy=multi-user.target
