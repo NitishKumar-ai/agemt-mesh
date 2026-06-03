@@ -32,19 +32,39 @@ class Verdict(BaseModel):
     passed: bool
     feedback: str
 
-def call_gemini_flash_lite(prompt: str) -> str:
-    # Stubbed Gemini 2.5 Flash-Lite LLM Call
+def call_llm(prompt: str, model_provider: str = "gemini") -> str:
+    """Call the specified LLM provider."""
     try:
-        from google import genai
-        client = genai.Client()
-        response = client.models.generate_content(
-            model='gemini-2.5-flash-lite',
-            contents=prompt,
-        )
-        return response.text
+        if model_provider == "gemini":
+            from google import genai
+            client = genai.Client()
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            return response.text
+        elif model_provider == "openai":
+            from openai import OpenAI
+            client = OpenAI()
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
+        elif model_provider == "anthropic":
+            from anthropic import Anthropic
+            client = Anthropic()
+            response = client.messages.create(
+                model="claude-3-7-sonnet-20250219",
+                max_tokens=4096,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.content[0].text
+        else:
+            raise ValueError(f"Unknown model provider: {model_provider}")
     except Exception as e:
-        logger.warning(f"Gemini call failed or missing API key: {e}")
-        return f"Mocked Gemini response for: {prompt}"
+        logger.warning(f"{model_provider} call failed or missing API key: {e}")
+        return f"Mocked {model_provider} response for: {prompt}"
 
 def init_db():
     with DBOS.transaction():
@@ -68,9 +88,10 @@ def update_status(run_id: str, agent_id: str, step: str, status: str):
     logger.info(f"[{agent_id}] Run {run_id} - Step: {step}, Status: {status}")
 
 class BaseAgent(ABC):
-    def __init__(self, agent_id: str, tenant_id: str = "default"):
+    def __init__(self, agent_id: str, tenant_id: str = "default", model_provider: str = "gemini"):
         self.agent_id = agent_id
         self.tenant_id = tenant_id
+        self.model_provider = model_provider
 
     def write_event(self, event_type: str, payload: dict):
         stream_name = f"agent_bus:{self.tenant_id}"
@@ -87,8 +108,8 @@ class BaseAgent(ABC):
     @DBOS.step(retries=3)
     def plan(self, context: str) -> Plan:
         logger.info(f"[{self.agent_id}] Planning...")
-        response = call_gemini_flash_lite(f"Create a plan for {self.agent_id} given: {context}")
-        plan_obj = Plan(steps=[f"Step 1 for {self.agent_id} based on: {response}"])
+        response = call_llm(f"Create a plan for {self.agent_id} given: {context}", model_provider=self.model_provider)
+        plan_obj = Plan(steps=[f"Step 1 for {self.agent_id} based on: {response[:50]}..."])
         self.write_event("plan_created", plan_obj.model_dump())
         return plan_obj
 
@@ -126,20 +147,31 @@ class BaseAgent(ABC):
         return verdict
 
 class ResearchAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default"):
-        super().__init__("ResearchAgent", tenant_id)
+    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
+        super().__init__("ResearchAgent", tenant_id, model_provider)
 
 class MLAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default"):
-        super().__init__("MLAgent", tenant_id)
+    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
+        super().__init__("MLAgent", tenant_id, model_provider)
 
 class MarketingAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default"):
-        super().__init__("MarketingAgent", tenant_id)
+    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
+        super().__init__("MarketingAgent", tenant_id, model_provider)
 
 class CommitGuardAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default"):
-        super().__init__("CommitGuardAgent", tenant_id)
+    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
+        super().__init__("CommitGuardAgent", tenant_id, model_provider)
+
+@DBOS.workflow()
+def agent_loop(context: str) -> str:
+    researcher = ResearchAgent(model_provider="anthropic")
+    coder = CommitGuardAgent(model_provider="openai")
+    
+    r_verdict = researcher.run(context)
+    if r_verdict.passed:
+        c_verdict = coder.run(context + " - Apply findings")
+        return f"Success. Researcher: {r_verdict.feedback}, Coder: {c_verdict.feedback}"
+    return f"Failed at research: {r_verdict.feedback}"
 
 if __name__ == "__main__":
     DBOS.launch()
