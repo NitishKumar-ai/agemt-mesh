@@ -293,55 +293,13 @@ body {
     <div style="font-size: 14px; color: var(--muted);">Workflow PID: 4092</div>
   </div>
 
-  <div class="feed">
-    <div class="message">
-      <div class="msg-avatar user"></div>
-      <div class="msg-content">
-        <div class="msg-author">You <span class="msg-time">2:00 PM</span></div>
-        <div class="msg-body" data-pretext contenteditable="true">Launch an autonomous audit against the target environment. Find any SQLi or deserialization vectors, and attempt to extract records.</div>
-      </div>
-    </div>
-
-    <div class="message">
-      <div class="msg-avatar res">R</div>
-      <div class="msg-content">
-        <div class="msg-author">Researcher <span class="msg-time">2:01 PM</span></div>
-        <div class="msg-body" data-pretext contenteditable="true">I am running Semgrep rulesets against the target repository structure.</div>
-        <div class="code-block" style="color: #27C93F;">
-          [SUCCESS] Semgrep found 3 potential vulnerabilities.<br>
-          -> src/db.py:L42 - Unsanitized SQL query input<br>
-          -> src/api/routes.py:L112 - Unsafe deserialization
-        </div>
-      </div>
-    </div>
-
-    <div class="message">
-      <div class="msg-avatar code">C</div>
-      <div class="msg-content">
-        <div class="msg-author">Coder <span class="msg-time">2:02 PM</span></div>
-        <div class="msg-body" data-pretext contenteditable="true">I received the context. I'll write an exploit script for the SQL injection in `db.py` and run it within the E2B sandbox.</div>
-        <div class="code-block" contenteditable="true">
-<span style="color: #AF52DE;">import</span> requests
-
-payload = <span style="color: #FFBD2E;">"1' OR '1'='1"</span>
-res = requests.post(<span style="color: #FFBD2E;">"http://target:8080/api/users"</span>, data={"id": payload})
-<span style="color: #AF52DE;">print</span>(res.json())
-        </div>
-      </div>
-    </div>
-
-    <div class="message">
-      <div class="msg-avatar code">C</div>
-      <div class="msg-content">
-        <div class="msg-author">Coder <span class="msg-time">2:03 PM</span></div>
-        <div class="msg-body" data-pretext contenteditable="true">The exploit succeeded. The target database returned 42 user records including hashed credentials.</div>
-      </div>
-    </div>
+  <div class="feed" id="feed">
+    <!-- Messages will be injected here via SSE -->
   </div>
 
   <div class="input-area">
     <div class="input-box">
-      <input type="text" placeholder="Send a message to the Agent Mesh..." />
+      <input type="text" id="prompt-input" placeholder="Send a message to the Agent Mesh..." />
     </div>
   </div>
 </div>
@@ -380,17 +338,17 @@ res = requests.post(<span style="color: #FFBD2E;">"http://target:8080/api/users"
 import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@1.0.0-beta.0'
 
 await document.fonts.ready;
-const elements = document.querySelectorAll('[data-pretext]');
 const prepared = new Map();
 
-for (const el of elements) {
-  const text = el.textContent || '';
-  const font = getComputedStyle(el).font;
-  prepared.set(el, prepare(text, font));
-}
-
 function relayout() {
-  for (const [el, handle] of prepared) {
+  const elements = document.querySelectorAll('[data-pretext]');
+  for (const el of elements) {
+    if (!prepared.has(el)) {
+      const text = el.textContent || '';
+      const font = getComputedStyle(el).font;
+      prepared.set(el, prepare(text, font));
+    }
+    const handle = prepared.get(el);
     const computed = getComputedStyle(el);
     let lineHeight = parseFloat(computed.lineHeight);
     if (isNaN(lineHeight)) {
@@ -402,18 +360,77 @@ function relayout() {
 }
 
 new ResizeObserver(() => relayout()).observe(document.body);
-relayout();
+window.addEventListener('resize', relayout);
 
-for (const el of elements) {
-  if (el.contentEditable === 'true') {
-    new MutationObserver(() => {
-      const text = el.textContent || '';
-      const font = getComputedStyle(el).font;
-      prepared.set(el, prepare(text, font));
-      relayout();
-    }).observe(el, { characterData: true, subtree: true, childList: true });
+function appendMessage(agent, text, code = "") {
+  const feed = document.getElementById("feed");
+  const msg = document.createElement("div");
+  msg.className = "message";
+  
+  let avatarClass = "user";
+  let avatarLetter = "";
+  if (agent === "ResearchAgent") { avatarClass = "res"; avatarLetter = "R"; }
+  else if (agent === "CommitGuardAgent") { avatarClass = "code"; avatarLetter = "C"; }
+  else if (agent !== "User") { avatarLetter = agent.charAt(0); }
+
+  let codeHtml = "";
+  if (code) {
+    codeHtml = `<div class="code-block">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
   }
+
+  const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  
+  msg.innerHTML = `
+    <div class="msg-avatar ${avatarClass}">${avatarLetter}</div>
+    <div class="msg-content">
+      <div class="msg-author">${agent} <span class="msg-time">${time}</span></div>
+      <div class="msg-body" data-pretext>${text}</div>
+      ${codeHtml}
+    </div>
+  `;
+  feed.appendChild(msg);
+  relayout();
+  feed.scrollTop = feed.scrollHeight;
 }
+
+const evtSource = new EventSource("/stream");
+evtSource.onmessage = function(event) {
+  try {
+    const data = JSON.parse(event.data);
+    const payload = JSON.parse(data.payload);
+    
+    if (data.event_type === "plan_created") {
+      appendMessage(data.agent_id, "Created plan: " + payload.steps.join(", "));
+    } else if (data.event_type === "code_generated") {
+      appendMessage(data.agent_id, "Generated code:", payload.code);
+    } else if (data.event_type === "execution_completed") {
+      if (payload.output) {
+        appendMessage(data.agent_id, "Execution output:", payload.output);
+      } else {
+        appendMessage(data.agent_id, "Completed execution.");
+      }
+    } else if (data.event_type === "review_completed") {
+      appendMessage(data.agent_id, "Review verdict: " + (payload.passed ? "Passed" : "Failed") + " - " + payload.feedback);
+    }
+  } catch (e) {
+    console.error("Error parsing event", e);
+  }
+};
+
+const input = document.getElementById("prompt-input");
+input.addEventListener("keypress", async (e) => {
+  if (e.key === "Enter" && input.value.trim() !== "") {
+    const text = input.value.trim();
+    input.value = "";
+    appendMessage("User", text);
+    
+    await fetch("/api/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ context: text })
+    });
+  }
+});
 </script>
 </body>
 </html>
