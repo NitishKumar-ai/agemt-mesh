@@ -1,0 +1,7 @@
+name: agent-mesh
+database:
+  hostname: localhost
+  port: 5432
+  username: classmode
+  password: classmode
+  app_db_name: agent_mesh

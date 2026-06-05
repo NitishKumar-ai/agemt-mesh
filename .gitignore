@@ -1,4 +1,14 @@
 .venv/
+venv/
 test_project/
 *.egg-info/
 __pycache__/
+.gstack/
+.env
+*.sqlite
+*.sqlite3
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts

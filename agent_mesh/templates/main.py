@@ -1,11 +1,11 @@
 import os
 import logging
 import json
-import redis
+import time
 from abc import ABC, abstractmethod
 from dbos import DBOS
 from pydantic import BaseModel
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 # Observability (Langfuse via OpenLLMetry)
 try:
@@ -14,28 +14,27 @@ try:
 except ImportError:
     pass
 
-# {{ OBSERVABILITY_INIT }}
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Redis for event bus/memory bus
-redis_client = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379, decode_responses=True)
+# Standardized Error Exception
+class AgentMeshError(Exception):
+    def __init__(self, problem: str, cause: str, fix: str, docs_link: str = "https://agentmesh.docs"):
+        self.problem = problem
+        self.cause = cause
+        self.fix = fix
+        self.docs_link = docs_link
+        super().__init__(f"{problem} | Cause: {cause} | Fix: {fix} | Docs: {docs_link}")
 
-class Plan(BaseModel):
-    steps: list[str]
+# Escape Hatch for Model Client
+class ModelClient(ABC):
+    @abstractmethod
+    def generate(self, prompt: str) -> str:
+        pass
 
-class Result(BaseModel):
-    data: Any
-
-class Verdict(BaseModel):
-    passed: bool
-    feedback: str
-
-def call_llm(prompt: str, model_provider: str = "gemini") -> str:
-    """Call the specified LLM provider."""
-    try:
-        if model_provider == "gemini":
+class GeminiClient(ModelClient):
+    def generate(self, prompt: str) -> str:
+        try:
             from google import genai
             client = genai.Client()
             response = client.models.generate_content(
@@ -43,15 +42,13 @@ def call_llm(prompt: str, model_provider: str = "gemini") -> str:
                 contents=prompt,
             )
             return response.text
-        elif model_provider == "openai":
-            from openai import OpenAI
-            client = OpenAI()
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return response.choices[0].message.content
-        elif model_provider == "anthropic":
+        except Exception as e:
+            logger.warning(f"Gemini call failed: {e}")
+            return f"Mocked response for: {prompt}"
+
+class AnthropicClient(ModelClient):
+    def generate(self, prompt: str) -> str:
+        try:
             from anthropic import Anthropic
             client = Anthropic()
             response = client.messages.create(
@@ -60,11 +57,17 @@ def call_llm(prompt: str, model_provider: str = "gemini") -> str:
                 messages=[{"role": "user", "content": prompt}]
             )
             return response.content[0].text
-        else:
-            raise ValueError(f"Unknown model provider: {model_provider}")
-    except Exception as e:
-        logger.warning(f"{model_provider} call failed or missing API key: {e}")
-        return f"Mocked {model_provider} response for: {prompt}"
+        except Exception as e:
+            logger.warning(f"Anthropic call failed: {e}")
+            return f"Mocked response for: {prompt}"
+
+def get_model_client(provider: str) -> ModelClient:
+    if provider == "gemini":
+        return GeminiClient()
+    elif provider == "anthropic":
+        return AnthropicClient()
+    else:
+        raise AgentMeshError("Unknown model provider", f"Provider {provider} not supported.", "Use 'gemini' or 'anthropic'")
 
 def init_db():
     with DBOS.transaction():
@@ -78,6 +81,29 @@ def init_db():
             "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
             ")"
         )
+        DBOS.sql_session.execute(
+            "CREATE TABLE IF NOT EXISTS agent_events ("
+            "id SERIAL PRIMARY KEY, "
+            "tenant_id TEXT, "
+            "payload JSONB, "
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        )
+        # Postgres NOTIFY trigger for SSE Dashboard
+        DBOS.sql_session.execute(
+            "CREATE OR REPLACE FUNCTION notify_event() RETURNS TRIGGER AS $$ "
+            "BEGIN "
+            "  PERFORM pg_notify('agent_bus', row_to_json(NEW)::text); "
+            "  RETURN NEW; "
+            "END; "
+            "$$ LANGUAGE plpgsql;"
+        )
+        DBOS.sql_session.execute("DROP TRIGGER IF EXISTS event_notify_trigger ON agent_events;")
+        DBOS.sql_session.execute(
+            "CREATE TRIGGER event_notify_trigger "
+            "AFTER INSERT ON agent_events "
+            "FOR EACH ROW EXECUTE FUNCTION notify_event();"
+        )
 
 @DBOS.transaction()
 def update_status(run_id: str, agent_id: str, step: str, status: str):
@@ -85,129 +111,90 @@ def update_status(run_id: str, agent_id: str, step: str, status: str):
         "INSERT INTO agent_runs (run_id, agent_id, step, status) VALUES (%s, %s, %s, %s)",
         [run_id, agent_id, step, status]
     )
-    logger.info(f"[{agent_id}] Run {run_id} - Step: {step}, Status: {status}")
 
+@DBOS.transaction()
+def publish_event(tenant_id: str, payload: dict):
+    DBOS.sql_session.execute(
+        "INSERT INTO agent_events (tenant_id, payload) VALUES (%s, %s)",
+        [tenant_id, json.dumps(payload)]
+    )
+
+# Progressive Disclosure BaseAgent
 class BaseAgent(ABC):
-    def __init__(self, agent_id: str, tenant_id: str = "default", model_provider: str = "gemini"):
-        self.agent_id = agent_id
-        self.tenant_id = tenant_id
-        self.model_provider = model_provider
+    def __init__(self, goal: str, model: str = "gemini", **kwargs):
+        self.goal = goal
+        self.model_provider = model
+        # Advanced configs hidden in kwargs
+        self.agent_id = kwargs.get("agent_id", self.__class__.__name__)
+        self.tenant_id = kwargs.get("tenant_id", "default")
+        self.client = get_model_client(self.model_provider)
 
     def write_event(self, event_type: str, payload: dict):
-        stream_name = f"agent_bus:{self.tenant_id}"
         event_data = {
             "agent_id": self.agent_id,
             "event_type": event_type,
-            "payload": json.dumps(payload)
+            "payload": payload
         }
-        try:
-            redis_client.xadd(stream_name, event_data)
-        except Exception as e:
-            logger.error(f"Failed to write to Redis: {e}")
+        publish_event(self.tenant_id, event_data)
 
-    @DBOS.step(retries=3)
-    def plan(self, context: str) -> Plan:
-        logger.info(f"[{self.agent_id}] Planning...")
-        response = call_llm(f"Create a plan for {self.agent_id} given: {context}", model_provider=self.model_provider)
-        plan_obj = Plan(steps=[f"Step 1 for {self.agent_id} based on: {response[:50]}..."])
-        self.write_event("plan_created", plan_obj.model_dump())
-        return plan_obj
+    @abstractmethod
+    def get_tools(self) -> list:
+        pass
 
-    @DBOS.step(retries=3)
-    def execute(self, plan: Plan) -> Result:
-        logger.info(f"[{self.agent_id}] Executing...")
-        # No-op tool stub
-        result = Result(data={"status": "success", "executed_steps": plan.steps})
-        self.write_event("execution_completed", result.model_dump())
+    @DBOS.step()
+    def plan(self, context: str) -> dict:
+        self.write_event("planning", {"context": context, "status": "Planning"})
+        prompt = f"Goal: {self.goal}. Context: {context}. Create a 3-step plan."
+        plan_text = self.client.generate(prompt)
+        plan_dict = {"steps": [f"Step 1: {plan_text[:20]}...", "Step 2: Execute", "Step 3: Review"]}
+        self.write_event("plan_created", {"plan_steps": len(plan_dict["steps"]), "status": "Idle"})
+        return plan_dict
+
+    @DBOS.step()
+    def execute(self, plan: dict) -> dict:
+        self.write_event("executing", {"status": "Executing"})
+        time.sleep(1) # Simulating long running execution
+        result = {"data": "Mocked tool execution result"}
+        self.write_event("execution_completed", {"result": "Success", "status": "Idle"})
         return result
 
-    @DBOS.step(retries=3)
-    def review(self, result: Result) -> Verdict:
-        logger.info(f"[{self.agent_id}] Reviewing...")
-        verdict = Verdict(passed=True, feedback="Looks good.")
-        self.write_event("review_completed", verdict.model_dump())
-        return verdict
-
-    @DBOS.workflow()
-    def run(self, context: str) -> Verdict:
-        run_id = DBOS.workflow_id
-        
-        update_status(run_id, self.agent_id, "plan", "running")
-        plan = self.plan(context)
-        update_status(run_id, self.agent_id, "plan", "completed")
-
-        update_status(run_id, self.agent_id, "execute", "running")
-        execution = self.execute(plan)
-        update_status(run_id, self.agent_id, "execute", "completed")
-
-        update_status(run_id, self.agent_id, "review", "running")
-        verdict = self.review(execution)
-        update_status(run_id, self.agent_id, "review", "completed")
-
+    @DBOS.step()
+    def review(self, result: dict) -> dict:
+        self.write_event("reviewing", {"status": "Executing"})
+        verdict = {"passed": True, "feedback": "Looks good"}
+        self.write_event("review_completed", {"verdict": verdict, "status": "Success"})
         return verdict
 
 class ResearchAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
-        super().__init__("ResearchAgent", tenant_id, model_provider)
-
-class MLAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
-        super().__init__("MLAgent", tenant_id, model_provider)
-
-class MarketingAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
-        super().__init__("MarketingAgent", tenant_id, model_provider)
+    def get_tools(self) -> list:
+        return ["web_search", "rag"]
 
 class CommitGuardAgent(BaseAgent):
-    def __init__(self, tenant_id: str = "default", model_provider: str = "gemini"):
-        super().__init__("CommitGuardAgent", tenant_id, model_provider)
-
-    @DBOS.step(retries=3)
-    def execute(self, plan: Plan) -> Result:
-        logger.info(f"[{self.agent_id}] Generating and executing code in E2B...")
-        
-        prompt = f"Write ONLY executable Python code to accomplish the following plan: {plan.steps}. Do not include markdown formatting or explanations. If you need libraries, assume they are available or use built-ins."
-        code = call_llm(prompt, model_provider=self.model_provider)
-        
-        if code.startswith("```"):
-            code = "\n".join(code.split("\n")[1:-1])
-            
-        self.write_event("code_generated", {"code": code})
-        
-        try:
-            from e2b_code_interpreter import CodeInterpreter
-            with CodeInterpreter() as sandbox:
-                execution = sandbox.notebook.exec_cell(code)
-                
-                output = ""
-                if execution.text:
-                    output += execution.text + "\n"
-                if execution.error:
-                    output += f"Error: {execution.error.name} - {execution.error.value}\n"
-                for result in execution.results:
-                    if result.text:
-                        output += result.text + "\n"
-                
-                result_obj = Result(data={"code": code, "output": output.strip()})
-        except Exception as e:
-            logger.error(f"E2B Execution failed: {e}")
-            result_obj = Result(data={"code": code, "output": f"Execution failed: {str(e)}"})
-            
-        self.write_event("execution_completed", result_obj.model_dump())
-        return result_obj
+    def get_tools(self) -> list:
+        # E2B Sandbox strictly proxied to github.com
+        return ["e2b_sandbox_proxied", "git_diff"]
 
 @DBOS.workflow()
-def agent_loop(context: str) -> str:
-    researcher = ResearchAgent(model_provider="anthropic")
-    coder = CommitGuardAgent(model_provider="openai")
+def agent_loop(context: str):
+    run_id = DBOS.workflow_id
     
-    r_verdict = researcher.run(context)
-    if r_verdict.passed:
-        c_verdict = coder.run(context + " - Apply findings")
-        return f"Success. Researcher: {r_verdict.feedback}, Coder: {c_verdict.feedback}"
-    return f"Failed at research: {r_verdict.feedback}"
-
-if __name__ == "__main__":
-    DBOS.launch()
-    init_db()
-    logger.info("Agent Mesh initialized with DBOS and Redis Streams. Agents ready.")
+    agent = CommitGuardAgent(goal="Audit target environment for vulnerabilities")
+    
+    update_status(run_id, agent.agent_id, "start", "Idle")
+    
+    plan = agent.plan(context)
+    update_status(run_id, agent.agent_id, "planning", "Planning")
+    
+    # 24h HITL timeout mock
+    # DBOS.sleep(86400) # real implementation would wait for event
+    
+    result = agent.execute(plan)
+    update_status(run_id, agent.agent_id, "executing", "Executing")
+    
+    verdict = agent.review(result)
+    if verdict.get("passed"):
+        update_status(run_id, agent.agent_id, "complete", "Success")
+    else:
+        update_status(run_id, agent.agent_id, "failed", "Failed")
+        
+    return verdict

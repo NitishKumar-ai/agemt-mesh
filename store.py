@@ -1,0 +1,543 @@
+"""
+store.py — All DBOS @transaction() functions for business data.
+
+Replaces the sqlite3 _db() pattern in api.py. Every table lives in the
+same Postgres database as DBOS execution state, so workflow writes and
+API reads are always in sync.
+"""
+import json
+from datetime import datetime, timedelta
+from typing import Optional
+
+from dbos import DBOS
+from sqlalchemy import text
+
+from github_integration import (
+    GitHubConfigurationError,
+    decrypt_token,
+    encrypt_token,
+)
+
+_INTERVALS = {"hourly": 3600, "daily": 86400, "weekly": 604800, "monthly": 2592000}
+
+
+# ── Schema ────────────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def init_business_tables() -> None:
+    """Create all business tables. Called once at startup from init_db()."""
+    sess = DBOS.sql_session
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS github_connections (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            github_user_id BIGINT NOT NULL,
+            login TEXT NOT NULL,
+            name TEXT,
+            avatar_url TEXT,
+            html_url TEXT,
+            token_encrypted TEXT NOT NULL,
+            scopes TEXT,
+            connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS github_imported_repositories (
+            id BIGSERIAL PRIMARY KEY,
+            github_repo_id BIGINT NOT NULL UNIQUE,
+            full_name TEXT NOT NULL,
+            html_url TEXT NOT NULL,
+            default_branch TEXT,
+            private INTEGER DEFAULT 0,
+            imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS suggested_tasks (
+            id BIGSERIAL PRIMARY KEY,
+            file_path TEXT NOT NULL,
+            line_number INTEGER NOT NULL,
+            marker TEXT NOT NULL,
+            comment TEXT NOT NULL,
+            context_snippet TEXT,
+            rationale TEXT,
+            confidence INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'pending',
+            workflow_id TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS scheduled_tasks (
+            id BIGSERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            prompt TEXT NOT NULL,
+            interval TEXT NOT NULL,
+            next_run_at TIMESTAMP NOT NULL,
+            last_run_at TIMESTAMP,
+            last_status TEXT,
+            enabled INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text(
+        "CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next_run "
+        "ON scheduled_tasks(next_run_at, enabled)"
+    ))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS webhook_events (
+            id BIGSERIAL PRIMARY KEY,
+            source TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            branch TEXT,
+            payload TEXT,
+            workflow_id TEXT,
+            status TEXT DEFAULT 'received',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS security_findings (
+            id BIGSERIAL PRIMARY KEY,
+            source_agent TEXT NOT NULL DEFAULT 'CommitGuardAgent',
+            title TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            evidence TEXT NOT NULL,
+            severity TEXT NOT NULL DEFAULT 'medium',
+            repository TEXT,
+            status TEXT NOT NULL DEFAULT 'review_required',
+            verified_by TEXT,
+            verified_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS marketing_audit_events (
+            id BIGSERIAL PRIMARY KEY,
+            entity_type TEXT NOT NULL,
+            entity_id BIGINT NOT NULL,
+            action TEXT NOT NULL,
+            actor TEXT NOT NULL DEFAULT 'system',
+            payload TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS marketing_campaigns (
+            id BIGSERIAL PRIMARY KEY,
+            source_finding_id BIGINT,
+            name TEXT NOT NULL,
+            audience TEXT NOT NULL,
+            finding_summary TEXT NOT NULL,
+            value_proposition TEXT,
+            channel TEXT DEFAULT 'email',
+            status TEXT DEFAULT 'draft',
+            subject TEXT,
+            body TEXT,
+            approval_note TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS commitguard_scans (
+            job_id TEXT PRIMARY KEY,
+            repo_url TEXT NOT NULL,
+            status TEXT DEFAULT 'queued',
+            step TEXT,
+            progress_pct INTEGER DEFAULT 0,
+            total_semgrep_hits INTEGER,
+            findings_truncated INTEGER DEFAULT 0,
+            scan_duration_s INTEGER,
+            user_github_login TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text("""
+        CREATE TABLE IF NOT EXISTS commitguard_findings (
+            id TEXT PRIMARY KEY,
+            job_id TEXT NOT NULL,
+            file TEXT NOT NULL,
+            line INTEGER NOT NULL,
+            severity TEXT NOT NULL,
+            verdict TEXT NOT NULL,
+            poc_summary TEXT,
+            cvss TEXT,
+            cwe TEXT,
+            fix_suggestion TEXT,
+            github_issue_url TEXT,
+            issue_filed INTEGER DEFAULT 0,
+            webhook_fired INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """))
+    sess.execute(text(
+        "CREATE INDEX IF NOT EXISTS idx_cg_findings_job ON commitguard_findings(job_id)"
+    ))
+
+
+# ── GitHub ────────────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def github_save_connection(user: dict, token: str, scopes: str) -> None:
+    DBOS.sql_session.execute(text("""
+        INSERT INTO github_connections (
+            id, github_user_id, login, name, avatar_url, html_url,
+            token_encrypted, scopes, updated_at
+        ) VALUES (1, :uid, :login, :name, :avatar, :html_url, :token_enc, :scopes, :now)
+        ON CONFLICT (id) DO UPDATE SET
+            github_user_id = EXCLUDED.github_user_id,
+            login          = EXCLUDED.login,
+            name           = EXCLUDED.name,
+            avatar_url     = EXCLUDED.avatar_url,
+            html_url       = EXCLUDED.html_url,
+            token_encrypted= EXCLUDED.token_encrypted,
+            scopes         = EXCLUDED.scopes,
+            updated_at     = EXCLUDED.updated_at
+    """), {
+        "uid": user["id"],
+        "login": user["login"],
+        "name": user.get("name"),
+        "avatar": user.get("avatar_url"),
+        "html_url": user.get("html_url"),
+        "token_enc": encrypt_token(token),
+        "scopes": scopes,
+        "now": datetime.utcnow().isoformat(),
+    })
+
+
+@DBOS.transaction()
+def github_get_connection() -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT github_user_id, login, name, avatar_url, html_url, "
+        "token_encrypted, scopes, connected_at FROM github_connections WHERE id=1"
+    )).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def github_get_access_token() -> str:
+    row = DBOS.sql_session.execute(text(
+        "SELECT token_encrypted FROM github_connections WHERE id=1"
+    )).fetchone()
+    if not row:
+        raise GitHubConfigurationError("GitHub account is not connected")
+    return decrypt_token(row[0])
+
+
+@DBOS.transaction()
+def github_delete_connection() -> None:
+    DBOS.sql_session.execute(text("DELETE FROM github_connections WHERE id=1"))
+
+
+@DBOS.transaction()
+def github_imported_count() -> int:
+    return DBOS.sql_session.execute(
+        text("SELECT COUNT(*) FROM github_imported_repositories")
+    ).scalar() or 0
+
+
+@DBOS.transaction()
+def github_get_imported_repos() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT github_repo_id AS id, full_name, html_url, default_branch, "
+        "private, imported_at FROM github_imported_repositories ORDER BY imported_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def github_upsert_repo(repo: dict) -> None:
+    DBOS.sql_session.execute(text("""
+        INSERT INTO github_imported_repositories (
+            github_repo_id, full_name, html_url, default_branch, private
+        ) VALUES (:rid, :full_name, :html_url, :default_branch, :private)
+        ON CONFLICT (github_repo_id) DO UPDATE SET
+            full_name      = EXCLUDED.full_name,
+            html_url       = EXCLUDED.html_url,
+            default_branch = EXCLUDED.default_branch,
+            private        = EXCLUDED.private
+    """), {
+        "rid": repo["id"],
+        "full_name": repo["full_name"],
+        "html_url": repo["html_url"],
+        "default_branch": repo.get("default_branch"),
+        "private": int(repo["private"]),
+    })
+
+
+# ── Security Findings ─────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def security_list_findings() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, source_agent, title, summary, evidence, severity, repository, "
+        "status, verified_by, verified_at, created_at "
+        "FROM security_findings ORDER BY created_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def security_create_finding(source_agent: str, title: str, summary: str,
+                             evidence: str, severity: str, repository: str) -> int:
+    finding_id = DBOS.sql_session.execute(text(
+        "INSERT INTO security_findings "
+        "(source_agent, title, summary, evidence, severity, repository) "
+        "VALUES (:agent, :title, :summary, :evidence, :severity, :repo) RETURNING id"
+    ), {"agent": source_agent, "title": title, "summary": summary,
+        "evidence": evidence, "severity": severity, "repo": repository}).scalar()
+    _audit("finding", finding_id, "finding_created", source_agent,
+           {"severity": severity, "repository": repository})
+    return finding_id
+
+
+@DBOS.transaction()
+def security_verify_finding(finding_id: int, verified_by: str) -> bool:
+    row = DBOS.sql_session.execute(
+        text("SELECT id FROM security_findings WHERE id=:fid"), {"fid": finding_id}
+    ).fetchone()
+    if not row:
+        return False
+    DBOS.sql_session.execute(text(
+        "UPDATE security_findings SET status='verified', verified_by=:by, "
+        "verified_at=CURRENT_TIMESTAMP WHERE id=:fid"
+    ), {"by": verified_by, "fid": finding_id})
+    _audit("finding", finding_id, "finding_verified", verified_by, {})
+    return True
+
+
+# ── Marketing Campaigns ───────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def marketing_list_campaigns() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, source_finding_id, name, audience, finding_summary, value_proposition, "
+        "channel, status, subject, body, approval_note, created_at, updated_at "
+        "FROM marketing_campaigns ORDER BY created_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def marketing_get_campaign(campaign_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, source_finding_id, name, audience, finding_summary, "
+        "value_proposition, channel, status, subject, body "
+        "FROM marketing_campaigns WHERE id=:cid"
+    ), {"cid": campaign_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def marketing_create_campaign(source_finding_id: int, name: str, audience: str,
+                               finding_summary: str, value_proposition: str,
+                               channel: str) -> tuple:
+    """Returns (campaign_id, actual_finding_summary). Raises ValueError on bad input."""
+    finding = DBOS.sql_session.execute(text(
+        "SELECT summary, status FROM security_findings WHERE id=:fid"
+    ), {"fid": source_finding_id}).fetchone()
+    if not finding:
+        raise ValueError("source_finding_not_found")
+    if finding[1] != "verified":
+        raise ValueError("source_finding_not_verified")
+    actual_summary = finding[0]
+    campaign_id = DBOS.sql_session.execute(text(
+        "INSERT INTO marketing_campaigns "
+        "(source_finding_id, name, audience, finding_summary, value_proposition, channel) "
+        "VALUES (:sfid, :name, :audience, :summary, :vp, :channel) RETURNING id"
+    ), {"sfid": source_finding_id, "name": name, "audience": audience,
+        "summary": actual_summary, "vp": value_proposition, "channel": channel}).scalar()
+    _audit("campaign", campaign_id, "campaign_created", "operator",
+           {"source_finding_id": source_finding_id, "channel": channel})
+    return campaign_id, actual_summary
+
+
+@DBOS.transaction()
+def marketing_update_draft(campaign_id: int, subject: str, body: str) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE marketing_campaigns SET subject=:sub, body=:body, "
+        "status='review_required', updated_at=CURRENT_TIMESTAMP WHERE id=:cid"
+    ), {"sub": subject, "body": body, "cid": campaign_id})
+    _audit("campaign", campaign_id, "draft_generated", "MarketingAgent", {"subject": subject})
+
+
+@DBOS.transaction()
+def marketing_approve_campaign(campaign_id: int, note: str) -> str:
+    """Returns 'approved', 'not_found', or 'no_draft'."""
+    row = DBOS.sql_session.execute(text(
+        "SELECT body FROM marketing_campaigns WHERE id=:cid"
+    ), {"cid": campaign_id}).fetchone()
+    if not row:
+        return "not_found"
+    if not row[0]:
+        return "no_draft"
+    DBOS.sql_session.execute(text(
+        "UPDATE marketing_campaigns SET status='approved', approval_note=:note, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:cid"
+    ), {"note": note, "cid": campaign_id})
+    _audit("campaign", campaign_id, "campaign_approved", "operator", {"note": note})
+    return "approved"
+
+
+@DBOS.transaction()
+def marketing_list_audit_events() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, entity_type, entity_id, action, actor, payload, created_at "
+        "FROM marketing_audit_events ORDER BY created_at DESC, id DESC LIMIT 200"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+# ── CommitGuard ───────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def commitguard_create_scan(job_id: str, repo_url: str, github_login: str) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO commitguard_scans (job_id, repo_url, status, step, user_github_login) "
+        "VALUES (:jid, :url, 'queued', 'queued', :login)"
+    ), {"jid": job_id, "url": repo_url, "login": github_login})
+
+
+@DBOS.transaction()
+def commitguard_get_scan(job_id: str) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT job_id, status, step, progress_pct, total_semgrep_hits, findings_truncated "
+        "FROM commitguard_scans WHERE job_id=:jid"
+    ), {"jid": job_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def commitguard_get_scan_with_findings(job_id: str) -> Optional[dict]:
+    scan = DBOS.sql_session.execute(text(
+        "SELECT job_id, repo_url, scan_duration_s, total_semgrep_hits, findings_truncated "
+        "FROM commitguard_scans WHERE job_id=:jid"
+    ), {"jid": job_id}).fetchone()
+    if not scan:
+        return None
+    findings = DBOS.sql_session.execute(text(
+        "SELECT id, file, line, severity, verdict, poc_summary, cvss, cwe, "
+        "fix_suggestion, github_issue_url, issue_filed "
+        "FROM commitguard_findings WHERE job_id=:jid ORDER BY created_at"
+    ), {"jid": job_id}).fetchall()
+    result = dict(scan._mapping)
+    result["findings"] = [dict(f._mapping) for f in findings]
+    return result
+
+
+# ── Suggested Tasks ───────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def tasks_list() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, file_path, line_number, marker, comment, rationale, confidence, status "
+        "FROM suggested_tasks ORDER BY confidence DESC, created_at DESC LIMIT 50"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def tasks_save(file_path: str, line_number: int, marker: str, comment: str,
+               context_snippet: str, rationale: str, confidence: int) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO suggested_tasks "
+        "(file_path, line_number, marker, comment, context_snippet, rationale, confidence) "
+        "VALUES (:fp, :ln, :marker, :comment, :ctx, :rationale, :conf)"
+    ), {"fp": file_path, "ln": line_number, "marker": marker, "comment": comment,
+        "ctx": context_snippet, "rationale": rationale, "conf": confidence})
+
+
+@DBOS.transaction()
+def tasks_get(task_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, file_path, line_number, marker, comment, rationale, confidence, status "
+        "FROM suggested_tasks WHERE id=:tid"
+    ), {"tid": task_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def tasks_mark_running(task_id: int) -> None:
+    DBOS.sql_session.execute(
+        text("UPDATE suggested_tasks SET status='running' WHERE id=:tid"), {"tid": task_id}
+    )
+
+
+# ── Scheduled Tasks ───────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def schedule_create(name: str, prompt: str, interval: str) -> int:
+    seconds = _INTERVALS.get(interval, 86400)
+    next_run = datetime.utcnow() + timedelta(seconds=seconds)
+    return DBOS.sql_session.execute(text(
+        "INSERT INTO scheduled_tasks (name, prompt, interval, next_run_at) "
+        "VALUES (:name, :prompt, :interval, :next_run) RETURNING id"
+    ), {"name": name, "prompt": prompt, "interval": interval, "next_run": next_run}).scalar()
+
+
+@DBOS.transaction()
+def schedule_list() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, name, prompt, interval, next_run_at, last_run_at, last_status, enabled "
+        "FROM scheduled_tasks ORDER BY created_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def schedule_get_due() -> list:
+    now = datetime.utcnow()
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, name, prompt, interval FROM scheduled_tasks "
+        "WHERE enabled=1 AND next_run_at <= :now"
+    ), {"now": now}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def schedule_mark_ran(task_id: int, status: str, interval: str) -> None:
+    seconds = _INTERVALS.get(interval, 86400)
+    next_run = datetime.utcnow() + timedelta(seconds=seconds)
+    now = datetime.utcnow()
+    DBOS.sql_session.execute(text(
+        "UPDATE scheduled_tasks SET last_run_at=:now, last_status=:status, "
+        "next_run_at=:next_run WHERE id=:tid"
+    ), {"now": now, "status": status, "next_run": next_run, "tid": task_id})
+
+
+@DBOS.transaction()
+def schedule_disable(task_id: int) -> None:
+    DBOS.sql_session.execute(
+        text("UPDATE scheduled_tasks SET enabled=0 WHERE id=:tid"), {"tid": task_id}
+    )
+
+
+# ── Webhook Events ────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def webhook_create(source: str, event_type: str, branch: str, payload: dict) -> int:
+    return DBOS.sql_session.execute(text(
+        "INSERT INTO webhook_events (source, event_type, branch, payload) "
+        "VALUES (:src, :etype, :branch, :payload) RETURNING id"
+    ), {"src": source, "etype": event_type, "branch": branch,
+        "payload": json.dumps(payload)}).scalar()
+
+
+@DBOS.transaction()
+def webhook_update_status(webhook_id: int, status: str, workflow_id: str = "") -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE webhook_events SET status=:status, workflow_id=:wid WHERE id=:wid_pk"
+    ), {"status": status, "wid": workflow_id, "wid_pk": webhook_id})
+
+
+# ── Internal helpers ──────────────────────────────────────────────────────────
+
+def _audit(entity_type: str, entity_id: int, action: str,
+           actor: str, payload: dict) -> None:
+    """Insert a marketing_audit_events row. Must be called from within a @DBOS.transaction()."""
+    DBOS.sql_session.execute(text(
+        "INSERT INTO marketing_audit_events (entity_type, entity_id, action, actor, payload) "
+        "VALUES (:etype, :eid, :action, :actor, :payload)"
+    ), {"etype": entity_type, "eid": entity_id, "action": action,
+        "actor": actor, "payload": json.dumps(payload)})

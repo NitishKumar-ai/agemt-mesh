@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CommitGuard | Agent Mesh OS</title>
+<title>Agent Mesh OS | Control Plane</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -25,6 +25,10 @@
   --color-success: #34C759;
   --color-warning: #FF9F0A;
   --color-error: #FF3B30;
+  --color-blocked: #FF9F0A;
+  --color-idle: #8E8E93;
+  --color-planning: #5E5CE6;
+  --color-executing: #007AFF;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
@@ -61,8 +65,65 @@ body {
   font-family: var(--font-sans);
   height: 100vh;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+/* TOP NAVBAR: GLOBAL HEALTH & KILLSWITCH */
+.top-nav {
+  height: 56px;
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.nav-brand {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.system-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--success);
+  font-weight: 500;
+}
+.health-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+.killswitch {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  padding: 6px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.killswitch:hover {
+  background-color: var(--color-error);
+  color: white;
+}
+
+/* MAIN LAYOUT */
+.layout-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* LEFT SIDEBAR: AGENT ROSTER & WORKFLOWS */
@@ -74,6 +135,7 @@ body {
   flex-direction: column;
   padding: 24px 16px;
   flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
@@ -90,14 +152,12 @@ body {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.2s;
+  background-color: var(--panel);
+  border: 1px solid var(--border);
 }
-
-.agent-item:hover { background-color: rgba(0, 0, 0, 0.05); }
-@media (prefers-color-scheme: dark) { .agent-item:hover { background-color: rgba(255, 255, 255, 0.05); } }
-.agent-item.active { background-color: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
 .agent-avatar {
   width: 32px;
@@ -111,11 +171,23 @@ body {
   font-weight: 600;
   font-size: 14px;
 }
-.agent-avatar.coder { background: #AF52DE; }
-.agent-info { flex: 1; }
-.agent-name { font-size: 14px; font-weight: 500; }
-.agent-status { font-size: 12px; color: var(--success); }
-.agent-status.idle { color: var(--muted); }
+.agent-info { flex: 1; overflow: hidden; }
+.agent-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-state-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.state-idle { background: rgba(142,142,147,0.1); color: var(--color-idle); }
+.state-planning { background: rgba(94,92,230,0.1); color: var(--color-planning); }
+.state-executing { background: rgba(0,122,255,0.1); color: var(--color-executing); }
+.state-blocked { background: rgba(255,159,10,0.1); color: var(--color-blocked); border: 1px solid var(--color-blocked); }
+.state-failed { background: rgba(255,59,48,0.1); color: var(--color-error); }
+.state-success { background: rgba(52,199,89,0.1); color: var(--color-success); }
 
 /* MAIN WORKSPACE: CHAT & LOGS */
 .main-workspace {
@@ -123,26 +195,7 @@ body {
   background-color: var(--panel);
   display: flex;
   flex-direction: column;
-  min-width: 0; /* allows text truncation */
-}
-
-.header {
-  height: 64px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  justify-content: space-between;
-}
-
-.header-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px;}
-.badge {
-  padding: 4px 10px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 500;
-  background: rgba(255, 59, 48, 0.1);
-  color: var(--color-error);
+  min-width: 0; 
 }
 
 .feed {
@@ -165,8 +218,7 @@ body {
   background: var(--border); flex-shrink: 0;
 }
 .msg-avatar.user { background: var(--muted); }
-.msg-avatar.res { background: var(--primary); color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
-.msg-avatar.code { background: #AF52DE; color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
+.msg-avatar.agent { background: #AF52DE; color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
 
 .msg-content { flex: 1; }
 .msg-author { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;}
@@ -188,6 +240,43 @@ body {
   overflow-x: auto;
   border: 1px solid #38383A;
 }
+
+/* DIFF VIEWER FOR APPROVALS */
+.diff-viewer {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg);
+}
+.diff-header {
+  background: var(--panel);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+.diff-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
+}
+.btn-approve { background: var(--color-success); color: white; }
+.btn-reject { background: var(--color-error); color: white; }
+.diff-content {
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.diff-add { color: var(--color-success); background: rgba(52,199,89,0.1); }
+.diff-sub { color: var(--color-error); background: rgba(255,59,48,0.1); }
 
 .input-area {
   padding: 24px 32px;
@@ -214,182 +303,103 @@ body {
   font-family: var(--font-sans);
 }
 
-/* RIGHT SIDEBAR: SANDBOX & TARGET */
-.target-pane {
-  width: 400px;
-  background-color: var(--bg);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.pane-header {
-  height: 64px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.pane-content {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
-.target-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 24px;
-}
-.target-card h3 { margin: 0 0 12px 0; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.target-card p { margin: 0 0 8px 0; font-size: 14px; }
-
-/* Pretext container */
-[data-pretext] { display: block; overflow: hidden; }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Agent Mesh</h2>
-  
-  <div class="agent-item active">
-    <div class="agent-avatar">O</div>
-    <div class="agent-info">
-      <div class="agent-name">Orchestrator</div>
-      <div class="agent-status">Active — Managing 2</div>
-    </div>
+<div class="top-nav">
+  <div class="nav-brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    Agent Mesh OS
+    <div class="system-health"><div class="health-dot"></div> Operational</div>
   </div>
-
-  <div class="agent-item">
-    <div class="agent-avatar res">R</div>
-    <div class="agent-info">
-      <div class="agent-name">Researcher</div>
-      <div class="agent-status" style="color: var(--primary);">Analyzing target</div>
-    </div>
-  </div>
-
-  <div class="agent-item">
-    <div class="agent-avatar coder">C</div>
-    <div class="agent-info">
-      <div class="agent-name">Coder (E2B)</div>
-      <div class="agent-status idle">Idle</div>
-    </div>
-  </div>
+  <button class="killswitch" onclick="alert('KILLSWITCH ENGAGED! Revoking all API keys and terminating DBOS workflows.')">EMERGENCY STOP ALL</button>
 </div>
 
-<div class="main-workspace">
-  <div class="header">
-    <div class="header-title">
-      Operation: CommitGuard DBOS Exploit
-      <div class="badge">Target Compromised</div>
-    </div>
-    <div style="font-size: 14px; color: var(--muted);">Workflow PID: 4092</div>
+<div class="layout-body">
+  <div class="sidebar" id="agent-roster">
+    <h2>Active Agents</h2>
+    <!-- Agents dynamically added here -->
   </div>
 
-  <div class="feed" id="feed">
-    <!-- Messages will be injected here via SSE -->
-  </div>
-
-  <div class="input-area">
-    <div class="input-box">
-      <input type="text" id="prompt-input" placeholder="Send a message to the Agent Mesh..." />
-    </div>
-  </div>
-</div>
-
-<div class="target-pane">
-  <div class="pane-header">E2B Sandbox State</div>
-  <div class="pane-content">
-    <div class="target-card">
-      <h3>Target System</h3>
-      <p><strong>Host:</strong> target-env-49b2</p>
-      <p><strong>Status:</strong> <span style="color: var(--color-error); font-weight: 600;">Breached</span></p>
-      <p><strong>Vectors:</strong> SQLi</p>
+  <div class="main-workspace">
+    <div class="feed" id="feed">
+      <!-- Messages will be injected here via SSE -->
     </div>
 
-    <div class="target-card">
-      <h3>Extracted Data Preview</h3>
-      <div class="code-block" style="margin-top: 0; background: var(--bg); border: 1px solid var(--border); color: var(--text);">
-[
-  {
-    "id": 1,
-    "email": "admin@target.local",
-    "hash": "$2b$12$xyZ..."
-  },
-  {
-    "id": 2,
-    "email": "dev@target.local",
-    "hash": "$2b$12$abC..."
-  }
-]
+    <div class="input-area">
+      <div class="input-box">
+        <input type="text" id="prompt-input" placeholder="Give the Agent Mesh a goal..." />
       </div>
     </div>
   </div>
 </div>
 
-<script type="module">
-import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@1.0.0-beta.0'
+<script>
+// Agent State Tracker
+const agents = {};
 
-await document.fonts.ready;
-const prepared = new Map();
-
-function relayout() {
-  const elements = document.querySelectorAll('[data-pretext]');
-  for (const el of elements) {
-    if (!prepared.has(el)) {
-      const text = el.textContent || '';
-      const font = getComputedStyle(el).font;
-      prepared.set(el, prepare(text, font));
+function updateAgentState(agentId, state) {
+  if (!agents[agentId]) {
+    agents[agentId] = { state: 'idle' };
+    const roster = document.getElementById("agent-roster");
+    const div = document.createElement("div");
+    div.id = `agent-${agentId}`;
+    div.className = "agent-item";
+    div.innerHTML = `
+      <div class="agent-avatar">${agentId.charAt(0)}</div>
+      <div class="agent-info">
+        <div class="agent-name">${agentId}</div>
+        <div class="agent-state-badge state-${state.toLowerCase()}" id="badge-${agentId}">${state}</div>
+      </div>
+    `;
+    roster.appendChild(div);
+  } else {
+    const badge = document.getElementById(`badge-${agentId}`);
+    if (badge) {
+      badge.className = `agent-state-badge state-${state.toLowerCase()}`;
+      badge.innerText = state;
     }
-    const handle = prepared.get(el);
-    const computed = getComputedStyle(el);
-    let lineHeight = parseFloat(computed.lineHeight);
-    if (isNaN(lineHeight)) {
-      lineHeight = parseFloat(computed.fontSize) * 1.6;
-    }
-    const { height } = layout(handle, el.clientWidth, lineHeight);
-    el.style.height = `${height}px`;
   }
 }
 
-new ResizeObserver(() => relayout()).observe(document.body);
-window.addEventListener('resize', relayout);
-
-function appendMessage(agent, text, code = "") {
+function appendMessage(agent, text, type = "text", payload = null) {
   const feed = document.getElementById("feed");
   const msg = document.createElement("div");
   msg.className = "message";
   
-  let avatarClass = "user";
-  let avatarLetter = "";
-  if (agent === "ResearchAgent") { avatarClass = "res"; avatarLetter = "R"; }
-  else if (agent === "CommitGuardAgent") { avatarClass = "code"; avatarLetter = "C"; }
-  else if (agent !== "User") { avatarLetter = agent.charAt(0); }
-
-  let codeHtml = "";
-  if (code) {
-    codeHtml = `<div class="code-block">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
-  }
-
+  const isUser = agent === "User";
+  const avatarClass = isUser ? "user" : "agent";
+  const avatarLetter = isUser ? "U" : agent.charAt(0);
   const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   
+  let contentHtml = `<div class="msg-body">${text}</div>`;
+  
+  if (type === "diff" && payload) {
+    contentHtml += `
+      <div class="diff-viewer">
+        <div class="diff-header">
+          <span>Pending Approval: CommitGuard Diff</span>
+          <div class="diff-actions">
+            <button class="btn-reject" onclick="this.parentNode.parentNode.parentNode.innerHTML='<div style=\\'padding: 16px;\\'>Rejected.</div>'">Reject</button>
+            <button class="btn-approve" onclick="this.parentNode.parentNode.parentNode.innerHTML='<div style=\\'padding: 16px;\\'>Approved via Webhook signature.</div>'">Approve</button>
+          </div>
+        </div>
+        <div class="diff-content"><span class="diff-add">+ ${payload.add}</span><br><span class="diff-sub">- ${payload.sub}</span></div>
+      </div>
+    `;
+  } else if (type === "code" && payload) {
+    contentHtml += `<div class="code-block">${payload.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+  }
+
   msg.innerHTML = `
     <div class="msg-avatar ${avatarClass}">${avatarLetter}</div>
     <div class="msg-content">
       <div class="msg-author">${agent} <span class="msg-time">${time}</span></div>
-      <div class="msg-body" data-pretext>${text}</div>
-      ${codeHtml}
+      ${contentHtml}
     </div>
   `;
   feed.appendChild(msg);
-  relayout();
   feed.scrollTop = feed.scrollHeight;
 }
 
@@ -397,20 +407,23 @@ const evtSource = new EventSource("/stream");
 evtSource.onmessage = function(event) {
   try {
     const data = JSON.parse(event.data);
-    const payload = JSON.parse(data.payload);
+    const agentId = data.agent_id;
+    const evtType = data.event_type;
+    const payload = data.payload;
     
-    if (data.event_type === "plan_created") {
-      appendMessage(data.agent_id, "Created plan: " + payload.steps.join(", "));
-    } else if (data.event_type === "code_generated") {
-      appendMessage(data.agent_id, "Generated code:", payload.code);
-    } else if (data.event_type === "execution_completed") {
-      if (payload.output) {
-        appendMessage(data.agent_id, "Execution output:", payload.output);
-      } else {
-        appendMessage(data.agent_id, "Completed execution.");
-      }
-    } else if (data.event_type === "review_completed") {
-      appendMessage(data.agent_id, "Review verdict: " + (payload.passed ? "Passed" : "Failed") + " - " + payload.feedback);
+    // Update State Badge
+    if (payload && payload.status) {
+      updateAgentState(agentId, payload.status);
+    }
+    
+    if (evtType === "plan_created") {
+      appendMessage(agentId, "Created plan: " + payload.plan_steps + " steps.");
+    } else if (evtType === "execution_completed") {
+      appendMessage(agentId, "Completed execution: " + payload.result);
+    } else if (evtType === "review_completed") {
+      appendMessage(agentId, "Review verdict: " + (payload.verdict.passed ? "Passed" : "Failed") + " - " + payload.verdict.feedback);
+    } else if (evtType === "approval_required") {
+      appendMessage(agentId, "Approval required for operation.", "diff", payload.diff);
     }
   } catch (e) {
     console.error("Error parsing event", e);
@@ -431,6 +444,10 @@ input.addEventListener("keypress", async (e) => {
     });
   }
 });
+
+// Mock Initial State
+updateAgentState('CommitGuardAgent', 'Idle');
+updateAgentState('ResearchAgent', 'Idle');
 </script>
 </body>
 </html>

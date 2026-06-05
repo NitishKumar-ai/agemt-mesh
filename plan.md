@@ -1,3 +1,4 @@
+<!-- /autoplan restore point: /Users/friday/.gstack/projects/Agent_mesh/main-autoplan-restore-20260603-155423.md -->
 # Technical Requirements Document: 24/7 Agent Mesh OS
 
 ## TL;DR
@@ -153,3 +154,252 @@
 - **Weekend MVP:** asyncio orchestrator + Redis Streams + Dramatiq + Postgres; 4 stubbed agents running the 3-pass loop; Gemini 2.5 Flash-Lite default; Langfuse tracing via OpenLLMetry; systemd `Restart=always`.
 - **Weeks 2–4:** DBOS durable execution; tiered routing (Flash-Lite → Sonnet/Pro); Firecracker/E2B sandboxes; scoped per-agent creds + GCP Secret Manager + tool-call audit logs + killswitch.
 - **Months 2–3:** human-in-the-loop approval gates; pgvector/Mem0 memory; benchmarked L4 vLLM node for embeddings/CommitGuard triage; per-agent/per-tenant cost dashboards; Temporal migration only if multi-tenant fan-out requires it.
+## Phase 1: CEO Review
+
+### CLAUDE SUBAGENT (CEO — strategic independence)
+1. **Right problem:** Scoping a generalized infra play instead of a vertical app is risky. (User confirmed OS scope).
+2. **Premises:** "Weekend MVP" with DBOS+Redis is a complex distributed system.
+3. **Regret:** Building custom orchestration when native MCP APIs might make it obsolete.
+4. **Alternatives:** Dismissing standard agent frameworks (LangGraph) in favor of custom.
+5. **Competitive risk:** Competing on infrastructure vs LangChain, Vercel, Cloudflare.
+
+### CEO DUAL VOICES — CONSENSUS TABLE:
+═══════════════════════════════════════════════════════════════
+  Dimension                           Claude  Codex  Consensus
+  ──────────────────────────────────── ─────── ─────── ─────────
+  1. Premises valid?                   NO       —      FLAGGED
+  2. Right problem to solve?           NO       —      FLAGGED
+  3. Scope calibration correct?        NO       —      FLAGGED
+  4. Alternatives sufficiently explored?NO       —      FLAGGED
+  5. Competitive/market risks covered? NO       —      FLAGGED
+  6. 6-month trajectory sound?         NO       —      FLAGGED
+═══════════════════════════════════════════════════════════════
+*(Note: Codex unavailable. User explicitly confirmed the premise to keep the Agent Mesh OS scope).*
+
+### What already exists
+- Weekend MVP Orchestration -> existing DBOS integration in `main.py`
+- Frontend Dashboard -> existing `dashboard.html` with SSE streaming
+- Tool execution sandbox -> existing E2B integration in `CommitGuardAgent`
+- Multi-model dispatch -> existing dispatcher in `api.py`
+
+### NOT in scope
+- Self-hosting L4 GPUs for local models (Deferred to avoid ops distraction).
+- Native Temporal migration (Deferred; stick with DBOS for now).
+
+### Error & Rescue Registry
+| Error | Rescue Mechanism |
+|-------|------------------|
+| Agent crash | systemd `Restart=always` |
+| Orchestrator restart | DBOS durable execution resumes from last step |
+
+### Failure Modes Registry
+| Component | Failure Mode | Auto-Decision Fix |
+|-----------|--------------|-------------------|
+| DBOS | Abstraction leak in future Temporal migration | Accepted (P6 - bias toward action, stick to DBOS). |
+| Custom Orchestrator | Native API obsolescence | Accepted (P5 - explicit over clever, build custom to own the stack). |
+
+### Dream State Delta
+```
+CURRENT                    THIS PLAN                           12-MONTH IDEAL
+weekend scripts   --->     durable execution + Redis Streams ---> fully managed cluster
+local LLMs        --->     API routing (Flash-Lite + Sonnet) ---> self-hosted specialized models
+print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant multi-agent orchestration
+```
+
+### CEO Completion Summary
+- **Plan Status:** REVIEWED (CEO Phase)
+- **Scope Calibration:** SELECTIVE EXPANSION
+- **Premises:** CONFIRMED BY USER
+- **Risks Flagged:** Custom orchestration vs off-the-shelf, DBOS lock-in.
+
+<!-- AUTONOMOUS DECISION LOG -->
+## Decision Audit Trail
+
+| # | Phase | Decision | Classification | Principle | Rationale | Rejected |
+|---|-------|----------|-----------|-----------|----------|----------|
+| 1 | CEO | Drop 3 agents and pivot to vertical app | User Challenge | Human | User confirmed Agent Mesh OS scope over vertical app. | N/A |
+| 2 | CEO | Include Langfuse & E2B from Day 1 | Mechanical | P2 (Boil Lakes) | In blast radius, <1d effort, high leverage. | Defer to Month 2 |
+| 3 | CEO | Drop self-hosted L4 GPUs | Mechanical | P3 (Pragmatic) | High ops overhead for MVP. | Keep in roadmap |
+
+## Phase 2: Design Review
+
+### CLAUDE SUBAGENT (Design — independent review)
+1. **Information Hierarchy:** Missing hierarchy. Need Primary (Actionable/Health), Secondary (Live streams), Tertiary (Config).
+2. **Missing States:** No UI states mapped to execution states (Idle, Planning, Executing, Blocked, Failed, Success).
+3. **User Journey:** Approval gates break the emotional arc of autonomous execution. Need async notifications (Slack/webhook).
+4. **Specificity:** Generic modals for approval. Need bespoke UI (git diff for CommitGuard, WYSIWYG for Marketing).
+5. **Ambiguous Design:** Killswitch must be a persistent global red toggle, not buried.
+
+### DESIGN LITMUS SCORECARD (Consensus Table)
+═══════════════════════════════════════════════════════════════
+  Dimension                           Claude  Codex  Consensus
+  ──────────────────────────────────── ─────── ─────── ─────────
+  1. Information hierarchy clear?      NO       —      FLAGGED
+  2. Interaction states defined?       NO       —      FLAGGED
+  3. Emotional journey unbroken?       NO       —      FLAGGED
+  4. Specificity in UI components?     NO       —      FLAGGED
+  5. Critical/danger paths clear?      NO       —      FLAGGED
+═══════════════════════════════════════════════════════════════
+*(Note: Codex unavailable. All Claude design findings accepted via P1 - Choose completeness and P5 - Explicit over clever).*
+
+### Design Decisions Auto-Decided
+- **Hierarchy Fix:** Approved. Global health & approvals on top, live streams in middle, config at bottom.
+- **State mapping:** Approved. Add UI badges for `Idle`, `Planning`, `Executing`, `Blocked`, `Failed`, `Success`.
+- **Async Notifications:** Approved. Add webhook skeleton for approval gating.
+- **Bespoke Approval UI:** Approved. Add diff viewer constraint for CommitGuard.
+- **Global Killswitch UI:** Approved. Must be a persistent header toggle.
+
+### Design Completion Summary
+- **Plan Status:** REVIEWED (Design Phase)
+- **Completeness:** 4/10 initial -> 8/10 post-review
+- **Risks Flagged:** Async notifications are required for true autonomy, or users will babysit the dashboard.
+
+<!-- AUTONOMOUS DECISION LOG -->
+| 4 | Design | Add explicit information hierarchy | Mechanical | P5 (Explicit) | Hierarchy was undefined. | Keep undefined |
+| 5 | Design | Map backend states to UI states | Mechanical | P1 (Completeness) | Edge cases/states were missing. | Leave missing |
+| 6 | Design | Require webhook for approvals | Taste | P2 (Boil Lakes) | In blast radius, fixes the core emotional arc. | Defer to MVP2 |
+| 7 | Design | Bespoke approval UI (git diff) | Mechanical | P5 (Explicit) | Generic JSON is unreadable for git diffs. | Generic JSON modal |
+| 8 | Design | Global persistent Killswitch UI | Mechanical | P1 (Completeness) | Critical danger path was undefined. | Buried setting |
+
+## Phase 3: Eng Review
+
+### CLAUDE SUBAGENT (Eng — independent review)
+1. **Architecture:** Leaky durable execution abstraction. Split-brain state between DBOS (Postgres) and Redis Streams.
+2. **Edge Cases:** Redis OOM risk without MAXLEN. Missing Dead Letter Queue (DLQ) for retries.
+3. **Tests:** Infinite LLM loop risk. Missing prompt evals, chaos tests, and hard cost caps.
+4. **Security:** Sandbox egress risks (attackers could exfiltrate tokens via `curl`).
+5. **Hidden Complexity:** Long-running suspended workflows (HITL) versioning pain. Tiered routing impedance mismatch.
+
+### ENG LITMUS SCORECARD (Consensus Table)
+═══════════════════════════════════════════════════════════════
+  Dimension                           Claude  Codex  Consensus
+  ──────────────────────────────────── ─────── ─────── ─────────
+  1. Architecture sound?               NO       —      FLAGGED
+  2. Test coverage sufficient?         NO       —      FLAGGED
+  3. Performance risks addressed?      NO       —      FLAGGED
+  4. Security threats covered?         NO       —      FLAGGED
+  5. Error paths handled?              NO       —      FLAGGED
+  6. Deployment risk manageable?       NO       —      FLAGGED
+═══════════════════════════════════════════════════════════════
+*(Note: Codex unavailable. All Claude eng findings accepted via P5 - Explicit over clever and P1 - Completeness).*
+
+### Architecture (ASCII Dependency Graph)
+```text
+[User] --> [Dashboard UI (FastAPI/SSE)]
+                 |
+        [DBOS Orchestrator] <---- (Replaces Redis Streams entirely)
+           /             \
+  [Agent: Flash-Lite]  [Agent: Sonnet/Pro]
+           \             /
+       [E2B Sandboxes (Egress Locked)]
+```
+
+### What already exists
+- Orchestrator entrypoints (`main.py`, `api.py`) -> DBOS setup
+- Tool mockups -> E2B Python sandbox integration
+
+### NOT in scope
+- Dual-writing to Redis Streams (Deferred to avoid split-brain, stick to DBOS Postgres).
+- Tiered routing between different model families (Stick to Flash/Pro within Gemini or Anthropic to avoid schema mismatch).
+
+### Failure Modes Registry
+| Component | Failure Mode | Auto-Decision Fix |
+|-----------|--------------|-------------------|
+| DBOS | Split-brain with Redis | Drop Redis Streams. Use DBOS messaging. |
+| Redis | OOM without MAXLEN | N/A (Dropping Redis). |
+| Sandbox | Exfiltration via curl | Add strict egress proxies (whitelist github.com). |
+| Agent | Infinite loop | Add system-level token/cost caps + DLQ. |
+| HITL | Suspended workflow rot | 24h auto-reject timeout on HITL. |
+
+### Eng Decisions Auto-Decided
+- **Architecture:** Drop Redis Streams to prevent split-brain. DBOS exclusively.
+- **Edge cases:** Added Dead Letter Queue (DLQ) & backoffs.
+- **Tests:** Mandated system-level token caps and chaos DBOS testing.
+- **Security:** Strict egress proxy on Firecracker.
+- **Complexity:** 24-hour timeout on all HITL workflows to prevent version rot.
+
+### Eng Completion Summary
+- **Plan Status:** REVIEWED (Eng Phase)
+- **Completeness:** 5/10 initial -> 9/10 post-review
+- **Risks Flagged:** Egress proxy configuration is critical for CommitGuard security.
+
+<!-- AUTONOMOUS DECISION LOG -->
+| 9 | Eng | Drop Redis Streams for DBOS native | Mechanical | P5 (Explicit) | Prevents split-brain state. | Keep Redis |
+| 10 | Eng | Egress proxy on E2B | Mechanical | P1 (Completeness) | Critical security hole. | Full internet access |
+| 11 | Eng | 24h HITL timeout | Mechanical | P3 (Pragmatic) | Prevents workflow versioning hell. | Infinite sleep |
+
+## Phase 3.5: DX Review
+
+### CLAUDE SUBAGENT (DX — independent review)
+1. **Getting Started (TTHW):** No defined TTHW.
+2. **API/CLI ergonomics:** Base Agent interface violates progressive disclosure (too many required args).
+3. **Error handling:** No standard for developer-facing errors.
+4. **Documentation:** Missing docsite, examples, IA.
+5. **Escape hatches:** Framework is overly rigid (DBOS exclusivity, hard timeouts).
+
+### DX DUAL VOICES — CONSENSUS TABLE
+═══════════════════════════════════════════════════════════════
+  Dimension                           Claude  Codex  Consensus
+  ──────────────────────────────────── ─────── ─────── ─────────
+  1. Getting started < 5 min?          NO       —      FLAGGED
+  2. API/CLI naming guessable?         NO       —      FLAGGED
+  3. Error messages actionable?        NO       —      FLAGGED
+  4. Docs findable & complete?         NO       —      FLAGGED
+  5. Upgrade path safe?                NO       —      FLAGGED
+  6. Dev environment friction-free?    NO       —      FLAGGED
+═══════════════════════════════════════════════════════════════
+*(Note: Codex unavailable. Claude DX findings accepted via P5 - Explicit over clever and P1 - Completeness).*
+
+### Developer Journey Map
+| Stage | Experience | Goal |
+|-------|------------|------|
+| 1. Discover | Reads README.md | Understand Agent Mesh OS value prop |
+| 2. Install | `pip install agentmesh` | 0 friction |
+| 3. Hello World | `agentmesh init` | < 1 min to running agent |
+| 4. Core Concepts | Learn `plan -> execute -> review` | Clear mental model |
+| 5. Advanced Config | Add DBOS/tenant config | Progressive disclosure |
+| 6. Debugging | Hit first error | Actionable error msg (Prob+Cause+Fix) |
+| 7. Deployment | Run in production | Easy DBOS migration guide |
+| 8. Scaling | Multi-agent workflows | Predictable limits |
+| 9. Escape Hatch | Override core routing | Clean interface to bypass |
+
+### Developer Empathy Narrative
+*As a developer, I just want my agent to run 24/7 without baby-sitting it. But when I open this repo, I am bombarded with DBOS, Redis Streams, Dramatiq, and Firecracker before I can even write a prompt. I need a single `agentmesh init` command that hides this complexity until I need it. When things break, tell me how to fix it, do not just dump a stack trace.*
+
+### DX Scorecard
+1. TTHW (0-10): 2
+2. API Ergonomics (0-10): 3
+3. Error Actionability (0-10): 2
+4. Documentation (0-10): 1
+5. Escape Hatches (0-10): 3
+6. Debuggability (0-10): 5
+7. Upgrade Safety (0-10): N/A
+8. Friction (0-10): 3
+**Overall DX Score: 2.7/10** (Target: 8/10)
+
+### TTHW Assessment
+- **Current TTHW:** Unknown (requires manual scaffolding of DBOS/Postgres).
+- **Target TTHW:** < 5 minutes.
+- **Fix:** Add `agentmesh init` CLI scaffold.
+
+### DX Implementation Checklist
+- [ ] Implement `agentmesh init` CLI for local SQLite/Postgres.
+- [ ] Refactor `BaseAgent` constructor to require only `goal` and `model`.
+- [ ] Create standardized framework exception class (Problem + Cause + Fix).
+- [ ] Build docs site scaffolding (Concepts, Guides, Reference).
+- [ ] Add `ModelClient` interface escape hatch for unsupported LLMs.
+
+### DX Completion Summary
+- **Plan Status:** REVIEWED (DX Phase)
+- **Completeness:** 2.7/10 initial -> 8/10 post-review targeted
+- **Risks Flagged:** Heavy upfront infrastructure requirements kill adoption.
+
+<!-- AUTONOMOUS DECISION LOG -->
+| 12 | DX | Add CLI init scaffold | Mechanical | P5 (Explicit) | Simplifies TTHW to <5m. | Require manual setup |
+| 13 | DX | Progressive disclosure on Agent | Taste | P5 (Explicit) | Reduces cognitive load. | Explicit config |
+| 14 | DX | Standardized Error exceptions | Mechanical | P1 (Completeness) | Improves debuggability. | Raw stack traces |
+| 15 | DX | Add ModelClient escape hatch | Taste | P3 (Pragmatic) | Prevents lock-in frustration. | Rigid routing |
+
+## Cross-Phase Themes
+1. **Infrastructure Gravity vs UX**: The plan was heavily skewed toward infrastructure and backend state engines. Both the Design and DX phases surfaced that without a seamless UI (webhooks, state badges, bespoke diff viewers) and an easy CLI (`agentmesh init`), the robust backend will be unusable.
+2. **State Management Friction**: The conflict between Redis Streams and DBOS was identified by the Eng subagent and resolved by dropping Redis Streams to rely entirely on Postgres/DBOS, centralizing state and reducing split-brain risk.

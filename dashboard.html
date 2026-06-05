@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inmodel · Continuous AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --blue:      #2563EB;
+  --blue-light:#EFF6FF;
+  --blue-dim:  rgba(37,99,235,0.12);
+  --green:     #16A34A;
+  --green-light:#F0FDF4;
+  --green-dim: rgba(22,163,74,0.12);
+  --amber:     #D97706;
+  --amber-light:#FFFBEB;
+  --amber-dim: rgba(217,119,6,0.12);
+  --red:       #DC2626;
+  --red-light: #FEF2F2;
+  --red-dim:   rgba(220,38,38,0.12);
+  --purple:    #7C3AED;
+  --purple-dim:rgba(124,58,237,0.12);
+
+  --bg:        #F8FAFC;
+  --surface:   #FFFFFF;
+  --surface-2: #F1F5F9;
+  --border:    #E2E8F0;
+  --border-2:  #CBD5E1;
+  --text:      #0F172A;
+  --text-2:    #475569;
+  --text-3:    #94A3B8;
+  --nav-bg:    #0F172A;
+  --nav-text:  #94A3B8;
+  --nav-active:#FFFFFF;
+  --nav-hover: #1E293B;
+
+  --font:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:  'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #020617;
+    --surface:   #0F172A;
+    --surface-2: #1E293B;
+    --border:    #1E293B;
+    --border-2:  #334155;
+    --text:      #F1F5F9;
+    --text-2:    #94A3B8;
+    --text-3:    #475569;
+    --nav-bg:    #020617;
+    --blue-light:#1E293B;
+    --green-light:#1E293B;
+    --amber-light:#1E293B;
+    --red-light: #1E293B;
+  }
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+button { cursor: pointer; font-family: var(--font); }
+input, select, textarea { font-family: var(--font); }
+a { color: inherit; text-decoration: none; }
+
+/* ── Topbar ────────────────────────────────────────────────── */
+.topbar {
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 0;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 200;
+}
+.topbar-logo {
+  width: 60px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nav-bg);
+  flex-shrink: 0;
+  gap: 0;
+}
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-mark svg { color: white; }
+.topbar-brand {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.topbar-search {
+  flex: 1;
+  max-width: 360px;
+  position: relative;
+}
+.topbar-search input {
+  width: 100%;
+  height: 34px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 12px 0 34px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.topbar-search input:focus { border-color: var(--blue); }
+.topbar-search .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--green-dim);
+  border: 1px solid rgba(22,163,74,.2);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.6; transform:scale(1.3); }
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+.killswitch {
+  height: 32px;
+  padding: 0 14px;
+  background: var(--red-dim);
+  border: 1px solid rgba(220,38,38,.25);
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: .02em;
+  transition: all .15s;
+}
+.killswitch:hover { background: var(--red); color: white; border-color: var(--red); }
+
+/* ── App Shell ─────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Left Nav ──────────────────────────────────────────────── */
+.nav {
+  width: 60px;
+  background: var(--nav-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 2px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.nav-item {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--nav-text);
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+}
+.nav-item:hover { background: var(--nav-hover); color: #CBD5E1; }
+.nav-item.active { background: rgba(37,99,235,.25); color: var(--blue); }
+.nav-item.active svg { color: #60A5FA; }
+.nav-item svg { flex-shrink: 0; }
+.nav-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.nav-divider {
+  width: 32px;
+  height: 1px;
+  background: #1E293B;
+  margin: 6px 0;
+}
+.nav-spacer { flex: 1; }
+.nav-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 99px;
+  background: var(--red);
+  color: white;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+/* ── Main Content ──────────────────────────────────────────── */
+.main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page switcher */
+.page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.page.active { display: flex; }
+
+/* ── Page Header ───────────────────────────────────────────── */
+.page-header {
+  padding: 24px 28px 0;
+  flex-shrink: 0;
+}
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -.03em; }
+.page-subtitle { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.page-actions { display: flex; gap: 8px; }
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: #1D4ED8; }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(220,38,38,.2); }
+.btn-danger:hover { background: var(--red); color: white; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── Stat Cards ────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 0 28px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stat-header { display: flex; align-items: center; justify-content: space-between; }
+.stat-label { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stat-value { font-size: 28px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.stat-delta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.stat-delta .up { color: var(--green); }
+.stat-delta .down { color: var(--red); }
+
+/* ── Activity Feed (Overview) ──────────────────────────────── */
+.two-col { display: flex; gap: 16px; flex: 1; overflow: hidden; padding: 0 28px 24px; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel-title { font-size: 14px; font-weight: 600; }
+.panel-body { flex: 1; overflow-y: auto; }
+
+/* ── Timeline Events ───────────────────────────────────────── */
+.timeline { padding: 12px 18px; display: flex; flex-direction: column; gap: 0; }
+.tl-entry {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.tl-entry:last-child { border-bottom: none; }
+.tl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.tl-content { flex: 1; min-width: 0; }
+.tl-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.tl-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.tl-time { font-size: 11px; color: var(--text-3); white-space: nowrap; margin-top: 5px; }
+
+/* ── Agent Roster Panel ────────────────────────────────────── */
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-row:hover { background: var(--surface-2); }
+.agent-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  flex-shrink: 0;
+}
+.agent-info { flex: 1; min-width: 0; }
+.agent-name { font-size: 13px; font-weight: 600; }
+.agent-role { font-size: 11px; color: var(--text-3); }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-idle     { background: var(--surface-2); color: var(--text-3); }
+.badge-planning { background: var(--purple-dim); color: var(--purple); }
+.badge-executing{ background: var(--blue-dim); color: var(--blue); }
+.badge-blocked  { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(217,119,6,.3); }
+.badge-success  { background: var(--green-dim); color: var(--green); }
+.badge-failed   { background: var(--red-dim); color: var(--red); }
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ── Page: Suggested Tasks ─────────────────────────────────── */
+.task-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px 16px;
+  flex-shrink: 0;
+}
+.task-filter-group { display: flex; gap: 6px; }
+.filter-chip {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  transition: all .15s;
+}
+.filter-chip:hover, .filter-chip.active { background: var(--blue-dim); color: var(--blue); border-color: rgba(37,99,235,.3); }
+.task-count { font-size: 13px; color: var(--text-3); margin-left: auto; }
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 0 28px 28px;
+  overflow-y: auto;
+  flex: 1;
+  align-content: start;
+}
+
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow .15s, transform .15s;
+}
+.task-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.task-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.task-marker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.marker-todo    { background: var(--amber-dim); color: var(--amber); }
+.marker-fixme   { background: var(--red-dim); color: var(--red); }
+.marker-hack    { background: var(--purple-dim); color: var(--purple); }
+.marker-xxx     { background: var(--red-dim); color: var(--red); }
+
+.conf-ring {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.conf-ring svg { transform: rotate(-90deg); }
+.conf-ring-track { fill: none; stroke: var(--border); stroke-width: 3; }
+.conf-ring-fill  { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+.conf-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.task-location {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  background: var(--surface-2);
+  padding: 3px 7px;
+  border-radius: var(--r-sm);
+  display: inline-block;
+  width: fit-content;
+}
+.task-comment { font-size: 13px; font-weight: 600; color: var(--text); }
+.task-rationale { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+.task-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.task-status-text { font-size: 11px; color: var(--text-3); }
+
+/* ── Page: Schedules ───────────────────────────────────────── */
+.table-wrap { flex: 1; overflow: auto; padding: 0 28px 28px; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+thead th:first-child { border-radius: var(--r-sm) 0 0 0; }
+thead th:last-child  { border-radius: 0 var(--r-sm) 0 0; }
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface-2); }
+tbody td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  vertical-align: middle;
+}
+.td-mono { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Page: Webhooks ────────────────────────────────────────── */
+.heal-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-content: start;
+}
+.heal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.heal-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.heal-info { flex: 1; min-width: 0; }
+.heal-title { font-size: 14px; font-weight: 600; }
+.heal-branch { font-family: var(--mono); font-size: 12px; color: var(--blue); margin-top: 2px; }
+.heal-cause { font-size: 12px; color: var(--text-2); margin-top: 6px; line-height: 1.4; }
+.heal-meta { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+.heal-time { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+/* ── Page: Activity (SSE Feed) ─────────────────────────────── */
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.msg {
+  display: flex;
+  gap: 12px;
+  max-width: 760px;
+  animation: msg-in .2s ease;
+}
+@keyframes msg-in {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.msg-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: white;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.msg-body { flex: 1; }
+.msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.msg-author { font-size: 13px; font-weight: 600; }
+.msg-time   { font-size: 11px; color: var(--text-3); }
+.msg-text   { font-size: 14px; color: var(--text); line-height: 1.55; }
+.code-block {
+  margin-top: 10px;
+  background: #0F172A;
+  color: #E2E8F0;
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  overflow-x: auto;
+  border: 1px solid #1E293B;
+  line-height: 1.5;
+}
+
+/* ── Diff Viewer ───────────────────────────────────────────── */
+.diff-viewer {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.diff-header {
+  background: var(--surface-2);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+.diff-actions { display: flex; gap: 6px; }
+.diff-content {
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.diff-add { color: #22C55E; background: rgba(34,197,94,.07); display:block; }
+.diff-sub { color: #F87171; background: rgba(248,113,113,.07); display:block; }
+
+.input-bar {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.input-inner {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 10px;
+  transition: border-color .15s;
+}
+.input-inner:focus-within { border-color: var(--blue); }
+.input-inner input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+.input-inner input::placeholder { color: var(--text-3); }
+.send-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: var(--blue);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.send-btn:hover { background: #1D4ED8; }
+
+/* ── Modal ─────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  width: 440px;
+  box-shadow: var(--shadow-lg);
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in {
+  from { opacity:0; transform:scale(.96) translateY(-8px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.field input, .field select, .field textarea {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+.field textarea { height: 80px; padding: 10px 12px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* ── Toast ─────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toast-in .25s ease;
+  pointer-events: auto;
+  max-width: 320px;
+}
+@keyframes toast-in {
+  from { opacity:0; transform:translateX(20px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  gap: 12px;
+  color: var(--text-3);
+}
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text-2); }
+.empty-sub   { font-size: 13px; text-align: center; max-width: 260px; line-height: 1.5; }
+
+/* ── Skeleton Loader ───────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+</style>
+</head>
+<body>
+
+<!-- ── Topbar ──────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-mark">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+  </div>
+  <span class="topbar-brand" style="margin-left:14px;">Inmodel</span>
+
+  <div class="topbar-search" style="margin-left:20px;">
+    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search tasks, schedules, events…" id="global-search">
+  </div>
+
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span id="status-label">All systems go</span>
+    </div>
+    <button class="icon-btn" title="Notifications" id="notif-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <button class="killswitch" onclick="emergencyStop()">⬛ Emergency Stop</button>
+  </div>
+</header>
+
+<!-- ── App Shell ───────────────────────────────────────────── -->
+<div class="app-shell">
+
+  <!-- Left Nav -->
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('overview')" title="Overview" id="nav-overview">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" onclick="showPage('suggested')" title="Suggested Tasks" id="nav-suggested">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="nav-label">Tasks</span>
+      <span class="nav-badge" id="tasks-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('schedules')" title="Scheduled Tasks" id="nav-schedules">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-label">Schedule</span>
+    </div>
+    <div class="nav-item" onclick="showPage('webhooks')" title="Self-Heal PRs" id="nav-webhooks">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="nav-label">Heals</span>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" onclick="showPage('activity')" title="Activity Log" id="nav-activity">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-label">Activity</span>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item" title="Settings" onclick="toast('Settings coming soon', 'info')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span class="nav-label">Settings</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ══ PAGE: OVERVIEW ══ -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">Overview</div>
+            <div class="page-subtitle">Continuous AI · monitoring your codebase 24/7</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="refreshAll()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Tasks Found</span>
+            <div class="stat-icon" style="background:var(--amber-dim);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="stat-tasks">—</div>
+          <div class="stat-delta">TODO / FIXME in codebase</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Schedules Active</span>
+            <div class="stat-icon" style="background:var(--blue-dim);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="stat-schedules">—</div>
+          <div class="stat-delta">Automated workflows running</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">PRs Healed</span>
+            <div class="stat-icon" style="background:var(--green-dim);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="stat-heals">—</div>
+          <div class="stat-delta">Build failures auto-fixed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Agents Live</span>
+            <div class="stat-icon" style="background:var(--purple-dim);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="stat-agents">2</div>
+          <div class="stat-delta">CommitGuard · Scheduler · Healer</div>
+        </div>
+      </div>
+
+      <!-- Two-col body -->
+      <div class="two-col">
+        <!-- Recent Activity -->
+        <div class="panel" style="flex:1.5;">
+          <div class="panel-header">
+            <span class="panel-title">Recent Activity</span>
+            <button class="btn btn-secondary btn-sm" onclick="showPage('activity')">View all</button>
+          </div>
+          <div class="panel-body">
+            <div class="timeline" id="overview-timeline">
+              <div class="empty" style="padding:40px 0;">
+                <div class="empty-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div class="empty-title">No activity yet</div>
+                <div class="empty-sub">Events will appear here as agents work</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Roster -->
+        <div class="panel" style="flex:1; min-width:220px; max-width:280px;">
+          <div class="panel-header">
+            <span class="panel-title">Agents</span>
+          </div>
+          <div class="panel-body" id="agent-roster">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SUGGESTED TASKS ══ -->
+    <div class="page" id="page-suggested">
+      <div class="page-header">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">Suggested Tasks</div>
+            <div class="page-subtitle">AI-discovered TODOs with confidence scores — click Run to fix automatically</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="loadSuggestedTasks()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Reload
+            </button>
+            <button class="btn btn-primary btn-sm" id="scan-btn" onclick="triggerScan(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Scan Codebase
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-toolbar">
+        <div class="task-filter-group">
+          <button class="filter-chip active" onclick="filterTasks('all', this)">All</button>
+          <button class="filter-chip" onclick="filterTasks('TODO', this)">TODO</button>
+          <button class="filter-chip" onclick="filterTasks('FIXME', this)">FIXME</button>
+          <button class="filter-chip" onclick="filterTasks('HACK', this)">HACK</button>
+        </div>
+        <span class="task-count" id="task-count"></span>
+      </div>
+
+      <div class="task-grid" id="task-grid">
+        <!-- skeleton -->
+        <div style="display:contents" id="task-skeleton">
+          <div class="task-card"><div class="skeleton" style="height:120px;width:100%;border-radius:var(--r-md);"></div></div>
+          <div class="task-card"><div class="skeleton" style="height:120px;width:100%;border-radius:var(--r-md);"></div></div>
+          <div class="task-card"><div class="skeleton" style="height:120px;width:100%;border-radius:var(--r-md);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: SCHEDULES ══ -->
+    <div class="page" id="page-schedules">
+      <div class="page-header">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">Scheduled Tasks</div>
+            <div class="page-subtitle">Natural language prompts that run on a timer and self-heal on failure</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary btn-sm" onclick="openScheduleModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Prompt</th>
+                <th>Interval</th>
+                <th>Next Run</th>
+                <th>Last Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="schedules-tbody">
+              <tr><td colspan="6"><div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-title">No schedules yet</div><div class="empty-sub">Add a natural language prompt to automate recurring tasks</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: WEBHOOKS / SELF-HEAL ══ -->
+    <div class="page" id="page-webhooks">
+      <div class="page-header">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">Self-Healing PRs</div>
+            <div class="page-subtitle">Render build failures automatically diagnosed and fixed</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="testWebhook()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              Test Webhook
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 28px 12px; flex-shrink:0; display:flex; gap:8px; align-items:center;">
+        <div class="badge badge-success"><span class="badge-dot"></span>Watching /webhook/render</div>
+        <span style="font-size:12px;color:var(--text-3);">POST build.failed events to trigger autonomous healing</span>
+      </div>
+
+      <div class="heal-grid" id="heal-grid">
+        <div class="empty">
+          <div class="empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <div class="empty-title">No heals yet</div>
+          <div class="empty-sub">When Render fires a build.failed webhook, Jules will diagnose and push a fix automatically</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: ACTIVITY ══ -->
+    <div class="page" id="page-activity">
+      <div class="page-header">
+        <div class="page-title-row">
+          <div>
+            <div class="page-title">Activity Log</div>
+            <div class="page-subtitle">Live event stream from all running agents</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="clearFeed()">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed" id="feed"></div>
+
+      <div class="input-bar">
+        <div class="input-inner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3);flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <input type="text" id="prompt-input" placeholder="Give an agent a goal and press Enter…">
+          <button class="send-btn" onclick="submitPrompt()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main><!-- /main -->
+</div><!-- /app-shell -->
+
+<!-- ── Schedule Modal ───────────────────────────────────────── -->
+<div class="modal-backdrop" id="schedule-modal">
+  <div class="modal">
+    <div class="modal-title">New Scheduled Task</div>
+    <div class="field">
+      <label>Task Name</label>
+      <input id="m-name" placeholder="e.g. Nightly NPM audit" />
+    </div>
+    <div class="field">
+      <label>Natural Language Prompt</label>
+      <textarea id="m-prompt" placeholder="e.g. Run npm audit, fix any high severity issues, and commit the lockfile"></textarea>
+    </div>
+    <div class="field">
+      <label>Interval</label>
+      <select id="m-interval">
+        <option value="hourly">Every hour</option>
+        <option value="daily" selected>Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createSchedule()">Create Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ──────────────────────────────────────── -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════ */
+const state = {
+  agents: {},
+  tasks: [],
+  taskFilter: 'all',
+  timelineEvents: [],
+  heals: [],
+};
+
+/* ══════════════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════════════ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AGENTS
+══════════════════════════════════════════════════════════════ */
+const AGENT_COLORS = {
+  CommitGuardAgent: '#7C3AED',
+  ResearchAgent:    '#0EA5E9',
+  SuggestedTaskScanner: '#D97706',
+  SelfHeal:         '#16A34A',
+  default:          '#64748B',
+};
+
+function getAgentColor(id) {
+  for (const [k, v] of Object.entries(AGENT_COLORS)) {
+    if (id.includes(k) || id === k) return v;
+  }
+  return AGENT_COLORS.default;
+}
+
+function updateAgent(agentId, statusRaw) {
+  const status = statusRaw || 'Idle';
+  state.agents[agentId] = status;
+  renderAgentRoster();
+  document.getElementById('stat-agents').textContent = Object.keys(state.agents).length;
+}
+
+function renderAgentRoster() {
+  const roster = document.getElementById('agent-roster');
+  if (Object.keys(state.agents).length === 0) {
+    roster.innerHTML = `<div class="empty" style="padding:32px 0;"><div class="empty-sub">No agents registered yet</div></div>`;
+    return;
+  }
+  roster.innerHTML = '';
+  for (const [id, status] of Object.entries(state.agents)) {
+    const color = getAgentColor(id);
+    const s = status.toLowerCase();
+    let badgeClass = 'badge-idle';
+    if (s.includes('plan'))    badgeClass = 'badge-planning';
+    else if (s.includes('exec')) badgeClass = 'badge-executing';
+    else if (s.includes('block')) badgeClass = 'badge-blocked';
+    else if (s.includes('succ') || s.includes('complete')) badgeClass = 'badge-success';
+    else if (s.includes('fail')) badgeClass = 'badge-failed';
+    const row = document.createElement('div');
+    row.className = 'agent-row';
+    row.innerHTML = `
+      <div class="agent-avatar" style="background:${color}">${id.charAt(0)}</div>
+      <div class="agent-info">
+        <div class="agent-name">${id}</div>
+        <div class="agent-role" id="role-${id}"></div>
+      </div>
+      <div class="badge ${badgeClass}"><span class="badge-dot"></span>${status}</div>
+    `;
+    roster.appendChild(row);
+  }
+}
+
+// Seed default agents
+updateAgent('CommitGuardAgent', 'Idle');
+updateAgent('ResearchAgent', 'Idle');
+
+/* ══════════════════════════════════════════════════════════════
+   TIMELINE (Overview)
+══════════════════════════════════════════════════════════════ */
+function pushTimeline(title, meta, color) {
+  state.timelineEvents.unshift({ title, meta, color, time: new Date() });
+  if (state.timelineEvents.length > 30) state.timelineEvents.pop();
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const el = document.getElementById('overview-timeline');
+  if (state.timelineEvents.length === 0) return;
+  el.innerHTML = '';
+  state.timelineEvents.slice(0, 12).forEach(e => {
+    const t = document.createElement('div');
+    t.className = 'tl-entry';
+    t.innerHTML = `
+      <div class="tl-dot" style="background:${e.color}"></div>
+      <div class="tl-content">
+        <div class="tl-title">${e.title}</div>
+        <div class="tl-meta">${e.meta}</div>
+      </div>
+      <div class="tl-time">${fmtTime(e.time)}</div>
+    `;
+    el.appendChild(t);
+  });
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIVITY FEED
+══════════════════════════════════════════════════════════════ */
+function appendMessage(agentId, text, type, payload) {
+  const feed = document.getElementById('feed');
+  const color = getAgentColor(agentId);
+  const time = fmtTime(new Date());
+  const msg = document.createElement('div');
+  msg.className = 'msg';
+
+  let extra = '';
+  if (type === 'diff' && payload) {
+    extra = `
+      <div class="diff-viewer">
+        <div class="diff-header">
+          <span>Pending Approval</span>
+          <div class="diff-actions">
+            <button class="btn btn-danger btn-sm" onclick="sendApproval(false, this)">Reject</button>
+            <button class="btn btn-primary btn-sm" style="background:var(--green)" onclick="sendApproval(true, this)">Approve</button>
+          </div>
+        </div>
+        <div class="diff-content">
+          <span class="diff-add">+ ${payload.add || ''}</span>
+          <span class="diff-sub">- ${payload.sub || ''}</span>
+        </div>
+      </div>`;
+  } else if (type === 'code' && payload) {
+    extra = `<div class="code-block">${String(payload).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  }
+
+  msg.innerHTML = `
+    <div class="msg-av" style="background:${color}">${agentId.charAt(0)}</div>
+    <div class="msg-body">
+      <div class="msg-header">
+        <span class="msg-author">${agentId}</span>
+        <span class="msg-time">${time}</span>
+      </div>
+      <div class="msg-text">${text}</div>
+      ${extra}
+    </div>
+  `;
+  feed.appendChild(msg);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function clearFeed() {
+  document.getElementById('feed').innerHTML = '';
+}
+
+async function submitPrompt() {
+  const input = document.getElementById('prompt-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendMessage('User', text);
+  await fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ context: text }),
+  });
+}
+document.getElementById('prompt-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') submitPrompt();
+});
+
+async function sendApproval(approved, btn) {
+  const workflowId = window._currentWorkflowId;
+  if (!workflowId) { toast('No active workflow to approve', 'error'); return; }
+  btn.closest('.diff-viewer').innerHTML = `<div style="padding:16px;font-size:13px;color:var(--text-2)">${approved ? '✓ Approved' : '✗ Rejected'}</div>`;
+  await fetch(`/api/approve/${workflowId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approved }),
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SSE
+══════════════════════════════════════════════════════════════ */
+const evtSource = new EventSource('/stream');
+evtSource.onmessage = function(event) {
+  try {
+    const data   = JSON.parse(event.data);
+    const id     = data.agent_id || 'System';
+    const et     = data.event_type;
+    const pl     = data.payload || {};
+
+    if (pl.status) updateAgent(id, pl.status);
+
+    // Activity feed
+    const msgMap = {
+      planning:           () => appendMessage(id, `Planning: ${pl.context || ''}…`),
+      plan_created:       () => appendMessage(id, `Plan ready — ${pl.plan_steps} steps queued`),
+      executing:          () => appendMessage(id, 'Executing…'),
+      execution_completed:() => appendMessage(id, `Done: ${pl.result}`),
+      review_completed:   () => appendMessage(id, `Review: ${pl.verdict?.passed ? '✓ Passed' : '✗ Failed'} — ${pl.verdict?.feedback || ''}`),
+      approval_required:  () => { window._currentWorkflowId = pl.workflow_id; appendMessage(id, 'Approval required for this change:', 'diff', pl.diff); },
+      scan_started:       () => appendMessage(id, `Scanning codebase — ${pl.count || '?'} potential items found`),
+      scan_complete:      () => { appendMessage(id, `Scan complete: ${pl.count} tasks found`); loadSuggestedTasks(); updateStat('stat-tasks', pl.count); pushTimeline(`Scan complete: ${pl.count} tasks`, id, getAgentColor(id)); toast(`Found ${pl.count} tasks`, 'success'); },
+      task_started:       () => { appendMessage(id, `Running scheduled: "${pl.prompt?.slice(0,60)}"`); loadScheduledTasks(); pushTimeline(`Scheduled task started`, id, getAgentColor(id)); },
+      task_success:       () => { appendMessage(id, `Scheduled task succeeded (attempt ${pl.attempt})`); loadScheduledTasks(); pushTimeline('Scheduled task completed', id, 'var(--green)'); toast('Scheduled task succeeded', 'success'); },
+      heal_started:       () => { appendMessage(id, `Self-healing PR on branch \`${pl.branch}\`…`); pushHeal({ branch: pl.branch, status: 'healing', time: new Date() }); pushTimeline(`Healing ${pl.branch}`, id, 'var(--amber)'); },
+      heal_pushed:        () => { appendMessage(id, `Fix pushed to \`${pl.branch}\`: ${pl.root_cause}`); updateHealStatus(pl.branch, 'fixed', pl.root_cause); pushTimeline(`Healed ${pl.branch}`, id, 'var(--green)'); toast('PR fix pushed successfully', 'success'); updateStat('stat-heals', (parseInt(document.getElementById('stat-heals').textContent)||0)+1); },
+      heal_failed:        () => { appendMessage(id, `Heal failed: ${pl.reason || pl.error || 'unknown'}`); updateHealStatus(pl.branch || '?', 'failed', pl.reason || pl.error); pushTimeline('Heal failed', id, 'var(--red)'); toast('PR heal failed', 'error'); },
+      execution_failed:   () => appendMessage(id, `Failed: ${pl.error || 'unknown error'}`),
+    };
+    if (msgMap[et]) msgMap[et]();
+
+  } catch(e) { console.error('SSE parse error', e); }
+};
+
+function updateStat(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUGGESTED TASKS
+══════════════════════════════════════════════════════════════ */
+let _allTasks = [];
+
+async function loadSuggestedTasks() {
+  try {
+    const res = await fetch('/api/tasks');
+    const { tasks } = await res.json();
+    _allTasks = tasks || [];
+    renderTasks(_allTasks);
+    updateStat('stat-tasks', _allTasks.length);
+    const badge = document.getElementById('tasks-badge');
+    const pending = _allTasks.filter(t => t.status === 'pending').length;
+    badge.style.display = pending ? 'flex' : 'none';
+    badge.textContent = pending;
+  } catch(e) {
+    document.getElementById('task-grid').innerHTML = `<div class="empty" style="grid-column:1/-1;"><div class="empty-title">Could not load tasks</div></div>`;
+  }
+}
+
+function filterTasks(marker, btn) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  state.taskFilter = marker;
+  const filtered = marker === 'all' ? _allTasks : _allTasks.filter(t => t.marker === marker);
+  renderTasks(filtered);
+}
+
+function renderTasks(tasks) {
+  const grid = document.getElementById('task-grid');
+  document.getElementById('task-skeleton').remove && (document.getElementById('task-skeleton').style.display='none');
+
+  const countEl = document.getElementById('task-count');
+  countEl.textContent = tasks.length ? `${tasks.length} task${tasks.length===1?'':'s'}` : '';
+
+  if (tasks.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;">
+        <div class="empty">
+          <div class="empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div class="empty-title">No tasks found</div>
+          <div class="empty-sub">Click "Scan Codebase" to discover TODO and FIXME comments</div>
+          <button class="btn btn-primary" style="margin-top:8px;" onclick="triggerScan(this)">Scan Codebase</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  tasks.forEach(t => {
+    const conf  = t.confidence || 0;
+    const color = conf >= 70 ? 'var(--green)' : conf >= 40 ? 'var(--amber)' : 'var(--red)';
+    const r = 15;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (conf / 100) * circ;
+    const mclass = `marker-${t.marker.toLowerCase()}`;
+
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.dataset.marker = t.marker;
+    card.innerHTML = `
+      <div class="task-card-top">
+        <span class="task-marker-chip ${mclass}">${t.marker}</span>
+        <div class="conf-ring" title="${conf}% confidence">
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <circle class="conf-ring-track" cx="18" cy="18" r="${r}" />
+            <circle class="conf-ring-fill" cx="18" cy="18" r="${r}"
+              stroke="${color}"
+              stroke-dasharray="${circ}"
+              stroke-dashoffset="${offset}" />
+          </svg>
+          <div class="conf-value" style="color:${color}">${conf}</div>
+        </div>
+      </div>
+      <div class="task-location">${t.file_path}:${t.line_number}</div>
+      <div class="task-comment">${escHtml(t.comment)}</div>
+      <div class="task-rationale">${escHtml(t.rationale || '')}</div>
+      <div class="task-footer">
+        <span class="task-status-text">${t.status}</span>
+        <button class="btn btn-primary btn-sm" onclick="runSuggestedTask(${t.id}, this)"
+          ${t.status !== 'pending' ? 'disabled' : ''}>
+          ${t.status === 'pending' ? 'Run' : '✓ ' + t.status}
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function triggerScan(btn) {
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Scanning…`;
+  try {
+    await fetch('/api/tasks/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    toast('Scan started — results will appear shortly', 'info');
+  } catch(e) { toast('Scan failed to start', 'error'); }
+  setTimeout(() => { btn.disabled = false; btn.textContent = orig || 'Scan Codebase'; }, 20000);
+}
+
+async function runSuggestedTask(id, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  try {
+    await fetch(`/api/tasks/${id}/run`, { method: 'POST' });
+    toast('Task started', 'success');
+    showPage('activity');
+  } catch(e) { toast('Failed to start task', 'error'); btn.disabled = false; btn.textContent = 'Run'; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCHEDULES
+══════════════════════════════════════════════════════════════ */
+async function loadScheduledTasks() {
+  try {
+    const res = await fetch('/api/schedule');
+    const { schedules } = await res.json();
+    renderSchedules(schedules || []);
+    updateStat('stat-schedules', (schedules || []).filter(s => s.enabled).length);
+  } catch(e) {}
+}
+
+function renderSchedules(schedules) {
+  const tbody = document.getElementById('schedules-tbody');
+  if (!schedules.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="empty-title">No schedules yet</div><div class="empty-sub">Create a natural language prompt to automate recurring tasks</div><button class="btn btn-primary" style="margin-top:8px;" onclick="openScheduleModal()">New Schedule</button></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = schedules.map(s => {
+    const dot = s.last_status === 'success' ? 'var(--green)' : s.last_status === 'failed' ? 'var(--red)' : 'var(--text-3)';
+    const next = s.next_run_at ? new Date(s.next_run_at + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    const last = s.last_run_at ? new Date(s.last_run_at + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never';
+    return `
+      <tr>
+        <td><strong>${escHtml(s.name)}</strong></td>
+        <td style="max-width:200px;"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:12px;">${escHtml(s.prompt)}</span></td>
+        <td><span class="badge badge-idle" style="text-transform:capitalize;">${s.interval}</span></td>
+        <td class="td-mono">${next}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:7px;height:7px;border-radius:50%;background:${dot};flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--text-2);">${s.last_status || 'pending'} · ${last}</span>
+          </div>
+        </td>
+        <td style="text-align:right;"><button class="btn btn-secondary btn-sm" onclick="deleteSchedule(${s.id})">Remove</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openScheduleModal() {
+  document.getElementById('schedule-modal').classList.add('open');
+  setTimeout(() => document.getElementById('m-name').focus(), 100);
+}
+function closeScheduleModal() {
+  document.getElementById('schedule-modal').classList.remove('open');
+}
+document.getElementById('schedule-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeScheduleModal();
+});
+
+async function createSchedule() {
+  const name     = document.getElementById('m-name').value.trim();
+  const prompt   = document.getElementById('m-prompt').value.trim();
+  const interval = document.getElementById('m-interval').value;
+  if (!name || !prompt) { toast('Name and prompt are required', 'error'); return; }
+  try {
+    await fetch('/api/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, prompt, interval }),
+    });
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-prompt').value = '';
+    closeScheduleModal();
+    toast(`"${name}" scheduled ${interval}`, 'success');
+    loadScheduledTasks();
+  } catch(e) { toast('Failed to create schedule', 'error'); }
+}
+
+async function deleteSchedule(id) {
+  // API not yet implemented — show toast
+  toast('Delete coming soon', 'info');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SELF-HEAL / WEBHOOKS
+══════════════════════════════════════════════════════════════ */
+function pushHeal(data) {
+  state.heals.unshift(data);
+  renderHeals();
+}
+function updateHealStatus(branch, status, cause) {
+  const h = state.heals.find(h => h.branch === branch);
+  if (h) { h.status = status; h.cause = cause; }
+  renderHeals();
+}
+function renderHeals() {
+  const grid = document.getElementById('heal-grid');
+  if (!state.heals.length) return;
+  grid.innerHTML = '';
+  state.heals.forEach(h => {
+    const isFixed   = h.status === 'fixed';
+    const isFailed  = h.status === 'failed';
+    const isHealing = h.status === 'healing';
+    const iconBg    = isFixed ? 'var(--green-dim)' : isFailed ? 'var(--red-dim)' : 'var(--amber-dim)';
+    const iconColor = isFixed ? 'var(--green)' : isFailed ? 'var(--red)' : 'var(--amber)';
+    const icon = isFixed
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+      : isFailed
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`;
+    const title = isFixed ? 'Fix pushed' : isFailed ? 'Heal failed' : 'Healing in progress…';
+    const badgeClass = isFixed ? 'badge-success' : isFailed ? 'badge-failed' : 'badge-blocked';
+    const card = document.createElement('div');
+    card.className = 'heal-card';
+    card.innerHTML = `
+      <div class="heal-icon" style="background:${iconBg}">${icon}</div>
+      <div class="heal-info">
+        <div class="heal-title">${title}</div>
+        <div class="heal-branch">${h.branch}</div>
+        ${h.cause ? `<div class="heal-cause">${escHtml(h.cause)}</div>` : ''}
+        <div class="heal-meta">${fmtTime(h.time || new Date())}</div>
+      </div>
+      <div><span class="badge ${badgeClass}">${h.status}</span></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function testWebhook() {
+  await fetch('/webhook/render', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'build.failed',
+      branch: 'feature/test-heal',
+      logs: 'Error: Cannot find module \'./utils\'\n  at Module._resolveFilename',
+      diff: '-import utils from \'./utils\'\n+// removed import',
+    }),
+  });
+  toast('Test webhook fired', 'info');
+  showPage('webhooks');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATS
+══════════════════════════════════════════════════════════════ */
+async function refreshAll() {
+  await Promise.all([loadSuggestedTasks(), loadScheduledTasks()]);
+  toast('Refreshed', 'success');
+}
+
+async function emergencyStop() {
+  if (!confirm('Stop all running agents and workflows?')) return;
+  toast('Emergency stop engaged — all workflows terminated', 'error');
+  for (const id of Object.keys(state.agents)) updateAgent(id, 'Stopped');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const colors = { success: 'var(--green)', error: 'var(--red)', info: 'var(--blue)', warning: 'var(--amber)' };
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<div class="toast-dot" style="background:${colors[type]}"></div>${escHtml(msg)}`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 350);
+  }, 3500);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── CSS keyframe for spin ──────────────────────────────────── */
+const style = document.createElement('style');
+style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+document.head.appendChild(style);
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════ */
+loadSuggestedTasks();
+loadScheduledTasks();
+updateStat('stat-heals', 0);
+</script>
+</body>
+</html>

@@ -1,17 +1,14 @@
 import os
 import json
 import asyncio
+import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from sse_starlette.sse import EventSourceResponse
 from dbos import DBOS
-import redis.asyncio as redis
 from main import agent_loop, init_db
 
 app = FastAPI(title="Agent Mesh OS")
-
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-redis_client = redis.from_url(redis_url, decode_responses=True)
 
 @app.on_event("startup")
 def on_startup():
@@ -29,35 +26,44 @@ async def get_dashboard():
 @app.post("/api/run")
 async def run_workflow(payload: dict):
     context = payload.get("context", "Audit target environment")
-    # DBOS start_workflow executes a workflow asynchronously and returns a workflow handle
     handle = DBOS.start_workflow(agent_loop, context)
     return {"status": "started", "workflow_id": handle.workflow_id}
 
 @app.get("/stream")
 async def event_stream(request: Request):
-    """Streams events from the Redis agent_bus to the frontend."""
+    """Streams events from Postgres agent_bus using asyncpg LISTEN/NOTIFY."""
     async def event_generator():
-        last_id = "0-0"
-        tenant_id = "default"
-        stream_name = f"agent_bus:{tenant_id}"
+        # Connect to Postgres
+        # DBOS uses DBOS_DATABASE_URL or default local postgres
+        pg_url = os.getenv("DBOS_DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
         
-        while True:
-            if await request.is_disconnected():
-                break
-                
-            try:
-                # Block for up to 1s waiting for new messages
-                messages = await redis_client.xread({stream_name: last_id}, count=10, block=1000)
-                if messages:
-                    for stream, msgs in messages:
-                        for msg_id, msg_data in msgs:
-                            last_id = msg_id
-                            yield {
-                                "event": "message",
-                                "data": json.dumps(msg_data)
-                            }
-            except Exception as e:
-                print(f"Redis error: {e}")
-                await asyncio.sleep(1)
-                
+        try:
+            conn = await asyncpg.connect(pg_url)
+        except Exception as e:
+            yield {"event": "error", "data": f"Failed to connect to PG: {e}"}
+            return
+
+        queue = asyncio.Queue()
+
+        def on_notify(connection, pid, channel, payload):
+            queue.put_nowait(payload)
+            
+        await conn.add_listener('agent_bus', on_notify)
+        
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    payload = await asyncio.wait_for(queue.get(), timeout=1.0)
+                    yield {
+                        "event": "message",
+                        "data": payload
+                    }
+                except asyncio.TimeoutError:
+                    continue
+        finally:
+            await conn.remove_listener('agent_bus', on_notify)
+            await conn.close()
+
     return EventSourceResponse(event_generator())
