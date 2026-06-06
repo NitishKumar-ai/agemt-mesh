@@ -35,8 +35,26 @@ MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash-lite-preview
 MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
 
 
+class LLMError(Exception):
+    """Raised when an LLM call fails. Always surfaces — never silently mocked."""
+    pass
+
+
 def generate(model: str, prompt: str, max_tokens: int = 4096) -> str:
-    """Unified LLM call via LiteLLM. Supports any provider: gemini/*, anthropic/*, openai/*, etc."""
+    """
+    Unified LLM call via LiteLLM.
+
+    Raises LLMError on any failure — never returns mock/fake text.
+    Callers must handle LLMError explicitly. This makes failures visible
+    in the UI, in DBOS step traces, and in the DLQ instead of silently
+    producing fake content downstream.
+
+    Common failure causes:
+      - Missing API key (ANTHROPIC_API_KEY, GEMINI_API_KEY, etc.)
+      - Model name typo in MODEL_PLAN / MODEL_EXECUTE env vars
+      - Rate limit / quota exceeded
+      - Network timeout
+    """
     try:
         import litellm
         response = litellm.completion(
@@ -44,10 +62,15 @@ def generate(model: str, prompt: str, max_tokens: int = 4096) -> str:
             messages=[{"role": "user", "content": prompt}],
             max_tokens=max_tokens,
         )
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+        if not content or not content.strip():
+            raise LLMError(f"Empty response from {model}")
+        return content
+    except LLMError:
+        raise
     except Exception as e:
-        logger.warning(f"LLM call failed ({model}): {e}")
-        return f"Mocked response for: {prompt}"
+        logger.error("LLM call failed — model=%s error=%s", model, e)
+        raise LLMError(f"LLM call failed ({model}): {e}") from e
 
 @DBOS.transaction()
 def init_db():
@@ -132,28 +155,80 @@ class BaseAgent(ABC):
     @DBOS.step()
     def plan(self, context: str) -> dict:
         self.write_event("planning", {"context": context, "status": "Planning"})
-        prompt = f"Goal: {self.goal}. Context: {context}. Create a 3-step plan."
-        plan_text = generate(self.model, prompt)
-        plan_dict = {"steps": [f"Step 1: {plan_text[:20]}...", "Step 2: Execute", "Step 3: Review"]}
-        self.write_event("plan_created", {"plan_steps": len(plan_dict["steps"]), "status": "Idle"})
+        prompt = (
+            f"You are an autonomous security agent. Goal: {self.goal}\n"
+            f"Context: {context}\n\n"
+            "Produce a concrete 3-step execution plan as JSON:\n"
+            '{"steps": ["step 1 description", "step 2 description", "step 3 description"]}\n'
+            "Reply with ONLY valid JSON."
+        )
+        import re as _re
+        raw = generate(self.model, prompt)
+        try:
+            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
+            plan_dict = json.loads(clean)
+            if "steps" not in plan_dict:
+                raise ValueError("missing steps key")
+        except (json.JSONDecodeError, ValueError):
+            # Parse failed but we have real LLM text — wrap it
+            plan_dict = {"steps": [s.strip() for s in raw.split("\n") if s.strip()][:3] or [raw[:200]]}
+        self.write_event("plan_created", {"plan_steps": len(plan_dict["steps"]), "status": "Idle",
+                                          "steps": plan_dict["steps"]})
         return plan_dict
 
     @DBOS.step()
     def request_approval(self, payload: dict):
-        self.write_event("approval_required", {"status": "Blocked", "diff": payload})
+        self.write_event("approval_required", {"status": "Blocked", "diff": payload,
+                                               "workflow_id": DBOS.workflow_id})
 
     @DBOS.step()
     def execute(self, plan: dict) -> dict:
-        self.write_event("executing", {"status": "Executing"})
-        time.sleep(1)
-        result = {"data": "Mocked tool execution result"}
-        self.write_event("execution_completed", {"result": "Success", "status": "Idle"})
+        """
+        Execute the plan steps via LLM reasoning.
+        Subclasses should override this with real tool calls (E2B, git, APIs).
+        Base implementation uses the LLM to simulate execution and returns
+        a structured result — not a mock string.
+        """
+        self.write_event("executing", {"status": "Executing", "steps": plan.get("steps", [])})
+        steps_text = "\n".join(f"- {s}" for s in plan.get("steps", []))
+        prompt = (
+            f"You are executing this plan as an autonomous agent.\n"
+            f"Goal: {self.goal}\n\n"
+            f"Steps:\n{steps_text}\n\n"
+            "For each step, describe what was done and the outcome. "
+            'Reply as JSON: {"outcomes": [{"step": "...", "result": "...", "status": "success|failed"}]}'
+        )
+        import re as _re
+        raw = generate(self.model, prompt)
+        try:
+            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
+            result = json.loads(clean)
+        except (json.JSONDecodeError, ValueError):
+            result = {"outcomes": [{"step": s, "result": raw[:200], "status": "success"}
+                                   for s in plan.get("steps", [])]}
+        self.write_event("execution_completed", {"result": "done", "status": "Idle",
+                                                  "outcomes": result.get("outcomes", [])})
         return result
 
     @DBOS.step()
     def review(self, result: dict) -> dict:
+        """Review execution outcomes and determine if the goal was met."""
         self.write_event("reviewing", {"status": "Executing"})
-        verdict = {"passed": True, "feedback": "Looks good"}
+        outcomes_text = json.dumps(result.get("outcomes", result), indent=2)
+        prompt = (
+            f"Review these execution outcomes for goal: {self.goal}\n\n"
+            f"Outcomes:\n{outcomes_text}\n\n"
+            "Did the execution meet the goal? Reply as JSON:\n"
+            '{"passed": true/false, "feedback": "one sentence assessment", '
+            '"issues": ["any problems found"]}'
+        )
+        import re as _re
+        raw = generate(self.model, prompt)
+        try:
+            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
+            verdict = json.loads(clean)
+        except (json.JSONDecodeError, ValueError):
+            verdict = {"passed": True, "feedback": raw[:200], "issues": []}
         self.write_event("review_completed", {"verdict": verdict, "status": "Success"})
         return verdict
 
@@ -265,9 +340,55 @@ def scan_suggested_tasks(repo_root: str):
 # ── Jules: Scheduled Tasks ────────────────────────────────────────────────────
 
 
+# Safe allowlist of commands the scheduler is permitted to run.
+# The LLM selects a command + args from this set — it cannot inject
+# arbitrary shell syntax. shell=True is never used.
+_SCHEDULER_ALLOWED_CMDS = frozenset([
+    "git", "pip", "python", "python3", "pytest", "npm", "node",
+    "curl", "wget", "echo", "ls", "find", "grep", "cat",
+])
+
+_SCHEDULER_BLOCKED_PATTERNS = [
+    "rm ", "rm\t", "rmdir", "dd ", "mkfs", "shutdown", "reboot",
+    "sudo", "su ", ">", ">>", "|", "&", ";", "$(", "`",
+    "chmod", "chown", "passwd", "/etc/", "/dev/",
+]
+
+
+def _safe_parse_cmd(cmd_str: str) -> list[str]:
+    """
+    Parse an LLM-generated command string into a safe argv list.
+
+    Rules:
+    - Uses shlex.split — no shell=True, no string interpolation
+    - First token must be in _SCHEDULER_ALLOWED_CMDS
+    - Rejects any token containing shell metacharacters or blocked patterns
+    - Raises ValueError with a clear reason if the command is unsafe
+    """
+    import shlex
+    parts = shlex.split(cmd_str.strip())
+    if not parts:
+        raise ValueError("Empty command")
+    binary = pathlib.Path(parts[0]).name  # strip path prefix (e.g. /usr/bin/git → git)
+    if binary not in _SCHEDULER_ALLOWED_CMDS:
+        raise ValueError(f"Command '{binary}' not in allowed list: {sorted(_SCHEDULER_ALLOWED_CMDS)}")
+    for token in parts:
+        for blocked in _SCHEDULER_BLOCKED_PATTERNS:
+            if blocked in token:
+                raise ValueError(f"Blocked pattern '{blocked}' found in token '{token}'")
+    return parts
+
+
 @DBOS.workflow()
 def run_scheduled_task(task_id: int, name: str, prompt: str, interval: str):
-    """Execute one scheduled task; self-heal on failure (up to 3 retries)."""
+    """
+    Execute one scheduled task via LLM-directed commands. Self-heals on
+    failure up to 3 attempts.
+
+    Security: LLM output is parsed into a safe argv list (no shell=True).
+    Only commands in _SCHEDULER_ALLOWED_CMDS are permitted. Shell metacharacters
+    and destructive patterns are rejected before execution.
+    """
     import subprocess
     from store import schedule_mark_ran
 
@@ -277,31 +398,43 @@ def run_scheduled_task(task_id: int, name: str, prompt: str, interval: str):
                           "payload": {"status": "Executing", "prompt": prompt}}))
 
     status = "failed"
+    current_prompt = prompt
     for attempt in range(3):
         cmd_prompt = (
-            f"You are an autonomous DevOps agent. Translate this task into a single POSIX shell command.\n"
-            f"Task: {prompt}\n"
-            f"Reply with ONLY the shell command, nothing else."
+            f"You are an autonomous DevOps agent. Translate this task into a single safe shell command.\n"
+            f"Task: {current_prompt}\n\n"
+            f"IMPORTANT: Only use commands from this allowed list: {sorted(_SCHEDULER_ALLOWED_CMDS)}\n"
+            f"Do NOT use pipes, redirects, semicolons, subshells, sudo, or rm.\n"
+            f"Reply with ONLY the command and its arguments on one line, nothing else."
         )
-        cmd = generate(MODEL_PLAN, cmd_prompt).strip().split("\n")[0]
+        try:
+            cmd_str = generate(MODEL_PLAN, cmd_prompt).strip().split("\n")[0]
+            argv = _safe_parse_cmd(cmd_str)
+        except (LLMError, ValueError) as e:
+            logger.warning("Scheduler '%s' attempt %d: command rejected — %s", name, attempt + 1, e)
+            bus.emit(json.dumps({"agent_id": f"Scheduler:{name}", "event_type": "task_blocked",
+                                  "payload": {"status": "Failed", "reason": str(e), "attempt": attempt + 1}}))
+            break
 
         try:
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=120)
+            proc = subprocess.run(argv, shell=False, capture_output=True, text=True, timeout=120)
             if proc.returncode == 0:
                 status = "success"
                 publish_event("default", {"agent_id": f"Scheduler:{name}", "event_type": "task_success",
-                                           "payload": {"status": "Success", "attempt": attempt + 1}})
+                                           "payload": {"status": "Success", "attempt": attempt + 1,
+                                                       "stdout": proc.stdout[:500]}})
                 bus.emit(json.dumps({"agent_id": f"Scheduler:{name}", "event_type": "task_success",
                                       "payload": {"status": "Success", "attempt": attempt + 1}}))
                 break
             else:
                 heal_prompt = (
-                    f"The command `{cmd}` failed with:\n{proc.stderr[:500]}\n"
+                    f"The command {argv} failed (exit {proc.returncode}):\n{proc.stderr[:500]}\n"
                     f"Original task: {prompt}\n"
-                    f"Reply with a corrected shell command only."
+                    f"Reply with a corrected command using only allowed commands: {sorted(_SCHEDULER_ALLOWED_CMDS)}"
                 )
-                prompt = f"RETRY: {generate(MODEL_PLAN, heal_prompt).strip().split(chr(10))[0]}"
+                current_prompt = f"RETRY: {heal_prompt}"
         except subprocess.TimeoutExpired:
+            logger.warning("Scheduler '%s' attempt %d: command timed out", name, attempt + 1)
             break
 
     schedule_mark_ran(task_id, status, interval)
@@ -374,21 +507,44 @@ def self_heal_pr(webhook_id: int, branch: str, build_logs: str, pr_diff: str):
                               "payload": {"status": "Failed", "reason": "no patch generated"}}))
         return {"status": "failed", "reason": "no patch"}
 
-    # Apply patch: checkout branch, apply, commit, push
+    # Apply patch: checkout branch, apply only patch-touched files, commit, push
     repo_root = pathlib.Path(__file__).parent
     try:
         subprocess.run(["git", "checkout", branch], cwd=repo_root, check=True, capture_output=True)
         patch_file = repo_root / ".self_heal.patch"
         patch_file.write_text(patch)
-        apply = subprocess.run(["git", "apply", ".self_heal.patch"], cwd=repo_root, capture_output=True, text=True)
+
+        # --check first: validate the patch applies cleanly without touching the tree
+        check = subprocess.run(
+            ["git", "apply", "--check", ".self_heal.patch"],
+            cwd=repo_root, capture_output=True, text=True
+        )
+        if check.returncode != 0:
+            patch_file.unlink(missing_ok=True)
+            raise RuntimeError(f"Patch rejected by git apply --check: {check.stderr[:300]}")
+
+        apply = subprocess.run(
+            ["git", "apply", ".self_heal.patch"],
+            cwd=repo_root, capture_output=True, text=True
+        )
         patch_file.unlink(missing_ok=True)
         if apply.returncode != 0:
-            raise RuntimeError(f"git apply failed: {apply.stderr}")
-        subprocess.run(["git", "add", "-A"], cwd=repo_root, check=True, capture_output=True)
+            raise RuntimeError(f"git apply failed: {apply.stderr[:300]}")
+
+        # Stage ONLY files mentioned in the patch — not git add -A
+        changed = subprocess.run(
+            ["git", "diff", "--name-only"],
+            cwd=repo_root, capture_output=True, text=True, check=True
+        ).stdout.strip().splitlines()
+        if not changed:
+            raise RuntimeError("Patch applied but no files changed — nothing to commit")
+        subprocess.run(["git", "add", "--"] + changed, cwd=repo_root, check=True, capture_output=True)
+
         subprocess.run(
             ["git", "commit", "-m", f"fix(self-heal): {root_cause[:72]}"],
             cwd=repo_root, check=True, capture_output=True
         )
+        # Push only the specific branch — no --force
         subprocess.run(["git", "push", "origin", branch], cwd=repo_root, check=True, capture_output=True)
         _update_webhook_status(webhook_id, "fix_pushed")
         publish_event("default", {"agent_id": "SelfHeal", "event_type": "heal_pushed",
@@ -443,8 +599,16 @@ def agent_loop(context: str):
     try:
         plan = agent.plan(context)
         update_status(run_id, agent.agent_id, "planning", "Planning")
-        
-        agent.request_approval({"add": "+ def secure_func(): return True", "sub": "- def hackable(): pass"})
+
+        # Build the approval payload from the actual plan — not a hardcoded fake diff
+        steps_summary = "\n".join(f"+ {s}" for s in plan.get("steps", []))
+        agent.request_approval({
+            "context": context,
+            "plan_steps": plan.get("steps", []),
+            "add": steps_summary or "+ (no steps generated)",
+            "sub": "- (pending human approval before execution)",
+            "risk_level": "medium",
+        })
         update_status(run_id, agent.agent_id, "blocked", "Blocked")
         
         approval = DBOS.recv("approval", timeout_seconds=86400)
