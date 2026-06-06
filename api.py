@@ -38,6 +38,8 @@ from store import (
     marketing_update_draft,
     marketing_approve_campaign,
     marketing_list_audit_events,
+    marketing_list_audience_embeddings,
+    marketing_save_audience_embedding,
     commitguard_create_scan,
     commitguard_get_scan,
     commitguard_get_scan_with_findings,
@@ -258,6 +260,30 @@ async def create_marketing_campaign(payload: dict):
         raise HTTPException(status_code=400, detail="source_finding_id from a verified finding is required")
     if channel not in {"email", "linkedin", "report"}:
         raise HTTPException(status_code=400, detail="channel must be email, linkedin, or report")
+
+    # ── HF audience deduplication gate ────────────────────────────────────────
+    # Embed the new audience string and compare against existing campaigns.
+    # Blocks creation if cosine similarity > 0.92 (near-duplicate audience).
+    # Fails open — if HF is offline, dedup is skipped and campaign is created.
+    try:
+        from agents.marketing.hf_harness import get_harness
+        harness = get_harness(timeout=4.0)
+        prior_embeddings = marketing_list_audience_embeddings(limit=50)
+        is_dup, sim_score = harness.deduplicate_audience(audience, prior_embeddings)
+        if is_dup:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Audience is too similar to an existing campaign (similarity {sim_score:.0%}). "
+                       "Refine your audience description to target a distinct segment."
+            )
+        # Compute embedding now so we can persist it after creation
+        new_embedding = harness.embed(audience)
+    except HTTPException:
+        raise
+    except Exception:
+        new_embedding = None  # HF offline — create campaign without embedding
+    # ──────────────────────────────────────────────────────────────────────────
+
     try:
         campaign_id, _ = marketing_create_campaign(
             source_finding_id, name, audience, finding_summary, value_proposition, channel
@@ -269,6 +295,14 @@ async def create_marketing_campaign(payload: dict):
         if msg == "source_finding_not_verified":
             raise HTTPException(status_code=409, detail="Source finding must be verified before campaign creation") from exc
         raise
+
+    # Persist the embedding for future dedup checks (best-effort)
+    if new_embedding:
+        try:
+            marketing_save_audience_embedding(campaign_id, new_embedding)
+        except Exception:
+            pass  # Non-critical — dedup degrades gracefully without this row
+
     return {"status": "created", "campaign_id": campaign_id}
 
 

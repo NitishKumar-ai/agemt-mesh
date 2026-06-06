@@ -14,9 +14,11 @@ import json
 import logging
 import os
 import re
+from typing import Optional
 from dbos import DBOS
 from main import generate, MODEL_EXECUTE, update_status
 from events import bus
+from agents.marketing.hf_harness import get_harness
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +75,62 @@ def _fetch_nvd_summary(cve_id: str) -> dict:
 # ── DBOS steps ────────────────────────────────────────────────────────────────
 
 @DBOS.step()
-def _research_audience(run_id: str, audience: str, channel: str) -> dict:
-    """Use the LLM to profile the target audience for the campaign channel."""
+def _hf_enrich(run_id: str, finding_text: str, audience: str) -> dict:
+    """
+    Run the HF ML intern harness before the LLM steps.
+
+    Produces:
+      hf_result = {
+        "ner":  {"orgs": [...], "products": [...], "raw": [...]},
+        "risk": {"risk_level": "high"|None, "score": 0.87},
+      }
+
+    Both outputs are injected into the LLM prompts downstream so the
+    model gets ML-grounded priors instead of cold-starting.
+    This step never raises — harness guarantees safe fallbacks.
+
+    Pipeline position:
+      run_researcher
+        ├─ _hf_enrich()          ← this step (fast, ~200ms)
+        ├─ _research_audience()  ← LLM, enriched with NER orgs/products
+        └─ _research_finding()   ← LLM, risk_level seeded from HF classifier
+    """
+    update_status(run_id, "ResearcherAgent", "hf_enrich", "running")
+    harness = get_harness(timeout=5.0)
+    result = harness.enrich(finding_text, audience)
+    update_status(run_id, "ResearcherAgent", "hf_enrich", "done")
+    _emit(run_id, "hf_enrich_done", {
+        "orgs": result["ner"]["orgs"],
+        "products": result["ner"]["products"],
+        "risk_level_hf": result["risk"]["risk_level"],
+        "risk_score_hf": result["risk"]["score"],
+    })
+    return result
+
+
+@DBOS.step()
+def _research_audience(run_id: str, audience: str, channel: str, hf_result: Optional[dict] = None) -> dict:
+    """
+    Use the LLM to profile the target audience for the campaign channel.
+    Accepts optional hf_result from _hf_enrich to inject NER-extracted
+    org/product names into the prompt, giving the model real named entities
+    rather than having it guess or hallucinate company names.
+    """
     update_status(run_id, "ResearcherAgent", "research_audience", "running")
+
+    # Build NER context hint for the prompt
+    ner_hint = ""
+    if hf_result:
+        orgs = hf_result.get("ner", {}).get("orgs", [])
+        products = hf_result.get("ner", {}).get("products", [])
+        parts = []
+        if orgs:
+            parts.append(f"Known organizations from finding: {', '.join(orgs[:5])}")
+        if products:
+            parts.append(f"Known products/technologies from finding: {', '.join(products[:5])}")
+        if parts:
+            ner_hint = "\nML-extracted entities (use these in your profile where relevant):\n" + "\n".join(parts) + "\n"
+
     prompt = (
         "You are a B2B market researcher. Given the target audience and channel below, "
         "produce a concise JSON object with these keys:\n"
@@ -84,7 +139,8 @@ def _research_audience(run_id: str, audience: str, channel: str) -> dict:
         "  pain_points: top 3 security pain points this audience faces (list of strings)\n"
         "  tone: recommended writing tone for this channel (string, e.g. 'formal', 'friendly', 'technical')\n"
         "  hook: one-sentence attention hook that resonates with this audience (string)\n\n"
-        f"Audience: {audience}\nChannel: {channel}\n\n"
+        f"Audience: {audience}\nChannel: {channel}\n"
+        f"{ner_hint}\n"
         "Reply with ONLY valid JSON, no markdown fences."
     )
     raw = generate(MODEL_EXECUTE, prompt, max_tokens=512)
@@ -106,10 +162,15 @@ def _research_audience(run_id: str, audience: str, channel: str) -> dict:
 
 
 @DBOS.step()
-def _research_finding(run_id: str, finding_summary: str, evidence: str) -> dict:
+def _research_finding(run_id: str, finding_summary: str, evidence: str, hf_result: Optional[dict] = None) -> dict:
     """
     Extract CVE IDs from the finding, fetch NVD context, and ask the LLM
     to produce a risk brief suitable for use in campaign copy.
+
+    If hf_result is provided, the HF zero-shot classifier's risk_level
+    is injected as a prior into the LLM prompt. This anchors the model
+    to an ML-grounded estimate rather than a cold guess, and means the
+    final risk_level is a synthesis of ML signal + LLM reasoning.
     """
     update_status(run_id, "ResearcherAgent", "research_finding", "running")
     cve_ids = _extract_cve_ids(f"{finding_summary} {evidence}")
@@ -124,6 +185,18 @@ def _research_finding(run_id: str, finding_summary: str, evidence: str) -> dict:
             lines.append(f"- {e['id']} ({score}): {e['description'][:200]}")
         nvd_context = "\nNVD context:\n" + "\n".join(lines)
 
+    # Build HF risk prior hint
+    hf_risk_hint = ""
+    if hf_result:
+        hf_risk = hf_result.get("risk", {})
+        hf_level = hf_risk.get("risk_level")
+        hf_score = hf_risk.get("score", 0.0)
+        if hf_level and hf_score >= 0.40:
+            hf_risk_hint = (
+                f"\nML classifier prior: risk_level={hf_level} (confidence={hf_score:.0%}). "
+                "Use this as a starting point but override if the evidence warrants it.\n"
+            )
+
     prompt = (
         "You are a security analyst writing for a B2B marketing brief. "
         "Produce a JSON object with these keys:\n"
@@ -133,7 +206,8 @@ def _research_finding(run_id: str, finding_summary: str, evidence: str) -> dict:
         "  remediation_hint: one sentence on how this class of issue is typically fixed (string)\n"
         "  cve_ids: list of CVE IDs mentioned (list of strings, empty if none)\n\n"
         f"Finding: {finding_summary}\nEvidence excerpt: {evidence[:500]}"
-        f"{nvd_context}\n\n"
+        f"{nvd_context}"
+        f"{hf_risk_hint}\n"
         "Reply with ONLY valid JSON, no markdown fences."
     )
     raw = generate(MODEL_EXECUTE, prompt, max_tokens=512)
@@ -172,15 +246,28 @@ def run_researcher(
     Returns a research_brief dict consumed by ContentWriterAgent.
     """
     _emit(run_id, "researcher_started", {"campaign_id": campaign_id, "status": "Researching"})
-    audience_profile = _research_audience(run_id, audience, channel)
-    finding_brief = _research_finding(run_id, finding_summary, evidence)
+
+    # Step 0: HF ML intern — fast, fallback-safe, runs before LLM steps
+    hf_result = _hf_enrich(run_id, f"{finding_summary}\n{evidence}", audience)
+
+    # Steps 1 + 2: LLM research, enriched with HF priors
+    audience_profile = _research_audience(run_id, audience, channel, hf_result=hf_result)
+    finding_brief = _research_finding(run_id, finding_summary, evidence, hf_result=hf_result)
+
     brief = {
         "campaign_id": campaign_id,
         "audience_profile": audience_profile,
         "finding_brief": finding_brief,
+        "hf_enrichment": {          # pass-through for audit / debugging
+            "orgs": hf_result.get("ner", {}).get("orgs", []),
+            "products": hf_result.get("ner", {}).get("products", []),
+            "hf_risk_level": hf_result.get("risk", {}).get("risk_level"),
+            "hf_risk_score": hf_result.get("risk", {}).get("score", 0.0),
+        },
     }
     _emit(run_id, "researcher_done", {"campaign_id": campaign_id, "status": "Idle",
-                                      "risk_level": finding_brief.get("risk_level")})
+                                      "risk_level": finding_brief.get("risk_level"),
+                                      "hf_risk_level": hf_result.get("risk", {}).get("risk_level")})
     return brief
 
 

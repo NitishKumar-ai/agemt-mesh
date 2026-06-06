@@ -20,6 +20,7 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from dbos import DBOS
 from main import update_status, MODEL_EXECUTE
 from store import marketing_get_campaign, marketing_list_audit_events
@@ -53,7 +54,7 @@ def _scheduled_today() -> int:
 
 
 @DBOS.transaction()
-def _audience_last_scheduled(audience: str) -> datetime | None:
+def _audience_last_scheduled(audience: str) -> Optional[datetime]:
     """Return the last time this exact audience string was scheduled, or None."""
     from sqlalchemy import text
     row = DBOS.sql_session.execute(text(
@@ -67,7 +68,7 @@ def _audience_last_scheduled(audience: str) -> datetime | None:
 
 @DBOS.transaction()
 def _mark_scheduled(campaign_id: int, audience: str, channel: str,
-                    typefully_id: str | None) -> None:
+                    typefully_id: Optional[str]) -> None:
     """Audit-log the schedule action and update campaign status."""
     from sqlalchemy import text
     from store import _audit  # reuse existing audit helper

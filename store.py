@@ -135,6 +135,7 @@ def init_business_tables() -> None:
             subject TEXT,
             body TEXT,
             approval_note TEXT,
+            audience_embedding TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -308,6 +309,31 @@ def security_verify_finding(finding_id: int, verified_by: str) -> bool:
 
 
 # ── Marketing Campaigns ───────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def marketing_list_audience_embeddings(limit: int = 50) -> list[list[float]]:
+    """Return the last `limit` non-null audience embeddings for dedup checks."""
+    rows = DBOS.sql_session.execute(text(
+        "SELECT audience_embedding FROM marketing_campaigns "
+        "WHERE audience_embedding IS NOT NULL "
+        "ORDER BY created_at DESC LIMIT :lim"
+    ), {"lim": limit}).fetchall()
+    result = []
+    for row in rows:
+        try:
+            result.append(json.loads(row[0]))
+        except (TypeError, ValueError):
+            pass
+    return result
+
+
+@DBOS.transaction()
+def marketing_save_audience_embedding(campaign_id: int, embedding: list[float]) -> None:
+    """Persist the HF audience embedding so future campaigns can dedup against it."""
+    DBOS.sql_session.execute(text(
+        "UPDATE marketing_campaigns SET audience_embedding=:emb WHERE id=:cid"
+    ), {"emb": json.dumps(embedding), "cid": campaign_id})
+
 
 @DBOS.transaction()
 def marketing_list_campaigns() -> list:
