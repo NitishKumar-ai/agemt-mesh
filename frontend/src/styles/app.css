@@ -19,6 +19,7 @@
   background: var(--bg);
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
 * { box-sizing: border-box; }
 html, body, #root { width: 100%; height: 100%; margin: 0; }
 body { overflow: hidden; background: var(--bg); }

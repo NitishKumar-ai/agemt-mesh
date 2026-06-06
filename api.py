@@ -274,36 +274,27 @@ async def create_marketing_campaign(payload: dict):
 
 @app.post("/api/marketing/campaigns/{campaign_id}/generate")
 async def generate_campaign_draft(campaign_id: int):
+    """
+    Start the full Research → Write pipeline via marketing_pipeline workflow.
+    The draft lands in the DB asynchronously; the SSE stream emits progress.
+    The endpoint returns immediately with the workflow_id for tracking.
+    """
+    from agents.marketing.scheduler import marketing_pipeline
     campaign = marketing_get_campaign(campaign_id)
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
 
-    prompt = (
-        "You are a responsible B2B security marketing writer. Create a concise outreach draft based only "
-        "on the supplied evidence. Do not invent claims, contacts, urgency, or customer impact. "
-        "Do not threaten, shame, or imply unauthorized access. The draft must invite a conversation and "
-        "state that a human reviewed the finding. Reply exactly as:\nSUBJECT: <subject>\nBODY: <body>\n\n"
-        f"Channel: {campaign['channel']}\nAudience: {campaign['audience']}\n"
-        f"Finding: {campaign['finding_summary']}\n"
-        f"Value proposition: {campaign['value_proposition'] or 'Independent security review'}"
-    )
-    raw = generate(MODEL_PLAN, prompt)
-    subject = f"Security review opportunity for {campaign['audience']}"
-    body = raw
-    if raw.startswith("Mocked response for:"):
-        body = (
-            f"We identified a security pattern relevant to {campaign['audience']}: "
-            f"{campaign['finding_summary']}. Our team can provide an evidence-backed review and remediation plan. "
-            "Would a short conversation be useful?"
-        )
-    for line in raw.splitlines():
-        if line.startswith("SUBJECT:"):
-            subject = line[len("SUBJECT:"):].strip()
-        elif line.startswith("BODY:"):
-            body = line[len("BODY:"):].strip()
+    # Fetch the source finding's evidence for the researcher
+    from store import security_list_findings
+    findings = security_list_findings()
+    evidence = ""
+    for f in findings:
+        if f["id"] == campaign.get("source_finding_id"):
+            evidence = f.get("evidence", "")
+            break
 
-    marketing_update_draft(campaign_id, subject, body)
-    return {"status": "review_required", "subject": subject, "body": body}
+    handle = DBOS.start_workflow(marketing_pipeline, campaign_id, evidence)
+    return {"status": "pipeline_started", "workflow_id": handle.workflow_id}
 
 
 @app.post("/api/marketing/campaigns/{campaign_id}/approve")
@@ -315,6 +306,24 @@ async def approve_marketing_campaign(campaign_id: int, payload: dict):
     if result == "no_draft":
         raise HTTPException(status_code=409, detail="Generate a draft before approval")
     return {"status": "approved"}
+
+
+@app.post("/api/marketing/campaigns/{campaign_id}/schedule")
+async def schedule_marketing_campaign(campaign_id: int):
+    """
+    Schedule an approved campaign via the SchedulerAgent (Typefully).
+    Enforces rate limits and consent checks before scheduling.
+    """
+    from agents.marketing.scheduler import run_scheduler
+    campaign = marketing_get_campaign(campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign["status"] != "approved":
+        raise HTTPException(status_code=409, detail="Campaign must be approved before scheduling")
+    result = run_scheduler(f"manual-{campaign_id}", campaign_id)
+    if not result.get("ok"):
+        raise HTTPException(status_code=429, detail=result.get("reason", "Scheduling blocked"))
+    return {"status": "scheduled", "method": result.get("method"), "typefully_id": result.get("typefully_id")}
 
 
 @app.get("/api/marketing/audit-events")

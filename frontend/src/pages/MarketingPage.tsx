@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Check, History, Megaphone, ShieldCheck, Sparkles } from "lucide-react";
+import { CalendarClock, Check, History, Loader2, Megaphone, ShieldCheck, Sparkles } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { api } from "../lib/api";
 import type { MarketingAuditEvent, MarketingCampaign, SecurityFinding } from "../lib/types";
@@ -27,6 +27,8 @@ export function MarketingPage() {
   const [auditEvents, setAuditEvents] = useState<MarketingAuditEvent[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [busy, setBusy] = useState<number>();
+  // Track which campaigns have a pipeline running (workflow_id → campaign_id)
+  const [pipelines, setPipelines] = useState<Record<number, string>>({});
 
   async function load() {
     const [campaignResponse, findingResponse, auditResponse] = await Promise.all([
@@ -54,10 +56,22 @@ export function MarketingPage() {
   async function generate(id: number) {
     setBusy(id);
     try {
-      await api.generateMarketingCampaign(id);
-      await load();
+      // Kicks off the Research → Write pipeline; poll until draft lands in DB
+      const res = await api.generateMarketingCampaign(id);
+      setPipelines((prev) => ({ ...prev, [id]: res.workflow_id }));
+      // Poll every 3s for up to 90s for the draft to appear
+      for (let i = 0; i < 30; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const updated = await api.listMarketingCampaigns();
+        const campaign = updated.campaigns.find((c) => c.id === id);
+        if (campaign?.subject) {
+          setCampaigns(updated.campaigns);
+          break;
+        }
+      }
     } finally {
       setBusy(undefined);
+      setPipelines((prev) => { const n = { ...prev }; delete n[id]; return n; });
     }
   }
 
@@ -65,6 +79,16 @@ export function MarketingPage() {
     setBusy(id);
     try {
       await api.approveMarketingCampaign(id, "Approved in Agent Mesh marketing workspace");
+      await load();
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function schedule(id: number) {
+    setBusy(id);
+    try {
+      await api.scheduleMarketingCampaign(id);
       await load();
     } finally {
       setBusy(undefined);
@@ -149,12 +173,24 @@ export function MarketingPage() {
                 </div>
               )}
               <footer>
-                <button className="secondary-button" disabled={busy === campaign.id} onClick={() => void generate(campaign.id)}>
-                  <Sparkles size={14} />{campaign.body ? "Regenerate draft" : "Generate draft"}
-                </button>
+                {pipelines[campaign.id] ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--primary)", fontSize: 13, fontWeight: 600 }}>
+                    <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                    Research &amp; writing in progress…
+                  </div>
+                ) : (
+                  <button className="secondary-button" disabled={busy === campaign.id} onClick={() => void generate(campaign.id)}>
+                    <Sparkles size={14} />{campaign.body ? "Regenerate draft" : "Generate draft"}
+                  </button>
+                )}
                 {campaign.status === "review_required" && (
                   <button className="primary-button" disabled={busy === campaign.id} onClick={() => void approve(campaign.id)}>
                     <Check size={14} />Approve draft
+                  </button>
+                )}
+                {campaign.status === "approved" && (
+                  <button className="primary-button" disabled={busy === campaign.id} onClick={() => void schedule(campaign.id)}>
+                    <CalendarClock size={14} />Schedule via Typefully
                   </button>
                 )}
               </footer>

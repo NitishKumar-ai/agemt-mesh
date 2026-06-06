@@ -80,7 +80,8 @@ export const api = {
   },
 
   generateMarketingCampaign(campaignId: number) {
-    return json<{ status: string; subject: string; body: string }>(`/api/marketing/campaigns/${campaignId}/generate`, {
+    // Now starts the full Research → Write pipeline; returns workflow_id for SSE tracking
+    return json<{ status: string; workflow_id: string }>(`/api/marketing/campaigns/${campaignId}/generate`, {
       method: "POST"
     });
   },
@@ -90,6 +91,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ note })
     });
+  },
+
+  scheduleMarketingCampaign(campaignId: number) {
+    return json<{ status: string; method: string; typefully_id: string | null }>(
+      `/api/marketing/campaigns/${campaignId}/schedule`,
+      { method: "POST" }
+    );
   },
 
   runWorkflow(context: string) {
