@@ -1,4 +1,4 @@
-import type { GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, ScheduledTask, SecurityFinding, SuggestedTask } from "./types";
+import type { AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, ScheduledTask, SecurityFinding, SuggestedTask, WorkflowRun } from "./types";
 
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -148,5 +148,33 @@ export const api = {
   getCommitGuardFindings(jobId: string) {
     return json<{ findings: unknown[]; findings_truncated: boolean }>
       (`/api/commitguard/findings/${jobId}`);
+  },
+
+  // Sessions
+  listSessions() {
+    return json<{ sessions: AgentSession[] }>("/api/sessions");
+  },
+
+  getSession(runId: string) {
+    return json<{ steps: AgentStep[] }>(`/api/sessions/${runId}`);
+  },
+
+  // Workflows
+  listWorkflows() {
+    return json<{ workflows: WorkflowRun[]; dlq: DlqEvent[] }>("/api/workflows");
+  },
+
+  retryWorkflow(runId: string) {
+    return json<{ status: string; new_workflow_id: string }>(`/api/workflows/${runId}/retry`, { method: "POST" });
+  },
+
+  // Approvals
+  listApprovals() {
+    return json<{ approvals: ApprovalEvent[] }>("/api/approvals");
+  },
+
+  // Settings
+  getSettings() {
+    return json<AppSettings>("/api/settings");
   }
 };

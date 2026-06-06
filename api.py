@@ -503,3 +503,129 @@ async def commitguard_findings(job_id: str):
     for f in data["findings"]:
         f["issue_filed"] = bool(f["issue_filed"])
     return data
+
+
+# ── Sessions ──────────────────────────────────────────────────────────────────
+
+@app.get("/api/sessions")
+async def list_sessions():
+    """Return recent agent runs grouped by run_id, newest first."""
+    from sqlalchemy import text as sql
+    rows = DBOS.sql_session.execute(sql("""
+        SELECT
+            run_id,
+            MIN(agent_id)    AS agent_id,
+            MIN(created_at)  AS started_at,
+            MAX(created_at)  AS updated_at,
+            MAX(step)        AS last_step,
+            MAX(status)      AS status,
+            COUNT(*)         AS step_count
+        FROM agent_runs
+        GROUP BY run_id
+        ORDER BY MAX(created_at) DESC
+        LIMIT 100
+    """)).mappings().all()
+    return {"sessions": [dict(r) for r in rows]}
+
+
+@app.get("/api/sessions/{run_id}")
+async def get_session(run_id: str):
+    """Return all steps for a single run_id."""
+    from sqlalchemy import text as sql
+    rows = DBOS.sql_session.execute(sql("""
+        SELECT id, run_id, agent_id, step, status, created_at
+        FROM agent_runs
+        WHERE run_id = :run_id
+        ORDER BY created_at ASC
+    """), {"run_id": run_id}).mappings().all()
+    if not rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"steps": [dict(r) for r in rows]}
+
+
+# ── Workflows ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/workflows")
+async def list_workflows():
+    """Return agent_runs + DLQ events for the Workflows page."""
+    from sqlalchemy import text as sql
+    runs = DBOS.sql_session.execute(sql("""
+        SELECT
+            run_id,
+            MIN(agent_id)   AS agent_id,
+            MIN(created_at) AS started_at,
+            MAX(created_at) AS updated_at,
+            MAX(step)       AS last_step,
+            MAX(status)     AS status,
+            COUNT(*)        AS step_count
+        FROM agent_runs
+        GROUP BY run_id
+        ORDER BY MAX(created_at) DESC
+        LIMIT 100
+    """)).mappings().all()
+    dlq = DBOS.sql_session.execute(sql("""
+        SELECT id, run_id, agent_id, error, created_at
+        FROM dlq_events
+        ORDER BY created_at DESC
+        LIMIT 50
+    """)).mappings().all()
+    return {"workflows": [dict(r) for r in runs], "dlq": [dict(r) for r in dlq]}
+
+
+@app.post("/api/workflows/{run_id}/retry")
+async def retry_workflow(run_id: str):
+    """Re-queue a failed run by re-submitting it as a new agent_loop workflow."""
+    from sqlalchemy import text as sql
+    row = DBOS.sql_session.execute(sql(
+        "SELECT MAX(step) AS last_step FROM agent_runs WHERE run_id = :rid"
+    ), {"rid": run_id}).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    context = f"Retry of workflow {run_id} — last step: {row['last_step']}"
+    handle = DBOS.start_workflow(agent_loop, context)
+    return {"status": "retried", "new_workflow_id": handle.workflow_id}
+
+
+# ── Approvals ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/approvals")
+async def list_approvals():
+    """Return agent_events with event_type approval_required, newest first."""
+    from sqlalchemy import text as sql
+    rows = DBOS.sql_session.execute(sql("""
+        SELECT id, tenant_id AS run_id, payload, created_at
+        FROM agent_events
+        WHERE payload::text LIKE '%approval_required%'
+        ORDER BY created_at DESC
+        LIMIT 100
+    """)).mappings().all()
+    parsed = []
+    for r in rows:
+        try:
+            payload = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
+        except (json.JSONDecodeError, TypeError):
+            payload = {}
+        parsed.append({
+            "id": r["id"],
+            "run_id": r["run_id"],
+            "payload": payload,
+            "created_at": r["created_at"],
+        })
+    return {"approvals": parsed}
+
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+@app.get("/api/settings")
+async def get_settings():
+    """Return current runtime settings (env-sourced, read-only at runtime)."""
+    import main as _main
+    return {
+        "model_plan": _main.MODEL_PLAN,
+        "model_execute": _main.MODEL_EXECUTE,
+        "e2b_configured": bool(os.environ.get("E2B_API_KEY")),
+        "github_configured": bool(os.environ.get("GITHUB_CLIENT_ID")),
+        "traceloop_configured": bool(os.environ.get("TRACELOOP_API_KEY")),
+        "langfuse_configured": bool(os.environ.get("LANGFUSE_PUBLIC_KEY")),
+        "commitguard_webhook": os.environ.get("COMMITGUARD_WEBHOOK_URL", ""),
+    }

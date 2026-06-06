@@ -120,3 +120,57 @@ export type SessionMessage = {
   status?: "idle" | "planning" | "executing" | "blocked" | "success" | "failed";
   event?: MeshEvent;
 };
+
+export type AgentSession = {
+  run_id: string;
+  agent_id: string;
+  started_at: string;
+  updated_at: string;
+  last_step: string;
+  status: string;
+  step_count: number;
+};
+
+export type AgentStep = {
+  id: number;
+  run_id: string;
+  agent_id: string;
+  step: string;
+  status: string;
+  created_at: string;
+};
+
+export type WorkflowRun = {
+  run_id: string;
+  agent_id: string;
+  started_at: string;
+  updated_at: string;
+  last_step: string;
+  status: string;
+  step_count: number;
+};
+
+export type DlqEvent = {
+  id: number;
+  run_id: string;
+  agent_id: string;
+  error: string;
+  created_at: string;
+};
+
+export type ApprovalEvent = {
+  id: number;
+  run_id: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AppSettings = {
+  model_plan: string;
+  model_execute: string;
+  e2b_configured: boolean;
+  github_configured: boolean;
+  traceloop_configured: boolean;
+  langfuse_configured: boolean;
+  commitguard_webhook: string;
+};
