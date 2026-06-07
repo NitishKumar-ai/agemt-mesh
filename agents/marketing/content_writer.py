@@ -98,13 +98,24 @@ def _parse_subject_body(raw: str, campaign_name: str) -> tuple[str, str]:
     return subject, body
 
 
-# ── Self-review step ─────────────────────────────────────────────────────────
+# ── Internal helpers (plain functions — NOT @DBOS.step) ───────────────────────
+#
+# DBOS does not support nested steps. _self_review and _write_draft are
+# implementation details of the run_content_writer step. Decorating them
+# with @DBOS.step() would make run_content_writer → _write_draft → _self_review
+# a three-level nested step chain, which DBOS rejects at runtime.
+#
+# Only run_content_writer (the entry point called by the workflow) is a step.
+# update_status() is a @DBOS.transaction() which IS safe to call from within
+# a running workflow context, so those calls stay.
 
-@DBOS.step()
 def _self_review(run_id: str, subject: str, body: str, finding_summary: str) -> dict:
     """
     Ask the model to check its own draft against the hard constraints.
     Returns {"passed": bool, "issues": list[str]}.
+
+    Plain function — called from _write_draft which is itself called from
+    the run_content_writer @DBOS.step. Not independently journaled.
     """
     update_status(run_id, "ContentWriterAgent", "self_review", "running")
     prompt = (
@@ -128,16 +139,21 @@ def _self_review(run_id: str, subject: str, body: str, finding_summary: str) -> 
     return result
 
 
-# ── DBOS steps ────────────────────────────────────────────────────────────────
-
-@DBOS.step()
 def _write_draft(run_id: str, campaign_id: int, channel: str,
                  audience_profile: dict, finding_brief: dict,
                  campaign_name: str, value_proposition: str,
                  finding_summary: str) -> tuple[str, str]:
-    """Generate the draft, self-review, retry once on failure."""
+    """
+    Generate the draft, self-review it, retry once on failure.
+
+    Plain function — called from run_content_writer (@DBOS.step).
+    Not independently journaled; the whole write+review cycle is atomic
+    from DBOS's perspective, which is correct: if the step crashes mid-retry
+    DBOS replays run_content_writer from the start, re-running both attempts.
+    """
     update_status(run_id, "ContentWriterAgent", "write_draft", "running")
 
+    subject, body = f"Security review — {campaign_name}", ""
     for attempt in range(2):
         prompt = _build_draft_prompt(
             channel, audience_profile, finding_brief, campaign_name, value_proposition
@@ -153,7 +169,6 @@ def _write_draft(run_id: str, campaign_id: int, channel: str,
             attempt + 1, review.get("issues", [])
         )
         if attempt == 0:
-            # Append the issues to the prompt and retry
             issue_text = "; ".join(str(i) for i in review.get("issues", []))
             value_proposition += f"\n[RETRY: fix rule violations: {issue_text}]"
 
