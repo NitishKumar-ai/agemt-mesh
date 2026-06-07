@@ -64,8 +64,13 @@ if FRONTEND_ASSETS.exists():
 # ── Startup ───────────────────────────────────────────────────────────────────
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
+    import asyncio
     from main import init_db
+    # Register the event loop with the bus BEFORE any DBOS worker threads
+    # start. This ensures emit() called from DBOS steps (worker threads)
+    # can schedule put_nowait on the correct loop via call_soon_threadsafe.
+    bus.set_loop(asyncio.get_running_loop())
     init_db()
     DBOS.launch()
 
