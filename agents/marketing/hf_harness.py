@@ -52,6 +52,13 @@ _EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 _HF_API_BASE = "https://api-inference.huggingface.co/models"
 
+# Audience deduplication threshold — cosine similarity above this blocks a new
+# campaign as a near-duplicate of an existing one. 0.85 is the standard
+# "semantically equivalent" cutoff for all-MiniLM-L6-v2 embeddings per the
+# SBERT benchmark. Override via HF_DEDUP_THRESHOLD env var to tune for your
+# campaign diversity requirements (higher = stricter, lower = more permissive).
+_DEFAULT_DEDUP_THRESHOLD: float = float(os.environ.get("HF_DEDUP_THRESHOLD", "0.85"))
+
 # Security-context labels for zero-shot NLI.
 # Bare words ("critical", "high") are ambiguous to an NLI model — adding
 # domain context ("security vulnerability") grounds the hypothesis correctly.
@@ -235,7 +242,7 @@ class HFInternHarness:
         self,
         audience: str,
         prior_embeddings: list[list[float]],
-        threshold: float = 0.92,
+        threshold: float = _DEFAULT_DEDUP_THRESHOLD,
     ) -> tuple[bool, float]:
         """
         Check if `audience` is too similar to any prior campaign audience.
