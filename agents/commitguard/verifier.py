@@ -37,9 +37,16 @@ EXPLOIT_MARKER = "EXPLOIT_CONFIRMED"
 POC_PROMPTS = {
     "sql_injection": (
         "Write a self-contained Python script (no imports from the target repo) that:\n"
-        "1. Constructs the SQL injection string described in this finding.\n"
-        "2. Asserts the string contains a single quote or OR 1=1 pattern.\n"
-        "3. Prints 'EXPLOIT_CONFIRMED' if the assertion passes.\n"
+        "1. Creates an in-memory SQLite database (import sqlite3; conn = sqlite3.connect(':memory:')).\n"
+        "2. Creates a simple table and inserts at least one row of test data.\n"
+        "3. Constructs the SQL injection payload described in the finding.\n"
+        "4. Executes the injected query against the SQLite DB using string concatenation "
+        "(the vulnerable pattern), NOT parameterised queries.\n"
+        "5. Confirms the injection succeeded by checking that the query returns more rows than "
+        "a non-injected equivalent would, OR that a UNION/boolean bypass works.\n"
+        "6. Prints 'EXPLOIT_CONFIRMED' ONLY if step 5 confirms exploitation.\n"
+        "Do NOT print EXPLOIT_CONFIRMED just because the string contains a quote — "
+        "actual database execution is required.\n"
         "Reply with ONLY the Python script, no explanation."
     ),
     "hardcoded_secret": (
