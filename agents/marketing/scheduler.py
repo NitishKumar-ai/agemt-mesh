@@ -22,7 +22,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from dbos import DBOS
-from main import update_status, MODEL_EXECUTE
+from main import update_status
 from store import marketing_get_campaign, marketing_list_audit_events
 from events import bus
 from agents.marketing.researcher import run_researcher
