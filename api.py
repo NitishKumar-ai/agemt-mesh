@@ -643,7 +643,7 @@ async def list_approvals():
     rows = DBOS.sql_session.execute(sql("""
         SELECT id, tenant_id AS run_id, payload, created_at
         FROM agent_events
-        WHERE payload::text LIKE '%approval_required%'
+        WHERE event_type = 'approval_required'
         ORDER BY created_at DESC
         LIMIT 100
     """)).mappings().all()

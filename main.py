@@ -88,9 +88,20 @@ def init_db():
         CREATE TABLE IF NOT EXISTS agent_events (
             id BIGSERIAL PRIMARY KEY,
             tenant_id TEXT,
+            event_type TEXT,
             payload TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+        )"""))
+    # Add event_type column to existing deployments (safe on both Postgres and SQLite)
+    try:
+        DBOS.sql_session.execute(text(
+            "ALTER TABLE agent_events ADD COLUMN event_type TEXT"
+        ))
+    except Exception:
+        pass  # column already exists — ignore
+    DBOS.sql_session.execute(text("""
+        CREATE INDEX IF NOT EXISTS idx_agent_events_event_type
+        ON agent_events (event_type)
     """))
     DBOS.sql_session.execute(text("""
         CREATE TABLE IF NOT EXISTS dlq_events (
@@ -118,9 +129,15 @@ def update_status(run_id: str, agent_id: str, step: str, status: str):
 
 @DBOS.transaction()
 def publish_event(tenant_id: str, payload: dict):
+    # Extract event_type from the payload dict so we can index/filter it directly
+    # without Postgres-specific JSON operators or casts.
+    event_type = payload.get("event_type") if isinstance(payload, dict) else None
     DBOS.sql_session.execute(
-        text("INSERT INTO agent_events (tenant_id, payload) VALUES (:tid, :payload)"),
-        {"tid": tenant_id, "payload": json.dumps(payload)}
+        text(
+            "INSERT INTO agent_events (tenant_id, event_type, payload) "
+            "VALUES (:tid, :etype, :payload)"
+        ),
+        {"tid": tenant_id, "etype": event_type, "payload": json.dumps(payload)}
     )
 
 
