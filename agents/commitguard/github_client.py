@@ -11,9 +11,16 @@ On CONFIRMED findings only:
 import asyncio
 import logging
 import time
+from typing import Optional
 
 import httpx
-from langfuse.decorators import observe
+try:
+    from langfuse import observe
+except Exception:
+    def observe(name=None, **_kw):  # type: ignore[misc]
+        def decorator(fn):
+            return fn
+        return decorator
 from pydantic import BaseModel
 
 from main import generate, MODEL_EXECUTE
@@ -29,13 +36,13 @@ GITHUB_HEADERS = {
 
 class FiledFinding(BaseModel):
     finding_id: str
-    fix_suggestion: str | None
-    github_issue_url: str | None
+    fix_suggestion: Optional[str]
+    github_issue_url: Optional[str]
     issue_filed: bool
 
 
 @observe(name="commitguard_generate_fix")
-def _generate_fix(vf: dict) -> str | None:
+def _generate_fix(vf: dict) -> Optional[str]:
     prompt = (
         "You are a security engineer. Given this confirmed vulnerability, provide a minimal "
         "code fix as a unified diff (3-5 lines). No explanation — only the diff.\n\n"
@@ -51,7 +58,7 @@ def _generate_fix(vf: dict) -> str | None:
         return None
 
 
-def _build_issue_body(vf: dict, fix_suggestion: str | None) -> str:
+def _build_issue_body(vf: dict, fix_suggestion: Optional[str]) -> str:
     cvss_note = f"\n**CVSS:** {vf['cvss']}" if vf.get("cvss") else ""
     cwe_note = f"\n**CWE:** {vf['cwe']}" if vf.get("cwe") else ""
     fix_section = (

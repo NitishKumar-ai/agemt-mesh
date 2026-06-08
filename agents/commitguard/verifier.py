@@ -15,9 +15,17 @@ Webhook fires immediately on CONFIRMED, before step returns.
 import json
 import logging
 import os
+from typing import Optional, Tuple
 
 import httpx
-from langfuse.decorators import observe
+try:
+    from langfuse import observe
+except Exception:
+    # Langfuse not configured or not installed — use a no-op decorator
+    def observe(name=None, **_kw):  # type: ignore[misc]
+        def decorator(fn):
+            return fn
+        return decorator
 from pydantic import BaseModel
 
 from main import generate, MODEL_EXECUTE
@@ -78,8 +86,8 @@ class VerifiedFinding(BaseModel):
     description: str
     verdict: str            # CONFIRMED / UNVERIFIABLE / FALSE_POSITIVE
     poc_summary: str
-    cvss: str | None        # AI-estimated, not validated
-    cwe: str | None
+    cvss: Optional[str]     # AI-estimated, not validated
+    cwe: Optional[str]
     webhook_fired: bool
 
 
@@ -103,7 +111,7 @@ def _generate_poc(finding: dict) -> str:
 
 
 @observe(name="commitguard_compute_cvss")
-def _compute_cvss(finding: dict) -> tuple[str | None, str | None]:
+def _compute_cvss(finding: dict) -> Tuple[Optional[str], Optional[str]]:
     prompt = (
         f"Finding:\n"
         f"Type: {finding['vuln_type']}\n"

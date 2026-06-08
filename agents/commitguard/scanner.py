@@ -18,7 +18,13 @@ import shutil
 import subprocess
 from typing import Optional
 
-from langfuse.decorators import observe
+try:
+    from langfuse import observe
+except Exception:
+    def observe(name=None, **_kw):  # type: ignore[misc]
+        def decorator(fn):
+            return fn
+        return decorator
 from pydantic import BaseModel
 
 from main import generate, MODEL_EXECUTE

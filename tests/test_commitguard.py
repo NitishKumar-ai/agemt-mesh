@@ -113,9 +113,8 @@ class TestVerifier(unittest.TestCase):
     def test_unverifiable_category_skips_e2b(self):
         from agents.commitguard.verifier import verify
         finding = self._sample_finding("unverifiable")
-        mock_client = MagicMock()
-        mock_client.generate.return_value = "CVSS: 6.5 MEDIUM\nCWE: CWE-79"
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
+        # verifier.py calls generate() directly — no get_model_client wrapper
+        with patch("agents.commitguard.verifier.generate", return_value="CVSS: 6.5 MEDIUM\nCWE: CWE-79"):
             with patch("agents.commitguard.verifier.os.environ.get", return_value=""):
                 result = verify(finding, "https://github.com/x/y")
         self.assertEqual(result["verdict"], "UNVERIFIABLE")
@@ -123,11 +122,6 @@ class TestVerifier(unittest.TestCase):
     def test_confirmed_on_exploit_marker(self):
         from agents.commitguard.verifier import verify, EXPLOIT_MARKER
         finding = self._sample_finding("sql_injection")
-        mock_client = MagicMock()
-        mock_client.generate.side_effect = [
-            "print('EXPLOIT_CONFIRMED')",  # PoC script
-            "CVSS: 8.1 HIGH\nCWE: CWE-89",  # CVSS
-        ]
         mock_exec = MagicMock()
         mock_exec.logs.stdout = [EXPLOIT_MARKER]
         mock_exec.error = None
@@ -135,7 +129,9 @@ class TestVerifier(unittest.TestCase):
         mock_sandbox.__enter__ = MagicMock(return_value=mock_sandbox)
         mock_sandbox.__exit__ = MagicMock(return_value=False)
         mock_sandbox.run_code.return_value = mock_exec
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
+        # generate() is called twice: once for PoC script, once for CVSS
+        with patch("agents.commitguard.verifier.generate",
+                   side_effect=["print('EXPLOIT_CONFIRMED')", "CVSS: 8.1 HIGH\nCWE: CWE-89"]):
             with patch("agents.commitguard.verifier.os.environ.get", return_value=""):
                 with patch("e2b_code_interpreter.Sandbox", return_value=mock_sandbox):
                     result = verify(finding, "https://github.com/x/y")
@@ -144,12 +140,8 @@ class TestVerifier(unittest.TestCase):
     def test_unverifiable_on_e2b_missing_api_key(self):
         from agents.commitguard.verifier import verify
         finding = self._sample_finding()
-        mock_client = MagicMock()
-        mock_client.generate.side_effect = [
-            "print('test')",
-            "CVSS: 8.1 HIGH\nCWE: CWE-89",
-        ]
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
+        with patch("agents.commitguard.verifier.generate",
+                   side_effect=["print('test')", "CVSS: 8.1 HIGH\nCWE: CWE-89"]):
             with patch("agents.commitguard.verifier.os.environ.get", return_value=""):
                 with patch("e2b_code_interpreter.Sandbox", side_effect=Exception("API key missing")):
                     result = verify(finding, "https://github.com/x/y")
@@ -158,12 +150,8 @@ class TestVerifier(unittest.TestCase):
     def test_unverifiable_on_e2b_network_error(self):
         from agents.commitguard.verifier import verify
         finding = self._sample_finding()
-        mock_client = MagicMock()
-        mock_client.generate.side_effect = [
-            "print('test')",
-            "CVSS: 8.1 HIGH\nCWE: CWE-89",
-        ]
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
+        with patch("agents.commitguard.verifier.generate",
+                   side_effect=["print('test')", "CVSS: 8.1 HIGH\nCWE: CWE-89"]):
             with patch("agents.commitguard.verifier.os.environ.get", return_value=""):
                 with patch("e2b_code_interpreter.Sandbox", side_effect=Exception("Connection refused")):
                     result = verify(finding, "https://github.com/x/y")
@@ -172,11 +160,6 @@ class TestVerifier(unittest.TestCase):
     def test_webhook_fires_on_confirmed(self):
         from agents.commitguard.verifier import verify, EXPLOIT_MARKER
         finding = self._sample_finding()
-        mock_client = MagicMock()
-        mock_client.generate.side_effect = [
-            "print('EXPLOIT_CONFIRMED')",
-            "CVSS: 8.1 HIGH\nCWE: CWE-89",
-        ]
         mock_exec = MagicMock()
         mock_exec.logs.stdout = [EXPLOIT_MARKER]
         mock_exec.error = None
@@ -184,8 +167,10 @@ class TestVerifier(unittest.TestCase):
         mock_sandbox.__enter__ = MagicMock(return_value=mock_sandbox)
         mock_sandbox.__exit__ = MagicMock(return_value=False)
         mock_sandbox.run_code.return_value = mock_exec
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
-            with patch("agents.commitguard.verifier.os.environ.get", return_value="https://hooks.slack.com/test"):
+        with patch("agents.commitguard.verifier.generate",
+                   side_effect=["print('EXPLOIT_CONFIRMED')", "CVSS: 8.1 HIGH\nCWE: CWE-89"]):
+            with patch("agents.commitguard.verifier.os.environ.get",
+                       return_value="https://hooks.slack.com/test"):
                 with patch("e2b_code_interpreter.Sandbox", return_value=mock_sandbox):
                     with patch("agents.commitguard.verifier.httpx.post") as mock_post:
                         mock_post.return_value = MagicMock(status_code=200)
@@ -195,11 +180,6 @@ class TestVerifier(unittest.TestCase):
     def test_webhook_silent_on_invalid_url(self):
         from agents.commitguard.verifier import verify, EXPLOIT_MARKER
         finding = self._sample_finding()
-        mock_client = MagicMock()
-        mock_client.generate.side_effect = [
-            "print('EXPLOIT_CONFIRMED')",
-            "CVSS: 8.1 HIGH\nCWE: CWE-89",
-        ]
         mock_exec = MagicMock()
         mock_exec.logs.stdout = [EXPLOIT_MARKER]
         mock_exec.error = None
@@ -207,10 +187,13 @@ class TestVerifier(unittest.TestCase):
         mock_sandbox.__enter__ = MagicMock(return_value=mock_sandbox)
         mock_sandbox.__exit__ = MagicMock(return_value=False)
         mock_sandbox.run_code.return_value = mock_exec
-        with patch("agents.commitguard.verifier.get_model_client", return_value=mock_client):
-            with patch("agents.commitguard.verifier.os.environ.get", return_value="https://bad-webhook.invalid"):
+        with patch("agents.commitguard.verifier.generate",
+                   side_effect=["print('EXPLOIT_CONFIRMED')", "CVSS: 8.1 HIGH\nCWE: CWE-89"]):
+            with patch("agents.commitguard.verifier.os.environ.get",
+                       return_value="https://bad-webhook.invalid"):
                 with patch("e2b_code_interpreter.Sandbox", return_value=mock_sandbox):
-                    with patch("agents.commitguard.verifier.httpx.post", side_effect=Exception("Connection error")):
+                    with patch("agents.commitguard.verifier.httpx.post",
+                               side_effect=Exception("Connection error")):
                         result = verify(finding, "https://github.com/x/y")
         # Should not crash; webhook_fired is False
         self.assertFalse(result["webhook_fired"])
@@ -237,9 +220,8 @@ class TestGitHubClient(unittest.TestCase):
 
     def test_files_issue_successfully(self):
         from agents.commitguard.github_client import file_issue
-        mock_client = MagicMock()
-        mock_client.generate.return_value = "--- a/app.py\n+++ b/app.py"
-        with patch("agents.commitguard.github_client.get_model_client", return_value=mock_client):
+        # github_client.py calls generate() directly — no get_model_client wrapper
+        with patch("agents.commitguard.github_client.generate", return_value="--- a/app.py\n+++ b/app.py"):
             with patch("agents.commitguard.github_client.asyncio.run") as mock_run:
                 mock_run.return_value = {"status": 201, "data": {"html_url": "https://github.com/x/y/issues/1"}}
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
@@ -248,9 +230,7 @@ class TestGitHubClient(unittest.TestCase):
 
     def test_graceful_on_403_no_write_access(self):
         from agents.commitguard.github_client import file_issue
-        mock_client = MagicMock()
-        mock_client.generate.return_value = "diff"
-        with patch("agents.commitguard.github_client.get_model_client", return_value=mock_client):
+        with patch("agents.commitguard.github_client.generate", return_value="diff"):
             with patch("agents.commitguard.github_client.asyncio.run") as mock_run:
                 mock_run.return_value = {"status": 403, "data": {"message": "Forbidden"}}
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
@@ -259,13 +239,11 @@ class TestGitHubClient(unittest.TestCase):
 
     def test_retries_on_429(self):
         from agents.commitguard.github_client import file_issue
-        mock_client = MagicMock()
-        mock_client.generate.return_value = "diff"
         calls = [
             {"status": 429, "data": {"retry_after": 1}},
             {"status": 201, "data": {"html_url": "https://github.com/x/y/issues/2"}},
         ]
-        with patch("agents.commitguard.github_client.get_model_client", return_value=mock_client):
+        with patch("agents.commitguard.github_client.generate", return_value="diff"):
             with patch("agents.commitguard.github_client.asyncio.run", side_effect=calls):
                 with patch("agents.commitguard.github_client.time.sleep"):
                     result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
@@ -273,9 +251,7 @@ class TestGitHubClient(unittest.TestCase):
 
     def test_graceful_on_exception(self):
         from agents.commitguard.github_client import file_issue
-        mock_client = MagicMock()
-        mock_client.generate.return_value = "diff"
-        with patch("agents.commitguard.github_client.get_model_client", return_value=mock_client):
+        with patch("agents.commitguard.github_client.generate", return_value="diff"):
             with patch("agents.commitguard.github_client.asyncio.run", side_effect=Exception("network error")):
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
         self.assertFalse(result["issue_filed"])
@@ -298,11 +274,14 @@ class TestCommitGuardAPI(unittest.TestCase):
         self.assertEqual(resp.status_code, 400)
 
     def test_findings_404_on_unknown_job(self):
-        resp = self.client.get("/api/commitguard/findings/nonexistent-job-id")
+        # Mock the DBOS transaction so tests run without a real DB / DBOS init
+        with patch("api.commitguard_get_scan_with_findings", return_value=None):
+            resp = self.client.get("/api/commitguard/findings/nonexistent-job-id")
         self.assertEqual(resp.status_code, 404)
 
     def test_stream_404_on_unknown_job(self):
-        resp = self.client.get("/api/commitguard/stream/nonexistent-job-id")
+        with patch("api.commitguard_get_scan", return_value=None):
+            resp = self.client.get("/api/commitguard/stream/nonexistent-job-id")
         self.assertEqual(resp.status_code, 404)
 
 
