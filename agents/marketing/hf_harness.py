@@ -131,7 +131,11 @@ class HFInternHarness:
                 group = ent.get("entity_group", ent.get("entity", ""))
                 word = ent.get("word", "").strip()
                 score = ent.get("score", 0.0)
-                if not word or score < 0.75:
+                # bert-base-NER is trained on CoNLL-03 (news) and produces lower
+                # confidence scores on security text (CVEs, vendor names, product
+                # identifiers). 0.60 retains useful entities that 0.75 drops while
+                # still filtering low-quality predictions.
+                if not word or score < 0.60:
                     continue
                 if group == "ORG":
                     orgs.append(word)
