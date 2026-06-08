@@ -35,6 +35,7 @@ import json
 import logging
 import math
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 import httpx
@@ -276,7 +277,11 @@ class HFInternHarness:
 
     def enrich(self, finding_text: str, audience: str) -> dict:
         """
-        Run NER + classify_risk in one call. Used by the _hf_enrich DBOS step.
+        Run NER + classify_risk concurrently. Used by the _hf_enrich DBOS step.
+
+        Both tasks hit different HF endpoints with no dependency on each other,
+        so running them sequentially wastes ~5s of wall time per call.
+        ThreadPoolExecutor keeps this sync-compatible (no asyncio required).
 
         Returns:
           {
@@ -284,10 +289,13 @@ class HFInternHarness:
             "risk": {"risk_level": "high"|None, "score": float},
           }
         """
-        return {
-            "ner": self.ner(finding_text),
-            "risk": self.classify_risk(finding_text),
-        }
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            ner_fut = pool.submit(self.ner, finding_text)
+            risk_fut = pool.submit(self.classify_risk, finding_text)
+            return {
+                "ner": ner_fut.result(),
+                "risk": risk_fut.result(),
+            }
 
 
 # ── Module-level singleton factory ────────────────────────────────────────────
