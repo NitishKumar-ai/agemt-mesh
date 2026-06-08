@@ -8,10 +8,11 @@ Runs three lightweight ML tasks via the HF Serverless Inference API:
     Gives ContentWriterAgent real company/product names to reference
     instead of relying on the LLM to hallucinate them.
 
-  Task 2 — Zero-shot risk classification (facebook/bart-large-mnli)
+  Task 2 — Zero-shot risk classification (MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli)
     Classifies finding severity as critical/high/medium/low WITHOUT
-    fine-tuning. Seeds _research_finding() so the LLM prompt contains
-    an ML-grounded prior rather than a cold guess.
+    fine-tuning. Uses security-context NLI hypotheses so the model's
+    entailment scores are domain-grounded. Seeds _research_finding()
+    so the LLM prompt contains an ML-grounded prior rather than a cold guess.
 
   Task 3 — Sentence embedding (sentence-transformers/all-MiniLM-L6-v2)
     Produces a 384-d embedding of the audience string.
@@ -43,12 +44,30 @@ logger = logging.getLogger(__name__)
 # ── Model IDs ─────────────────────────────────────────────────────────────────
 
 _NER_MODEL = "dslim/bert-base-NER"
-_CLASSIFIER_MODEL = "facebook/bart-large-mnli"
+# DeBERTa-v3 consistently outperforms bart-large-mnli on NLI benchmarks and
+# produces better-calibrated scores for zero-shot classification.
+# bart-large-mnli is an MNLI-only model with no security domain exposure.
+_CLASSIFIER_MODEL = "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"
 _EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 _HF_API_BASE = "https://api-inference.huggingface.co/models"
 
-_RISK_LABELS = ["critical", "high", "medium", "low"]
+# Security-context labels for zero-shot NLI.
+# Bare words ("critical", "high") are ambiguous to an NLI model — adding
+# domain context ("security vulnerability") grounds the hypothesis correctly.
+_RISK_LABELS_NLI = [
+    "critical severity security vulnerability",
+    "high severity security issue",
+    "medium severity security finding",
+    "low severity or informational security note",
+]
+# Map back from the verbose NLI label to a canonical short name
+_RISK_LABEL_MAP = {
+    "critical severity security vulnerability": "critical",
+    "high severity security issue": "high",
+    "medium severity security finding": "medium",
+    "low severity or informational security note": "low",
+}
 
 
 # ── Harness class ─────────────────────────────────────────────────────────────
@@ -140,7 +159,7 @@ class HFInternHarness:
                 json={
                     "inputs": text[:512],
                     "parameters": {
-                        "candidate_labels": _RISK_LABELS,
+                        "candidate_labels": _RISK_LABELS_NLI,
                         "multi_label": False,
                     },
                 },
@@ -156,13 +175,15 @@ class HFInternHarness:
             if not labels or not scores:
                 return default
 
-            top_label = labels[0]
+            top_label_nli = labels[0]
             top_score = scores[0]
             # Only trust if confidence is meaningful (>40%)
             if top_score < 0.40:
                 logger.info("HF_INTERN: task=classify_risk status=low_confidence score=%.2f", top_score)
                 return {"risk_level": None, "score": top_score}
 
+            # Map verbose NLI hypothesis back to canonical short label
+            top_label = _RISK_LABEL_MAP.get(top_label_nli, top_label_nli.split()[0])
             logger.info("HF_INTERN: task=classify_risk status=ok risk=%s score=%.2f", top_label, top_score)
             return {"risk_level": top_label, "score": top_score}
 

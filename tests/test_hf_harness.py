@@ -82,9 +82,15 @@ class TestNER:
 
 class TestClassifyRisk:
     def test_happy_path_returns_top_label(self, harness):
+        # Model now returns verbose NLI hypotheses; harness maps them to short labels
         clf_response = {
-            "labels": ["high", "critical", "medium", "low"],
-            "scores": [0.72,    0.15,      0.08,     0.05],
+            "labels": [
+                "high severity security issue",
+                "critical severity security vulnerability",
+                "medium severity security finding",
+                "low severity or informational security note",
+            ],
+            "scores": [0.72, 0.15, 0.08, 0.05],
         }
         with patch("httpx.post", return_value=_mock_response(clf_response)):
             result = harness.classify_risk("SQL injection vulnerability found")
