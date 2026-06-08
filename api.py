@@ -469,11 +469,19 @@ async def event_stream(request: Request):
 
 # ── CommitGuard Arm ───────────────────────────────────────────────────────────
 
-_CG_RUNNING: set[str] = set()  # Phase 1: enforce one scan at a time
+_CG_RUNNING: set[str] = set()  # enforce one scan at a time globally
+
+# Per-user rate limiting: github_login → timestamp of last accepted scan request.
+# E2B sandboxes are billed per-second and can take 2-10 min each — without a
+# cooldown, a single authenticated user can drain the E2B budget by rapid-firing.
+# 5-minute cooldown is aggressive but appropriate for an expensive sandbox op.
+_CG_LAST_SCAN: dict[str, float] = {}
+_CG_COOLDOWN_SECS: float = float(os.environ.get("CG_SCAN_COOLDOWN_SECS", "300"))
 
 
 @app.post("/api/commitguard/scan")
 async def commitguard_scan(payload: dict):
+    import time
     repo_url = str(payload.get("repo_url", "")).strip()
     max_findings = int(payload.get("max_findings", 5))
 
@@ -489,13 +497,25 @@ async def commitguard_scan(payload: dict):
     if not connection:
         raise HTTPException(status_code=401, detail="Connect GitHub first (GET /api/github/connect)")
     token = github_get_access_token()
+    github_login = connection["login"]
+
+    # Per-user cooldown — prevents a single authenticated user from draining
+    # the E2B sandbox budget by queuing rapid successive scans.
+    now = time.time()
+    last = _CG_LAST_SCAN.get(github_login, 0.0)
+    remaining = _CG_COOLDOWN_SECS - (now - last)
+    if remaining > 0:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit: wait {int(remaining)}s before starting another scan.",
+        )
 
     import uuid
     job_id = str(uuid.uuid4())
-    github_login = connection["login"]
 
     commitguard_create_scan(job_id, repo_url, github_login)
 
+    _CG_LAST_SCAN[github_login] = now
     _CG_RUNNING.add(job_id)
     handle = DBOS.start_workflow(commitguard_workflow, job_id, repo_url, max_findings, token)
 
