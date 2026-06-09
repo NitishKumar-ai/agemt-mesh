@@ -220,10 +220,11 @@ class TestGitHubClient(unittest.TestCase):
 
     def test_files_issue_successfully(self):
         from agents.commitguard.github_client import file_issue
-        # github_client.py calls generate() directly — no get_model_client wrapper
+        # Patch _post_issue_async directly with AsyncMock to avoid unawaited-coroutine warning.
+        # Patching asyncio.run creates a coroutine that the mock never awaits.
         with patch("agents.commitguard.github_client.generate", return_value="--- a/app.py\n+++ b/app.py"):
-            with patch("agents.commitguard.github_client.asyncio.run") as mock_run:
-                mock_run.return_value = {"status": 201, "data": {"html_url": "https://github.com/x/y/issues/1"}}
+            with patch("agents.commitguard.github_client._post_issue_async",
+                       new=AsyncMock(return_value={"status": 201, "data": {"html_url": "https://github.com/x/y/issues/1"}})):
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
         self.assertTrue(result["issue_filed"])
         self.assertEqual(result["github_issue_url"], "https://github.com/x/y/issues/1")
@@ -231,20 +232,21 @@ class TestGitHubClient(unittest.TestCase):
     def test_graceful_on_403_no_write_access(self):
         from agents.commitguard.github_client import file_issue
         with patch("agents.commitguard.github_client.generate", return_value="diff"):
-            with patch("agents.commitguard.github_client.asyncio.run") as mock_run:
-                mock_run.return_value = {"status": 403, "data": {"message": "Forbidden"}}
+            with patch("agents.commitguard.github_client._post_issue_async",
+                       new=AsyncMock(return_value={"status": 403, "data": {"message": "Forbidden"}})):
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
         self.assertFalse(result["issue_filed"])
         self.assertIsNone(result["github_issue_url"])
 
     def test_retries_on_429(self):
         from agents.commitguard.github_client import file_issue
-        calls = [
+        responses = [
             {"status": 429, "data": {"retry_after": 1}},
             {"status": 201, "data": {"html_url": "https://github.com/x/y/issues/2"}},
         ]
         with patch("agents.commitguard.github_client.generate", return_value="diff"):
-            with patch("agents.commitguard.github_client.asyncio.run", side_effect=calls):
+            with patch("agents.commitguard.github_client._post_issue_async",
+                       new=AsyncMock(side_effect=responses)):
                 with patch("agents.commitguard.github_client.time.sleep"):
                     result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
         self.assertTrue(result["issue_filed"])
@@ -252,7 +254,8 @@ class TestGitHubClient(unittest.TestCase):
     def test_graceful_on_exception(self):
         from agents.commitguard.github_client import file_issue
         with patch("agents.commitguard.github_client.generate", return_value="diff"):
-            with patch("agents.commitguard.github_client.asyncio.run", side_effect=Exception("network error")):
+            with patch("agents.commitguard.github_client._post_issue_async",
+                       new=AsyncMock(side_effect=Exception("network error"))):
                 result = file_issue(self._sample_vf(), "https://github.com/owner/repo", "token123")
         self.assertFalse(result["issue_filed"])
 
