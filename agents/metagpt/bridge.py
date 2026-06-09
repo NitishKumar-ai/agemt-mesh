@@ -17,6 +17,7 @@ import logging
 import os
 import pathlib
 import subprocess
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def ping() -> bool:
         return False
 
 
-def run_software_company(requirement: str, output_dir: str | None = None) -> dict:
+def run_software_company(requirement: str, output_dir: Optional[str] = None) -> dict:
     """
     Run the MetaGPT software company on a requirement.
     Returns {"status": "done", "output_dir": "...", "files": [...]}
