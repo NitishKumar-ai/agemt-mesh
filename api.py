@@ -3,6 +3,7 @@ import json
 import asyncio
 import pathlib
 import secrets
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -57,7 +58,28 @@ from store import (
     approvals_list,
 )
 
-app = FastAPI(title="Agent Mesh OS")
+# ── Startup / Shutdown ────────────────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan handler (replaces deprecated @app.on_event('startup'))."""
+    from main import init_db
+    # Register the event loop with the bus BEFORE any DBOS worker threads
+    # start. This ensures emit() called from DBOS steps (worker threads)
+    # can schedule put_nowait on the correct loop via call_soon_threadsafe.
+    bus.set_loop(asyncio.get_running_loop())
+    init_db()
+    yield  # app runs here
+
+
+async def on_startup():
+    """Legacy shim kept for TestClient compatibility in unit tests."""
+    from main import init_db
+    bus.set_loop(asyncio.get_running_loop())
+    init_db()
+
+
+app = FastAPI(title="Agent Mesh OS", lifespan=lifespan)
 
 ROOT_DIR = pathlib.Path(__file__).parent
 FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
@@ -65,18 +87,6 @@ FRONTEND_ASSETS = FRONTEND_DIST / "assets"
 
 if FRONTEND_ASSETS.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="frontend-assets")
-
-# ── Startup ───────────────────────────────────────────────────────────────────
-
-@app.on_event("startup")
-async def on_startup():
-    import asyncio
-    from main import init_db
-    # Register the event loop with the bus BEFORE any DBOS worker threads
-    # start. This ensures emit() called from DBOS steps (worker threads)
-    # can schedule put_nowait on the correct loop via call_soon_threadsafe.
-    bus.set_loop(asyncio.get_running_loop())
-    init_db()
     DBOS.launch()
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
