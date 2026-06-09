@@ -72,50 +72,63 @@ def generate(model: str, prompt: str, max_tokens: int = 4096) -> str:
         logger.error("LLM call failed — model=%s error=%s", model, e)
         raise LLMError(f"LLM call failed ({model}): {e}") from e
 
-@DBOS.transaction()
 def init_db():
-    DBOS.sql_session.execute(text("""
-        CREATE TABLE IF NOT EXISTS agent_runs (
-            id BIGSERIAL PRIMARY KEY,
-            run_id TEXT,
-            agent_id TEXT,
-            step TEXT,
-            status TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    DBOS.sql_session.execute(text("""
-        CREATE TABLE IF NOT EXISTS agent_events (
-            id BIGSERIAL PRIMARY KEY,
-            tenant_id TEXT,
-            event_type TEXT,
-            payload TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )"""))
-    # Add event_type column to existing deployments (safe on both Postgres and SQLite)
-    try:
-        DBOS.sql_session.execute(text(
-            "ALTER TABLE agent_events ADD COLUMN event_type TEXT"
-        ))
-    except Exception:
-        pass  # column already exists — ignore
-    DBOS.sql_session.execute(text("""
-        CREATE INDEX IF NOT EXISTS idx_agent_events_event_type
-        ON agent_events (event_type)
-    """))
-    DBOS.sql_session.execute(text("""
-        CREATE TABLE IF NOT EXISTS dlq_events (
-            id BIGSERIAL PRIMARY KEY,
-            run_id TEXT,
-            agent_id TEXT,
-            error TEXT,
-            payload TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
+    """
+    Create all application tables using a raw SQLAlchemy engine.
+
+    Intentionally NOT a @DBOS.transaction() — DDL at startup doesn't need
+    durable execution, and DBOS 1.x prohibits calling a @transaction from
+    outside a workflow context (and prohibits nesting transactions).
+    """
+    from sqlalchemy import create_engine
+    import os
+
+    db_url = os.environ.get(
+        "APP_DATABASE_URL",
+        "sqlite:///agent_mesh.sqlite",
+    )
+    engine = create_engine(db_url, connect_args={"check_same_thread": False} if "sqlite" in db_url else {})
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS agent_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT,
+                agent_id TEXT,
+                step TEXT,
+                status TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS agent_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id TEXT,
+                event_type TEXT,
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        try:
+            conn.execute(text("ALTER TABLE agent_events ADD COLUMN event_type TEXT"))
+        except Exception:
+            pass  # column already exists
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_agent_events_event_type
+            ON agent_events (event_type)
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS dlq_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT,
+                agent_id TEXT,
+                error TEXT,
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
     # Create all business tables (GitHub, CommitGuard, marketing, etc.)
     from store import init_business_tables
-    init_business_tables()
+    init_business_tables(engine)
 
 
 @DBOS.transaction()

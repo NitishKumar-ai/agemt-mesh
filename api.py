@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig  # noqa: F401
 from main import (agent_loop, generate, MODEL_PLAN, scan_suggested_tasks, self_heal_pr,
                   commitguard_workflow, _update_scan_step)
 from events import bus
@@ -62,14 +62,11 @@ from store import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """FastAPI lifespan handler (replaces deprecated @app.on_event('startup'))."""
+    """FastAPI lifespan handler — runs init_db then yields to DBOS lifespan."""
     from main import init_db
-    # Register the event loop with the bus BEFORE any DBOS worker threads
-    # start. This ensures emit() called from DBOS steps (worker threads)
-    # can schedule put_nowait on the correct loop via call_soon_threadsafe.
     bus.set_loop(asyncio.get_running_loop())
-    init_db()
-    yield  # app runs here
+    init_db()          # plain function, no DBOS context needed
+    yield
 
 
 async def on_startup():
@@ -81,13 +78,24 @@ async def on_startup():
 
 app = FastAPI(title="Agent Mesh OS", lifespan=lifespan)
 
+# Initialize DBOS with the SQLite app database so all @transaction functions
+# run against the same file as the raw DDL above.
+DBOS(
+    config=DBOSConfig(
+        name="agent-mesh",
+        database_url="sqlite:///agent_mesh.sqlite",
+    ),
+    fastapi=app,
+)
+
 ROOT_DIR = pathlib.Path(__file__).parent
 FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 FRONTEND_ASSETS = FRONTEND_DIST / "assets"
 
 if FRONTEND_ASSETS.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="frontend-assets")
-    DBOS.launch()
+
+DBOS.launch()
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 

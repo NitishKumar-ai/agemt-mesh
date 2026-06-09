@@ -23,158 +23,169 @@ _INTERVALS = {"hourly": 3600, "daily": 86400, "weekly": 604800, "monthly": 25920
 
 # ── Schema ────────────────────────────────────────────────────────────────────
 
-@DBOS.transaction()
-def init_business_tables() -> None:
-    """Create all business tables. Called once at startup from init_db()."""
-    sess = DBOS.sql_session
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS github_connections (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            github_user_id BIGINT NOT NULL,
-            login TEXT NOT NULL,
-            name TEXT,
-            avatar_url TEXT,
-            html_url TEXT,
-            token_encrypted TEXT NOT NULL,
-            scopes TEXT,
-            connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS github_imported_repositories (
-            id BIGSERIAL PRIMARY KEY,
-            github_repo_id BIGINT NOT NULL UNIQUE,
-            full_name TEXT NOT NULL,
-            html_url TEXT NOT NULL,
-            default_branch TEXT,
-            private INTEGER DEFAULT 0,
-            imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS suggested_tasks (
-            id BIGSERIAL PRIMARY KEY,
-            file_path TEXT NOT NULL,
-            line_number INTEGER NOT NULL,
-            marker TEXT NOT NULL,
-            comment TEXT NOT NULL,
-            context_snippet TEXT,
-            rationale TEXT,
-            confidence INTEGER DEFAULT 0,
-            status TEXT DEFAULT 'pending',
-            workflow_id TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS scheduled_tasks (
-            id BIGSERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            prompt TEXT NOT NULL,
-            interval TEXT NOT NULL,
-            next_run_at TIMESTAMP NOT NULL,
-            last_run_at TIMESTAMP,
-            last_status TEXT,
-            enabled INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text(
-        "CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next_run "
-        "ON scheduled_tasks(next_run_at, enabled)"
-    ))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS webhook_events (
-            id BIGSERIAL PRIMARY KEY,
-            source TEXT NOT NULL,
-            event_type TEXT NOT NULL,
-            branch TEXT,
-            payload TEXT,
-            workflow_id TEXT,
-            status TEXT DEFAULT 'received',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS security_findings (
-            id BIGSERIAL PRIMARY KEY,
-            source_agent TEXT NOT NULL DEFAULT 'CommitGuardAgent',
-            title TEXT NOT NULL,
-            summary TEXT NOT NULL,
-            evidence TEXT NOT NULL,
-            severity TEXT NOT NULL DEFAULT 'medium',
-            repository TEXT,
-            status TEXT NOT NULL DEFAULT 'review_required',
-            verified_by TEXT,
-            verified_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS marketing_audit_events (
-            id BIGSERIAL PRIMARY KEY,
-            entity_type TEXT NOT NULL,
-            entity_id BIGINT NOT NULL,
-            action TEXT NOT NULL,
-            actor TEXT NOT NULL DEFAULT 'system',
-            payload TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS marketing_campaigns (
-            id BIGSERIAL PRIMARY KEY,
-            source_finding_id BIGINT,
-            name TEXT NOT NULL,
-            audience TEXT NOT NULL,
-            finding_summary TEXT NOT NULL,
-            value_proposition TEXT,
-            channel TEXT DEFAULT 'email',
-            status TEXT DEFAULT 'draft',
-            subject TEXT,
-            body TEXT,
-            approval_note TEXT,
-            audience_embedding TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS commitguard_scans (
-            job_id TEXT PRIMARY KEY,
-            repo_url TEXT NOT NULL,
-            status TEXT DEFAULT 'queued',
-            step TEXT,
-            progress_pct INTEGER DEFAULT 0,
-            total_semgrep_hits INTEGER,
-            findings_truncated INTEGER DEFAULT 0,
-            scan_duration_s INTEGER,
-            user_github_login TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text("""
-        CREATE TABLE IF NOT EXISTS commitguard_findings (
-            id TEXT PRIMARY KEY,
-            job_id TEXT NOT NULL,
-            file TEXT NOT NULL,
-            line INTEGER NOT NULL,
-            severity TEXT NOT NULL,
-            verdict TEXT NOT NULL,
-            poc_summary TEXT,
-            cvss TEXT,
-            cwe TEXT,
-            fix_suggestion TEXT,
-            github_issue_url TEXT,
-            issue_filed INTEGER DEFAULT 0,
-            webhook_fired INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """))
-    sess.execute(text(
-        "CREATE INDEX IF NOT EXISTS idx_cg_findings_job ON commitguard_findings(job_id)"
-    ))
+def init_business_tables(engine=None) -> None:
+    """
+    Create all business tables using a raw SQLAlchemy engine.
+
+    Intentionally NOT a @DBOS.transaction() — DDL at startup must not use
+    DBOS transactions (they require a workflow context and cannot be nested).
+    Accepts an optional engine; if None, creates a SQLite engine as fallback.
+    """
+    import os
+    if engine is None:
+        from sqlalchemy import create_engine
+        db_url = os.environ.get("APP_DATABASE_URL", "sqlite:///agent_mesh.sqlite")
+        engine = create_engine(db_url, connect_args={"check_same_thread": False} if "sqlite" in db_url else {})
+
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS github_connections (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                github_user_id BIGINT NOT NULL,
+                login TEXT NOT NULL,
+                name TEXT,
+                avatar_url TEXT,
+                html_url TEXT,
+                token_encrypted TEXT NOT NULL,
+                scopes TEXT,
+                connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS github_imported_repositories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                github_repo_id BIGINT NOT NULL UNIQUE,
+                full_name TEXT NOT NULL,
+                html_url TEXT NOT NULL,
+                default_branch TEXT,
+                private INTEGER DEFAULT 0,
+                imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS suggested_tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_path TEXT NOT NULL,
+                line_number INTEGER NOT NULL,
+                marker TEXT NOT NULL,
+                comment TEXT NOT NULL,
+                context_snippet TEXT,
+                rationale TEXT,
+                confidence INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pending',
+                workflow_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS scheduled_tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                prompt TEXT NOT NULL,
+                interval TEXT NOT NULL,
+                next_run_at TIMESTAMP NOT NULL,
+                last_run_at TIMESTAMP,
+                last_status TEXT,
+                enabled INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next_run "
+            "ON scheduled_tasks(next_run_at, enabled)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS webhook_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                branch TEXT,
+                payload TEXT,
+                workflow_id TEXT,
+                status TEXT DEFAULT 'received',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS security_findings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_agent TEXT NOT NULL DEFAULT 'CommitGuardAgent',
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL,
+                evidence TEXT NOT NULL,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                repository TEXT,
+                status TEXT NOT NULL DEFAULT 'review_required',
+                verified_by TEXT,
+                verified_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS marketing_audit_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entity_type TEXT NOT NULL,
+                entity_id INTEGER NOT NULL,
+                action TEXT NOT NULL,
+                actor TEXT NOT NULL DEFAULT 'system',
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS marketing_campaigns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_finding_id INTEGER,
+                name TEXT NOT NULL,
+                audience TEXT NOT NULL,
+                finding_summary TEXT NOT NULL,
+                value_proposition TEXT,
+                channel TEXT DEFAULT 'email',
+                status TEXT DEFAULT 'draft',
+                subject TEXT,
+                body TEXT,
+                approval_note TEXT,
+                audience_embedding TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS commitguard_scans (
+                job_id TEXT PRIMARY KEY,
+                repo_url TEXT NOT NULL,
+                status TEXT DEFAULT 'queued',
+                step TEXT,
+                progress_pct INTEGER DEFAULT 0,
+                total_semgrep_hits INTEGER,
+                findings_truncated INTEGER DEFAULT 0,
+                scan_duration_s INTEGER,
+                user_github_login TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS commitguard_findings (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL,
+                file TEXT NOT NULL,
+                line INTEGER NOT NULL,
+                severity TEXT NOT NULL,
+                verdict TEXT NOT NULL,
+                poc_summary TEXT,
+                cvss TEXT,
+                cwe TEXT,
+                fix_suggestion TEXT,
+                github_issue_url TEXT,
+                issue_filed INTEGER DEFAULT 0,
+                webhook_fired INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_cg_findings_job ON commitguard_findings(job_id)"
+        ))
 
 
 # ── GitHub ────────────────────────────────────────────────────────────────────
