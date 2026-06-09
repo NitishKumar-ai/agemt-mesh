@@ -105,6 +105,10 @@ def _hf_enrich(run_id: str, finding_text: str, audience: str) -> dict:
         "risk_level_hf": result["risk"]["risk_level"],
         "risk_score_hf": result["risk"]["score"],
     })
+    # Strip raw NER tokens before DBOS serializes this step's output —
+    # raw can be 100s of token dicts and is only needed for debugging,
+    # not by any downstream step.
+    result["ner"].pop("raw", None)
     return result
 
 
