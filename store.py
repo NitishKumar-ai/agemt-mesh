@@ -557,6 +557,104 @@ def webhook_update_status(webhook_id: int, status: str, workflow_id: str = "") -
     ), {"status": status, "wid": workflow_id, "wid_pk": webhook_id})
 
 
+# ── Sessions / Workflows / Approvals ─────────────────────────────────────────
+# These were previously queried inline in FastAPI route handlers via bare
+# DBOS.sql_session calls — which crash because sql_session is only available
+# inside a @DBOS.transaction() context. Moved here so each handler gets a
+# proper transaction boundary.
+
+@DBOS.transaction()
+def sessions_list(limit: int = 100) -> list:
+    """Return recent agent runs grouped by run_id, newest first."""
+    rows = DBOS.sql_session.execute(text("""
+        SELECT
+            run_id,
+            MIN(agent_id)    AS agent_id,
+            MIN(created_at)  AS started_at,
+            MAX(created_at)  AS updated_at,
+            MAX(step)        AS last_step,
+            MAX(status)      AS status,
+            COUNT(*)         AS step_count
+        FROM agent_runs
+        GROUP BY run_id
+        ORDER BY MAX(created_at) DESC
+        LIMIT :lim
+    """), {"lim": limit}).mappings().all()
+    return [dict(r) for r in rows]
+
+
+@DBOS.transaction()
+def sessions_get(run_id: str) -> list:
+    """Return all steps for a single run_id (empty list if not found)."""
+    rows = DBOS.sql_session.execute(text("""
+        SELECT id, run_id, agent_id, step, status, created_at
+        FROM agent_runs
+        WHERE run_id = :run_id
+        ORDER BY created_at ASC
+    """), {"run_id": run_id}).mappings().all()
+    return [dict(r) for r in rows]
+
+
+@DBOS.transaction()
+def workflows_list(run_limit: int = 100, dlq_limit: int = 50) -> dict:
+    """Return agent_runs + DLQ events for the Workflows page."""
+    runs = DBOS.sql_session.execute(text("""
+        SELECT
+            run_id,
+            MIN(agent_id)   AS agent_id,
+            MIN(created_at) AS started_at,
+            MAX(created_at) AS updated_at,
+            MAX(step)       AS last_step,
+            MAX(status)     AS status,
+            COUNT(*)        AS step_count
+        FROM agent_runs
+        GROUP BY run_id
+        ORDER BY MAX(created_at) DESC
+        LIMIT :lim
+    """), {"lim": run_limit}).mappings().all()
+    dlq = DBOS.sql_session.execute(text("""
+        SELECT id, run_id, agent_id, error, created_at
+        FROM dlq_events
+        ORDER BY created_at DESC
+        LIMIT :lim
+    """), {"lim": dlq_limit}).mappings().all()
+    return {"workflows": [dict(r) for r in runs], "dlq": [dict(r) for r in dlq]}
+
+
+@DBOS.transaction()
+def workflows_get_last_step(run_id: str) -> Optional[dict]:
+    """Return the last step for a run_id (None if not found)."""
+    row = DBOS.sql_session.execute(text(
+        "SELECT MAX(step) AS last_step FROM agent_runs WHERE run_id = :rid"
+    ), {"rid": run_id}).mappings().first()
+    return dict(row) if row else None
+
+
+@DBOS.transaction()
+def approvals_list(limit: int = 100) -> list:
+    """Return agent_events with event_type approval_required, newest first."""
+    rows = DBOS.sql_session.execute(text("""
+        SELECT id, tenant_id AS run_id, payload, created_at
+        FROM agent_events
+        WHERE event_type = 'approval_required'
+        ORDER BY created_at DESC
+        LIMIT :lim
+    """), {"lim": limit}).mappings().all()
+    result = []
+    for r in rows:
+        try:
+            payload = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
+        except (json.JSONDecodeError, TypeError):
+            payload = {}
+        result.append({
+            "id": r["id"],
+            "run_id": r["run_id"],
+            "payload": payload,
+            "created_at": r["created_at"],
+        })
+    return result
+
+
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 def _audit(entity_type: str, entity_id: int, action: str,

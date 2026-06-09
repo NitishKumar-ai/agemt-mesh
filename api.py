@@ -50,6 +50,11 @@ from store import (
     schedule_list,
     schedule_disable,
     webhook_create,
+    sessions_list,
+    sessions_get,
+    workflows_list,
+    workflows_get_last_step,
+    approvals_list,
 )
 
 app = FastAPI(title="Agent Mesh OS")
@@ -578,37 +583,16 @@ async def commitguard_findings(job_id: str):
 @app.get("/api/sessions")
 async def list_sessions():
     """Return recent agent runs grouped by run_id, newest first."""
-    from sqlalchemy import text as sql
-    rows = DBOS.sql_session.execute(sql("""
-        SELECT
-            run_id,
-            MIN(agent_id)    AS agent_id,
-            MIN(created_at)  AS started_at,
-            MAX(created_at)  AS updated_at,
-            MAX(step)        AS last_step,
-            MAX(status)      AS status,
-            COUNT(*)         AS step_count
-        FROM agent_runs
-        GROUP BY run_id
-        ORDER BY MAX(created_at) DESC
-        LIMIT 100
-    """)).mappings().all()
-    return {"sessions": [dict(r) for r in rows]}
+    return {"sessions": sessions_list()}
 
 
 @app.get("/api/sessions/{run_id}")
 async def get_session(run_id: str):
     """Return all steps for a single run_id."""
-    from sqlalchemy import text as sql
-    rows = DBOS.sql_session.execute(sql("""
-        SELECT id, run_id, agent_id, step, status, created_at
-        FROM agent_runs
-        WHERE run_id = :run_id
-        ORDER BY created_at ASC
-    """), {"run_id": run_id}).mappings().all()
-    if not rows:
+    steps = sessions_get(run_id)
+    if not steps:
         raise HTTPException(status_code=404, detail="Session not found")
-    return {"steps": [dict(r) for r in rows]}
+    return {"steps": steps}
 
 
 # ── Workflows ─────────────────────────────────────────────────────────────────
@@ -616,37 +600,13 @@ async def get_session(run_id: str):
 @app.get("/api/workflows")
 async def list_workflows():
     """Return agent_runs + DLQ events for the Workflows page."""
-    from sqlalchemy import text as sql
-    runs = DBOS.sql_session.execute(sql("""
-        SELECT
-            run_id,
-            MIN(agent_id)   AS agent_id,
-            MIN(created_at) AS started_at,
-            MAX(created_at) AS updated_at,
-            MAX(step)       AS last_step,
-            MAX(status)     AS status,
-            COUNT(*)        AS step_count
-        FROM agent_runs
-        GROUP BY run_id
-        ORDER BY MAX(created_at) DESC
-        LIMIT 100
-    """)).mappings().all()
-    dlq = DBOS.sql_session.execute(sql("""
-        SELECT id, run_id, agent_id, error, created_at
-        FROM dlq_events
-        ORDER BY created_at DESC
-        LIMIT 50
-    """)).mappings().all()
-    return {"workflows": [dict(r) for r in runs], "dlq": [dict(r) for r in dlq]}
+    return workflows_list()
 
 
 @app.post("/api/workflows/{run_id}/retry")
 async def retry_workflow(run_id: str):
     """Re-queue a failed run by re-submitting it as a new agent_loop workflow."""
-    from sqlalchemy import text as sql
-    row = DBOS.sql_session.execute(sql(
-        "SELECT MAX(step) AS last_step FROM agent_runs WHERE run_id = :rid"
-    ), {"rid": run_id}).mappings().first()
+    row = workflows_get_last_step(run_id)
     if not row:
         raise HTTPException(status_code=404, detail="Workflow not found")
     context = f"Retry of workflow {run_id} — last step: {row['last_step']}"
@@ -659,27 +619,7 @@ async def retry_workflow(run_id: str):
 @app.get("/api/approvals")
 async def list_approvals():
     """Return agent_events with event_type approval_required, newest first."""
-    from sqlalchemy import text as sql
-    rows = DBOS.sql_session.execute(sql("""
-        SELECT id, tenant_id AS run_id, payload, created_at
-        FROM agent_events
-        WHERE event_type = 'approval_required'
-        ORDER BY created_at DESC
-        LIMIT 100
-    """)).mappings().all()
-    parsed = []
-    for r in rows:
-        try:
-            payload = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
-        except (json.JSONDecodeError, TypeError):
-            payload = {}
-        parsed.append({
-            "id": r["id"],
-            "run_id": r["run_id"],
-            "payload": payload,
-            "created_at": r["created_at"],
-        })
-    return {"approvals": parsed}
+    return {"approvals": approvals_list()}
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────
