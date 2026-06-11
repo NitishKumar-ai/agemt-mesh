@@ -186,6 +186,43 @@ def init_business_tables(engine=None) -> None:
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS idx_cg_findings_job ON commitguard_findings(job_id)"
         ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS agent_run_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                phase TEXT NOT NULL,
+                model TEXT,
+                prompt_tokens INTEGER DEFAULT 0,
+                completion_tokens INTEGER DEFAULT 0,
+                cost_usd REAL DEFAULT 0.0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_agent_run_tokens_run "
+            "ON agent_run_tokens(run_id)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS social_connections (
+                platform TEXT PRIMARY KEY,
+                display_name TEXT NOT NULL,
+                api_key_encrypted TEXT NOT NULL,
+                username TEXT,
+                avatar_url TEXT,
+                status TEXT DEFAULT 'active',
+                scopes TEXT,
+                connected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
 
 
 # ── GitHub ────────────────────────────────────────────────────────────────────
@@ -548,6 +585,173 @@ def schedule_disable(task_id: int) -> None:
     DBOS.sql_session.execute(
         text("UPDATE scheduled_tasks SET enabled=0 WHERE id=:tid"), {"tid": task_id}
     )
+
+
+@DBOS.transaction()
+def schedule_enable(task_id: int) -> bool:
+    row = DBOS.sql_session.execute(
+        text("SELECT id FROM scheduled_tasks WHERE id=:tid"), {"tid": task_id}
+    ).fetchone()
+    if not row:
+        return False
+    seconds = 0
+    interval_row = DBOS.sql_session.execute(
+        text("SELECT interval FROM scheduled_tasks WHERE id=:tid"), {"tid": task_id}
+    ).fetchone()
+    if interval_row:
+        seconds = _INTERVALS.get(interval_row[0], 86400)
+    next_run = datetime.utcnow() + timedelta(seconds=seconds)
+    DBOS.sql_session.execute(text(
+        "UPDATE scheduled_tasks SET enabled=1, next_run_at=:next_run WHERE id=:tid"
+    ), {"tid": task_id, "next_run": next_run})
+    return True
+
+
+@DBOS.transaction()
+def schedule_update(task_id: int, name: Optional[str] = None,
+                    prompt: Optional[str] = None, interval: Optional[str] = None) -> bool:
+    row = DBOS.sql_session.execute(
+        text("SELECT id FROM scheduled_tasks WHERE id=:tid"), {"tid": task_id}
+    ).fetchone()
+    if not row:
+        return False
+    updates = []
+    params: dict = {"tid": task_id}
+    if name is not None:
+        updates.append("name=:name")
+        params["name"] = name
+    if prompt is not None:
+        updates.append("prompt=:prompt")
+        params["prompt"] = prompt
+    if interval is not None:
+        updates.append("interval=:interval")
+        params["interval"] = interval
+        seconds = _INTERVALS.get(interval, 86400)
+        next_run = datetime.utcnow() + timedelta(seconds=seconds)
+        updates.append("next_run_at=:next_run")
+        params["next_run"] = next_run
+    if updates:
+        DBOS.sql_session.execute(
+            text(f"UPDATE scheduled_tasks SET {', '.join(updates)} WHERE id=:tid"), params
+        )
+    return True
+
+
+@DBOS.transaction()
+def schedule_get(task_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, name, prompt, interval, next_run_at, last_run_at, last_status, enabled "
+        "FROM scheduled_tasks WHERE id=:tid"
+    ), {"tid": task_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+# ── Social Connections ───────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def social_save_connection(platform: str, display_name: str, api_key_encrypted: str,
+                           username: Optional[str] = None, avatar_url: Optional[str] = None,
+                           scopes: Optional[str] = None) -> None:
+    DBOS.sql_session.execute(text("""
+        INSERT INTO social_connections
+            (platform, display_name, api_key_encrypted, username, avatar_url, scopes, updated_at)
+        VALUES (:platform, :display_name, :key, :username, :avatar, :scopes, CURRENT_TIMESTAMP)
+        ON CONFLICT (platform) DO UPDATE SET
+            display_name = EXCLUDED.display_name,
+            api_key_encrypted = EXCLUDED.api_key_encrypted,
+            username = EXCLUDED.username,
+            avatar_url = EXCLUDED.avatar_url,
+            scopes = EXCLUDED.scopes,
+            status = 'active',
+            updated_at = CURRENT_TIMESTAMP
+    """), {"platform": platform, "display_name": display_name, "key": api_key_encrypted,
+           "username": username, "avatar": avatar_url, "scopes": scopes})
+
+
+@DBOS.transaction()
+def social_get_connection(platform: str) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT * FROM social_connections WHERE platform=:p"
+    ), {"p": platform}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def social_list_connections() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT platform, display_name, username, avatar_url, status, scopes, "
+        "connected_at, updated_at FROM social_connections ORDER BY connected_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def social_delete_connection(platform: str) -> None:
+    DBOS.sql_session.execute(text(
+        "DELETE FROM social_connections WHERE platform=:p"
+    ), {"p": platform})
+
+
+@DBOS.transaction()
+def social_get_api_key(platform: str) -> Optional[str]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT api_key_encrypted FROM social_connections WHERE platform=:p AND status='active'"
+    ), {"p": platform}).fetchone()
+    if not row:
+        return None
+    from github_integration import decrypt_token
+    return decrypt_token(row[0])
+
+
+# ── Agent Run Token Tracking ─────────────────────────────────────────────────
+
+@DBOS.transaction()
+def agent_run_record_tokens(run_id: str, agent_id: str, phase: str,
+                            model: str, prompt_tokens: int,
+                            completion_tokens: int, cost_usd: float) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO agent_run_tokens "
+        "(run_id, agent_id, phase, model, prompt_tokens, completion_tokens, cost_usd) "
+        "VALUES (:rid, :aid, :phase, :model, :pt, :ct, :cost)"
+    ), {"rid": run_id, "aid": agent_id, "phase": phase, "model": model,
+        "pt": prompt_tokens, "ct": completion_tokens, "cost": cost_usd})
+
+
+@DBOS.transaction()
+def agent_run_total_cost(run_id: str) -> float:
+    row = DBOS.sql_session.execute(text(
+        "SELECT COALESCE(SUM(cost_usd), 0.0) FROM agent_run_tokens WHERE run_id=:rid"
+    ), {"rid": run_id}).fetchone()
+    return float(row[0])
+
+
+@DBOS.transaction()
+def agent_run_total_tokens(run_id: str) -> int:
+    row = DBOS.sql_session.execute(text(
+        "SELECT COALESCE(SUM(prompt_tokens + completion_tokens), 0) "
+        "FROM agent_run_tokens WHERE run_id=:rid"
+    ), {"rid": run_id}).fetchone()
+    return int(row[0])
+
+
+# ── Killswitch ───────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def killswitch_get() -> bool:
+    row = DBOS.sql_session.execute(text(
+        "SELECT value FROM app_settings WHERE key='killswitch'"
+    )).fetchone()
+    return row[0] == "1" if row else False
+
+
+@DBOS.transaction()
+def killswitch_set(active: bool) -> None:
+    val = "1" if active else "0"
+    DBOS.sql_session.execute(text("""
+        INSERT INTO app_settings (key, value, updated_at)
+        VALUES ('killswitch', :val, CURRENT_TIMESTAMP)
+        ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=EXCLUDED.updated_at
+    """), {"val": val})
 
 
 # ── Webhook Events ────────────────────────────────────────────────────────────

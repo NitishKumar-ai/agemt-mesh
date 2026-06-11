@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, OctagonX, ShieldOff, XCircle } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { api } from "../lib/api";
 import type { AppSettings } from "../lib/types";
@@ -26,14 +26,14 @@ function SectionHeader({ title, description }: { title: string; description: str
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, danger }: { children: React.ReactNode; danger?: boolean }) {
   return (
     <div
       style={{
-        border: "1px solid var(--border)",
+        border: `1px solid ${danger ? "var(--error)" : "var(--border)"}`,
         borderRadius: 12,
         padding: "18px 20px",
-        background: "var(--panel)",
+        background: danger ? "rgba(221,78,78,0.04)" : "var(--panel)",
         marginBottom: 20,
         display: "flex",
         flexDirection: "column",
@@ -75,6 +75,8 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [killswitchPending, setKillswitchPending] = useState(false);
+  const [confirmKill, setConfirmKill] = useState(false);
 
   useEffect(() => {
     api.getSettings()
@@ -83,19 +85,114 @@ export function SettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function toggleKillswitch() {
+    if (!settings) return;
+    if (settings.killswitch_active) {
+      setKillswitchPending(true);
+      try {
+        const res = await api.disengageKillswitch();
+        setSettings({ ...settings, killswitch_active: res.killswitch_active });
+      } finally {
+        setKillswitchPending(false);
+      }
+    } else {
+      if (!confirmKill) {
+        setConfirmKill(true);
+        return;
+      }
+      setKillswitchPending(true);
+      setConfirmKill(false);
+      try {
+        const res = await api.engageKillswitch();
+        setSettings({ ...settings, killswitch_active: res.killswitch_active });
+      } finally {
+        setKillswitchPending(false);
+      }
+    }
+  }
+
   return (
     <div className="page">
       <PageHeader
         eyebrow="Operations"
         title="Settings"
-        description="Runtime configuration status for models, integrations, and observability."
+        description="Runtime configuration, integrations, and safety controls."
       />
 
       {loading && <div className="empty-card">Loading settings…</div>}
-      {error && <div className="empty-card" style={{ color: "var(--error)" }}>{error}</div>}
+      {error && (
+        <div className="empty-card" style={{ color: "var(--muted)" }}>
+          Could not load settings — the backend is not reachable.
+        </div>
+      )}
 
       {settings && (
         <>
+          {/* Global Killswitch */}
+          <SectionHeader
+            title="Emergency stop"
+            description="Immediately halt all running agent workflows. Agents already mid-step will finish their current step but will not continue."
+          />
+          <Card danger={settings.killswitch_active}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {settings.killswitch_active
+                  ? <OctagonX size={22} color="var(--error)" />
+                  : <ShieldOff size={22} color="var(--muted)" />}
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: settings.killswitch_active ? "var(--error)" : "var(--text)" }}>
+                    {settings.killswitch_active ? "Killswitch ENGAGED — all agents halted" : "Killswitch disengaged"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                    {settings.killswitch_active
+                      ? "No new workflows will start. Click to resume normal operation."
+                      : "Agents are running normally."}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {confirmKill && !settings.killswitch_active && (
+                  <>
+                    <span style={{ fontSize: 12, color: "var(--error)", fontWeight: 600 }}>
+                      <AlertTriangle size={13} style={{ verticalAlign: "middle", marginRight: 3 }} />
+                      Confirm?
+                    </span>
+                    <button
+                      className="secondary-button"
+                      style={{ fontSize: 12, padding: "5px 12px" }}
+                      onClick={() => setConfirmKill(false)}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={toggleKillswitch}
+                  disabled={killswitchPending}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    border: 0,
+                    color: "white",
+                    background: settings.killswitch_active ? "var(--success)" : "var(--error)",
+                    opacity: killswitchPending ? 0.6 : 1,
+                  }}
+                >
+                  {killswitchPending
+                    ? "Working…"
+                    : settings.killswitch_active
+                      ? "Resume agents"
+                      : confirmKill
+                        ? "Yes, stop all agents"
+                        : "Stop all agents"}
+                </button>
+              </div>
+            </div>
+          </Card>
+
           {/* Models */}
           <SectionHeader
             title="Model routing"
@@ -144,8 +241,8 @@ export function SettingsPage() {
             }}
           >
             <strong>To change settings:</strong> edit your <code>.env</code> file (see{" "}
-            <code>.env.example</code>) and restart the API server. All values are read at
-            startup and cannot be changed at runtime.
+            <code>.env.example</code>) and restart the API server. All values except the killswitch
+            are read at startup and cannot be changed at runtime.
           </div>
         </>
       )}

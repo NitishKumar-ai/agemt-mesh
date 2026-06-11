@@ -46,7 +46,7 @@ export function AppShell({ children, page, onPageChange, navItems, streamState, 
         </button>
 
         <nav className="sidebar-nav">
-          {navItems.filter((item) => !["session", "sessions", "settings"].includes(item.key)).map((item) => {
+          {navItems.filter((item) => !["session", "settings"].includes(item.key)).map((item) => {
             const Icon = item.icon;
             return (
               <button

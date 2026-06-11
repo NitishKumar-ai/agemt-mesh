@@ -11,6 +11,10 @@ from sse_starlette.sse import EventSourceResponse
 from dbos import DBOS, DBOSConfig  # noqa: F401
 from main import (agent_loop, generate, MODEL_PLAN, scan_suggested_tasks, self_heal_pr,
                   commitguard_workflow, _update_scan_step)
+from harness import (
+    BaseAgent, AgentConfig, register_agent, list_agents_info,
+    run_agent as harness_run_agent,
+)
 from events import bus
 from github_integration import (
     GitHubConfigurationError,
@@ -49,13 +53,18 @@ from store import (
     tasks_mark_running,
     schedule_create,
     schedule_list,
+    schedule_get,
     schedule_disable,
+    schedule_enable,
+    schedule_update,
     webhook_create,
     sessions_list,
     sessions_get,
     workflows_list,
     workflows_get_last_step,
     approvals_list,
+    killswitch_get,
+    killswitch_set,
 )
 
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
@@ -96,6 +105,85 @@ if FRONTEND_ASSETS.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="frontend-assets")
 
 DBOS.launch()
+
+# ── Agent Registry ───────────────────────────────────────────────────────────
+# Register all known agents so the harness can dispatch by agent_id.
+
+from harness import MODEL_PLAN as _H_MODEL_PLAN, MODEL_EXECUTE as _H_MODEL_EXECUTE
+
+
+class _CommitGuardAgent(BaseAgent):
+    def get_tools(self) -> list:
+        return ["git_diff_review", "secret_scanning", "static_analysis", "github_issues"]
+
+
+class _MarketingAgent(BaseAgent):
+    def get_tools(self) -> list:
+        return ["research", "content_generation", "typefully_scheduling"]
+
+
+class _SchedulerAgent(BaseAgent):
+    def get_tools(self) -> list:
+        return ["cron_execution", "self_healing"]
+
+
+class _SelfHealAgent(BaseAgent):
+    def get_tools(self) -> list:
+        return ["build_diagnosis", "patch_generation", "pr_creation"]
+
+
+class _ResearchAgent(BaseAgent):
+    def get_tools(self) -> list:
+        return ["web_search", "rag"]
+
+
+register_agent("commitguard", _CommitGuardAgent,
+    name="CommitGuard",
+    description="Security scanner — reviews git diffs for vulnerabilities in E2B sandboxes.",
+    capabilities=["git_diff_review", "secret_scanning", "static_analysis", "github_issues"],
+    default_config=AgentConfig(
+        agent_id="commitguard", model_plan=_H_MODEL_PLAN,
+        model_execute=_H_MODEL_PLAN, sandbox="e2b",
+        requires_approval=True, cost_budget_usd=2.0,
+    ))
+
+register_agent("marketing", _MarketingAgent,
+    name="Marketing Agent",
+    description="Researches findings and generates outreach content via the Research → Write pipeline.",
+    capabilities=["research", "content_generation", "typefully_scheduling"],
+    default_config=AgentConfig(
+        agent_id="marketing", model_plan=_H_MODEL_PLAN,
+        model_execute=_H_MODEL_EXECUTE, requires_approval=True,
+        cost_budget_usd=1.0,
+    ))
+
+register_agent("scheduler", _SchedulerAgent,
+    name="Scheduler Agent",
+    description="Runs recurring natural-language tasks on configurable intervals.",
+    capabilities=["cron_execution", "self_healing"],
+    default_config=AgentConfig(
+        agent_id="scheduler", model_plan=_H_MODEL_PLAN,
+        model_execute=_H_MODEL_PLAN, cost_budget_usd=0.5,
+    ))
+
+register_agent("selfheal", _SelfHealAgent,
+    name="Self-Heal Agent",
+    description="Diagnoses failed builds from webhook events and generates fix PRs.",
+    capabilities=["build_diagnosis", "patch_generation", "pr_creation"],
+    default_config=AgentConfig(
+        agent_id="selfheal", model_plan=_H_MODEL_PLAN,
+        model_execute=_H_MODEL_EXECUTE, cost_budget_usd=1.5,
+    ))
+
+register_agent("research", _ResearchAgent,
+    name="Research Agent",
+    description="Web search and RAG-powered research for information gathering.",
+    capabilities=["web_search", "rag"],
+    default_config=AgentConfig(
+        agent_id="research", model_plan=_H_MODEL_PLAN,
+        model_execute=_H_MODEL_EXECUTE, cost_budget_usd=0.5,
+    ))
+
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
@@ -237,6 +325,197 @@ async def github_import_repository(payload: dict):
         raise HTTPException(status_code=404, detail="Repository not found for connected GitHub account")
     github_upsert_repo(repository)
     return {"status": "imported", "repository": repository}
+
+
+# ── Social Media Connections ─────────────────────────────────────────────────
+
+from store import (
+    social_save_connection,
+    social_get_connection,
+    social_list_connections,
+    social_delete_connection,
+    social_get_api_key,
+)
+
+SUPPORTED_PLATFORMS = {
+    "typefully": {
+        "name": "Typefully",
+        "description": "Schedule and publish to Twitter/X and LinkedIn via Typefully's API.",
+        "auth_type": "api_key",
+        "docs_url": "https://typefully.com/settings/api",
+        "icon": "pen-tool",
+        "scopes": "drafts,schedule,analytics",
+    },
+    "twitter": {
+        "name": "Twitter / X",
+        "description": "Direct Twitter API access for posting and analytics.",
+        "auth_type": "api_key",
+        "docs_url": "https://developer.twitter.com/en/portal/dashboard",
+        "icon": "twitter",
+        "scopes": "tweet.read,tweet.write,users.read",
+    },
+    "linkedin": {
+        "name": "LinkedIn",
+        "description": "Publish posts and articles to your LinkedIn profile or company page.",
+        "auth_type": "api_key",
+        "docs_url": "https://www.linkedin.com/developers/apps",
+        "icon": "linkedin",
+        "scopes": "w_member_social,r_liteprofile",
+    },
+    "buffer": {
+        "name": "Buffer",
+        "description": "Multi-platform social scheduling via Buffer's publishing API.",
+        "auth_type": "api_key",
+        "docs_url": "https://buffer.com/developers/api",
+        "icon": "layers",
+        "scopes": "publish",
+    },
+}
+
+
+@app.get("/api/social/platforms")
+async def list_social_platforms():
+    """Return all supported social platforms with their connection status."""
+    connections = {c["platform"]: c for c in social_list_connections()}
+    platforms = []
+    for pid, meta in SUPPORTED_PLATFORMS.items():
+        conn = connections.get(pid)
+        platforms.append({
+            "id": pid,
+            **meta,
+            "connected": conn is not None and conn.get("status") == "active",
+            "username": conn.get("username") if conn else None,
+            "connected_at": conn.get("connected_at") if conn else None,
+        })
+    return {"platforms": platforms}
+
+
+@app.post("/api/social/connect")
+async def connect_social(payload: dict):
+    """
+    Connect a social media platform via API key.
+
+    Body: {"platform": "typefully", "api_key": "...", "username": "optional"}
+    """
+    platform = payload.get("platform", "").strip()
+    api_key = payload.get("api_key", "").strip()
+    username = payload.get("username", "").strip() or None
+
+    if platform not in SUPPORTED_PLATFORMS:
+        raise HTTPException(400, f"Unsupported platform: {platform}. Supported: {list(SUPPORTED_PLATFORMS.keys())}")
+    if not api_key:
+        raise HTTPException(400, "api_key is required")
+
+    meta = SUPPORTED_PLATFORMS[platform]
+
+    # Validate the key by making a test request
+    validation = await _validate_social_key(platform, api_key)
+    if not validation["valid"]:
+        raise HTTPException(400, f"API key validation failed: {validation['error']}")
+
+    from github_integration import encrypt_token
+    encrypted = encrypt_token(api_key)
+
+    social_save_connection(
+        platform=platform,
+        display_name=meta["name"],
+        api_key_encrypted=encrypted,
+        username=validation.get("username") or username,
+        avatar_url=validation.get("avatar_url"),
+        scopes=meta["scopes"],
+    )
+
+    return {
+        "status": "connected",
+        "platform": platform,
+        "username": validation.get("username") or username,
+    }
+
+
+@app.delete("/api/social/{platform}")
+async def disconnect_social(platform: str):
+    if platform not in SUPPORTED_PLATFORMS:
+        raise HTTPException(400, f"Unsupported platform: {platform}")
+    conn = social_get_connection(platform)
+    if not conn:
+        raise HTTPException(404, f"{platform} is not connected")
+    social_delete_connection(platform)
+    return {"status": "disconnected", "platform": platform}
+
+
+@app.get("/api/social/{platform}/status")
+async def social_platform_status(platform: str):
+    if platform not in SUPPORTED_PLATFORMS:
+        raise HTTPException(400, f"Unsupported platform: {platform}")
+    conn = social_get_connection(platform)
+    meta = SUPPORTED_PLATFORMS[platform]
+    if not conn:
+        return {"platform": platform, "connected": False, **meta}
+    return {
+        "platform": platform,
+        "connected": conn.get("status") == "active",
+        "username": conn.get("username"),
+        "avatar_url": conn.get("avatar_url"),
+        "connected_at": conn.get("connected_at"),
+        **meta,
+    }
+
+
+async def _validate_social_key(platform: str, api_key: str) -> dict:
+    """Test an API key against the platform's validation endpoint."""
+    import httpx
+    try:
+        if platform == "typefully":
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    "https://api.typefully.com/v1/drafts/recently-published",
+                    headers={"X-API-KEY": f"Bearer {api_key}"},
+                )
+            if resp.status_code == 200:
+                return {"valid": True, "username": None, "avatar_url": None}
+            if resp.status_code == 401:
+                return {"valid": False, "error": "Invalid API key — check your Typefully settings"}
+            return {"valid": False, "error": f"Typefully returned HTTP {resp.status_code}"}
+
+        elif platform == "twitter":
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    "https://api.twitter.com/2/users/me",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                )
+            if resp.status_code == 200:
+                data = resp.json().get("data", {})
+                return {"valid": True, "username": data.get("username"), "avatar_url": data.get("profile_image_url")}
+            return {"valid": False, "error": f"Twitter returned HTTP {resp.status_code}"}
+
+        elif platform == "linkedin":
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    "https://api.linkedin.com/v2/userinfo",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                )
+            if resp.status_code == 200:
+                data = resp.json()
+                return {"valid": True, "username": data.get("name"), "avatar_url": data.get("picture")}
+            return {"valid": False, "error": f"LinkedIn returned HTTP {resp.status_code}"}
+
+        elif platform == "buffer":
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    "https://api.bufferapp.com/1/user.json",
+                    params={"access_token": api_key},
+                )
+            if resp.status_code == 200:
+                data = resp.json()
+                return {"valid": True, "username": data.get("name"), "avatar_url": None}
+            return {"valid": False, "error": f"Buffer returned HTTP {resp.status_code}"}
+
+        return {"valid": True}  # unknown platform — skip validation
+    except httpx.TimeoutException:
+        return {"valid": False, "error": f"Connection to {platform} timed out"}
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
+
 
 # ── Marketing arm ─────────────────────────────────────────────────────────────
 
@@ -442,6 +721,35 @@ async def create_schedule(payload: dict):
 @app.get("/api/schedule")
 async def list_schedules():
     return {"schedules": schedule_list()}
+
+
+@app.patch("/api/schedule/{task_id}")
+async def update_schedule(task_id: int, payload: dict):
+    name = payload.get("name")
+    prompt = payload.get("prompt")
+    interval = payload.get("interval")
+    enabled = payload.get("enabled")
+    if interval and interval not in _VALID_INTERVALS:
+        raise HTTPException(status_code=400, detail="interval must be hourly/daily/weekly/monthly")
+    if enabled is not None:
+        if enabled:
+            if not schedule_enable(task_id):
+                raise HTTPException(status_code=404, detail="Schedule not found")
+        else:
+            schedule_disable(task_id)
+    if name or prompt or interval:
+        if not schedule_update(task_id, name=name, prompt=prompt, interval=interval):
+            raise HTTPException(status_code=404, detail="Schedule not found")
+    return {"status": "updated"}
+
+
+@app.post("/api/schedule/{task_id}/run")
+async def run_schedule_now(task_id: int):
+    row = schedule_get(task_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    handle = DBOS.start_workflow(agent_loop, row["prompt"])
+    return {"status": "started", "workflow_id": handle.workflow_id}
 
 
 @app.delete("/api/schedule/{task_id}")
@@ -654,4 +962,51 @@ async def get_settings():
         "traceloop_configured": bool(os.environ.get("TRACELOOP_API_KEY")),
         "langfuse_configured": bool(os.environ.get("LANGFUSE_PUBLIC_KEY")),
         "commitguard_webhook": os.environ.get("COMMITGUARD_WEBHOOK_URL", ""),
+        "killswitch_active": killswitch_get(),
     }
+
+
+# ── Killswitch ───────────────────────────────────────────────────────────────
+
+@app.post("/api/killswitch")
+async def engage_killswitch():
+    killswitch_set(True)
+    return {"status": "engaged", "killswitch_active": True}
+
+
+@app.delete("/api/killswitch")
+async def disengage_killswitch():
+    killswitch_set(False)
+    return {"status": "disengaged", "killswitch_active": False}
+
+
+# ── Agents Roster ────────────────────────────────────────────────────────────
+
+@app.get("/api/agents")
+async def list_agents():
+    """Return the agent roster from the harness registry with live status."""
+    return {"agents": list_agents_info()}
+
+
+@app.post("/api/agents/run")
+async def run_agent_endpoint(payload: dict):
+    """
+    Dispatch any registered agent through the generic harness workflow.
+
+    Body: {"agent_id": "...", "goal": "...", "context": "...", "config": {...}}
+    """
+    agent_id = payload.get("agent_id")
+    goal = payload.get("goal", "")
+    context = payload.get("context", "")
+    config_overrides = payload.get("config")
+
+    if not agent_id:
+        raise HTTPException(400, "agent_id is required")
+    if not goal:
+        raise HTTPException(400, "goal is required")
+
+    handle = DBOS.start_workflow(
+        harness_run_agent, agent_id, goal, context,
+        config_overrides=config_overrides,
+    )
+    return {"status": "started", "workflow_id": handle.workflow_id, "agent_id": agent_id}

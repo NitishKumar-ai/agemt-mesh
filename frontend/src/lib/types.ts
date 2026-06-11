@@ -3,11 +3,13 @@ export type PageKey =
   | "sessions"
   | "workflows"
   | "approvals"
+  | "agents"
   | "commitguard"
   | "marketing"
   | "tasks"
   | "schedules"
   | "activity"
+  | "connections"
   | "settings";
 
 export type MeshEvent = {
@@ -173,4 +175,28 @@ export type AppSettings = {
   traceloop_configured: boolean;
   langfuse_configured: boolean;
   commitguard_webhook: string;
+  killswitch_active: boolean;
+};
+
+export type SocialPlatform = {
+  id: string;
+  name: string;
+  description: string;
+  auth_type: string;
+  docs_url: string;
+  icon: string;
+  scopes: string;
+  connected: boolean;
+  username: string | null;
+  connected_at: string | null;
+};
+
+export type AgentInfo = {
+  id: string;
+  name: string;
+  description: string;
+  model: string;
+  sandbox: string | null;
+  capabilities: string[];
+  status: "idle" | "running" | "error";
 };

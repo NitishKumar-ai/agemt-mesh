@@ -1,4 +1,4 @@
-import type { AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, ScheduledTask, SecurityFinding, SuggestedTask, WorkflowRun } from "./types";
+import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
 
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -179,6 +179,57 @@ export const api = {
   // Approvals
   listApprovals() {
     return json<{ approvals: ApprovalEvent[] }>("/api/approvals");
+  },
+
+  // Schedules — Phase 2
+  updateSchedule(taskId: number, payload: { name?: string; prompt?: string; interval?: string; enabled?: boolean }) {
+    return json<{ status: string }>(`/api/schedule/${taskId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    });
+  },
+
+  runScheduleNow(taskId: number) {
+    return json<{ status: string; workflow_id: string }>(`/api/schedule/${taskId}/run`, { method: "POST" });
+  },
+
+  // Killswitch
+  engageKillswitch() {
+    return json<{ status: string; killswitch_active: boolean }>("/api/killswitch", { method: "POST" });
+  },
+
+  disengageKillswitch() {
+    return json<{ status: string; killswitch_active: boolean }>("/api/killswitch", { method: "DELETE" });
+  },
+
+  // Agents
+  listAgents() {
+    return json<{ agents: AgentInfo[] }>("/api/agents");
+  },
+
+  // Social connections
+  listSocialPlatforms() {
+    return json<{ platforms: SocialPlatform[] }>("/api/social/platforms");
+  },
+
+  connectSocial(platform: string, apiKey: string, username?: string) {
+    return json<{ status: string; platform: string; username: string | null }>("/api/social/connect", {
+      method: "POST",
+      body: JSON.stringify({ platform, api_key: apiKey, username }),
+    });
+  },
+
+  disconnectSocial(platform: string) {
+    return json<{ status: string; platform: string }>(`/api/social/${platform}`, {
+      method: "DELETE",
+    });
+  },
+
+  runAgent(agentId: string, goal: string, context: string, config?: Record<string, unknown>) {
+    return json<{ status: string; workflow_id: string; agent_id: string }>("/api/agents/run", {
+      method: "POST",
+      body: JSON.stringify({ agent_id: agentId, goal, context, config }),
+    });
   },
 
   // Settings

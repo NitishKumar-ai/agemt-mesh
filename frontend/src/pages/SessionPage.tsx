@@ -90,7 +90,7 @@ export function SessionPage({
           id: `error-${Date.now()}`,
           role: "system",
           title: "Could not start task",
-          body: error instanceof Error ? error.message : "Unknown error",
+          body: "The backend is not reachable. Make sure the API server is running.",
           time: new Date(),
           status: "failed"
         }
