@@ -65,6 +65,11 @@ from store import (
     approvals_list,
     killswitch_get,
     killswitch_set,
+    safety_list_verdicts,
+    safety_list_traces,
+    safety_list_escalations,
+    safety_resolve_escalation,
+    safety_stats,
 )
 
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
@@ -203,7 +208,10 @@ async def get_dashboard():
 @app.post("/api/run")
 async def run_workflow(payload: dict):
     context = payload.get("context", "Audit target environment")
-    handle = DBOS.start_workflow(agent_loop, context)
+    goal = payload.get("goal", "Audit target environment for vulnerabilities")
+    handle = DBOS.start_workflow(
+        harness_run_agent, "commitguard", goal, context
+    )
     return {"status": "started", "workflow_id": handle.workflow_id}
 
 @app.post("/api/approve/{workflow_id}")
@@ -1010,3 +1018,47 @@ async def run_agent_endpoint(payload: dict):
         config_overrides=config_overrides,
     )
     return {"status": "started", "workflow_id": handle.workflow_id, "agent_id": agent_id}
+
+
+# ── Safety / CriticGate (Track B) ────────────────────────────────────────────
+
+@app.get("/api/safety/stats")
+async def get_safety_stats():
+    """Aggregate CriticGate statistics — verdicts, risk tiers, confidence."""
+    return safety_stats()
+
+
+@app.get("/api/safety/verdicts")
+async def get_safety_verdicts(run_id: str = "", limit: int = 100):
+    """List Critic verdicts, optionally filtered by run_id."""
+    return {"verdicts": safety_list_verdicts(run_id=run_id or None, limit=limit)}
+
+
+@app.get("/api/safety/traces/{run_id}")
+async def get_safety_traces(run_id: str):
+    """Return all trace frames for a specific run."""
+    return {"traces": safety_list_traces(run_id)}
+
+
+@app.get("/api/safety/escalations")
+async def get_safety_escalations(resolved: str = ""):
+    """List escalations. Pass ?resolved=true or ?resolved=false to filter."""
+    r = None
+    if resolved == "true":
+        r = True
+    elif resolved == "false":
+        r = False
+    return {"escalations": safety_list_escalations(resolved=r)}
+
+
+@app.post("/api/safety/escalations/{escalation_id}/resolve")
+async def resolve_escalation(escalation_id: int, payload: dict):
+    """Resolve a FLAG/BLOCK escalation with human judgment."""
+    resolved_by = payload.get("resolved_by", "operator")
+    resolution = payload.get("resolution", "")
+    if not resolution:
+        raise HTTPException(400, "resolution is required")
+    ok = safety_resolve_escalation(escalation_id, resolved_by, resolution)
+    if not ok:
+        raise HTTPException(404, "Escalation not found")
+    return {"status": "resolved", "escalation_id": escalation_id}

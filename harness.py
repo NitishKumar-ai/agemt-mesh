@@ -30,6 +30,9 @@ from store import (
     agent_run_total_cost,
     agent_run_total_tokens,
     killswitch_get,
+    safety_record_trace,
+    safety_record_verdict,
+    safety_create_escalation,
 )
 
 logger = logging.getLogger(__name__)
@@ -192,8 +195,15 @@ class BaseAgent(ABC):
         prompt = (
             f"You are an autonomous agent. Goal: {self.goal}\n"
             f"Context: {context}\n\n"
-            "Produce a concrete execution plan as JSON:\n"
-            '{"steps": ["step 1 description", "step 2 description", ...]}\n'
+            "Produce a concrete execution plan as a JSON object containing a list of 'frames'.\n"
+            "Each frame MUST include:\n"
+            "  - step_index: integer\n"
+            "  - thought: your internal reasoning for this step\n"
+            "  - proposed_action: the concrete action to execute\n"
+            "  - justification: why this action is safe and serves the goal\n"
+            "  - dependencies: list of prior step_indexes this step depends on\n\n"
+            "Format:\n"
+            '{"frames": [{"step_index": 0, "thought": "...", "proposed_action": "...", "justification": "...", "dependencies": []}, ...]}\n'
             "Reply with ONLY valid JSON."
         )
         raw = generate_tracked(
@@ -202,17 +212,26 @@ class BaseAgent(ABC):
         try:
             clean = re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
             plan_dict = json.loads(clean)
-            if "steps" not in plan_dict:
-                raise ValueError("missing steps key")
+            if "frames" in plan_dict:
+                # Compatibility shim for legacy consumers of "steps"
+                plan_dict["steps"] = [f["proposed_action"] for f in plan_dict["frames"]]
+            elif "steps" in plan_dict:
+                # Fallback for old-style plans
+                pass
+            else:
+                raise ValueError("missing frames or steps key")
         except (json.JSONDecodeError, ValueError):
             plan_dict = {
                 "steps": [s.strip() for s in raw.split("\n") if s.strip()][:5]
                 or [raw[:200]]
             }
+        
+        steps = plan_dict.get("steps", [])
         self.write_event("plan_created", {
-            "plan_steps": len(plan_dict["steps"]),
+            "plan_steps": len(steps),
             "status": "Idle",
-            "steps": plan_dict["steps"],
+            "steps": steps,
+            "has_traces": "frames" in plan_dict,
         })
         return plan_dict
 
@@ -362,6 +381,78 @@ def _harness_review(agent: BaseAgent, result: dict, run_id: str) -> dict:
 
 
 @DBOS.step()
+def _harness_critic_gate(
+    agent: BaseAgent, plan: dict, run_id: str, goal: str,
+) -> dict:
+    """
+    Per-action CriticGate evaluation (Track B).
+
+    Extracts trace frames from the plan, runs each through the Critic,
+    and returns a gated result with verdicts per action.
+    """
+    from agents.safety.critic import (
+        CriticGate, TraceFrame, extract_trace_frames, Verdict,
+    )
+
+    gate = CriticGate(
+        critic_model=os.getenv("MODEL_CRITIC", "anthropic/claude-haiku-4-5"),
+        max_recursion_depth=int(os.getenv("CRITIC_MAX_DEPTH", "2")),
+        confidence_threshold=float(os.getenv("CRITIC_CONFIDENCE", "0.7")),
+    )
+
+    steps = plan.get("steps", [])
+    # Pass the full plan dict as JSON so extract_trace_frames can find "frames"
+    frames = extract_trace_frames(json.dumps(plan), steps, goal)
+
+    gated_steps = []
+    blocked_steps = []
+    flagged_steps = []
+
+    for frame in frames:
+        verdict = gate.evaluate(frame, run_id, agent.agent_id, goal)
+
+        safety_record_trace(run_id, agent.agent_id, frame.to_dict())
+        safety_record_verdict(run_id, agent.agent_id, verdict.to_dict())
+
+        if verdict.verdict == Verdict.PASS:
+            gated_steps.append(frame.proposed_action)
+        elif verdict.verdict == Verdict.FLAG:
+            flagged_steps.append({
+                "step": frame.proposed_action,
+                "reason": verdict.reasoning,
+                "confidence": verdict.confidence,
+            })
+            gated_steps.append(frame.proposed_action)
+        else:
+            blocked_steps.append({
+                "step": frame.proposed_action,
+                "reason": verdict.reasoning,
+                "confidence": verdict.confidence,
+            })
+            safety_create_escalation(
+                run_id, agent.agent_id, frame.frame_hash,
+                None, "critic_block",
+            )
+
+    agent.write_event("critic_evaluation", {
+        "status": "Executing",
+        "total_steps": len(frames),
+        "passed": len(gated_steps),
+        "flagged": len(flagged_steps),
+        "blocked": len(blocked_steps),
+        "stats": gate.stats,
+    })
+
+    return {
+        "gated_steps": gated_steps,
+        "blocked_steps": blocked_steps,
+        "flagged_steps": flagged_steps,
+        "all_passed": len(blocked_steps) == 0,
+        "stats": gate.stats,
+    }
+
+
+@DBOS.step()
 def _harness_request_approval(agent: BaseAgent, payload: dict, run_id: str):
     agent.request_approval(payload, run_id)
 
@@ -443,10 +534,36 @@ def run_agent(
                     agent.write_event("execution_aborted", {"status": "Failed"})
                     return {"passed": False, "feedback": "Rejected by operator"}
 
-            # ── Execute ──
+            # ── Critic Gate (Track B) ──
+            agent.check_killswitch()
+            update_status(run_id, agent_id, "critic_eval", "Executing")
+            gate_result = _harness_critic_gate(agent, plan, run_id, goal)
+            agent.check_budget(run_id)
+
+            if not gate_result["all_passed"]:
+                blocked = gate_result["blocked_steps"]
+                agent.write_event("critic_blocked", {
+                    "status": "Executing",
+                    "blocked_steps": blocked,
+                })
+                if attempt < cfg.max_retries:
+                    context = (
+                        f"Critic blocked {len(blocked)} action(s): "
+                        f"{[b['reason'] for b in blocked[:3]]}. "
+                        f"Revise plan to avoid these. Original context: {context[:300]}"
+                    )
+                    agent.write_event("retry", {
+                        "status": "Executing",
+                        "attempt": attempt + 2,
+                        "issues": [b["reason"] for b in blocked],
+                    })
+                    continue
+
+            # ── Execute (only critic-approved steps) ──
+            gated_plan = {"steps": gate_result["gated_steps"]}
             agent.check_killswitch()
             update_status(run_id, agent_id, "executing", "Executing")
-            result = _harness_execute(agent, plan, run_id)
+            result = _harness_execute(agent, gated_plan, run_id)
             agent.check_budget(run_id)
 
             # ── Review ──

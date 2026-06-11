@@ -1,4 +1,4 @@
-import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
+import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, SafetyEscalation, SafetyStats, SafetyTraceFrame, SafetyVerdict, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
 
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -229,6 +229,32 @@ export const api = {
     return json<{ status: string; workflow_id: string; agent_id: string }>("/api/agents/run", {
       method: "POST",
       body: JSON.stringify({ agent_id: agentId, goal, context, config }),
+    });
+  },
+
+  // Safety / CriticGate
+  safetyStats() {
+    return json<SafetyStats>("/api/safety/stats");
+  },
+
+  safetyVerdicts(runId?: string) {
+    const q = runId ? `?run_id=${runId}` : "";
+    return json<{ verdicts: SafetyVerdict[] }>(`/api/safety/verdicts${q}`);
+  },
+
+  safetyTraces(runId: string) {
+    return json<{ traces: SafetyTraceFrame[] }>(`/api/safety/traces/${runId}`);
+  },
+
+  safetyEscalations(resolved?: boolean) {
+    const q = resolved !== undefined ? `?resolved=${resolved}` : "";
+    return json<{ escalations: SafetyEscalation[] }>(`/api/safety/escalations${q}`);
+  },
+
+  resolveEscalation(escalationId: number, resolution: string) {
+    return json<{ status: string }>(`/api/safety/escalations/${escalationId}/resolve`, {
+      method: "POST",
+      body: JSON.stringify({ resolution, resolved_by: "operator" }),
     });
   },
 

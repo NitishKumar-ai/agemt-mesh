@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Bot, CheckCircle2, Clock3, Files, Link2, Megaphone, PlayCircle, Settings, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Bot, CheckCircle2, Clock3, Files, Link2, Megaphone, PlayCircle, Settings, Shield, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { AppShell } from "./components/AppShell";
 import { SessionPage } from "./pages/SessionPage";
 import { SessionsPage } from "./pages/SessionsPage";
@@ -12,6 +12,7 @@ import { MarketingPage } from "./pages/MarketingPage";
 import { CommitGuardPage } from "./pages/CommitGuardPage";
 import { AgentsPage } from "./pages/AgentsPage";
 import { ConnectionsPage } from "./pages/ConnectionsPage";
+import { SafetyPage } from "./pages/SafetyPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { connectEventStream } from "./lib/events";
 import { api } from "./lib/api";
@@ -47,6 +48,7 @@ export function App() {
       { key: "workflows" as const, label: "Workflows", icon: PlayCircle },
       { key: "approvals" as const, label: "Approvals", icon: ShieldAlert, badge: events.some((e) => e.eventType.includes("approval")) },
       { key: "agents" as const, label: "Agents", icon: Bot },
+      { key: "safety" as const, label: "Safety", icon: Shield },
       { key: "commitguard" as const, label: "CommitGuard", icon: ShieldCheck },
       { key: "marketing" as const, label: "Marketing", icon: Megaphone },
       { key: "tasks" as const, label: "Tasks", icon: CheckCircle2 },
@@ -70,6 +72,7 @@ export function App() {
       {page === "tasks"      && <TasksPage />}
       {page === "schedules"  && <SchedulesPage />}
       {page === "activity"   && <ActivityPage events={events} streamState={streamState} />}
+      {page === "safety"      && <SafetyPage />}
       {page === "connections" && <ConnectionsPage />}
       {page === "settings"   && <SettingsPage />}
     </AppShell>

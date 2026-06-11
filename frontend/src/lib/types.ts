@@ -10,6 +10,7 @@ export type PageKey =
   | "schedules"
   | "activity"
   | "connections"
+  | "safety"
   | "settings";
 
 export type MeshEvent = {
@@ -199,4 +200,59 @@ export type AgentInfo = {
   sandbox: string | null;
   capabilities: string[];
   status: "idle" | "running" | "error";
+};
+
+export type SafetyVerdict = {
+  id: number;
+  run_id: string;
+  agent_id: string;
+  frame_hash: string;
+  verdict: "PASS" | "FLAG" | "BLOCK";
+  confidence: number;
+  reasoning: string;
+  checks: Record<string, boolean>;
+  risk_tier: "low" | "medium" | "high" | "critical";
+  recursion_depth: number;
+  counterfactual_flag: boolean;
+  critic_model: string;
+  eval_duration_ms: number;
+  created_at: string;
+};
+
+export type SafetyTraceFrame = {
+  id: number;
+  run_id: string;
+  agent_id: string;
+  step_index: number;
+  thought: string;
+  proposed_action: string;
+  justification: string;
+  dependencies: number[];
+  context_hash: string;
+  frame_hash: string;
+  created_at: string;
+};
+
+export type SafetyEscalation = {
+  id: number;
+  run_id: string;
+  agent_id: string;
+  frame_hash: string;
+  verdict_id: number | null;
+  escalation_type: string;
+  resolved: boolean;
+  resolved_by: string | null;
+  resolution: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export type SafetyStats = {
+  total_evaluations: number;
+  by_verdict: Record<string, number>;
+  by_risk_tier: Record<string, number>;
+  avg_confidence: number;
+  avg_eval_duration_ms: number;
+  counterfactual_blocks: number;
+  open_escalations: number;
 };

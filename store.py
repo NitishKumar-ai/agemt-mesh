@@ -210,6 +210,67 @@ def init_business_tables(engine=None) -> None:
             "CREATE INDEX IF NOT EXISTS idx_agent_run_tokens_run "
             "ON agent_run_tokens(run_id)"
         ))
+        # ── Safety / CriticGate tables ───────────────────────────────────
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS safety_trace_frames (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                step_index INTEGER NOT NULL,
+                thought TEXT NOT NULL,
+                proposed_action TEXT NOT NULL,
+                justification TEXT NOT NULL,
+                dependencies TEXT DEFAULT '[]',
+                context_hash TEXT,
+                frame_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_safety_trace_run "
+            "ON safety_trace_frames(run_id)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS safety_critic_verdicts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                frame_hash TEXT NOT NULL,
+                verdict TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                reasoning TEXT NOT NULL,
+                checks TEXT DEFAULT '{}',
+                risk_tier TEXT DEFAULT 'low',
+                recursion_depth INTEGER DEFAULT 0,
+                counterfactual_flag INTEGER DEFAULT 0,
+                critic_model TEXT,
+                eval_duration_ms INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_safety_verdicts_run "
+            "ON safety_critic_verdicts(run_id)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_safety_verdicts_verdict "
+            "ON safety_critic_verdicts(verdict)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS safety_escalations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                frame_hash TEXT NOT NULL,
+                verdict_id INTEGER,
+                escalation_type TEXT NOT NULL,
+                resolved INTEGER DEFAULT 0,
+                resolved_by TEXT,
+                resolution TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP
+            )
+        """))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS social_connections (
                 platform TEXT PRIMARY KEY,
@@ -868,6 +929,176 @@ def approvals_list(limit: int = 100) -> list:
             "created_at": r["created_at"],
         })
     return result
+
+
+# ── Safety / CriticGate ─────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def safety_record_trace(run_id: str, agent_id: str, frame: dict) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO safety_trace_frames "
+        "(run_id, agent_id, step_index, thought, proposed_action, justification, "
+        "dependencies, context_hash, frame_hash) "
+        "VALUES (:rid, :aid, :si, :thought, :action, :justification, :deps, :ctx, :fh)"
+    ), {
+        "rid": run_id, "aid": agent_id,
+        "si": frame.get("step_index", 0),
+        "thought": frame.get("thought", ""),
+        "action": frame.get("proposed_action", ""),
+        "justification": frame.get("justification", ""),
+        "deps": json.dumps(frame.get("dependencies", [])),
+        "ctx": frame.get("context_hash", ""),
+        "fh": frame.get("frame_hash", ""),
+    })
+
+
+@DBOS.transaction()
+def safety_record_verdict(run_id: str, agent_id: str, verdict: dict) -> int:
+    vid = DBOS.sql_session.execute(text(
+        "INSERT INTO safety_critic_verdicts "
+        "(run_id, agent_id, frame_hash, verdict, confidence, reasoning, "
+        "checks, risk_tier, recursion_depth, counterfactual_flag, "
+        "critic_model, eval_duration_ms) "
+        "VALUES (:rid, :aid, :fh, :verdict, :conf, :reasoning, :checks, "
+        ":risk, :depth, :cf, :model, :dur) RETURNING id"
+    ), {
+        "rid": run_id, "aid": agent_id,
+        "fh": verdict.get("frame_hash", ""),
+        "verdict": verdict.get("verdict", "FLAG"),
+        "conf": verdict.get("confidence", 0.0),
+        "reasoning": verdict.get("reasoning", ""),
+        "checks": json.dumps(verdict.get("checks", {})),
+        "risk": verdict.get("risk_tier", "low"),
+        "depth": verdict.get("recursion_depth", 0),
+        "cf": 1 if verdict.get("counterfactual_flag") else 0,
+        "model": verdict.get("critic_model", ""),
+        "dur": verdict.get("eval_duration_ms", 0),
+    }).scalar()
+    return vid
+
+
+@DBOS.transaction()
+def safety_create_escalation(run_id: str, agent_id: str, frame_hash: str,
+                              verdict_id: Optional[int], escalation_type: str) -> int:
+    return DBOS.sql_session.execute(text(
+        "INSERT INTO safety_escalations "
+        "(run_id, agent_id, frame_hash, verdict_id, escalation_type) "
+        "VALUES (:rid, :aid, :fh, :vid, :etype) RETURNING id"
+    ), {"rid": run_id, "aid": agent_id, "fh": frame_hash,
+        "vid": verdict_id, "etype": escalation_type}).scalar()
+
+
+@DBOS.transaction()
+def safety_resolve_escalation(escalation_id: int, resolved_by: str, resolution: str) -> bool:
+    row = DBOS.sql_session.execute(
+        text("SELECT id FROM safety_escalations WHERE id=:eid"), {"eid": escalation_id}
+    ).fetchone()
+    if not row:
+        return False
+    DBOS.sql_session.execute(text(
+        "UPDATE safety_escalations SET resolved=1, resolved_by=:by, "
+        "resolution=:res, resolved_at=CURRENT_TIMESTAMP WHERE id=:eid"
+    ), {"by": resolved_by, "res": resolution, "eid": escalation_id})
+    return True
+
+
+@DBOS.transaction()
+def safety_list_verdicts(run_id: Optional[str] = None, limit: int = 100) -> list:
+    if run_id:
+        rows = DBOS.sql_session.execute(text(
+            "SELECT id, run_id, agent_id, frame_hash, verdict, confidence, "
+            "reasoning, checks, risk_tier, recursion_depth, counterfactual_flag, "
+            "critic_model, eval_duration_ms, created_at "
+            "FROM safety_critic_verdicts WHERE run_id=:rid "
+            "ORDER BY created_at DESC LIMIT :lim"
+        ), {"rid": run_id, "lim": limit}).fetchall()
+    else:
+        rows = DBOS.sql_session.execute(text(
+            "SELECT id, run_id, agent_id, frame_hash, verdict, confidence, "
+            "reasoning, checks, risk_tier, recursion_depth, counterfactual_flag, "
+            "critic_model, eval_duration_ms, created_at "
+            "FROM safety_critic_verdicts "
+            "ORDER BY created_at DESC LIMIT :lim"
+        ), {"lim": limit}).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r._mapping)
+        try:
+            d["checks"] = json.loads(d["checks"]) if isinstance(d["checks"], str) else d["checks"]
+        except (json.JSONDecodeError, TypeError):
+            d["checks"] = {}
+        result.append(d)
+    return result
+
+
+@DBOS.transaction()
+def safety_list_traces(run_id: str) -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, run_id, agent_id, step_index, thought, proposed_action, "
+        "justification, dependencies, context_hash, frame_hash, created_at "
+        "FROM safety_trace_frames WHERE run_id=:rid ORDER BY step_index ASC"
+    ), {"rid": run_id}).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r._mapping)
+        try:
+            d["dependencies"] = json.loads(d["dependencies"]) if isinstance(d["dependencies"], str) else d["dependencies"]
+        except (json.JSONDecodeError, TypeError):
+            d["dependencies"] = []
+        result.append(d)
+    return result
+
+
+@DBOS.transaction()
+def safety_list_escalations(resolved: Optional[bool] = None, limit: int = 50) -> list:
+    if resolved is not None:
+        rows = DBOS.sql_session.execute(text(
+            "SELECT * FROM safety_escalations WHERE resolved=:r "
+            "ORDER BY created_at DESC LIMIT :lim"
+        ), {"r": 1 if resolved else 0, "lim": limit}).fetchall()
+    else:
+        rows = DBOS.sql_session.execute(text(
+            "SELECT * FROM safety_escalations ORDER BY created_at DESC LIMIT :lim"
+        ), {"lim": limit}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def safety_stats() -> dict:
+    total = DBOS.sql_session.execute(text(
+        "SELECT COUNT(*) FROM safety_critic_verdicts"
+    )).scalar() or 0
+    by_verdict = {}
+    for r in DBOS.sql_session.execute(text(
+        "SELECT verdict, COUNT(*) as n FROM safety_critic_verdicts GROUP BY verdict"
+    )).fetchall():
+        by_verdict[r[0]] = r[1]
+    by_risk = {}
+    for r in DBOS.sql_session.execute(text(
+        "SELECT risk_tier, COUNT(*) as n FROM safety_critic_verdicts GROUP BY risk_tier"
+    )).fetchall():
+        by_risk[r[0]] = r[1]
+    avg_confidence = DBOS.sql_session.execute(text(
+        "SELECT COALESCE(AVG(confidence), 0.0) FROM safety_critic_verdicts"
+    )).scalar()
+    avg_duration = DBOS.sql_session.execute(text(
+        "SELECT COALESCE(AVG(eval_duration_ms), 0) FROM safety_critic_verdicts"
+    )).scalar()
+    counterfactual_blocks = DBOS.sql_session.execute(text(
+        "SELECT COUNT(*) FROM safety_critic_verdicts WHERE counterfactual_flag=1"
+    )).scalar() or 0
+    open_escalations = DBOS.sql_session.execute(text(
+        "SELECT COUNT(*) FROM safety_escalations WHERE resolved=0"
+    )).scalar() or 0
+    return {
+        "total_evaluations": total,
+        "by_verdict": by_verdict,
+        "by_risk_tier": by_risk,
+        "avg_confidence": round(float(avg_confidence), 3),
+        "avg_eval_duration_ms": int(avg_duration),
+        "counterfactual_blocks": counterfactual_blocks,
+        "open_escalations": open_escalations,
+    }
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
