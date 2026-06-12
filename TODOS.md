@@ -22,6 +22,12 @@
 - **Done (Phase 5)**: Approval queue page: dedicated Approvals tab with diff viewer, risk level, 24h auto-expiry, and audit history (`seed_approvals.py` seeds demo data).
 - Settings page: model routing, sandbox policy, budget caps, kill switch scope (currently PlaceholderPage).
 
-## CriticGate — Phase 6
-- Run the eval with the real LLM deep-probe: `CRITICGATE_REAL_PROBE=1` + `MODEL_CRITIC` env var — wired and stub-verified in Phase 5, needs an Anthropic/Gemini API key to produce real numbers.
-- Strategy D red team: LLM-generated backdoors (the scripted A–C set saturates at 1.000 safety against the simulated probe and no longer stresses the monitor).
+## CriticGate — Phase 6 (Done)
+- **Done**: AUROC + ROC reporting and 0.5%/1% audit-budget columns in `metrics.py`/`run_eval.py` (baseline AUROC 0.655 vs CriticGate 1.000).
+- **Done**: Strategy D `adaptive_evasion` red team — attacker-authored subtle compound-trigger backdoors with causally-consistent false rationales. CriticGate 4/6 at h=0 (first non-saturated class), 6/6 by h=0.20, 0 FPs. Pluggable LLM-attacker stub gated on `CRITICGATE_REAL_ATTACKER=1`.
+- **Done**: `criticgate_eval/SUBMISSION.md` — hackathon writeup framing the result against adaptive attacks with citations.
+
+## CriticGate — Phase 7
+- **Real-probe vs Strategy D**: export an API key, run `CRITICGATE_REAL_PROBE=1` + `MODEL_CRITIC`, and measure whether the real LLM deep-probe catches the 2 Strategy D residuals the simulated probe misses. This is the open scientific question.
+- **LLM-generated attacker**: enable `CRITICGATE_REAL_ATTACKER=1` to generate Strategy D backdoors via the Control Tax brainstorm→rank→generate→iterate loop (currently hand-authored).
+- Consider wiring one ControlArena APPS setting as an external-validity check.
