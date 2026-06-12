@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import logging
 import pathlib
 import secrets
 from contextlib import asynccontextmanager
@@ -9,6 +10,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
 from dbos import DBOS, DBOSConfig  # noqa: F401
+from dbos._error import DBOSNonExistentWorkflowError
 from main import (agent_loop, generate, MODEL_PLAN, scan_suggested_tasks, self_heal_pr,
                   commitguard_workflow, _update_scan_step)
 from harness import (
@@ -971,10 +973,22 @@ async def decide_approval(approval_id: int, payload: dict):
         
     action = "approved" if approved else "rejected"
     record_approval_decision(approval_id, action, "operator", {"note": note})
-    
-    # Notify the workflow
-    DBOS.send(run_id, {"approved": approved, "note": note}, "approval")
-    return {"status": "decided", "action": action}
+
+    # Notify the waiting workflow. The human decision is authoritative and is
+    # already recorded above; if the workflow is no longer waiting (completed,
+    # timed out via the 24h auto-reject, or this is demo/seed data with no live
+    # run) the send raises DBOSNonExistentWorkflowError. That is not a failure
+    # of the decision — swallow it and report that nothing was notified.
+    notified = True
+    try:
+        DBOS.send(run_id, {"approved": approved, "note": note}, "approval")
+    except DBOSNonExistentWorkflowError:
+        notified = False
+        logging.warning(
+            "Approval %s decided (%s) but workflow %s no longer exists to notify",
+            approval_id, action, run_id,
+        )
+    return {"status": "decided", "action": action, "workflow_notified": notified}
 
 
 @app.get("/api/approvals/{approval_id}/history")
