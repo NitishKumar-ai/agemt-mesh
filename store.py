@@ -21,6 +21,11 @@ from github_integration import (
 _INTERVALS = {"hourly": 3600, "daily": 86400, "weekly": 604800, "monthly": 2592000}
 
 
+class KillswitchEngaged(Exception):
+    """Raised when an operation is blocked by the global killswitch."""
+    pass
+
+
 # ── Schema ────────────────────────────────────────────────────────────────────
 
 def init_business_tables(engine=None) -> None:
@@ -284,6 +289,18 @@ def init_business_tables(engine=None) -> None:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS killswitch_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                engaged INTEGER DEFAULT 0,
+                engaged_at TIMESTAMP,
+                engaged_by TEXT,
+                reason TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        # Ensure a row exists
+        conn.execute(text("INSERT OR IGNORE INTO killswitch_state (id, engaged) VALUES (1, 0)"))
 
 
 # ── GitHub ────────────────────────────────────────────────────────────────────
@@ -800,19 +817,43 @@ def agent_run_total_tokens(run_id: str) -> int:
 @DBOS.transaction()
 def killswitch_get() -> bool:
     row = DBOS.sql_session.execute(text(
-        "SELECT value FROM app_settings WHERE key='killswitch'"
+        "SELECT engaged FROM killswitch_state WHERE id=1"
     )).fetchone()
-    return row[0] == "1" if row else False
+    return bool(row[0]) if row else False
 
 
 @DBOS.transaction()
-def killswitch_set(active: bool) -> None:
-    val = "1" if active else "0"
+def killswitch_get_full_state() -> dict:
+    row = DBOS.sql_session.execute(text(
+        "SELECT engaged, engaged_at, engaged_by, reason, updated_at "
+        "FROM killswitch_state WHERE id=1"
+    )).fetchone()
+    if not row:
+        return {"engaged": False, "engaged_at": None, "engaged_by": None, "reason": None}
+    return {
+        "engaged": bool(row[0]),
+        "engaged_at": row[1],
+        "engaged_by": row[2],
+        "reason": row[3],
+        "updated_at": row[4]
+    }
+
+
+@DBOS.transaction()
+def killswitch_set(active: bool, engaged_by: str = "system", reason: Optional[str] = None) -> None:
+    engaged_at = datetime.utcnow().isoformat() if active else None
     DBOS.sql_session.execute(text("""
-        INSERT INTO app_settings (key, value, updated_at)
-        VALUES ('killswitch', :val, CURRENT_TIMESTAMP)
-        ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=EXCLUDED.updated_at
-    """), {"val": val})
+        UPDATE killswitch_state SET 
+            engaged = :val,
+            engaged_at = :at,
+            engaged_by = :by,
+            reason = :reason,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = 1
+    """), {"val": 1 if active else 0, "at": engaged_at, "by": engaged_by, "reason": reason})
+    
+    _audit("system", 1, "killswitch_engaged" if active else "killswitch_disengaged", 
+           engaged_by, {"reason": reason, "at": engaged_at})
 
 
 # ── Webhook Events ────────────────────────────────────────────────────────────

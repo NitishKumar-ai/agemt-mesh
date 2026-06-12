@@ -179,6 +179,14 @@ export type AppSettings = {
   killswitch_active: boolean;
 };
 
+export type KillswitchState = {
+  engaged: boolean;
+  engaged_at: string | null;
+  engaged_by: string | null;
+  reason: string | null;
+  updated_at?: string;
+};
+
 export type SocialPlatform = {
   id: string;
   name: string;

@@ -64,6 +64,7 @@ from store import (
     workflows_get_last_step,
     approvals_list,
     killswitch_get,
+    killswitch_get_full_state,
     killswitch_set,
     safety_list_verdicts,
     safety_list_traces,
@@ -976,16 +977,24 @@ async def get_settings():
 
 # ── Killswitch ───────────────────────────────────────────────────────────────
 
+@app.get("/api/killswitch")
+async def get_killswitch_state():
+    return killswitch_get_full_state()
+
+
 @app.post("/api/killswitch")
-async def engage_killswitch():
-    killswitch_set(True)
-    return {"status": "engaged", "killswitch_active": True}
+async def engage_killswitch(payload: dict):
+    engaged = payload.get("engaged", True)
+    reason = payload.get("reason")
+    engaged_by = payload.get("engaged_by", "operator")
+    killswitch_set(engaged, engaged_by=engaged_by, reason=reason)
+    return {"status": "updated", "killswitch_active": engaged, "state": killswitch_get_full_state()}
 
 
 @app.delete("/api/killswitch")
 async def disengage_killswitch():
-    killswitch_set(False)
-    return {"status": "disengaged", "killswitch_active": False}
+    killswitch_set(False, engaged_by="operator", reason="Disengaged via dashboard")
+    return {"status": "disengaged", "killswitch_active": False, "state": killswitch_get_full_state()}
 
 
 # ── Agents Roster ────────────────────────────────────────────────────────────
