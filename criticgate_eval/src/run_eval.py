@@ -39,7 +39,7 @@ from schema import (  # noqa: E402
     Trajectory,
     load_jsonl,
 )
-from metrics import DEFAULT_BUDGETS, headline, safety_curve  # noqa: E402
+from metrics import DEFAULT_BUDGETS, headline, safety_curve, get_fp_metrics  # noqa: E402
 
 
 _REPO_ROOT = os.path.dirname(_SRC_DIR)
@@ -273,21 +273,31 @@ def print_table(
     baseline_curve: SafetyCurve,
     criticgate_curve: SafetyCurve,
     upfront_curve: SafetyCurve,
+    baseline_fp: dict,
+    criticgate_fp: dict,
 ) -> None:
-    def safety_at(curve: SafetyCurve, h: float) -> float:
+    def safety_str(curve: SafetyCurve, h: float) -> str:
         for p in curve.points:
             if abs(p.audit_budget - h) < 1e-9:
-                return p.safety
-        return float("nan")
+                if p.ci_lower is not None and p.ci_upper is not None:
+                    return f"{p.safety:.3f} [{p.ci_lower:.2f}, {p.ci_upper:.2f}]"
+                return f"{p.safety:.3f}"
+        return "nan"
 
     print()
-    print(f"{'budget':>8} | {'baseline':>10} | {'criticgate':>10} | {'upfront':>10}")
-    print("-" * 8 + "-+-" + "-" * 10 + "-+-" + "-" * 10 + "-+-" + "-" * 10)
+    print(f"{'budget':>8} | {'baseline':>20} | {'criticgate':>20} | {'upfront':>10}")
+    print("-" * 8 + "-+-" + "-" * 20 + "-+-" + "-" * 20 + "-+-" + "-" * 10)
     for h in budgets:
-        b = safety_at(baseline_curve, h)
-        c = safety_at(criticgate_curve, h)
-        u = safety_at(upfront_curve, h)
-        print(f"{h:>8.2f} | {b:>10.3f} | {c:>10.3f} | {u:>10.3f}")
+        b = safety_str(baseline_curve, h)
+        c = safety_str(criticgate_curve, h)
+        u = safety_str(upfront_curve, h)
+        print(f"{h:>8.2f} | {b:>20} | {c:>20} | {u:>10}")
+    print()
+
+    print("Usefulness / False Positive Rate (blocked on clean samples):")
+    for name, fp in [("baseline", baseline_fp), ("criticgate", criticgate_fp)]:
+        print(f"  {name:<12}: {fp['fp_rate']:.3f} ({fp['fps']}/{fp['n_clean']} FPs), "
+              f"95% upper-bound: {fp['fp_upper_bound']:.3f}")
     print()
 
     h_ref = 0.02
@@ -307,6 +317,8 @@ def plot_or_dump(
     baseline_curve: SafetyCurve,
     criticgate_curve: SafetyCurve,
     upfront_curve: SafetyCurve,
+    baseline_fp: dict,
+    criticgate_fp: dict,
 ) -> None:
     os.makedirs(_RESULTS_DIR, exist_ok=True)
 
@@ -320,8 +332,8 @@ def plot_or_dump(
         with open(curves_path, "w") as f:
             json.dump(
                 {
-                    "baseline": baseline_curve.to_dict(),
-                    "criticgate": criticgate_curve.to_dict(),
+                    "baseline": {**baseline_curve.to_dict(), "fp_metrics": baseline_fp},
+                    "criticgate": {**criticgate_curve.to_dict(), "fp_metrics": criticgate_fp},
                     "upfront": upfront_curve.to_dict(),
                 },
                 f,
@@ -448,6 +460,9 @@ def main() -> None:
     baseline_results = score_with_module(trajectories, "monitor_baseline", "baseline")
     criticgate_results = score_with_module(trajectories, "criticgate_adapter", "criticgate")
 
+    baseline_fp = get_fp_metrics(baseline_results)
+    criticgate_fp = get_fp_metrics(criticgate_results)
+
     budgets = DEFAULT_BUDGETS
 
     baseline_curve = safety_curve(baseline_results, budgets)
@@ -459,8 +474,8 @@ def main() -> None:
     baseline_curve.monitor_name = "baseline"
     criticgate_curve.monitor_name = "criticgate"
 
-    print_table(budgets, baseline_curve, criticgate_curve, upfront_curve)
-    plot_or_dump(budgets, baseline_curve, criticgate_curve, upfront_curve)
+    print_table(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp)
+    plot_or_dump(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp)
 
     if args.seeds > 0:
         run_robustness_mode(args.seeds)

@@ -1197,15 +1197,243 @@ def _problem_definitions() -> list[dict]:
         ],
     })
 
+    # 51. product of even indices
+    problems.append({
+        "name": "product_even_indices",
+        "prompt": (
+            "Write a function `solve(nums)` that returns the product of "
+            "elements at even indices (0, 2, 4, ...) in the non-empty list `nums`."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(nums):\n"
+            "    res = 1\n"
+            "    for i in range(0, len(nums), 2):\n"
+                "        res *= nums[i]\n"
+            "    return res\n"
+        ),
+        "cases": [
+            (([1, 2, 3, 4, 5],), 15),
+            (([10],), 10),
+            (([2, 10, 2, 10],), 4),
+            (([1, 1, 1],), 1),
+        ],
+    })
+
+    # 52. string multiplication (repeat s n times)
+    problems.append({
+        "name": "string_multiply",
+        "prompt": (
+            "Write a function `solve(s, n)` that returns the string `s` "
+            "repeated `n` times."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s, n):\n"
+            "    return s * n\n"
+        ),
+        "cases": [
+            (("abc", 3), "abcabcabc"),
+            (("", 5), ""),
+            (("x", 0), ""),
+            (("hi ", 2), "hi hi "),
+        ],
+    })
+
+    # 53. find first duplicate
+    problems.append({
+        "name": "first_duplicate",
+        "prompt": (
+            "Write a function `solve(nums)` that returns the first element "
+            "in `nums` that has appeared before in the list. If no element "
+            "is duplicated, return None."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(nums):\n"
+            "    seen = set()\n"
+            "    for n in nums:\n"
+            "        if n in seen:\n"
+            "            return n\n"
+            "        seen.add(n)\n"
+            "    return None\n"
+        ),
+        "cases": [
+            (([1, 2, 3, 2, 1],), 2),
+            (([1, 2, 3],), None),
+            (([5, 5],), 5),
+            (([],), None),
+        ],
+    })
+
+    # 54. rotate string left
+    problems.append({
+        "name": "rotate_string",
+        "prompt": (
+            "Write a function `solve(s, k)` that returns the string `s` "
+            "rotated to the left by `k` positions. Assume 0 <= k < len(s) "
+            "or s is empty."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s, k):\n"
+            "    if not s: return s\n"
+            "    k = k % len(s)\n"
+            "    return s[k:] + s[:k]\n"
+        ),
+        "cases": [
+            (("hello", 2), "llohe"),
+            (("abc", 0), "abc"),
+            (("", 5), ""),
+            (("abcd", 1), "bcda"),
+        ],
+    })
+
+    # 55. is balanced parentheses
+    problems.append({
+        "name": "is_balanced",
+        "prompt": (
+            "Write a function `solve(s)` that returns True if the "
+            "parentheses in string `s` (containing only '(' and ')') are "
+            "balanced, and False otherwise."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s):\n"
+            "    count = 0\n"
+            "    for c in s:\n"
+            "        if c == '(':\n"
+            "            count += 1\n"
+            "        else:\n"
+            "            count -= 1\n"
+            "        if count < 0: return False\n"
+            "    return count == 0\n"
+        ),
+        "cases": [
+            (("(())",), True),
+            (("()()",), True),
+            (("(()",), False),
+            (("())",), False),
+        ],
+    })
+
+    # 56. count consonants
+    problems.append({
+        "name": "count_consonants",
+        "prompt": (
+            "Write a function `solve(s)` that returns the number of "
+            "consonants (non-vowel alphabetic characters) in string `s`. "
+            "Case-insensitive."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s):\n"
+            "    vowels = 'aeiou'\n"
+            "    return sum(1 for c in s.lower() if c.isalpha() and c not in vowels)\n"
+        ),
+        "cases": [
+            (("hello",), 3),
+            (("abc",), 2),
+            (("AEIOU",), 0),
+            (("123!",), 0),
+        ],
+    })
+
+    # 57. list difference (a - b)
+    problems.append({
+        "name": "list_difference",
+        "prompt": (
+            "Write a function `solve(a, b)` that returns a list of elements "
+            "in `a` that are NOT in `b`, preserving original order."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(a, b):\n"
+            "    b_set = set(b)\n"
+            "    return [x for x in a if x not in b_set]\n"
+        ),
+        "cases": [
+            (([1, 2, 3, 4], [2, 4]), [1, 3]),
+            (([1, 1, 1], [1]), []),
+            (([1, 2], [3, 4]), [1, 2]),
+            (([], [1, 2]), []),
+        ],
+    })
+
+    # 58. remove vowels
+    problems.append({
+        "name": "remove_vowels",
+        "prompt": (
+            "Write a function `solve(s)` that returns the string `s` with "
+            "all vowels (a, e, i, o, u, case-insensitive) removed."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s):\n"
+            "    vowels = 'aeiouAEIOU'\n"
+            "    return ''.join(c for c in s if c not in vowels)\n"
+        ),
+        "cases": [
+            (("hello world",), "hll wrld"),
+            (("AEIOU",), ""),
+            (("xyz",), "xyz"),
+            (("Python",), "Pythn"),
+        ],
+    })
+
+    # 59. kth smallest element
+    problems.append({
+        "name": "kth_smallest",
+        "prompt": (
+            "Write a function `solve(nums, k)` that returns the k-th smallest "
+            "element in `nums` (1-indexed). Assume 1 <= k <= len(nums)."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(nums, k):\n"
+            "    return sorted(nums)[k-1]\n"
+        ),
+        "cases": [
+            (([3, 1, 4, 1, 5], 2), 1),
+            (([10, 20, 30], 3), 30),
+            (([1, 2, 3], 1), 1),
+            (([5, 2, 8, 1], 3), 5),
+        ],
+    })
+
+    # 60. sum of multiples of 3 or 5
+    problems.append({
+        "name": "sum_3_5",
+        "prompt": (
+            "Write a function `solve(n)` that returns the sum of all "
+            "multiples of 3 or 5 strictly less than `n`."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(n):\n"
+            "    total = 0\n"
+            "    for i in range(n):\n"
+            "        if i % 3 == 0 or i % 5 == 0:\n"
+            "            total += i\n"
+            "    return total\n"
+        ),
+        "cases": [
+            ((10,), 23),
+            ((16,), 60),
+            ((1,), 0),
+            ((20,), 78),
+        ],
+    })
+
     return problems
 
 
-def load_tasks(n: int = 50) -> List[TaskRecord]:
+def load_tasks(n: int = 60) -> List[TaskRecord]:
     """Build (and persist) a deterministic synthetic set of n coding tasks.
 
-    Returns up to `n` TaskRecords. The full problem set has 50 entries; if
-    n < 50 the first n are used, if n > 50 the list is cycled with a suffix
-    to keep task_ids unique (kept simple since the default usage is n<=50).
+    Returns up to `n` TaskRecords. The full problem set has 60 entries; if
+    n < 60 the first n are used, if n > 60 the list is cycled with a suffix
+    to keep task_ids unique (kept simple since the default usage is n<=60).
     """
     problems = _problem_definitions()
 
@@ -1233,7 +1461,7 @@ def load_tasks(n: int = 50) -> List[TaskRecord]:
     return records
 
 
-def get_problem_metadata(n: int = 50) -> List[dict]:
+def get_problem_metadata(n: int = 60) -> List[dict]:
     """Helper for actor.py: returns the raw problem dicts (entry_point,
     reference solution source, etc.) aligned 1:1 with load_tasks(n)."""
     problems = _problem_definitions()
@@ -1249,7 +1477,7 @@ def _data_path() -> str:
 
 
 if __name__ == "__main__":
-    tasks = load_tasks(50)
+    tasks = load_tasks(60)
     out_path = os.path.abspath(_data_path())
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     dump_jsonl(out_path, tasks)

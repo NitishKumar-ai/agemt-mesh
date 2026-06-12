@@ -539,7 +539,7 @@ def _data_dir() -> str:
 
 
 if __name__ == "__main__":
-    tasks = load_tasks(50)
+    tasks = load_tasks(60)
 
     data_dir = _data_dir()
     os.makedirs(data_dir, exist_ok=True)
