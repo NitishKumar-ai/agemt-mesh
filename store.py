@@ -272,6 +272,21 @@ def init_business_tables(engine=None) -> None:
             )
         """))
         conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS audit_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                actor TEXT NOT NULL DEFAULT 'system',
+                payload TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_audit_events_entity "
+            "ON audit_events(entity_type, entity_id)"
+        ))
+        conn.execute(text("""
             CREATE TABLE IF NOT EXISTS social_connections (
                 platform TEXT PRIMARY KEY,
                 display_name TEXT NOT NULL,
@@ -916,19 +931,79 @@ def approvals_list(limit: int = 100) -> list:
         ORDER BY created_at DESC
         LIMIT :lim
     """), {"lim": limit}).mappings().all()
+    
+    now = datetime.utcnow()
     result = []
     for r in rows:
+        created_at = r["created_at"]
+        if isinstance(created_at, str):
+            # Try parsing ISO format
+            try:
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            except ValueError:
+                created_at = now # Fallback
+        
+        # Mark as expired if older than 24h
+        is_expired = (now - created_at) > timedelta(hours=24)
+        
         try:
             payload = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
         except (json.JSONDecodeError, TypeError):
             payload = {}
+        
+        # Check if already decided
+        decision = DBOS.sql_session.execute(text("""
+            SELECT action FROM audit_events 
+            WHERE entity_type = 'approval' AND entity_id = :eid
+            ORDER BY created_at DESC LIMIT 1
+        """), {"eid": str(r["id"])}).mappings().first()
+        
+        status = "pending"
+        if decision:
+            status = decision["action"] # 'approved' or 'rejected'
+        elif is_expired:
+            status = "expired"
+
         result.append({
             "id": r["id"],
             "run_id": r["run_id"],
             "payload": payload,
             "created_at": r["created_at"],
+            "status": status,
+            "risk_level": payload.get("risk_level", "medium"),
+            "requesting_agent": payload.get("agent_id", "unknown"),
         })
     return result
+
+
+@DBOS.transaction()
+def approval_get_history(approval_id: int) -> list:
+    """Return audit history for a specific approval."""
+    rows = DBOS.sql_session.execute(text("""
+        SELECT action, actor, payload, created_at
+        FROM audit_events
+        WHERE entity_type = 'approval' AND entity_id = :eid
+        ORDER BY created_at ASC
+    """), {"eid": str(approval_id)}).mappings().all()
+    result = []
+    for r in rows:
+        try:
+            p = json.loads(r["payload"]) if isinstance(r["payload"], str) else r["payload"]
+        except (json.JSONDecodeError, TypeError):
+            p = {}
+        result.append({
+            "action": r["action"],
+            "actor": r["actor"],
+            "payload": p,
+            "created_at": r["created_at"],
+        })
+    return result
+
+
+@DBOS.transaction()
+def record_approval_decision(approval_id: int, action: str, actor: str, payload: dict) -> None:
+    """Record a decision in the audit_events table."""
+    _audit_general("approval", str(approval_id), action, actor, payload)
 
 
 # ── Safety / CriticGate ─────────────────────────────────────────────────────
@@ -1102,6 +1177,16 @@ def safety_stats() -> dict:
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
+
+def _audit_general(entity_type: str, entity_id: str, action: str,
+                   actor: str, payload: dict) -> None:
+    """Insert an audit_events row. Must be called from within a @DBOS.transaction()."""
+    DBOS.sql_session.execute(text(
+        "INSERT INTO audit_events (entity_type, entity_id, action, actor, payload) "
+        "VALUES (:etype, :eid, :action, :actor, :payload)"
+    ), {"etype": entity_type, "eid": entity_id, "action": action,
+        "actor": actor, "payload": json.dumps(payload)})
+
 
 def _audit(entity_type: str, entity_id: int, action: str,
            actor: str, payload: dict) -> None:

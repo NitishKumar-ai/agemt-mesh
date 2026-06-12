@@ -63,6 +63,8 @@ from store import (
     workflows_list,
     workflows_get_last_step,
     approvals_list,
+    approval_get_history,
+    record_approval_decision,
     killswitch_get,
     killswitch_set,
     safety_list_verdicts,
@@ -954,6 +956,30 @@ async def retry_workflow(run_id: str):
 async def list_approvals():
     """Return agent_events with event_type approval_required, newest first."""
     return {"approvals": approvals_list()}
+
+
+@app.post("/api/approvals/{approval_id}/decide")
+async def decide_approval(approval_id: int, payload: dict):
+    """Approve or reject a pending approval and record the decision."""
+    run_id = payload.get("run_id")
+    approved = payload.get("approved", False)
+    note = payload.get("note", "")
+    
+    if not run_id:
+        raise HTTPException(status_code=400, detail="run_id is required")
+        
+    action = "approved" if approved else "rejected"
+    record_approval_decision(approval_id, action, "operator", {"note": note})
+    
+    # Notify the workflow
+    DBOS.send(run_id, {"approved": approved, "note": note}, "approval")
+    return {"status": "decided", "action": action}
+
+
+@app.get("/api/approvals/{approval_id}/history")
+async def get_approval_history(approval_id: int):
+    """Return audit history for a specific approval."""
+    return {"history": approval_get_history(approval_id)}
 
 
 # ── Settings ──────────────────────────────────────────────────────────────────

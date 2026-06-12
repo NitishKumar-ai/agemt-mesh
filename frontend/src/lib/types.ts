@@ -166,6 +166,15 @@ export type ApprovalEvent = {
   run_id: string;
   payload: Record<string, unknown>;
   created_at: string;
+  status: "pending" | "approved" | "rejected" | "expired";
+  risk_level: "low" | "medium" | "high" | "critical";
+  requesting_agent: string;
+  history?: {
+    action: string;
+    actor: string;
+    payload: Record<string, unknown>;
+    created_at: string;
+  }[];
 };
 
 export type AppSettings = {

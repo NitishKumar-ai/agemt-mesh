@@ -181,6 +181,17 @@ export const api = {
     return json<{ approvals: ApprovalEvent[] }>("/api/approvals");
   },
 
+  decideApproval(approvalId: number, payload: { run_id: string; approved: boolean; note?: string }) {
+    return json<{ status: string; action: string }>(`/api/approvals/${approvalId}/decide`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+
+  getApprovalHistory(approvalId: number) {
+    return json<{ history: ApprovalEvent["history"] }>(`/api/approvals/${approvalId}/history`);
+  },
+
   // Schedules — Phase 2
   updateSchedule(taskId: number, payload: { name?: string; prompt?: string; interval?: string; enabled?: boolean }) {
     return json<{ status: string }>(`/api/schedule/${taskId}`, {
