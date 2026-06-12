@@ -212,6 +212,8 @@ async def get_dashboard():
 
 @app.post("/api/run")
 async def run_workflow(payload: dict):
+    if killswitch_get():
+        raise HTTPException(status_code=503, detail="Killswitch engaged — agent dispatch is halted")
     context = payload.get("context", "Audit target environment")
     goal = payload.get("goal", "Audit target environment for vulnerabilities")
     handle = DBOS.start_workflow(
@@ -1061,6 +1063,8 @@ async def run_agent_endpoint(payload: dict):
         raise HTTPException(400, "agent_id is required")
     if not goal:
         raise HTTPException(400, "goal is required")
+    if killswitch_get():
+        raise HTTPException(status_code=503, detail="Killswitch engaged — agent dispatch is halted")
 
     handle = DBOS.start_workflow(
         harness_run_agent, agent_id, goal, context,
