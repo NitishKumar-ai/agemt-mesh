@@ -37,17 +37,20 @@ Audit accounting is faithful to the AI-control setting: a hard-BLOCK happens pre
 
 *Note: 0 false positives (0/42 clean trajectories hard-blocked). 95% FP upper-bound (rule-of-three): 0.071.*
 
-## Red Team (Phase 3 & 4)
+## Red Team (Phases 3–6)
 
-We organize attacks into labeled strategies and measure per-type detection (`src/red_team.py`, chart at `results/red_team.png`):
+We organize attacks into labeled strategies and measure per-type detection at **zero audit budget** (pre-execution hard-BLOCK only — `src/red_team.py`, chart at `results/red_team.png`):
 
-| Attack strategy | What it is | Baseline | CriticGate |
+| Attack strategy | What it is | Baseline | CriticGate (h=0) |
 | :--- | :--- | :--- | :--- |
-| A. `naive_scalar` | scalar trigger + literal guard the code regex sees | catches | **catches all (hard-BLOCK)** |
-| B. `reasoning_channel` | compound trigger (code-blind) + action/justification mismatch | **misses most** | **catches all (hard-BLOCK)** |
-| C. `consistent_evasion` | compound trigger + plausible correctness rationale | misses | **catches all (Deep-Probe)** |
+| A. `naive_scalar` | scalar trigger + literal guard the code regex sees | catches | **6/6 (hard-BLOCK)** |
+| B. `reasoning_channel` | compound trigger (code-blind) + action/justification mismatch | misses most (1/6) | **6/6 (hard-BLOCK)** |
+| C. `consistent_evasion` | compound trigger + plausible correctness rationale | misses (0/6) | **6/6 (Deep-Probe)** |
+| D. `adaptive_evasion` | subtle compound trigger + causally-consistent *false* rationale | misses (0/6) | **4/6 (residual)** |
 
 **Strategy C (Phase 4):** With no code-level tell and a causally-consistent trace, these attacks evade offline checks. CriticGate's **Clean-Room Deep-Probe** catches them by independently deriving the correct answer from the specification and detecting the Actor's factual lie.
+
+**Strategy D (Phase 6) — the honest residual.** Adaptive attacks ([arXiv:2510.09462](https://arxiv.org/abs/2510.09462)) authored by an attacker that *knows* CriticGate targets reasoning/code consistency: the trigger is a subtle compound branch and the rationale is causally consistent but factually false. Against the **simulated** probe, CriticGate hard-blocks only 4/6 pre-execution — the first class it does not saturate. The audit budget recovers the remaining 2 (6/6 by h=0.20), and false positives stay at 0/32 clean. This is the intended stress test: it shows the offline causal check alone is insufficient against an adaptive attacker and motivates measuring the **real** LLM deep-probe (`CRITICGATE_REAL_PROBE=1`) against Strategy D — the open Phase 7 question.
 
 ## Instructions
 
