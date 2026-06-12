@@ -437,7 +437,11 @@ def main() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--seeds", type=int, default=0, help="Number of seeds for robustness check")
+    parser.add_argument("--real-probe", action="store_true", help="Use real LLM-backed deep-probe")
     args = parser.parse_args()
+
+    if args.real_probe:
+        os.environ["CRITICGATE_REAL_PROBE"] = "1"
 
     trajectories = load_trajectories()
 

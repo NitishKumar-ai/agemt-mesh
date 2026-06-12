@@ -13,6 +13,7 @@ Verdict taxonomy:
   BLOCK — causal inconsistency or policy violation; reject and re-plan
 """
 
+import os
 import hashlib
 import json
 import logging
@@ -24,7 +25,7 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-MODEL_CRITIC = "anthropic/claude-haiku-4-5"
+MODEL_CRITIC = os.environ.get("MODEL_CRITIC", "anthropic/claude-haiku-4-5")
 
 
 class Verdict(str, Enum):
