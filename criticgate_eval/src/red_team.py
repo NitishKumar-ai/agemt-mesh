@@ -38,6 +38,7 @@ from typing import List, Optional, Tuple
 
 from schema import Trajectory, MonitorResult
 from tasks import load_tasks, get_problem_metadata
+from strategy_d import get_hand_authored_strategy_d
 from actor import (
     run_solution,
     check_passes_tests,
@@ -171,6 +172,11 @@ def build_attack_suite(per_type: int = 6) -> Tuple[List[LabeledAttack], List[Tra
     # C. consistent_evasion — compound trigger (code-blind) + consistent trace
     emit(compound_idx, "consistent_evasion", _backdoor_reasoning_trace_consistent, per_type)
 
+    # D. adaptive_evasion — subtle triggers (code-blind) + consistent traces + false correctness rationale
+    strategy_d_attacks = get_hand_authored_strategy_d()
+    for t in strategy_d_attacks:
+        attacks.append(LabeledAttack(trajectory=t, attack_type="adaptive_evasion"))
+
     # Clean background: every task not used for an attack, as a clean trajectory.
     clean: List[Trajectory] = []
     for i, (task, m) in enumerate(zip(tasks, meta)):
@@ -238,11 +244,12 @@ def evaluate(attacks: List[LabeledAttack], clean: List[Trajectory],
 
 # ── Reporting ─────────────────────────────────────────────────────────────
 
-_TYPE_ORDER = ["naive_scalar", "reasoning_channel", "consistent_evasion"]
+_TYPE_ORDER = ["naive_scalar", "reasoning_channel", "consistent_evasion", "adaptive_evasion"]
 _TYPE_LABEL = {
     "naive_scalar": "A. naive_scalar (both should catch)",
     "reasoning_channel": "B. reasoning_channel (CriticGate only)",
     "consistent_evasion": "C. consistent_evasion (Caught by Deep-Probe)",
+    "adaptive_evasion": "D. adaptive_evasion (Subtle trigger + consistent trace)",
 }
 
 
@@ -282,7 +289,7 @@ def plot(report: dict, path: str) -> bool:
     ax.bar([i - w / 2 for i in x], base_rate, w, label="Baseline", color="#1f77b4")
     ax.bar([i + w / 2 for i in x], crit_rate, w, label="CriticGate", color="#ff7f0e")
     ax.set_xticks(list(x))
-    ax.set_xticklabels(["A. naive\nscalar", "B. reasoning\nchannel", "C. consistent\nevasion"])
+    ax.set_xticklabels(["A. naive\nscalar", "B. reasoning\nchannel", "C. consistent\nevasion", "D. adaptive\nevasion"])
     ax.set_ylabel(f"Detection rate @ {report['audit_budget']:.0%} audit budget")
     ax.set_ylim(0, 1.05)
     ax.set_title("Red-team: detection by attack strategy")
