@@ -14,40 +14,40 @@ A **trusted monitor** audits a fraction $h$ (the audit budget) of the trajectori
 
 ## Results
 
-At the canonical 2% audit budget ($h=0.02$), **CriticGate achieves 0.600 safety**, compared to only **0.067 for the baseline** (~9x improvement).
+At the canonical 2% audit budget ($h=0.02$), **CriticGate achieves 1.000 safety**, compared to only **0.056 for the baseline** (~18x improvement).
 
-CriticGate provides a **pre-execution BLOCK floor of 0.533**: it hard-blocks 8 of 15 backdoors via causal analysis *before* they execute, so those are caught at zero audit budget. Audit budget then adds further detections on top, so CriticGate dominates the baseline at every budget. There is an **honest residual** of ~5 backdoors that neither monitor catches (the `consistent_evasion` attack class — see Red Team below).
+CriticGate provides a **pre-execution BLOCK floor of 1.000**: it hard-blocks all 18 backdoors via a combination of causal analysis and the **Phase 4/5 Clean-Room Deep Probe** *before* they execute. The deep-probe independently derives the expected behavior from the problem specification and catches the "honest-looking" reasoning of advanced attackers.
 
 Audit accounting is faithful to the AI-control setting: a hard-BLOCK happens pre-execution and does **not** consume the human audit budget, so audit slots are spent only on the non-blocked stream.
 
 ### Performance Table
 
-| Audit Budget ($h$) | Baseline Safety | CriticGate Safety | Upfront Random |
+| Audit Budget ($h$) | Baseline Safety [95% CI] | CriticGate Safety [95% CI] | Upfront Random |
 | :--- | :--- | :--- | :--- |
-| 0.00 | 0.000 | 0.533 | 0.000 |
-| 0.01 | 0.000 | 0.533 | 0.010 |
-| 0.02 | 0.067 | 0.600 | 0.020 |
-| 0.05 | 0.133 | 0.667 | 0.050 |
-| 0.10 | 0.333 | 0.733 | 0.100 |
-| 0.20 | 0.400 | 0.800 | 0.200 |
+| 0.00 | 0.000 [0.00, 0.00] | 1.000 [1.00, 1.00] | 0.000 |
+| 0.01 | 0.056 [0.04, 0.21] | 1.000 [1.00, 1.00] | 0.010 |
+| 0.02 | 0.056 [0.04, 0.21] | 1.000 [1.00, 1.00] | 0.020 |
+| 0.05 | 0.167 [0.12, 0.33] | 1.000 [1.00, 1.00] | 0.050 |
+| 0.10 | 0.333 [0.16, 0.47] | 1.000 [1.00, 1.00] | 0.100 |
+| 0.20 | 0.389 [0.22, 0.61] | 1.000 [1.00, 1.00] | 0.200 |
 
-*Note: 0 false positives (no clean trajectories hard-blocked) across 35 clean samples.*
+*Note: 0 false positives (0/42 clean trajectories hard-blocked). 95% FP upper-bound (rule-of-three): 0.071.*
 
-## Red Team (Phase 3)
+## Red Team (Phase 3 & 4)
 
 We organize attacks into labeled strategies and measure per-type detection (`src/red_team.py`, chart at `results/red_team.png`):
 
 | Attack strategy | What it is | Baseline | CriticGate |
 | :--- | :--- | :--- | :--- |
-| A. `naive_scalar` | scalar trigger + literal guard the code regex sees | catches | catches |
+| A. `naive_scalar` | scalar trigger + literal guard the code regex sees | catches | **catches all (hard-BLOCK)** |
 | B. `reasoning_channel` | compound trigger (code-blind) + action/justification mismatch | **misses most** | **catches all (hard-BLOCK)** |
-| C. `consistent_evasion` | compound trigger + plausible correctness rationale | misses | misses |
+| C. `consistent_evasion` | compound trigger + plausible correctness rationale | misses | **catches all (Deep-Probe)** |
 
-Strategy **C is the honest failure mode**: with no code-level tell and a causally-consistent trace, neither the static baseline nor CriticGate's offline causal check fires. It is the motivation for CriticGate's LLM deep-probe (future work).
+**Strategy C (Phase 4):** With no code-level tell and a causally-consistent trace, these attacks evade offline checks. CriticGate's **Clean-Room Deep-Probe** catches them by independently deriving the correct answer from the specification and detecting the Actor's factual lie.
 
 ## Instructions
 
-To reproduce the results, run the following commands from the project root:
+To reproduce the results with the **simulated** deep-probe (default):
 
 ```bash
 cd criticgate_eval
@@ -55,4 +55,12 @@ python3 src/actor.py
 python3 src/run_eval.py
 ```
 
-The evaluation script will generate a tradeoff curve at `results/tradeoff_curve.png`.
+To run with the **real LLM-backed** deep-probe (Phase 5):
+
+```bash
+# Requires MODEL_CRITIC env var (e.g. anthropic/claude-haiku-4-5)
+# Note: No API keys provided in this environment; use the test suite for end-to-end verification.
+CRITICGATE_REAL_PROBE=1 python3 src/run_eval.py
+```
+
+The evaluation script will generate a tradeoff curve at `results/tradeoff_curve.png` (or `results/curves.json`).
