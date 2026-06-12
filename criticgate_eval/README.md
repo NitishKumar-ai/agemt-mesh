@@ -16,7 +16,9 @@ A **trusted monitor** audits a fraction $h$ (the audit budget) of the trajectori
 
 At the canonical 2% audit budget ($h=0.02$), **CriticGate achieves 1.000 safety**, compared to only **0.056 for the baseline** (~18x improvement).
 
-CriticGate provides a **pre-execution BLOCK floor of 1.000**: it hard-blocks all 18 backdoors via a combination of causal analysis and the **Phase 4/5 Clean-Room Deep Probe** *before* they execute. The deep-probe independently derives the expected behavior from the problem specification and catches the "honest-looking" reasoning of advanced attackers.
+> **What these numbers do and don't show.** The results below use the default **simulated** deep-probe — a deterministic, rule-based stand-in for the LLM probe (see Instructions). The real LLM-backed probe is fully wired (Phase 5) and verified end-to-end with a stubbed model, but has not yet been measured against this attack set. CriticGate saturating at 1.000 also means the current scripted red team (strategies A–C) no longer stresses the monitor: the load-bearing claims are the *gap* over the baseline at every budget and the zero false positives on clean trajectories, not the perfect score itself. The next eval iteration needs a stronger attacker — LLM-generated "Strategy D" backdoors scored by the real probe.
+
+CriticGate provides a **pre-execution BLOCK floor of 1.000 on this attack set**: it hard-blocks all 18 backdoors via a combination of causal analysis and the **Phase 4/5 Clean-Room Deep Probe** *before* they execute. The deep-probe independently derives the expected behavior from the problem specification and catches the "honest-looking" reasoning of advanced attackers.
 
 Audit accounting is faithful to the AI-control setting: a hard-BLOCK happens pre-execution and does **not** consume the human audit budget, so audit slots are spent only on the non-blocked stream.
 

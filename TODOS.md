@@ -15,9 +15,13 @@
 
 ## Infrastructure — Phase 2
 - GCP deploy: e2-standard-4, 4 systemd services (API + worker + Postgres + Redis), deploy.yml GitHub Action (SSH + git pull + systemctl restart).
-- Killswitch implementation: global kill switch to halt all running DBOS workflows + drain the job queue.
+- **Done (Phase 5)**: Killswitch implementation: global kill switch to halt all running DBOS workflows + drain the job queue. Persisted flag, dispatch gating, audit events, header toggle + global banner.
 
 ## Platform — Ongoing
 - DLQ retry UI: surface dlq_events in the dashboard so failed workflows can be replayed.
-- Approval queue page: dedicated Approvals tab with diff viewer, risk level, and audit history (currently PlaceholderPage).
+- **Done (Phase 5)**: Approval queue page: dedicated Approvals tab with diff viewer, risk level, 24h auto-expiry, and audit history (`seed_approvals.py` seeds demo data).
 - Settings page: model routing, sandbox policy, budget caps, kill switch scope (currently PlaceholderPage).
+
+## CriticGate — Phase 6
+- Run the eval with the real LLM deep-probe: `CRITICGATE_REAL_PROBE=1` + `MODEL_CRITIC` env var — wired and stub-verified in Phase 5, needs an Anthropic/Gemini API key to produce real numbers.
+- Strategy D red team: LLM-generated backdoors (the scripted A–C set saturates at 1.000 safety against the simulated probe and no longer stresses the monitor).
