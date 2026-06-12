@@ -1,4 +1,4 @@
-import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, MarketingAuditEvent, MarketingCampaign, SafetyEscalation, SafetyStats, SafetyTraceFrame, SafetyVerdict, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
+import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, KillswitchState, MarketingAuditEvent, MarketingCampaign, SafetyEscalation, SafetyStats, SafetyTraceFrame, SafetyVerdict, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
 
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -205,12 +205,19 @@ export const api = {
   },
 
   // Killswitch
-  engageKillswitch() {
-    return json<{ status: string; killswitch_active: boolean }>("/api/killswitch", { method: "POST" });
+  getKillswitchState() {
+    return json<KillswitchState>("/api/killswitch");
+  },
+
+  engageKillswitch(reason?: string) {
+    return json<{ status: string; killswitch_active: boolean; state: KillswitchState }>("/api/killswitch", {
+      method: "POST",
+      body: JSON.stringify({ engaged: true, reason, engaged_by: "operator" })
+    });
   },
 
   disengageKillswitch() {
-    return json<{ status: string; killswitch_active: boolean }>("/api/killswitch", { method: "DELETE" });
+    return json<{ status: string; killswitch_active: boolean; state: KillswitchState }>("/api/killswitch", { method: "DELETE" });
   },
 
   // Agents

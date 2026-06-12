@@ -22,8 +22,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from dbos import DBOS
-from main import update_status
-from store import marketing_get_campaign, marketing_list_audit_events
+from main import update_status, check_killswitch
+from store import marketing_get_campaign, marketing_list_audit_events, KillswitchEngaged
 from events import bus
 from agents.marketing.researcher import run_researcher
 from agents.marketing.content_writer import run_content_writer
@@ -185,6 +185,7 @@ def run_scheduler(run_id: str, campaign_id: int) -> dict:
     Schedule an already-approved campaign. Called by the marketing workflow
     after operator approval. Enforces rate limits, then pushes to Typefully.
     """
+    check_killswitch()
     campaign = marketing_get_campaign(campaign_id)
     if not campaign:
         return {"ok": False, "reason": "Campaign not found"}
@@ -226,6 +227,7 @@ def marketing_pipeline(campaign_id: int, finding_evidence: str) -> dict:
     The workflow suspends at the approval gate (DBOS.recv) for up to 24h.
     The operator approves via the Approvals tab or /api/approve/{workflow_id}.
     """
+    check_killswitch()
     run_id = DBOS.workflow_id
     campaign = marketing_get_campaign(campaign_id)
     if not campaign:
@@ -271,6 +273,7 @@ def marketing_pipeline(campaign_id: int, finding_evidence: str) -> dict:
         return {"ok": False, "reason": "Operator rejected the draft"}
 
     # Phase 4: Schedule
+    check_killswitch()
     schedule_result = run_scheduler(run_id, campaign_id)
     _emit_workflow(run_id, campaign_id, "pipeline_done", {
         "status": "Success",

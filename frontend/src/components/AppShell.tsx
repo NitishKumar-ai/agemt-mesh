@@ -5,11 +5,13 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Power,
   Settings,
+  ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
 import { api } from "../lib/api";
-import type { GitHubStatus, PageKey } from "../lib/types";
+import type { GitHubStatus, KillswitchState, PageKey } from "../lib/types";
 
 type NavItem = {
   key: PageKey;
@@ -25,13 +27,46 @@ type Props = {
   navItems: NavItem[];
   streamState: "connected" | "reconnecting" | "closed";
   githubStatus?: GitHubStatus;
+  killswitch?: KillswitchState;
+  onKillswitchChange?: (state: KillswitchState) => void;
 };
 
-export function AppShell({ children, page, onPageChange, navItems, streamState, githubStatus }: Props) {
+export function AppShell({ children, page, onPageChange, navItems, streamState, githubStatus, killswitch, onKillswitchChange }: Props) {
   const [open, setOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const toggleKillswitch = async () => {
+    if (!killswitch) return;
+    
+    const action = killswitch.engaged ? "disengage" : "engage";
+    const msg = killswitch.engaged 
+      ? "Are you sure you want to DISENGAGE the global killswitch? Agents will resume work."
+      : "Are you sure you want to ENGAGE the global killswitch? All running workflows will be halted.";
+      
+    if (!window.confirm(msg)) return;
+
+    setLoading(true);
+    try {
+      const res = killswitch.engaged 
+        ? await api.disengageKillswitch() 
+        : await api.engageKillswitch("Manual emergency stop");
+      onKillswitchChange?.(res.state);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to toggle killswitch");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={`app ${open ? "" : "app--sidebar-closed"}`}>
+      {killswitch?.engaged && (
+        <div className="global-killswitch-banner">
+          <ShieldAlert size={16} />
+          <span>Global Killswitch Engaged: All agent activity is currently halted.</span>
+        </div>
+      )}
+      
       <aside className="sidebar">
         <div className="sidebar-head">
           <span className="app-wordmark">Agent Mesh</span>
@@ -86,11 +121,24 @@ export function AppShell({ children, page, onPageChange, navItems, streamState, 
       </aside>
 
       <section className="app-main">
-        {!open && (
-          <button className="open-sidebar" type="button" onClick={() => setOpen(true)} title="Open sidebar">
-            <PanelLeftOpen size={18} />
+        <header className="app-header">
+          {!open && (
+            <button className="bare-icon" type="button" onClick={() => setOpen(true)} title="Open sidebar">
+              <PanelLeftOpen size={18} />
+            </button>
+          )}
+          <div className="header-spacer" />
+          <button 
+            className={`header-killswitch ${killswitch?.engaged ? "header-killswitch--engaged" : ""}`}
+            type="button"
+            onClick={toggleKillswitch}
+            disabled={loading}
+          >
+            <Power size={14} />
+            <span>{killswitch?.engaged ? "Killswitch Active" : "Killswitch"}</span>
           </button>
-        )}
+        </header>
+
         <main className="content">{children}</main>
       </section>
     </div>

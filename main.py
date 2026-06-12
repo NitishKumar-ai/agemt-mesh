@@ -324,9 +324,16 @@ def _save_suggested_task(file_path: str, line_number: int, marker: str,
     tasks_save(file_path, line_number, marker, comment, context_snippet, rationale, confidence)
 
 
+from store import KillswitchEngaged, killswitch_get
+
+def check_killswitch():
+    if killswitch_get():
+        raise KillswitchEngaged("Global killswitch engaged — all agent work halted.")
+
 @DBOS.workflow()
 def scan_suggested_tasks(repo_root: str):
     """Discover TODO/FIXME markers, score each with LLM, persist to DB."""
+    check_killswitch()
     todos = _extract_todos(repo_root)
 
     publish_event("default", {"agent_id": "SuggestedTaskScanner", "event_type": "scan_started",
@@ -419,6 +426,7 @@ def run_scheduled_task(task_id: int, name: str, prompt: str, interval: str):
     Only commands in _SCHEDULER_ALLOWED_CMDS are permitted. Shell metacharacters
     and destructive patterns are rejected before execution.
     """
+    check_killswitch()
     import subprocess
     from store import schedule_mark_ran
 
@@ -475,6 +483,10 @@ def run_scheduled_task(task_id: int, name: str, prompt: str, interval: str):
 @DBOS.workflow()
 def scheduled_dispatcher(scheduled_time: datetime, actual_time: datetime):
     """Runs every minute. Finds due tasks and kicks off their workflows."""
+    try:
+        check_killswitch()
+    except KillswitchEngaged:
+        return
     from store import schedule_get_due
     due = schedule_get_due()
     for task in due:
@@ -496,6 +508,7 @@ def _update_webhook_status(webhook_id: int, status: str, workflow_id: str = ""):
 @DBOS.workflow()
 def self_heal_pr(webhook_id: int, branch: str, build_logs: str, pr_diff: str):
     """Diagnose a failing Render build and push a fix commit to the PR branch."""
+    check_killswitch()
     import subprocess
 
     if not _SAFE_BRANCH_RE.match(branch):
@@ -627,6 +640,7 @@ def agent_loop(context: str):
     update_status(run_id, agent.agent_id, "start", "Idle")
     
     try:
+        check_killswitch()
         plan = agent.plan(context)
         update_status(run_id, agent.agent_id, "planning", "Planning")
 
@@ -650,9 +664,11 @@ def agent_loop(context: str):
             agent.write_event("execution_aborted", {"status": "Failed"})
             return {"passed": False, "feedback": "Rejected by human"}
         
+        check_killswitch()
         result = agent.execute(plan)
         update_status(run_id, agent.agent_id, "executing", "Executing")
         
+        check_killswitch()
         verdict = agent.review(result)
         if verdict.get("passed"):
             update_status(run_id, agent.agent_id, "complete", "Success")
@@ -660,6 +676,10 @@ def agent_loop(context: str):
             update_status(run_id, agent.agent_id, "failed", "Failed")
             
         return verdict
+    except KillswitchEngaged as e:
+        update_status(run_id, agent.agent_id, "halted", "Failed")
+        agent.write_event("agent_halted", {"status": "Failed", "reason": str(e)})
+        return {"passed": False, "feedback": str(e)}
     except Exception as e:
         insert_dlq(run_id, agent.agent_id, str(e), {"context": context})
         update_status(run_id, agent.agent_id, "dlq", "Failed")
@@ -769,44 +789,60 @@ def commitguard_workflow(job_id: str, repo_url: str, max_findings: int, github_t
     tmpdir = f"/tmp/commitguard-{job_id}"
     started_at = _time.time()
 
-    _update_scan_step(job_id, "clone", 5)
-    _cg_emit(job_id, "clone", 5)
+    try:
+        check_killswitch()
+        _update_scan_step(job_id, "clone", 5)
+        _cg_emit(job_id, "clone", 5)
 
-    cg_clone(repo_url, tmpdir)
+        cg_clone(repo_url, tmpdir)
 
-    _update_scan_step(job_id, "scan", 15)
-    _cg_emit(job_id, "scan", 15)
+        check_killswitch()
+        _update_scan_step(job_id, "scan", 15)
+        _cg_emit(job_id, "scan", 15)
 
-    raw_findings, truncated = cg_scan(repo_url, tmpdir, max_findings)
-    total_hits = len(raw_findings)
+        raw_findings, truncated = cg_scan(repo_url, tmpdir, max_findings)
+        total_hits = len(raw_findings)
 
-    verified_all = []
-    for i, finding in enumerate(raw_findings):
-        pct = 20 + int(60 * (i / max(total_hits, 1)))
-        _update_scan_step(job_id, "verify", pct)
-        _cg_emit(job_id, "verify", pct, {"current": i + 1, "total": total_hits})
-        vf = cg_verify(finding, repo_url)
-        verified_all.append(vf)
+        verified_all = []
+        for i, finding in enumerate(raw_findings):
+            check_killswitch()
+            pct = 20 + int(60 * (i / max(total_hits, 1)))
+            _update_scan_step(job_id, "verify", pct)
+            _cg_emit(job_id, "verify", pct, {"current": i + 1, "total": total_hits})
+            vf = cg_verify(finding, repo_url)
+            verified_all.append(vf)
 
-    filed_all = []
-    for vf in verified_all:
-        if vf.get("verdict") != "CONFIRMED":
-            filed_all.append({"verified_finding": vf, "fix_suggestion": None,
-                               "github_issue_url": None, "issue_filed": False})
-            continue
-        _update_scan_step(job_id, "file", 85)
-        ff = cg_file_issue(vf, repo_url, github_token)
-        filed_all.append({"verified_finding": vf, **ff})
+        filed_all = []
+        for vf in verified_all:
+            if vf.get("verdict") != "CONFIRMED":
+                filed_all.append({"verified_finding": vf, "fix_suggestion": None,
+                                   "github_issue_url": None, "issue_filed": False})
+                continue
+            check_killswitch()
+            _update_scan_step(job_id, "file", 85)
+            ff = cg_file_issue(vf, repo_url, github_token)
+            filed_all.append({"verified_finding": vf, **ff})
 
-    cg_cleanup(tmpdir)
+        cg_cleanup(tmpdir)
 
-    duration_s = int(_time.time() - started_at)
-    _save_commitguard_results(job_id, filed_all, duration_s, total_hits, truncated)
+        duration_s = int(_time.time() - started_at)
+        _save_commitguard_results(job_id, filed_all, duration_s, total_hits, truncated)
 
-    publish_event("default", {"agent_id": "CommitGuard", "event_type": "scan_complete",
-                               "payload": {"job_id": job_id, "status": "complete",
-                                           "findings": len(filed_all)}})
-    bus.emit(json.dumps({"agent_id": "CommitGuard", "event_type": "scan_complete",
-                          "payload": {"job_id": job_id, "status": "complete",
-                                      "findings": len(filed_all)}}))
-    return {"job_id": job_id, "findings": len(filed_all), "duration_s": duration_s}
+        publish_event("default", {"agent_id": "CommitGuard", "event_type": "scan_complete",
+                                   "payload": {"job_id": job_id, "status": "complete",
+                                               "findings": len(filed_all)}})
+        bus.emit(json.dumps({"agent_id": "CommitGuard", "event_type": "scan_complete",
+                              "payload": {"job_id": job_id, "status": "complete",
+                                          "findings": len(filed_all)}}))
+        return {"job_id": job_id, "findings": len(filed_all), "duration_s": duration_s}
+
+    except KillswitchEngaged as e:
+        _update_scan_step(job_id, "halted", 0, status="failed")
+        publish_event("default", {"agent_id": "CommitGuard", "event_type": "scan_failed",
+                                   "payload": {"job_id": job_id, "status": "failed", "reason": str(e)}})
+        bus.emit(json.dumps({"agent_id": "CommitGuard", "event_type": "scan_failed",
+                              "payload": {"job_id": job_id, "status": "failed", "reason": str(e)}}))
+        raise
+    except Exception as e:
+        _update_scan_step(job_id, "error", 0, status="failed")
+        raise

@@ -16,7 +16,7 @@ import { SafetyPage } from "./pages/SafetyPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { connectEventStream } from "./lib/events";
 import { api } from "./lib/api";
-import type { GitHubStatus, MeshEvent, PageKey } from "./lib/types";
+import type { GitHubStatus, KillswitchState, MeshEvent, PageKey } from "./lib/types";
 
 export function App() {
   const [page, setPage] = useState<PageKey>("session");
@@ -24,6 +24,7 @@ export function App() {
   const [events, setEvents] = useState<MeshEvent[]>([]);
   const [streamState, setStreamState] = useState<"connected" | "reconnecting" | "closed">("reconnecting");
   const [githubStatus, setGithubStatus] = useState<GitHubStatus>();
+  const [killswitch, setKillswitch] = useState<KillswitchState>();
 
   function handlePageChange(next: PageKey) {
     if (next === "session") setSessionKey((k) => k + 1);
@@ -39,6 +40,7 @@ export function App() {
 
   useEffect(() => {
     void api.githubStatus().then(setGithubStatus).catch(() => undefined);
+    void api.getKillswitchState().then(setKillswitch).catch(() => undefined);
   }, []);
 
   const navItems = useMemo(
@@ -61,7 +63,7 @@ export function App() {
   );
 
   return (
-    <AppShell page={page} onPageChange={handlePageChange} navItems={navItems} streamState={streamState} githubStatus={githubStatus}>
+    <AppShell page={page} onPageChange={handlePageChange} navItems={navItems} streamState={streamState} githubStatus={githubStatus} killswitch={killswitch} onKillswitchChange={setKillswitch}>
       {page === "session"     && <SessionPage key={sessionKey} events={events} streamState={streamState} githubStatus={githubStatus} onGitHubStatusChange={setGithubStatus} />}
       {page === "sessions"   && <SessionsPage />}
       {page === "workflows"  && <WorkflowsPage />}
