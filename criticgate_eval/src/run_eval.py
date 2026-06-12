@@ -39,7 +39,7 @@ from schema import (  # noqa: E402
     Trajectory,
     load_jsonl,
 )
-from metrics import DEFAULT_BUDGETS, headline, safety_curve, get_fp_metrics  # noqa: E402
+from metrics import DEFAULT_BUDGETS, headline, safety_curve, get_fp_metrics, compute_auroc  # noqa: E402
 
 
 _REPO_ROOT = os.path.dirname(_SRC_DIR)
@@ -275,6 +275,8 @@ def print_table(
     upfront_curve: SafetyCurve,
     baseline_fp: dict,
     criticgate_fp: dict,
+    baseline_auroc: float = 0.0,
+    criticgate_auroc: float = 0.0,
 ) -> None:
     def safety_str(curve: SafetyCurve, h: float) -> str:
         for p in curve.points:
@@ -291,7 +293,7 @@ def print_table(
         b = safety_str(baseline_curve, h)
         c = safety_str(criticgate_curve, h)
         u = safety_str(upfront_curve, h)
-        print(f"{h:>8.2f} | {b:>20} | {c:>20} | {u:>10}")
+        print(f"{h:>8.3f} | {b:>20} | {c:>20} | {u:>10}")
     print()
 
     print("Usefulness / False Positive Rate (blocked on clean samples):")
@@ -302,8 +304,8 @@ def print_table(
 
     h_ref = 0.02
     print(f"Headline numbers at h = {h_ref}:")
-    print(f"  baseline   safety(0.02) = {headline(baseline_curve, h_ref):.3f}")
-    print(f"  criticgate safety(0.02) = {headline(criticgate_curve, h_ref):.3f}")
+    print(f"  baseline   safety(0.02) = {headline(baseline_curve, h_ref):.3f} (AUROC: {baseline_auroc:.3f})")
+    print(f"  criticgate safety(0.02) = {headline(criticgate_curve, h_ref):.3f} (AUROC: {criticgate_auroc:.3f})")
     print(f"  upfront    safety(0.02) = {headline(upfront_curve, h_ref):.3f}")
     print()
 
@@ -319,27 +321,30 @@ def plot_or_dump(
     upfront_curve: SafetyCurve,
     baseline_fp: dict,
     criticgate_fp: dict,
+    baseline_auroc: float = 0.0,
+    criticgate_auroc: float = 0.0,
 ) -> None:
     os.makedirs(_RESULTS_DIR, exist_ok=True)
+
+    curves_path = os.path.join(_RESULTS_DIR, "curves.json")
+    with open(curves_path, "w") as f:
+        json.dump(
+            {
+                "baseline": {**baseline_curve.to_dict(), "fp_metrics": baseline_fp, "auroc": baseline_auroc},
+                "criticgate": {**criticgate_curve.to_dict(), "fp_metrics": criticgate_fp, "auroc": criticgate_auroc},
+                "upfront": upfront_curve.to_dict(),
+            },
+            f,
+            indent=2,
+        )
+    print(f"[run_eval] Wrote {curves_path}")
 
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError as exc:
-        print(f"[run_eval] matplotlib not available ({exc}); writing results/curves.json instead.")
-        curves_path = os.path.join(_RESULTS_DIR, "curves.json")
-        with open(curves_path, "w") as f:
-            json.dump(
-                {
-                    "baseline": {**baseline_curve.to_dict(), "fp_metrics": baseline_fp},
-                    "criticgate": {**criticgate_curve.to_dict(), "fp_metrics": criticgate_fp},
-                    "upfront": upfront_curve.to_dict(),
-                },
-                f,
-                indent=2,
-            )
-        print(f"[run_eval] Wrote {curves_path}")
+        print(f"[run_eval] matplotlib not available ({exc}); tradeoff_curve.png not plotted.")
         return
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -469,13 +474,16 @@ def main() -> None:
     criticgate_curve = safety_curve(criticgate_results, budgets)
     upfront_curve = upfront_auditing_curve(trajectories, budgets)
 
+    baseline_auroc = compute_auroc(baseline_results)
+    criticgate_auroc = compute_auroc(criticgate_results)
+
     # safety_curve() takes monitor_name from results[0]; force canonical
     # names in case the fallback/real scorers used something else.
     baseline_curve.monitor_name = "baseline"
     criticgate_curve.monitor_name = "criticgate"
 
-    print_table(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp)
-    plot_or_dump(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp)
+    print_table(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp, baseline_auroc, criticgate_auroc)
+    plot_or_dump(budgets, baseline_curve, criticgate_curve, upfront_curve, baseline_fp, criticgate_fp, baseline_auroc, criticgate_auroc)
 
     if args.seeds > 0:
         run_robustness_mode(args.seeds)
