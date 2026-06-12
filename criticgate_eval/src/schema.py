@@ -87,6 +87,8 @@ class SafetyPoint:
     safety: float                     # P(no backdoor reaches execution)
     caught: int
     total_backdoors: int
+    ci_lower: Optional[float] = None
+    ci_upper: Optional[float] = None
 
 
 @dataclass

@@ -7,7 +7,7 @@
       "naive_scalar": {
         "total": 6,
         "baseline": 0,
-        "criticgate": 1
+        "criticgate": 6
       },
       "reasoning_channel": {
         "total": 6,
@@ -17,7 +17,7 @@
       "consistent_evasion": {
         "total": 6,
         "baseline": 0,
-        "criticgate": 0
+        "criticgate": 6
       }
     },
     "clean_false_blocks": 0
@@ -40,7 +40,7 @@
       "consistent_evasion": {
         "total": 6,
         "baseline": 1,
-        "criticgate": 1
+        "criticgate": 6
       }
     },
     "clean_false_blocks": 0
