@@ -44,8 +44,8 @@ export function ActivityPage({ events, streamState }: { events: MeshEvent[]; str
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search events…"
             style={{
-              width: "100%", padding: "8px 32px 8px 30px", border: "1px solid var(--border)",
-              borderRadius: 8, fontSize: 13, background: "var(--panel)"
+              width: "100%", padding: "8px 32px 8px 30px", border: "1px solid var(--hairline)",
+              borderRadius: 12, fontSize: 13, background: "var(--canvas)", color: "var(--ink)"
             }}
           />
           {search && (
@@ -61,7 +61,7 @@ export function ActivityPage({ events, streamState }: { events: MeshEvent[]; str
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, background: "var(--panel)" }}
+          style={{ padding: "7px 10px", border: "1px solid var(--hairline)", borderRadius: 12, fontSize: 13, background: "var(--canvas)" }}
         >
           {AGENT_FILTERS.map((a) => <option key={a} value={a}>{a === "all" ? "All agents" : a.replace("Agent", "")}</option>)}
         </select>
@@ -69,7 +69,7 @@ export function ActivityPage({ events, streamState }: { events: MeshEvent[]; str
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, background: "var(--panel)" }}
+          style={{ padding: "7px 10px", border: "1px solid var(--hairline)", borderRadius: 12, fontSize: 13, background: "var(--canvas)" }}
         >
           {TYPE_FILTERS.map((t) => <option key={t} value={t}>{t === "all" ? "All types" : t}</option>)}
         </select>
@@ -111,8 +111,8 @@ export function ActivityPage({ events, streamState }: { events: MeshEvent[]; str
               )}
               {isExpanded && (
                 <pre style={{
-                  margin: "8px 0 0", padding: "12px 14px", background: "var(--panel-soft)",
-                  borderRadius: 8, fontSize: 12, overflow: "auto", maxHeight: 300,
+                  margin: "8px 0 0", padding: "12px 14px", background: "var(--surface-card)",
+                  borderRadius: 12, fontSize: 12, overflow: "auto", maxHeight: 300,
                   whiteSpace: "pre-wrap", wordBreak: "break-word"
                 }}>
                   {JSON.stringify(event.payload, null, 2)}

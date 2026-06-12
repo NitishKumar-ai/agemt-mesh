@@ -6,7 +6,7 @@ import type { AppSettings } from "../lib/types";
 
 function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
       {ok
         ? <CheckCircle2 size={15} color="var(--success)" />
         : <XCircle size={15} color="var(--error)" />}
@@ -19,9 +19,9 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
 
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{title}</h2>
-      <p style={{ color: "var(--muted)", fontSize: 13 }}>{description}</p>
+    <div style={{ marginBottom: 16 }}>
+      <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4, letterSpacing: "-0.2px" }}>{title}</h2>
+      <p style={{ color: "var(--muted)", fontSize: 14 }}>{description}</p>
     </div>
   );
 }
@@ -30,14 +30,14 @@ function Card({ children, danger }: { children: React.ReactNode; danger?: boolea
   return (
     <div
       style={{
-        border: `1px solid ${danger ? "var(--error)" : "var(--border)"}`,
-        borderRadius: 12,
-        padding: "18px 20px",
-        background: danger ? "rgba(221,78,78,0.04)" : "var(--panel)",
-        marginBottom: 20,
+        border: `1px solid ${danger ? "rgba(239,68,68,.2)" : "var(--hairline)"}`,
+        borderRadius: 16,
+        padding: "20px 22px",
+        background: danger ? "rgba(255,107,90,.04)" : "var(--canvas)",
+        marginBottom: 22,
         display: "flex",
         flexDirection: "column",
-        gap: 12,
+        gap: 14,
       }}
     >
       {children}
@@ -48,23 +48,23 @@ function Card({ children, danger }: { children: React.ReactNode; danger?: boolea
 function ModelField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", marginBottom: 6, letterSpacing: "0.5px" }}>
         {label}
       </div>
       <code
         style={{
           display: "block",
-          padding: "8px 12px",
-          background: "var(--panel-soft)",
-          borderRadius: 8,
+          padding: "10px 14px",
+          background: "var(--surface-card)",
+          borderRadius: 12,
           fontSize: 13,
-          color: "var(--primary)",
-          border: "1px solid var(--border)",
+          color: "var(--brand-teal)",
+          border: "1px solid var(--hairline)",
         }}
       >
         {value}
       </code>
-      <p style={{ fontSize: 11, color: "var(--subtle)", marginTop: 4 }}>
+      <p style={{ fontSize: 11, color: "var(--muted-soft)", marginTop: 5 }}>
         Override via env var <code>MODEL_{label.replace(" ", "_").toUpperCase()}</code>
       </p>
     </div>
@@ -135,15 +135,15 @@ export function SettingsPage() {
           />
           <Card danger={settings.killswitch_active}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {settings.killswitch_active
-                  ? <OctagonX size={22} color="var(--error)" />
-                  : <ShieldOff size={22} color="var(--muted)" />}
+                  ? <OctagonX size={24} color="var(--brand-coral)" />
+                  : <ShieldOff size={24} color="var(--muted)" />}
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: settings.killswitch_active ? "var(--error)" : "var(--text)" }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: settings.killswitch_active ? "var(--brand-coral)" : "var(--ink)", letterSpacing: "-0.2px" }}>
                     {settings.killswitch_active ? "Killswitch ENGAGED — all agents halted" : "Killswitch disengaged"}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                  <div style={{ fontSize: 13, color: "var(--muted)" }}>
                     {settings.killswitch_active
                       ? "No new workflows will start. Click to resume normal operation."
                       : "Agents are running normally."}
@@ -153,13 +153,13 @@ export function SettingsPage() {
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {confirmKill && !settings.killswitch_active && (
                   <>
-                    <span style={{ fontSize: 12, color: "var(--error)", fontWeight: 600 }}>
+                    <span style={{ fontSize: 12, color: "var(--brand-coral)", fontWeight: 600 }}>
                       <AlertTriangle size={13} style={{ verticalAlign: "middle", marginRight: 3 }} />
                       Confirm?
                     </span>
                     <button
                       className="secondary-button"
-                      style={{ fontSize: 12, padding: "5px 12px" }}
+                      style={{ fontSize: 12, padding: "5px 14px" }}
                       onClick={() => setConfirmKill(false)}
                     >
                       Cancel
@@ -170,15 +170,16 @@ export function SettingsPage() {
                   onClick={toggleKillswitch}
                   disabled={killswitchPending}
                   style={{
-                    padding: "8px 18px",
-                    borderRadius: 8,
-                    fontWeight: 700,
+                    padding: "9px 20px",
+                    borderRadius: 12,
+                    fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",
                     border: 0,
                     color: "white",
-                    background: settings.killswitch_active ? "var(--success)" : "var(--error)",
+                    background: settings.killswitch_active ? "var(--success)" : "var(--brand-coral)",
                     opacity: killswitchPending ? 0.6 : 1,
+                    transition: "all 150ms",
                   }}
                 >
                   {killswitchPending
@@ -214,7 +215,7 @@ export function SettingsPage() {
             {settings.commitguard_webhook && (
               <div style={{ fontSize: 13, color: "var(--muted)" }}>
                 CommitGuard webhook:{" "}
-                <code style={{ color: "var(--text)" }}>{settings.commitguard_webhook}</code>
+                <code style={{ color: "var(--ink)" }}>{settings.commitguard_webhook}</code>
               </div>
             )}
           </Card>
@@ -232,12 +233,12 @@ export function SettingsPage() {
           {/* Env hint */}
           <div
             style={{
-              padding: "12px 16px",
-              borderRadius: 10,
-              background: "var(--primary-soft)",
-              color: "var(--primary)",
-              fontSize: 13,
-              border: "1px solid var(--primary)",
+              padding: "14px 18px",
+              borderRadius: 16,
+              background: "rgba(232,185,74,.08)",
+              color: "var(--ink)",
+              fontSize: 14,
+              border: "1px solid rgba(232,185,74,.2)",
             }}
           >
             <strong>To change settings:</strong> edit your <code>.env</code> file (see{" "}

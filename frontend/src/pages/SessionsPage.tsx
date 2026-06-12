@@ -9,8 +9,8 @@ const STATUS_FILTERS = ["all", "running", "completed", "failed", "blocked"] as c
 function statusColor(status: string) {
   if (status === "success" || status === "completed") return "var(--success)";
   if (status === "failed" || status === "error") return "var(--error)";
-  if (status === "running" || status === "executing") return "var(--primary)";
-  if (status === "blocked") return "var(--warning)";
+  if (status === "running" || status === "executing") return "var(--brand-teal)";
+  if (status === "blocked") return "var(--brand-ochre)";
   return "var(--muted)";
 }
 
@@ -81,14 +81,15 @@ export function SessionsPage() {
   useEffect(() => { void load(); }, []);
 
   const filterChipStyle = (active: boolean) => ({
-    padding: "5px 12px",
+    padding: "5px 14px",
     border: 0,
-    borderRadius: 20,
+    borderRadius: 9999,
     fontWeight: 600,
     fontSize: 12,
     cursor: "pointer",
-    background: active ? "var(--primary-soft)" : "transparent",
-    color: active ? "var(--primary)" : "var(--muted)",
+    background: active ? "var(--surface-card)" : "transparent",
+    color: active ? "var(--ink)" : "var(--muted)",
+    transition: "all 150ms",
   });
 
   return (
@@ -106,22 +107,22 @@ export function SessionsPage() {
         />
 
         {/* Search + Filter chips */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ position: "relative", flex: "1 1 180px", maxWidth: 280 }}>
-            <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }} />
+            <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--muted)" }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search sessions…"
               style={{
-                width: "100%", padding: "6px 28px 6px 28px", border: "1px solid var(--border)",
-                borderRadius: 8, fontSize: 12, background: "var(--panel)"
+                width: "100%", padding: "8px 28px 8px 30px", border: "1px solid var(--hairline)",
+                borderRadius: 12, fontSize: 13, background: "var(--canvas)", color: "var(--ink)",
               }}
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: 0, cursor: "pointer", color: "var(--muted)" }}
+                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: 0, cursor: "pointer", color: "var(--muted)" }}
               >
                 <X size={12} />
               </button>
@@ -152,7 +153,7 @@ export function SessionsPage() {
             <article
               className="schedule-row"
               key={s.run_id}
-              style={{ cursor: "pointer", background: selected === s.run_id ? "var(--primary-soft)" : undefined }}
+              style={{ cursor: "pointer", background: selected === s.run_id ? "var(--surface-card)" : undefined }}
               onClick={() => openSession(s.run_id)}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -165,7 +166,7 @@ export function SessionsPage() {
                   />
                   {shortId(s.run_id)}
                   <span style={{
-                    padding: "1px 7px", borderRadius: 6, fontSize: 10, fontWeight: 700,
+                    padding: "2px 8px", borderRadius: 9999, fontSize: 10, fontWeight: 700,
                     background: statusColor(s.status), color: "white"
                   }}>
                     {s.status}
@@ -179,7 +180,7 @@ export function SessionsPage() {
                   {relTime(s.started_at)} · {s.step_count} step{s.step_count !== 1 ? "s" : ""} · {s.last_step}
                 </small>
               </div>
-              <ChevronRight size={16} color="var(--subtle)" />
+              <ChevronRight size={16} color="var(--muted-soft)" />
             </article>
           ))}
         </div>
@@ -188,7 +189,7 @@ export function SessionsPage() {
       <aside className="form-panel" style={{ overflowY: "auto" }}>
         {!selected && (
           <div style={{ color: "var(--muted)", fontSize: 14, marginTop: 24 }}>
-            <Files size={28} style={{ marginBottom: 10, display: "block", color: "var(--subtle)" }} />
+            <Files size={28} style={{ marginBottom: 10, display: "block", color: "var(--muted-soft)" }} />
             Select a session on the left to view its step timeline.
           </div>
         )}
@@ -197,23 +198,23 @@ export function SessionsPage() {
             <h2 style={{ marginBottom: 14 }}>Steps · {shortId(selected)}</h2>
             {loadingSteps && <div className="empty-card">Loading steps…</div>}
             {!loadingSteps && steps.length === 0 && <div className="empty-card">No steps recorded.</div>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {steps.map((step, i) => (
                 <div
                   key={step.id}
                   style={{
                     display: "flex", alignItems: "flex-start", gap: 10,
-                    padding: "10px 12px",
-                    border: "1px solid var(--border)",
-                    borderRadius: 10,
-                    background: "var(--panel)",
+                    padding: "12px 14px",
+                    border: "1px solid var(--hairline)",
+                    borderRadius: 12,
+                    background: "var(--canvas)",
                     fontSize: 13
                   }}
                 >
                   <span
                     style={{
-                      width: 22, height: 22, borderRadius: "50%",
-                      background: "var(--primary-soft)", color: "var(--primary)",
+                      width: 24, height: 24, borderRadius: "50%",
+                      background: "rgba(26,58,58,.06)", color: "var(--brand-teal)",
                       display: "grid", placeItems: "center",
                       fontWeight: 700, fontSize: 11, flexShrink: 0
                     }}
@@ -226,7 +227,7 @@ export function SessionsPage() {
                       {step.status}
                     </div>
                   </div>
-                  <div style={{ color: "var(--subtle)", fontSize: 11, whiteSpace: "nowrap" }}>
+                  <div style={{ color: "var(--muted-soft)", fontSize: 11, whiteSpace: "nowrap" }}>
                     {relTime(step.created_at)}
                   </div>
                 </div>

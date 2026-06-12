@@ -108,10 +108,13 @@ export function SessionPage({
   if (!taskStarted) {
     return (
       <div className="task-home">
-        <div className="home-content">
+        <div className="home-content" style={{ position: "relative" }}>
+          <img src="/hero_mesh_robot.png" alt="3D Robot" style={{ position: "absolute", right: -240, top: -80, width: 420, height: 420, objectFit: "contain", pointerEvents: "none", zIndex: -1, filter: "drop-shadow(0 20px 40px rgba(255,77,139,0.15))" }} />
+          <img src="/hero_data_nodes.png" alt="3D Nodes" style={{ position: "absolute", left: -280, top: 180, width: 320, height: 320, objectFit: "contain", pointerEvents: "none", zIndex: -1, filter: "drop-shadow(0 20px 40px rgba(184,164,237,0.15))" }} />
+
           <div className="hero-kicker"><Sparkles size={16} />Autonomous engineering, with you in control</div>
-          <h1>What should we work on?</h1>
-          <p>Describe a task, connect a repository, and watch Agent Mesh plan, execute, and review the work.</p>
+          <h1 style={{ position: "relative", zIndex: 1 }}>What should we work on?</h1>
+          <p style={{ position: "relative", zIndex: 1 }}>Describe a task, connect a repository, and watch Agent Mesh plan, execute, and review the work.</p>
 
           <form
             className="hero-prompt"

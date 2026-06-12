@@ -5,16 +5,16 @@ import { api } from "../lib/api";
 import type { SafetyEscalation, SafetyStats, SafetyVerdict } from "../lib/types";
 
 const VERDICT_COLORS: Record<string, { bg: string; fg: string; border: string }> = {
-  PASS:  { bg: "#E8F5E9", fg: "#2E7D32", border: "#A5D6A7" },
-  FLAG:  { bg: "#FFF8E1", fg: "#F57F17", border: "#FFE082" },
-  BLOCK: { bg: "#FFEBEE", fg: "#C62828", border: "#EF9A9A" },
+  PASS:  { bg: "rgba(34,197,94,.08)", fg: "#16a34a", border: "rgba(34,197,94,.2)" },
+  FLAG:  { bg: "rgba(232,185,74,.1)", fg: "#b8860b", border: "rgba(232,185,74,.25)" },
+  BLOCK: { bg: "rgba(239,68,68,.06)", fg: "#dc2626", border: "rgba(239,68,68,.2)" },
 };
 
 const RISK_COLORS: Record<string, string> = {
-  low: "#2FA76F",
-  medium: "#DC8B24",
-  high: "#DD4E4E",
-  critical: "#9C27B0",
+  low: "var(--success)",
+  medium: "var(--brand-ochre)",
+  high: "var(--brand-coral)",
+  critical: "var(--brand-pink)",
 };
 
 function VerdictPill({ verdict }: { verdict: string }) {
@@ -22,7 +22,7 @@ function VerdictPill({ verdict }: { verdict: string }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
-      padding: "2px 10px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
+      padding: "3px 12px", borderRadius: 9999, fontSize: 12, fontWeight: 600,
       background: c.bg, color: c.fg, border: `1px solid ${c.border}`,
     }}>
       {verdict === "PASS" && <CheckCircle2 size={12} />}
@@ -34,33 +34,38 @@ function VerdictPill({ verdict }: { verdict: string }) {
 }
 
 function RiskPill({ tier }: { tier: string }) {
-  const color = RISK_COLORS[tier] || "#777";
+  const color = RISK_COLORS[tier] || "var(--muted)";
   return (
     <span style={{
-      display: "inline-block", padding: "2px 8px", borderRadius: 9999,
-      fontSize: 11, fontWeight: 600, color, border: `1px solid ${color}30`,
-      background: `${color}12`,
+      display: "inline-block", padding: "3px 10px", borderRadius: 9999,
+      fontSize: 11, fontWeight: 600, color, border: `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
+      background: `color-mix(in srgb, ${color} 8%, transparent)`,
     }}>
       {tier}
     </span>
   );
 }
 
-function StatCard({ label, value, sub, icon: Icon }: {
+function StatCard({ label, value, sub, icon: Icon, accent }: {
   label: string; value: string | number; sub?: string;
-  icon: typeof Shield;
+  icon: typeof Shield; accent?: string;
 }) {
+  const accentColor = accent ?? "var(--brand-ochre)";
   return (
     <div style={{
-      background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12,
-      padding: 20, flex: "1 1 160px", minWidth: 140,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <Icon size={16} style={{ color: "var(--muted)" }} />
-        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>{label}</span>
+      background: "var(--canvas)", border: "1px solid var(--hairline)", borderRadius: 16,
+      padding: 22, flex: "1 1 160px", minWidth: 140,
+      transition: "transform 150ms, box-shadow 150ms",
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(10,10,10,.06)"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <Icon size={16} style={{ color: accentColor }} />
+        <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</span>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text)" }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 30, fontWeight: 500, color: "var(--ink)", letterSpacing: "-1px" }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 5 }}>{sub}</div>}
     </div>
   );
 }
@@ -109,34 +114,34 @@ export function SafetyPage() {
         title="Safety — CriticGate"
         description="Recursive Self-Correction Protocol. Every agent action is evaluated by a trusted Critic before execution."
         actions={
-          <button onClick={refresh} className="btn btn--secondary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button onClick={refresh} className="secondary-button" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <RefreshCw size={14} className={loading ? "spin" : ""} /> Refresh
           </button>
         }
       />
 
       {/* Stats row */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <StatCard icon={Shield} label="Total Evaluations" value={stats?.total_evaluations ?? "—"} />
-        <StatCard icon={ShieldCheck} label="Pass Rate" value={`${passRate}%`} sub={`${stats?.by_verdict["PASS"] ?? 0} passed`} />
-        <StatCard icon={ShieldAlert} label="Flagged" value={stats?.by_verdict["FLAG"] ?? 0} sub="Escalated for review" />
-        <StatCard icon={ShieldX} label="Blocked" value={stats?.by_verdict["BLOCK"] ?? 0} sub={`${stats?.counterfactual_blocks ?? 0} counterfactual`} />
-        <StatCard icon={Clock} label="Avg Eval Time" value={`${stats?.avg_eval_duration_ms ?? 0}ms`} sub={`Confidence: ${stats?.avg_confidence ?? 0}`} />
-        <StatCard icon={AlertTriangle} label="Open Escalations" value={stats?.open_escalations ?? 0} />
+      <div style={{ display: "flex", gap: 14, marginBottom: 28, flexWrap: "wrap" }}>
+        <StatCard icon={Shield} label="Total Evaluations" value={stats?.total_evaluations ?? "—"} accent="var(--brand-teal)" />
+        <StatCard icon={ShieldCheck} label="Pass Rate" value={`${passRate}%`} sub={`${stats?.by_verdict["PASS"] ?? 0} passed`} accent="var(--success)" />
+        <StatCard icon={ShieldAlert} label="Flagged" value={stats?.by_verdict["FLAG"] ?? 0} sub="Escalated for review" accent="var(--brand-ochre)" />
+        <StatCard icon={ShieldX} label="Blocked" value={stats?.by_verdict["BLOCK"] ?? 0} sub={`${stats?.counterfactual_blocks ?? 0} counterfactual`} accent="var(--brand-coral)" />
+        <StatCard icon={Clock} label="Avg Eval Time" value={`${stats?.avg_eval_duration_ms ?? 0}ms`} sub={`Confidence: ${stats?.avg_confidence ?? 0}`} accent="var(--brand-lavender)" />
+        <StatCard icon={AlertTriangle} label="Open Escalations" value={stats?.open_escalations ?? 0} accent="var(--brand-pink)" />
       </div>
 
       {/* Risk tier breakdown */}
       {stats && Object.keys(stats.by_risk_tier).length > 0 && (
         <div style={{
-          background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12,
-          padding: 16, marginBottom: 24,
+          background: "var(--canvas)", border: "1px solid var(--hairline)", borderRadius: 16,
+          padding: 18, marginBottom: 28,
         }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Risk Tier Distribution</div>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 14, letterSpacing: "-0.2px" }}>Risk Tier Distribution</div>
+          <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
             {Object.entries(stats.by_risk_tier).map(([tier, count]) => (
               <div key={tier} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <RiskPill tier={tier} />
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{count}</span>
+                <span style={{ fontSize: 15, fontWeight: 500 }}>{count}</span>
               </div>
             ))}
           </div>
@@ -144,16 +149,17 @@ export function SafetyPage() {
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 2, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
         {(["verdicts", "escalations"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              padding: "8px 20px", fontSize: 13, fontWeight: 600, border: "1px solid var(--border)",
-              borderRadius: 8, cursor: "pointer",
-              background: tab === t ? "var(--primary-soft)" : "var(--panel)",
-              color: tab === t ? "var(--primary)" : "var(--muted)",
+              padding: "8px 20px", fontSize: 13, fontWeight: 600, border: 0,
+              borderRadius: 9999, cursor: "pointer",
+              background: tab === t ? "var(--surface-card)" : "transparent",
+              color: tab === t ? "var(--ink)" : "var(--muted)",
+              transition: "all 150ms",
             }}
           >
             {t === "verdicts" ? `Verdicts (${verdicts.length})` : `Escalations (${escalations.length})`}
@@ -163,9 +169,9 @@ export function SafetyPage() {
 
       {/* Verdicts list */}
       {tab === "verdicts" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {verdicts.length === 0 && !loading && (
-            <div style={{ textAlign: "center", padding: 48, color: "var(--muted)", fontSize: 14 }}>
+            <div className="empty-card">
               No critic evaluations yet. Run an agent to see safety verdicts here.
             </div>
           )}
@@ -173,59 +179,59 @@ export function SafetyPage() {
             const expanded = expandedId === v.id;
             return (
               <div key={v.id} style={{
-                background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12,
+                background: "var(--canvas)", border: "1px solid var(--hairline)", borderRadius: 16,
                 overflow: "hidden",
               }}>
                 <button
                   onClick={() => setExpandedId(expanded ? null : v.id)}
                   style={{
                     width: "100%", display: "flex", alignItems: "center", gap: 12,
-                    padding: "14px 16px", background: "none", border: 0, cursor: "pointer",
+                    padding: "16px 18px", background: "none", border: 0, cursor: "pointer",
                     textAlign: "left",
                   }}
                 >
                   {expanded ? <ChevronDown size={14} color="var(--muted)" /> : <ChevronRight size={14} color="var(--muted)" />}
                   <VerdictPill verdict={v.verdict} />
                   <RiskPill tier={v.risk_tier} />
-                  <span style={{ flex: 1, fontSize: 13, color: "var(--text)", fontWeight: 500 }}>
+                  <span style={{ flex: 1, fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
                     {v.agent_id}
                   </span>
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>
                     {v.confidence.toFixed(2)} confidence
                   </span>
-                  <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "monospace" }}>
+                  <span style={{ fontSize: 11, color: "var(--muted-soft)", fontFamily: "monospace" }}>
                     {v.eval_duration_ms}ms
                   </span>
                   {v.counterfactual_flag && (
                     <span style={{
-                      fontSize: 10, padding: "2px 6px", borderRadius: 4,
-                      background: "#F3E5F5", color: "#7B1FA2", fontWeight: 600,
+                      fontSize: 10, padding: "3px 8px", borderRadius: 9999,
+                      background: "rgba(255,77,139,.08)", color: "var(--brand-pink)", fontWeight: 600,
                     }}>
                       COUNTERFACTUAL
                     </span>
                   )}
                 </button>
                 {expanded && (
-                  <div style={{ padding: "0 16px 16px 42px", fontSize: 13 }}>
-                    <div style={{ marginBottom: 8 }}>
-                      <span style={{ fontWeight: 600, color: "var(--text)" }}>Reasoning: </span>
-                      <span style={{ color: "var(--muted)" }}>{v.reasoning}</span>
+                  <div style={{ padding: "0 18px 18px 44px", fontSize: 13 }}>
+                    <div style={{ marginBottom: 10 }}>
+                      <span style={{ fontWeight: 600, color: "var(--ink)" }}>Reasoning: </span>
+                      <span style={{ color: "var(--body)" }}>{v.reasoning}</span>
                     </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <span style={{ fontWeight: 600, color: "var(--text)" }}>Checks: </span>
+                    <div style={{ marginBottom: 10 }}>
+                      <span style={{ fontWeight: 600, color: "var(--ink)" }}>Checks: </span>
                       <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap" }}>
                         {Object.entries(v.checks).map(([k, passed]) => (
                           <span key={k} style={{
-                            fontSize: 11, padding: "2px 6px", borderRadius: 4,
-                            background: passed ? "#E8F5E9" : "#FFEBEE",
-                            color: passed ? "#2E7D32" : "#C62828",
+                            fontSize: 11, padding: "3px 8px", borderRadius: 9999,
+                            background: passed ? "rgba(34,197,94,.08)" : "rgba(239,68,68,.06)",
+                            color: passed ? "var(--success)" : "var(--error)",
                           }}>
                             {passed ? "✓" : "✗"} {k}
                           </span>
                         ))}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--muted)" }}>
+                    <div style={{ display: "flex", gap: 18, fontSize: 12, color: "var(--muted)" }}>
                       <span>Run: <code>{v.run_id.slice(0, 12)}</code></span>
                       <span>Frame: <code>{v.frame_hash}</code></span>
                       <span>Depth: {v.recursion_depth}</span>
@@ -241,57 +247,57 @@ export function SafetyPage() {
 
       {/* Escalations list */}
       {tab === "escalations" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {escalations.length === 0 && !loading && (
-            <div style={{ textAlign: "center", padding: 48, color: "var(--muted)", fontSize: 14 }}>
+            <div className="empty-card">
               No escalations. Blocked or flagged actions from the Critic will appear here.
             </div>
           )}
           {escalations.map((e) => (
             <div key={e.id} style={{
-              background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 12,
-              padding: 16,
+              background: "var(--canvas)", border: "1px solid var(--hairline)", borderRadius: 16,
+              padding: 18,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <span style={{
-                  fontSize: 11, padding: "2px 8px", borderRadius: 9999, fontWeight: 600,
-                  background: e.resolved ? "#E8F5E9" : "#FFF8E1",
-                  color: e.resolved ? "#2E7D32" : "#F57F17",
-                  border: `1px solid ${e.resolved ? "#A5D6A7" : "#FFE082"}`,
+                  fontSize: 11, padding: "3px 10px", borderRadius: 9999, fontWeight: 600,
+                  background: e.resolved ? "rgba(34,197,94,.08)" : "rgba(232,185,74,.1)",
+                  color: e.resolved ? "var(--success)" : "var(--brand-ochre)",
+                  border: `1px solid ${e.resolved ? "rgba(34,197,94,.2)" : "rgba(232,185,74,.25)"}`,
                 }}>
                   {e.resolved ? "Resolved" : "Open"}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
                   {e.escalation_type}
                 </span>
                 <span style={{ fontSize: 12, color: "var(--muted)" }}>
                   Agent: {e.agent_id}
                 </span>
-                <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: "auto", fontFamily: "monospace" }}>
+                <span style={{ fontSize: 11, color: "var(--muted-soft)", marginLeft: "auto", fontFamily: "monospace" }}>
                   {e.frame_hash}
                 </span>
               </div>
               {e.resolved && e.resolution && (
-                <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: "var(--body)", marginBottom: 10 }}>
                   <span style={{ fontWeight: 600 }}>Resolution:</span> {e.resolution}
                   {e.resolved_by && <span> — by {e.resolved_by}</span>}
                 </div>
               )}
               {!e.resolved && (
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   <input
                     placeholder="Resolution note…"
                     value={resolveText}
                     onChange={(ev) => setResolveText(ev.target.value)}
                     style={{
-                      flex: 1, padding: "6px 10px", fontSize: 13, border: "1px solid var(--border)",
-                      borderRadius: 8, background: "var(--bg)",
+                      flex: 1, padding: "8px 12px", fontSize: 13, border: "1px solid var(--hairline)",
+                      borderRadius: 12, background: "var(--canvas)", color: "var(--ink)",
                     }}
                   />
                   <button
                     onClick={() => handleResolve(e.id)}
-                    className="btn btn--primary"
-                    style={{ fontSize: 13, padding: "6px 16px" }}
+                    className="primary-button"
+                    style={{ fontSize: 13, padding: "8px 18px" }}
                   >
                     Resolve
                   </button>

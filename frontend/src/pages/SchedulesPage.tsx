@@ -25,7 +25,7 @@ function statusPill(status: string | undefined | null) {
   const color =
     status === "success" || status === "completed" ? "var(--success)" :
     status === "failed" || status === "error" ? "var(--error)" :
-    status === "running" ? "var(--primary)" : "var(--muted)";
+    status === "running" ? "var(--brand-teal)" : "var(--muted)";
   return (
     <span style={{
       display: "inline-block", padding: "2px 7px", borderRadius: 6,
@@ -116,19 +116,19 @@ export function SchedulesPage() {
                       <input
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                        style={{ padding: "6px 10px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13 }}
+                        style={{ padding: "6px 10px", border: "1px solid var(--hairline)", borderRadius: 12, fontSize: 13, color: "var(--ink)" }}
                       />
                       <textarea
                         value={editForm.prompt}
                         onChange={(e) => setEditForm({ ...editForm, prompt: e.target.value })}
                         rows={2}
-                        style={{ padding: "6px 10px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, resize: "vertical" }}
+                        style={{ padding: "6px 10px", border: "1px solid var(--hairline)", borderRadius: 12, fontSize: 13, resize: "vertical", color: "var(--ink)" }}
                       />
                       <div style={{ display: "flex", gap: 6 }}>
                         <select
                           value={editForm.interval}
                           onChange={(e) => setEditForm({ ...editForm, interval: e.target.value })}
-                          style={{ padding: "5px 8px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+                          style={{ padding: "5px 8px", border: "1px solid var(--hairline)", borderRadius: 12, fontSize: 12 }}
                         >
                           <option value="hourly">Hourly</option>
                           <option value="daily">Daily</option>
@@ -147,7 +147,7 @@ export function SchedulesPage() {
                         {statusPill(schedule.last_status)}
                       </h3>
                       <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>{schedule.prompt}</p>
-                      <small style={{ color: "var(--subtle)" }}>
+                      <small style={{ color: "var(--muted-soft)" }}>
                         {schedule.interval} · next {relTime(schedule.next_run_at)}
                         {schedule.last_run_at && <> · last run {relTime(schedule.last_run_at)}</>}
                       </small>

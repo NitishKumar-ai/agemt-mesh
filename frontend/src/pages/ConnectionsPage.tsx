@@ -23,6 +23,13 @@ const ICONS: Record<string, typeof PenTool> = {
   layers: Layers,
 };
 
+const BRAND_ACCENTS = [
+  { bg: "rgba(255,77,139,.08)", fg: "var(--brand-pink)" },
+  { bg: "rgba(184,164,237,.1)", fg: "var(--brand-lavender)" },
+  { bg: "rgba(26,58,58,.06)", fg: "var(--brand-teal)" },
+  { bg: "rgba(232,185,74,.1)", fg: "var(--brand-ochre)" },
+];
+
 export function ConnectionsPage() {
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,11 +130,11 @@ export function ConnectionsPage() {
               <h3
                 style={{
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   textTransform: "uppercase",
                   color: "var(--muted)",
-                  marginBottom: 10,
-                  letterSpacing: "0.04em",
+                  marginBottom: 12,
+                  letterSpacing: "1.5px",
                 }}
               >
                 Connected
@@ -136,14 +143,15 @@ export function ConnectionsPage() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                  gap: 14,
-                  marginBottom: 28,
+                  gap: 16,
+                  marginBottom: 32,
                 }}
               >
-                {connected.map((p) => (
+                {connected.map((p, i) => (
                   <PlatformCard
                     key={p.id}
                     platform={p}
+                    accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
                     onDisconnect={() => disconnect(p.id)}
                     disconnecting={disconnecting === p.id}
                   />
@@ -158,11 +166,11 @@ export function ConnectionsPage() {
               <h3
                 style={{
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   textTransform: "uppercase",
                   color: "var(--muted)",
-                  marginBottom: 10,
-                  letterSpacing: "0.04em",
+                  marginBottom: 12,
+                  letterSpacing: "1.5px",
                 }}
               >
                 Available
@@ -171,14 +179,15 @@ export function ConnectionsPage() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                  gap: 14,
-                  marginBottom: 28,
+                  gap: 16,
+                  marginBottom: 32,
                 }}
               >
-                {available.map((p) => (
+                {available.map((p, i) => (
                   <PlatformCard
                     key={p.id}
                     platform={p}
+                    accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
                     onConnect={() => {
                       setConnectTarget(p.id);
                       setError(null);
@@ -197,10 +206,11 @@ export function ConnectionsPage() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.4)",
+            background: "rgba(10,10,10,0.3)",
             display: "grid",
             placeItems: "center",
             zIndex: 100,
+            backdropFilter: "blur(4px)",
           }}
           onClick={() => {
             setConnectTarget(null);
@@ -209,46 +219,49 @@ export function ConnectionsPage() {
         >
           <div
             style={{
-              background: "var(--bg)",
-              borderRadius: 16,
-              padding: 28,
+              background: "var(--canvas)",
+              borderRadius: 24,
+              padding: 32,
               width: 440,
               maxWidth: "90vw",
-              border: "1px solid var(--border)",
+              border: "1px solid var(--hairline)",
+              boxShadow: "0 20px 60px rgba(10,10,10,.12)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {(() => {
               const p = platforms.find((x) => x.id === connectTarget);
               const Icon = ICONS[p?.icon ?? ""] ?? PenTool;
+              const pIdx = platforms.indexOf(p!);
+              const accent = BRAND_ACCENTS[pIdx >= 0 ? pIdx % BRAND_ACCENTS.length : 0];
               return (
                 <>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 12,
-                      marginBottom: 20,
+                      gap: 14,
+                      marginBottom: 24,
                     }}
                   >
                     <div
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 10,
-                        background: "var(--primary-soft)",
-                        color: "var(--primary)",
+                        width: 44,
+                        height: 44,
+                        borderRadius: 14,
+                        background: accent.bg,
+                        color: accent.fg,
                         display: "grid",
                         placeItems: "center",
                       }}
                     >
-                      <Icon size={20} />
+                      <Icon size={22} />
                     </div>
                     <div>
-                      <h2 style={{ margin: 0 }}>Connect {p?.name}</h2>
+                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: "-0.3px" }}>Connect {p?.name}</h2>
                       <p
                         style={{
-                          fontSize: 12,
+                          fontSize: 13,
                           color: "var(--muted)",
                           margin: 0,
                         }}
@@ -262,14 +275,16 @@ export function ConnectionsPage() {
                     style={{
                       display: "block",
                       fontSize: 12,
-                      fontWeight: 700,
-                      marginBottom: 4,
+                      fontWeight: 600,
+                      marginBottom: 6,
                       color: "var(--muted)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
                     }}
                   >
                     API Key
                   </label>
-                  <div style={{ position: "relative", marginBottom: 12 }}>
+                  <div style={{ position: "relative", marginBottom: 14 }}>
                     <input
                       type={showKey ? "text" : "password"}
                       value={apiKey}
@@ -277,11 +292,12 @@ export function ConnectionsPage() {
                       placeholder={`Paste your ${p?.name} API key`}
                       style={{
                         width: "100%",
-                        padding: "8px 36px 8px 12px",
-                        borderRadius: 8,
-                        border: "1px solid var(--border)",
-                        fontSize: 13,
-                        background: "var(--panel)",
+                        padding: "10px 38px 10px 14px",
+                        borderRadius: 12,
+                        border: "1px solid var(--hairline)",
+                        fontSize: 14,
+                        background: "var(--canvas)",
+                        color: "var(--ink)",
                       }}
                     />
                     <button
@@ -289,7 +305,7 @@ export function ConnectionsPage() {
                       onClick={() => setShowKey(!showKey)}
                       style={{
                         position: "absolute",
-                        right: 8,
+                        right: 10,
                         top: "50%",
                         transform: "translateY(-50%)",
                         background: "none",
@@ -307,9 +323,11 @@ export function ConnectionsPage() {
                     style={{
                       display: "block",
                       fontSize: 12,
-                      fontWeight: 700,
-                      marginBottom: 4,
+                      fontWeight: 600,
+                      marginBottom: 6,
                       color: "var(--muted)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
                     }}
                   >
                     Username (optional)
@@ -320,12 +338,13 @@ export function ConnectionsPage() {
                     placeholder="@handle or display name"
                     style={{
                       width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid var(--border)",
-                      fontSize: 13,
-                      background: "var(--panel)",
-                      marginBottom: 12,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--hairline)",
+                      fontSize: 14,
+                      background: "var(--canvas)",
+                      marginBottom: 14,
+                      color: "var(--ink)",
                     }}
                   />
 
@@ -337,11 +356,12 @@ export function ConnectionsPage() {
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: 4,
-                        fontSize: 12,
-                        color: "var(--primary)",
-                        marginBottom: 16,
+                        gap: 5,
+                        fontSize: 13,
+                        color: "var(--brand-teal)",
+                        marginBottom: 18,
                         textDecoration: "none",
+                        fontWeight: 600,
                       }}
                     >
                       <ExternalLink size={12} /> Get your API key from{" "}
@@ -352,14 +372,14 @@ export function ConnectionsPage() {
                   {error && (
                     <div
                       style={{
-                        padding: "8px 12px",
-                        borderRadius: 8,
-                        background: "rgba(221,78,78,0.08)",
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        background: "rgba(239,68,68,.06)",
                         color: "var(--error)",
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: 600,
-                        marginBottom: 12,
-                        border: "1px solid rgba(221,78,78,0.2)",
+                        marginBottom: 14,
+                        border: "1px solid rgba(239,68,68,.2)",
                       }}
                     >
                       {error}
@@ -369,7 +389,7 @@ export function ConnectionsPage() {
                   <div
                     style={{
                       display: "flex",
-                      gap: 8,
+                      gap: 10,
                       justifyContent: "flex-end",
                     }}
                   >
@@ -402,11 +422,13 @@ export function ConnectionsPage() {
 
 function PlatformCard({
   platform,
+  accent,
   onConnect,
   onDisconnect,
   disconnecting,
 }: {
   platform: SocialPlatform;
+  accent: { bg: string; fg: string };
   onConnect?: () => void;
   onDisconnect?: () => void;
   disconnecting?: boolean;
@@ -416,14 +438,17 @@ function PlatformCard({
   return (
     <article
       style={{
-        border: `1px solid ${platform.connected ? "var(--success)" : "var(--border)"}`,
-        borderRadius: 12,
-        background: "var(--panel)",
-        padding: "18px 20px",
+        border: `1px solid ${platform.connected ? "rgba(34,197,94,.2)" : "var(--hairline)"}`,
+        borderRadius: 16,
+        background: "var(--canvas)",
+        padding: "20px 22px",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 12,
+        transition: "transform 150ms, box-shadow 150ms",
       }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(10,10,10,.06)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
     >
       <div
         style={{
@@ -432,28 +457,28 @@ function PlatformCard({
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
+              width: 40,
+              height: 40,
+              borderRadius: 12,
               background: platform.connected
-                ? "rgba(47,167,111,0.1)"
-                : "var(--primary-soft)",
-              color: platform.connected ? "var(--success)" : "var(--primary)",
+                ? "rgba(34,197,94,.08)"
+                : accent.bg,
+              color: platform.connected ? "var(--success)" : accent.fg,
               display: "grid",
               placeItems: "center",
             }}
           >
-            <Icon size={18} />
+            <Icon size={20} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>
+            <div style={{ fontWeight: 600, fontSize: 16, letterSpacing: "-0.2px" }}>
               {platform.name}
             </div>
             {platform.connected && platform.username && (
-              <div style={{ fontSize: 11, color: "var(--muted)" }}>
+              <div style={{ fontSize: 12, color: "var(--muted)" }}>
                 @{platform.username}
               </div>
             )}
@@ -462,15 +487,15 @@ function PlatformCard({
         {platform.connected ? (
           <CheckCircle2 size={18} color="var(--success)" />
         ) : (
-          <XCircle size={16} color="var(--subtle)" />
+          <XCircle size={16} color="var(--muted-soft)" />
         )}
       </div>
 
       <p
         style={{
-          fontSize: 13,
+          fontSize: 14,
           color: "var(--muted)",
-          lineHeight: 1.45,
+          lineHeight: 1.5,
           margin: 0,
         }}
       >
@@ -481,20 +506,20 @@ function PlatformCard({
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: 5,
+          gap: 6,
         }}
       >
         {platform.scopes.split(",").map((scope) => (
           <span
             key={scope}
             style={{
-              padding: "2px 7px",
-              borderRadius: 6,
+              padding: "3px 9px",
+              borderRadius: 9999,
               fontSize: 10,
               fontWeight: 600,
-              background: "var(--panel-soft)",
+              background: "var(--surface-card)",
               color: "var(--muted)",
-              border: "1px solid var(--border)",
+              border: "1px solid var(--hairline)",
             }}
           >
             {scope.trim()}
@@ -507,8 +532,8 @@ function PlatformCard({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderTop: "1px solid var(--border)",
-          paddingTop: 10,
+          borderTop: "1px solid var(--hairline)",
+          paddingTop: 12,
           marginTop: 2,
         }}
       >
@@ -518,7 +543,7 @@ function PlatformCard({
             {new Date(platform.connected_at).toLocaleDateString()}
           </span>
         ) : (
-          <span style={{ fontSize: 11, color: "var(--subtle)" }}>
+          <span style={{ fontSize: 11, color: "var(--muted-soft)" }}>
             Not connected
           </span>
         )}
@@ -528,16 +553,17 @@ function PlatformCard({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 4,
-              padding: "5px 12px",
-              borderRadius: 8,
-              border: "1px solid var(--error)",
-              background: "rgba(221,78,78,0.06)",
+              gap: 5,
+              padding: "6px 14px",
+              borderRadius: 12,
+              border: "1px solid rgba(239,68,68,.2)",
+              background: "rgba(239,68,68,.04)",
               color: "var(--error)",
-              fontWeight: 700,
-              fontSize: 11,
+              fontWeight: 600,
+              fontSize: 12,
               cursor: "pointer",
               opacity: disconnecting ? 0.6 : 1,
+              transition: "all 150ms",
             }}
             onClick={onDisconnect}
             disabled={disconnecting}
@@ -549,15 +575,16 @@ function PlatformCard({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 4,
-              padding: "5px 12px",
-              borderRadius: 8,
-              border: "1px solid var(--primary)",
-              background: "var(--primary-soft)",
-              color: "var(--primary)",
-              fontWeight: 700,
-              fontSize: 11,
+              gap: 5,
+              padding: "6px 14px",
+              borderRadius: 12,
+              border: 0,
+              background: "var(--primary)",
+              color: "var(--on-primary)",
+              fontWeight: 600,
+              fontSize: 12,
               cursor: "pointer",
+              transition: "background 150ms",
             }}
             onClick={onConnect}
           >

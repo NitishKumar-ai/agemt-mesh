@@ -17,9 +17,9 @@ function shortId(id: string) {
 }
 
 function diffLine(line: string) {
-  if (line.startsWith("+")) return { color: "var(--success)", bg: "#f0fdf4" };
-  if (line.startsWith("-")) return { color: "var(--error)", bg: "#fff5f5" };
-  return { color: "var(--text)", bg: "transparent" };
+  if (line.startsWith("+")) return { color: "var(--success)", bg: "rgba(34,197,94,.05)" };
+  if (line.startsWith("-")) return { color: "var(--error)", bg: "rgba(239,68,68,.04)" };
+  return { color: "var(--ink)", bg: "transparent" };
 }
 
 export function ApprovalsPage({ events }: { events?: { eventType: string; payload: Record<string, unknown> }[] }) {
@@ -81,7 +81,7 @@ export function ApprovalsPage({ events }: { events?: { eventType: string; payloa
 
       {!loading && all.length === 0 && (
         <div className="empty-card">
-          <ShieldAlert size={28} style={{ marginBottom: 8, display: "block", color: "var(--subtle)" }} />
+          <ShieldAlert size={28} style={{ marginBottom: 8, display: "block", color: "var(--muted-soft)" }} />
           No pending approvals. Agent workflows requiring sign-off will appear here.
         </div>
       )}
@@ -92,43 +92,44 @@ export function ApprovalsPage({ events }: { events?: { eventType: string; payloa
           const diff = (approval.payload?.diff as Record<string, string>) ?? {};
           const riskLevel = (approval.payload?.risk_level as string) ?? "medium";
           const riskColor =
-            riskLevel === "high" || riskLevel === "critical" ? "var(--error)" :
-            riskLevel === "medium" ? "var(--warning)" : "var(--success)";
+            riskLevel === "high" || riskLevel === "critical" ? "var(--brand-coral)" :
+            riskLevel === "medium" ? "var(--brand-ochre)" : "var(--success)";
 
           return (
             <article
               key={approval.id}
               style={{
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                background: "var(--panel)",
-                padding: "16px 18px",
+                border: "1px solid var(--hairline)",
+                borderRadius: 16,
+                background: "var(--canvas)",
+                padding: "18px 20px",
                 opacity: isDone ? 0.55 : 1,
+                transition: "all 250ms",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <ShieldAlert size={16} color={riskColor} />
-                  <span style={{ fontWeight: 700, fontSize: 14 }}>
+                  <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: "-0.2px" }}>
                     Workflow {shortId(approval.run_id)}
                   </span>
                   <span
                     style={{
-                      padding: "2px 8px", borderRadius: 6, fontSize: 11,
+                      padding: "3px 10px", borderRadius: 9999, fontSize: 11,
                       fontWeight: 700, background: riskColor, color: "white"
                     }}
                   >
                     {riskLevel}
                   </span>
                 </div>
-                <span style={{ color: "var(--subtle)", fontSize: 12 }}>{relTime(approval.created_at)}</span>
+                <span style={{ color: "var(--muted-soft)", fontSize: 12 }}>{relTime(approval.created_at)}</span>
               </div>
 
               {/* Diff viewer */}
               {(diff.add || diff.sub) && (
                 <div
                   style={{
-                    borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)",
+                    borderRadius: 12, overflow: "hidden", border: "1px solid var(--hairline)",
                     fontFamily: "monospace", fontSize: 12, marginBottom: 14
                   }}
                 >
@@ -136,7 +137,7 @@ export function ApprovalsPage({ events }: { events?: { eventType: string; payloa
                     if (!line) return null;
                     const { color, bg } = diffLine(line);
                     return (
-                      <div key={i} style={{ background: bg, color, padding: "4px 12px", whiteSpace: "pre-wrap" }}>
+                      <div key={i} style={{ background: bg, color, padding: "5px 14px", whiteSpace: "pre-wrap" }}>
                         {line}
                       </div>
                     );
@@ -148,9 +149,9 @@ export function ApprovalsPage({ events }: { events?: { eventType: string; payloa
               {!diff.add && !diff.sub && (
                 <pre
                   style={{
-                    background: "var(--panel-soft)", borderRadius: 8,
-                    padding: "10px 12px", fontSize: 12, overflow: "auto",
-                    maxHeight: 160, marginBottom: 14
+                    background: "var(--surface-card)", borderRadius: 12,
+                    padding: "12px 14px", fontSize: 12, overflow: "auto",
+                    maxHeight: 160, marginBottom: 14, color: "var(--body)"
                   }}
                 >
                   {JSON.stringify(approval.payload, null, 2)}
@@ -174,7 +175,7 @@ export function ApprovalsPage({ events }: { events?: { eventType: string; payloa
                   </button>
                   <button
                     className="secondary-button"
-                    style={{ flex: 1, color: "var(--error)", borderColor: "var(--error)" }}
+                    style={{ flex: 1, color: "var(--brand-coral)", borderColor: "var(--brand-coral)" }}
                     disabled={deciding === approval.id}
                     onClick={() => decide(approval, false)}
                   >

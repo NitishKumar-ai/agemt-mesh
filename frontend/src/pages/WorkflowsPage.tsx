@@ -5,25 +5,25 @@ import { api } from "../lib/api";
 import type { DlqEvent, WorkflowRun } from "../lib/types";
 
 function statusPill(status: string) {
-  const map: Record<string, string> = {
-    success: "var(--success)",
-    completed: "var(--success)",
-    failed: "var(--error)",
-    error: "var(--error)",
-    running: "var(--primary)",
-    executing: "var(--primary)",
+  const map: Record<string, { bg: string; fg: string }> = {
+    success: { bg: "rgba(34,197,94,.08)", fg: "var(--success)" },
+    completed: { bg: "rgba(34,197,94,.08)", fg: "var(--success)" },
+    failed: { bg: "rgba(239,68,68,.06)", fg: "var(--error)" },
+    error: { bg: "rgba(239,68,68,.06)", fg: "var(--error)" },
+    running: { bg: "rgba(26,58,58,.06)", fg: "var(--brand-teal)" },
+    executing: { bg: "rgba(26,58,58,.06)", fg: "var(--brand-teal)" },
   };
-  const color = map[status] ?? "var(--muted)";
+  const style = map[status] ?? { bg: "var(--surface-card)", fg: "var(--muted)" };
   return (
     <span
       style={{
         display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: 6,
+        padding: "3px 10px",
+        borderRadius: 9999,
         fontSize: 11,
         fontWeight: 700,
-        color: "white",
-        background: color,
+        color: style.fg,
+        background: style.bg,
       }}
     >
       {status}
@@ -74,14 +74,15 @@ export function WorkflowsPage() {
   useEffect(() => { void load(); }, []);
 
   const tabStyle = (active: boolean) => ({
-    padding: "6px 14px",
+    padding: "7px 16px",
     border: 0,
-    borderRadius: 8,
+    borderRadius: 9999,
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
-    background: active ? "var(--primary-soft)" : "transparent",
-    color: active ? "var(--primary)" : "var(--muted)",
+    background: active ? "var(--surface-card)" : "transparent",
+    color: active ? "var(--ink)" : "var(--muted)",
+    transition: "all 150ms",
   });
 
   return (
@@ -97,13 +98,13 @@ export function WorkflowsPage() {
         }
       />
 
-      <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 18 }}>
         <button style={tabStyle(tab === "runs")} onClick={() => setTab("runs")}>
-          <PlayCircle size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
+          <PlayCircle size={13} style={{ verticalAlign: "middle", marginRight: 5 }} />
           Runs ({workflows.length})
         </button>
         <button style={tabStyle(tab === "dlq")} onClick={() => setTab("dlq")}>
-          <AlertCircle size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
+          <AlertCircle size={13} style={{ verticalAlign: "middle", marginRight: 5 }} />
           Dead-letter queue ({dlq.length})
         </button>
       </div>
@@ -122,10 +123,10 @@ export function WorkflowsPage() {
                   {shortId(w.run_id)}
                   {statusPill(w.status)}
                 </h3>
-                <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 3 }}>
+                <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>
                   {w.agent_id} · {w.step_count} step{w.step_count !== 1 ? "s" : ""} · last: {w.last_step}
                 </p>
-                <small style={{ color: "var(--subtle)" }}>
+                <small style={{ color: "var(--muted-soft)" }}>
                   started {relTime(w.started_at)} · updated {relTime(w.updated_at)}
                 </small>
               </div>
@@ -153,12 +154,12 @@ export function WorkflowsPage() {
             <article className="task-row" key={d.id}>
               <div>
                 <div className="task-row-meta">
-                  <span style={{ color: "var(--error)", fontWeight: 700 }}>DLQ</span>
+                  <span style={{ color: "var(--brand-coral)", fontWeight: 700 }}>DLQ</span>
                   <code>{shortId(d.run_id)}</code>
                 </div>
                 <h3>{d.agent_id}</h3>
                 <p style={{ color: "var(--error)", fontFamily: "monospace", fontSize: 12 }}>{d.error}</p>
-                <small style={{ color: "var(--subtle)" }}>{relTime(d.created_at)}</small>
+                <small style={{ color: "var(--muted-soft)" }}>{relTime(d.created_at)}</small>
               </div>
               <div className="task-row-side">
                 <button
