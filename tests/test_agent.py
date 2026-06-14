@@ -116,27 +116,27 @@ class TestBaseAgentPlan:
     def test_plan_parses_valid_json(self):
         agent = self._make_agent()
         plan_json = json.dumps({"steps": ["scan deps", "report findings", "review"]})
-        with patch("main.generate", return_value=plan_json), \
+        with patch("harness.generate_tracked", return_value=plan_json), \
              patch("main.publish_event"), \
              patch("main.bus") :
-            result = agent.plan.__wrapped__(agent, "test context")
+            result = agent.plan("test context", "run-1")
         assert "steps" in result
         assert len(result["steps"]) == 3
 
     def test_plan_falls_back_gracefully_on_bad_json(self):
         agent = self._make_agent()
-        with patch("main.generate", return_value="1. Do this\n2. Do that\n3. Review"), \
+        with patch("harness.generate_tracked", return_value="1. Do this\n2. Do that\n3. Review"), \
              patch("main.publish_event"), \
              patch("main.bus"):
-            result = agent.plan.__wrapped__(agent, "context")
+            result = agent.plan("context", "run-2")
         assert "steps" in result
         assert len(result["steps"]) > 0
 
     def test_plan_raises_on_llm_error(self):
         from main import LLMError
         agent = self._make_agent()
-        with patch("main.generate", side_effect=LLMError("api key missing")), \
+        with patch("harness.generate_tracked", side_effect=LLMError("api key missing")), \
              patch("main.publish_event"), \
              patch("main.bus"):
             with pytest.raises(LLMError):
-                agent.plan.__wrapped__(agent, "context")
+                agent.plan("context", "run-3")

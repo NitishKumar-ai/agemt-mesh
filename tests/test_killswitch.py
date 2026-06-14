@@ -100,6 +100,6 @@ def test_harness_gating():
         def execute(self, plan, run_id): return {}
 
     agent = MockAgent(goal="test", config=AgentConfig(agent_id="test"))
-    with patch("harness.killswitch_get", return_value=True):
+    with patch("store.killswitch_get", return_value=True):
         with pytest.raises(KillswitchEngaged):
             agent.check_killswitch()

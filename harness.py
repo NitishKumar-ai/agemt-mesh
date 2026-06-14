@@ -17,34 +17,16 @@ import logging
 import os
 import re
 import time
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, Optional, Type
+
+from agent_base import BaseAgent, AgentConfig, MODEL_PLAN, MODEL_EXECUTE
 
 from dbos import DBOS
 from sqlalchemy import text
 
 from events import bus
-from store import (
-    agent_run_record_tokens,
-    agent_run_total_cost,
-    agent_run_total_tokens,
-    killswitch_get,
-    safety_record_trace,
-    safety_record_verdict,
-    safety_create_escalation,
-)
-
-logger = logging.getLogger(__name__)
-
-MODEL_PLAN = os.getenv("MODEL_PLAN", "gemini/gemini-2.5-flash-lite-preview-06-17")
-MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
-
-
-class AgentError(Exception):
-    pass
-
-
+from loop import Tool, ToolRegistry
 from store import (
     agent_run_record_tokens,
     agent_run_total_cost,
@@ -56,6 +38,12 @@ from store import (
     safety_create_escalation,
 )
 
+logger = logging.getLogger(__name__)
+
+
+class AgentError(Exception):
+    pass
+
 
 class BudgetExceeded(AgentError):
     pass
@@ -63,6 +51,7 @@ class BudgetExceeded(AgentError):
 
 # ── Token-tracked LLM call ──────────────────────────────────────────────────
 
+@DBOS.step()
 def generate_tracked(
     model: str,
     prompt: str,
@@ -119,193 +108,7 @@ def _estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> fl
     return 0.0
 
 
-# ── BaseAgent ────────────────────────────────────────────────────────────────
-
-@dataclass
-class AgentConfig:
-    agent_id: str = ""
-    tenant_id: str = "default"
-    model_plan: str = ""
-    model_execute: str = ""
-    max_retries: int = 2
-    cost_budget_usd: float = 1.0
-    token_budget: int = 500_000
-    sandbox: Optional[str] = None
-    requires_approval: bool = False
-
-
-class BaseAgent(ABC):
-    """
-    Abstract base for all agents in the mesh.
-
-    Subclasses must implement:
-      - get_tools() → list of tool names
-      - execute(plan, run_id) → result dict
-
-    Optionally override:
-      - plan(context, run_id) → plan dict
-      - review(result, run_id) → verdict dict
-    """
-
-    def __init__(self, goal: str, config: Optional[AgentConfig] = None, **kwargs):
-        self.goal = goal
-        cfg = config or AgentConfig()
-        self.agent_id = cfg.agent_id or kwargs.get("agent_id", self.__class__.__name__)
-        self.tenant_id = cfg.tenant_id or kwargs.get("tenant_id", "default")
-        self.model_plan = cfg.model_plan or MODEL_PLAN
-        self.model_execute = cfg.model_execute or MODEL_EXECUTE
-        self.max_retries = cfg.max_retries
-        self.cost_budget_usd = cfg.cost_budget_usd
-        self.token_budget = cfg.token_budget
-        self.sandbox = cfg.sandbox
-        self.requires_approval = cfg.requires_approval
-
-    # ── Event helpers ────────────────────────────────────────────────────────
-
-    def write_event(self, event_type: str, payload: dict):
-        from main import publish_event
-        event_data = {
-            "agent_id": self.agent_id,
-            "event_type": event_type,
-            "payload": payload,
-        }
-        publish_event(self.tenant_id, event_data)
-        bus.emit(json.dumps(event_data))
-
-    # ── Budget checks ────────────────────────────────────────────────────────
-
-    def check_killswitch(self):
-        if killswitch_get():
-            raise KillswitchEngaged(f"Killswitch engaged — agent {self.agent_id} halted")
-
-    def check_budget(self, run_id: str):
-        cost = agent_run_total_cost(run_id)
-        if cost >= self.cost_budget_usd:
-            raise BudgetExceeded(
-                f"Agent {self.agent_id} exceeded cost budget: "
-                f"${cost:.4f} >= ${self.cost_budget_usd:.2f}"
-            )
-        tokens = agent_run_total_tokens(run_id)
-        if tokens >= self.token_budget:
-            raise BudgetExceeded(
-                f"Agent {self.agent_id} exceeded token budget: "
-                f"{tokens} >= {self.token_budget}"
-            )
-
-    # ── 3-pass methods ───────────────────────────────────────────────────────
-
-    @abstractmethod
-    def get_tools(self) -> list:
-        pass
-
-    def plan(self, context: str, run_id: str) -> dict:
-        self.write_event("planning", {"context": context[:200], "status": "Planning"})
-        prompt = (
-            f"You are an autonomous agent. Goal: {self.goal}\n"
-            f"Context: {context}\n\n"
-            "Produce a concrete execution plan as a JSON object containing a list of 'frames'.\n"
-            "Each frame MUST include:\n"
-            "  - step_index: integer\n"
-            "  - thought: your internal reasoning for this step\n"
-            "  - proposed_action: the concrete action to execute\n"
-            "  - justification: why this action is safe and serves the goal\n"
-            "  - dependencies: list of prior step_indexes this step depends on\n\n"
-            "Format:\n"
-            '{"frames": [{"step_index": 0, "thought": "...", "proposed_action": "...", "justification": "...", "dependencies": []}, ...]}\n'
-            "Reply with ONLY valid JSON."
-        )
-        raw = generate_tracked(
-            self.model_plan, prompt, run_id, self.agent_id, "plan",
-        )
-        try:
-            clean = re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            plan_dict = json.loads(clean)
-            if "frames" in plan_dict:
-                # Compatibility shim for legacy consumers of "steps"
-                plan_dict["steps"] = [f["proposed_action"] for f in plan_dict["frames"]]
-            elif "steps" in plan_dict:
-                # Fallback for old-style plans
-                pass
-            else:
-                raise ValueError("missing frames or steps key")
-        except (json.JSONDecodeError, ValueError):
-            plan_dict = {
-                "steps": [s.strip() for s in raw.split("\n") if s.strip()][:5]
-                or [raw[:200]]
-            }
-        
-        steps = plan_dict.get("steps", [])
-        self.write_event("plan_created", {
-            "plan_steps": len(steps),
-            "status": "Idle",
-            "steps": steps,
-            "has_traces": "frames" in plan_dict,
-        })
-        return plan_dict
-
-    def execute(self, plan: dict, run_id: str) -> dict:
-        self.write_event("executing", {
-            "status": "Executing",
-            "steps": plan.get("steps", []),
-        })
-        steps_text = "\n".join(f"- {s}" for s in plan.get("steps", []))
-        prompt = (
-            f"You are executing this plan as an autonomous agent.\n"
-            f"Goal: {self.goal}\n\nSteps:\n{steps_text}\n\n"
-            "For each step, describe what was done and the outcome. "
-            'Reply as JSON: {"outcomes": [{"step": "...", "result": "...", "status": "success|failed"}]}'
-        )
-        raw = generate_tracked(
-            self.model_execute, prompt, run_id, self.agent_id, "execute",
-        )
-        try:
-            clean = re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            result = json.loads(clean)
-        except (json.JSONDecodeError, ValueError):
-            result = {
-                "outcomes": [
-                    {"step": s, "result": raw[:200], "status": "success"}
-                    for s in plan.get("steps", [])
-                ]
-            }
-        self.write_event("execution_completed", {
-            "result": "done",
-            "status": "Idle",
-            "outcomes": result.get("outcomes", []),
-        })
-        return result
-
-    def review(self, result: dict, run_id: str) -> dict:
-        self.write_event("reviewing", {"status": "Executing"})
-        outcomes_text = json.dumps(result.get("outcomes", result), indent=2)
-        prompt = (
-            f"Review these execution outcomes for goal: {self.goal}\n\n"
-            f"Outcomes:\n{outcomes_text}\n\n"
-            "Did the execution meet the goal? Reply as JSON:\n"
-            '{"passed": true/false, "feedback": "one sentence assessment", '
-            '"issues": ["any problems found"]}'
-        )
-        raw = generate_tracked(
-            self.model_plan, prompt, run_id, self.agent_id, "review",
-        )
-        try:
-            clean = re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            verdict = json.loads(clean)
-        except (json.JSONDecodeError, ValueError):
-            verdict = {"passed": True, "feedback": raw[:200], "issues": []}
-        status = "Success" if verdict.get("passed") else "Failed"
-        self.write_event("review_completed", {"verdict": verdict, "status": status})
-        return verdict
-
-    def request_approval(self, payload: dict, run_id: str):
-        self.write_event("approval_required", {
-            "status": "Blocked",
-            "diff": payload,
-            "workflow_id": run_id,
-        })
-
-
-# ── Agent Registry ───────────────────────────────────────────────────────────
+# ── Registry ─────────────────────────────────────────────────────────────────
 
 @dataclass
 class AgentRegistration:
@@ -313,8 +116,7 @@ class AgentRegistration:
     name: str
     description: str
     default_config: AgentConfig
-    capabilities: list = field(default_factory=list)
-
+    capabilities: list
 
 _REGISTRY: Dict[str, AgentRegistration] = {}
 _RUNNING: Dict[str, str] = {}  # agent_id → run_id of active run
@@ -462,7 +264,14 @@ def _harness_critic_gate(
 
 @DBOS.step()
 def _harness_request_approval(agent: BaseAgent, payload: dict, run_id: str):
-    agent.request_approval(payload, run_id)
+    from main import publish_event
+    event_data = {
+        "agent_id": agent.agent_id,
+        "event_type": "approval_required",
+        "payload": payload,
+    }
+    publish_event(agent.tenant_id, event_data)
+    bus.emit(json.dumps(event_data))
 
 
 @DBOS.workflow()
@@ -530,6 +339,7 @@ def run_agent(
                     "sub": "- (pending approval)",
                     "risk_level": "medium",
                     "attempt": attempt + 1,
+                    "agent_id": agent.agent_id,
                 }, run_id)
                 update_status(run_id, agent_id, "blocked", "Blocked")
 
@@ -571,7 +381,7 @@ def run_agent(
             gated_plan = {"steps": gate_result["gated_steps"]}
             agent.check_killswitch()
             update_status(run_id, agent_id, "executing", "Executing")
-            result = _harness_execute(agent, gated_plan, run_id)
+            result = agent.execute(gated_plan, run_id)
             agent.check_budget(run_id)
 
             # ── Review ──

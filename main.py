@@ -2,13 +2,12 @@ import os
 import logging
 import json
 import time
-from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from dbos import DBOS
 from sqlalchemy import text
-from pydantic import BaseModel
 from typing import Any, Dict, Optional
 from events import bus
+from loop import Tool
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -162,109 +161,70 @@ def insert_dlq(run_id: str, agent_id: str, error: str, payload: dict):
         {"run_id": run_id, "agent_id": agent_id, "error": error, "payload": json.dumps(payload)}
     )
 
-class BaseAgent(ABC):
-    def __init__(self, goal: str, model: str = MODEL_PLAN, **kwargs):
-        self.goal = goal
-        self.model = model
-        self.agent_id = kwargs.get("agent_id", self.__class__.__name__)
-        self.tenant_id = kwargs.get("tenant_id", "default")
-
-    def write_event(self, event_type: str, payload: dict):
-        event_data = {
-            "agent_id": self.agent_id,
-            "event_type": event_type,
-            "payload": payload
-        }
-        publish_event(self.tenant_id, event_data)
-        bus.emit(json.dumps(event_data))
-
-    @abstractmethod
-    def get_tools(self) -> list:
-        pass
-
-    @DBOS.step()
-    def plan(self, context: str) -> dict:
-        self.write_event("planning", {"context": context, "status": "Planning"})
-        prompt = (
-            f"You are an autonomous security agent. Goal: {self.goal}\n"
-            f"Context: {context}\n\n"
-            "Produce a concrete 3-step execution plan as JSON:\n"
-            '{"steps": ["step 1 description", "step 2 description", "step 3 description"]}\n'
-            "Reply with ONLY valid JSON."
-        )
-        import re as _re
-        raw = generate(self.model, prompt)
-        try:
-            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            plan_dict = json.loads(clean)
-            if "steps" not in plan_dict:
-                raise ValueError("missing steps key")
-        except (json.JSONDecodeError, ValueError):
-            # Parse failed but we have real LLM text — wrap it
-            plan_dict = {"steps": [s.strip() for s in raw.split("\n") if s.strip()][:3] or [raw[:200]]}
-        self.write_event("plan_created", {"plan_steps": len(plan_dict["steps"]), "status": "Idle",
-                                          "steps": plan_dict["steps"]})
-        return plan_dict
-
-    @DBOS.step()
-    def request_approval(self, payload: dict):
-        self.write_event("approval_required", {"status": "Blocked", "diff": payload,
-                                               "workflow_id": DBOS.workflow_id})
-
-    @DBOS.step()
-    def execute(self, plan: dict) -> dict:
-        """
-        Execute the plan steps via LLM reasoning.
-        Subclasses should override this with real tool calls (E2B, git, APIs).
-        Base implementation uses the LLM to simulate execution and returns
-        a structured result — not a mock string.
-        """
-        self.write_event("executing", {"status": "Executing", "steps": plan.get("steps", [])})
-        steps_text = "\n".join(f"- {s}" for s in plan.get("steps", []))
-        prompt = (
-            f"You are executing this plan as an autonomous agent.\n"
-            f"Goal: {self.goal}\n\n"
-            f"Steps:\n{steps_text}\n\n"
-            "For each step, describe what was done and the outcome. "
-            'Reply as JSON: {"outcomes": [{"step": "...", "result": "...", "status": "success|failed"}]}'
-        )
-        import re as _re
-        raw = generate(self.model, prompt)
-        try:
-            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            result = json.loads(clean)
-        except (json.JSONDecodeError, ValueError):
-            result = {"outcomes": [{"step": s, "result": raw[:200], "status": "success"}
-                                   for s in plan.get("steps", [])]}
-        self.write_event("execution_completed", {"result": "done", "status": "Idle",
-                                                  "outcomes": result.get("outcomes", [])})
-        return result
-
-    @DBOS.step()
-    def review(self, result: dict) -> dict:
-        """Review execution outcomes and determine if the goal was met."""
-        self.write_event("reviewing", {"status": "Executing"})
-        outcomes_text = json.dumps(result.get("outcomes", result), indent=2)
-        prompt = (
-            f"Review these execution outcomes for goal: {self.goal}\n\n"
-            f"Outcomes:\n{outcomes_text}\n\n"
-            "Did the execution meet the goal? Reply as JSON:\n"
-            '{"passed": true/false, "feedback": "one sentence assessment", '
-            '"issues": ["any problems found"]}'
-        )
-        import re as _re
-        raw = generate(self.model, prompt)
-        try:
-            clean = _re.sub(r"```[a-z]*\n?", "", raw).strip().strip("`")
-            verdict = json.loads(clean)
-        except (json.JSONDecodeError, ValueError):
-            verdict = {"passed": True, "feedback": raw[:200], "issues": []}
-        self.write_event("review_completed", {"verdict": verdict, "status": "Success"})
-        return verdict
+from agent_base import BaseAgent, AgentConfig
 
 class ResearchAgent(BaseAgent):
     def get_tools(self) -> list:
         return ["web_search", "rag"]
+
+    def get_tool_objects(self, run_id: str) -> list:
+        tools = super().get_tool_objects(run_id) or []
+        tools.extend([
+            Tool(
+                name="web_search",
+                description="Search the web for up-to-date information on a topic.",
+                parameters={"query": "Search query"},
+                run=lambda args: f"Results for '{args.get('query')}': [Mock web search results including NIST and CVE data for security findings]",
+                risk_level="low",
+            ),
+            Tool(
+                name="rag",
+                description="Query the internal knowledge base for past security findings and documentation.",
+                parameters={"query": "RAG query"},
+                run=lambda args: f"RAG results for '{args.get('query')}': [Mock RAG results containing relevant internal audit history]",
+                risk_level="low",
+            )
+        ])
+        return tools
+
+class MLInternAgent(ResearchAgent):
+    """
+    Hugging Face ml-intern pattern: Code-native research agent.
+    Inherits from ResearchAgent but adds a 'python' tool for data processing
+    and advanced reasoning.
+    """
+    def get_tools(self) -> list:
+        return super().get_tools() + ["python"]
+
+    def get_tool_objects(self, run_id: str) -> list:
+        tools = super().get_tool_objects(run_id)
+        
+        def python_tool(args):
+            code = args.get("code")
+            if not code:
+                return "Error: no code provided"
+            
+            # ── E2B Sandbox (Isolated Execution) ─────────────────────────────
+            logger.info("Executing code-native tool in run %s", run_id)
+            try:
+                from e2b_code_interpreter import Sandbox
+                with Sandbox() as sb:
+                    # In a real impl, we'd inject current tool results as variables
+                    execution = sb.run_code(code)
+                    if execution.error:
+                        return f"Runtime Error: {execution.error.name}: {execution.error.value}\n{execution.error.traceback}"
+                    return execution.logs.stdout or "Success (no output)"
+            except Exception as e:
+                return f"Sandbox Error: {e}"
+
+        tools.append(Tool(
+            name="python",
+            description="Execute Python code in a secure sandbox for data analysis, complex math, or logic.",
+            parameters={"code": "The Python code to execute"},
+            run=python_tool,
+            risk_level="high", # Risky as it executes arbitrary code
+        ))
+        return tools
 
 
 # ── Jules: Suggested Tasks ────────────────────────────────────────────────────
@@ -602,6 +562,42 @@ def self_heal_pr(webhook_id: int, branch: str, build_logs: str, pr_diff: str):
         bus.emit(json.dumps({"agent_id": "SelfHeal", "event_type": "heal_failed",
                               "payload": {"status": "Failed", "error": str(e)}}))
         return {"status": "error", "error": str(e)}
+
+class HermesAgent(BaseAgent):
+    """
+    Nous Research Hermes pattern: The 'Brain' of the company.
+    Focuses on orchestration, high-level planning, and skill management.
+    """
+    def get_tools(self) -> list:
+        return ["delegate_task", "save_new_skill", "list_known_skills"]
+
+    def get_tool_objects(self, run_id: str) -> list:
+        from skill_store import save_skill, list_skills
+        tools = super().get_tool_objects(run_id) or []
+
+        def save_skill_tool(args):
+            name = args.get("name")
+            desc = args.get("description")
+            # In a real impl, we'd extract the actual steps from recent history
+            save_skill(name, desc, [], [])
+            return f"Skill '{name}' saved to ~/.agent_mesh/skills/"
+
+        tools.extend([
+            Tool(
+                name="save_new_skill",
+                description="Codify a successful workflow into a permanent skill.",
+                parameters={"name": "Name of the skill", "description": "What it does"},
+                run=save_skill_tool,
+                risk_level="low",
+            ),
+            Tool(
+                name="list_known_skills",
+                description="List all currently learned skills.",
+                run=lambda args: f"Learned skills: {', '.join(list_skills())}",
+                risk_level="low",
+            )
+        ])
+        return tools
 
 class ApprovalGatedAgent(BaseAgent):
     # Generic demo agent for the session approval-gate workflow.
