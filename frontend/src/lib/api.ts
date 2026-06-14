@@ -1,4 +1,4 @@
-import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, DlqEvent, GitHubRepository, GitHubStatus, KillswitchState, MarketingAuditEvent, MarketingCampaign, SafetyEscalation, SafetyStats, SafetyTraceFrame, SafetyVerdict, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
+import type { AgentInfo, AgentSession, AgentStep, AppSettings, ApprovalEvent, ConnectionInfo, ConnectorConfig, DlqEvent, GitHubRepository, GitHubStatus, KillswitchState, MarketingAuditEvent, MarketingCampaign, SafetyEscalation, SafetyStats, SafetyTraceFrame, SafetyVerdict, ScheduledTask, SecurityFinding, SocialPlatform, SuggestedTask, WorkflowRun } from "./types";
 
 async function json<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
@@ -92,13 +92,42 @@ export const api = {
       body: JSON.stringify({ note })
     });
   },
+scheduleMarketingCampaign(campaignId: number) {
+  return json<{ status: string; method: string; typefully_id: string | null }>(
+    `/api/marketing/campaigns/${campaignId}/schedule`,
+    { method: "POST" }
+  );
+},
 
-  scheduleMarketingCampaign(campaignId: number) {
-    return json<{ status: string; method: string; typefully_id: string | null }>(
-      `/api/marketing/campaigns/${campaignId}/schedule`,
-      { method: "POST" }
-    );
-  },
+// Unified connections
+listAvailableConnectors() {
+  return json<{ connectors: ConnectorConfig[] }>("/api/connections/available");
+},
+
+listConnections() {
+  return json<{ connections: ConnectionInfo[] }>("/api/connections");
+},
+
+createConnection(providerId: string, config: any, metadata: any) {
+  return json<{ status: string; id: string }>("/api/connections", {
+    method: "POST",
+    body: JSON.stringify({ provider_id: providerId, config, metadata })
+  });
+},
+
+deleteConnection(connectionId: string) {
+  return json<{ status: string }>(`/api/connections/${connectionId}`, {
+    method: "DELETE"
+  });
+},
+
+testConnection(connectionId: string) {
+  return json<{ status: string }>(`/api/connections/${connectionId}/test`, {
+    method: "POST"
+  });
+},
+
+// Social connections
 
   runWorkflow(context: string) {
     return json<{ status: string; workflow_id: string }>("/api/run", {
@@ -165,6 +194,30 @@ export const api = {
 
   getSession(runId: string) {
     return json<{ steps: AgentStep[] }>(`/api/sessions/${runId}`);
+  },
+
+  // Session CRUD (title stored in localStorage until backend supports it)
+  getSessionTitle(runId: string): string {
+    try {
+      const titles = JSON.parse(localStorage.getItem("mesh_session_titles") || "{}");
+      return titles[runId] || "";
+    } catch { return ""; }
+  },
+
+  setSessionTitle(runId: string, title: string) {
+    try {
+      const titles = JSON.parse(localStorage.getItem("mesh_session_titles") || "{}");
+      titles[runId] = title;
+      localStorage.setItem("mesh_session_titles", JSON.stringify(titles));
+    } catch { /* noop */ }
+  },
+
+  deleteSessionTitle(runId: string) {
+    try {
+      const titles = JSON.parse(localStorage.getItem("mesh_session_titles") || "{}");
+      delete titles[runId];
+      localStorage.setItem("mesh_session_titles", JSON.stringify(titles));
+    } catch { /* noop */ }
   },
 
   // Workflows

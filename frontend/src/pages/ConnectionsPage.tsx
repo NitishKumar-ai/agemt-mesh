@@ -11,16 +11,47 @@ import {
   Twitter,
   Unplug,
   XCircle,
+  Cloud,
+  Wrench,
+  Github,
+  Globe,
+  Plus,
+  MessageSquare,
+  CreditCard,
+  Target,
+  Search,
+  BarChart,
+  PieChart,
+  Activity,
+  Server,
+  Database,
+  Users,
+  CloudLightning,
 } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { api } from "../lib/api";
-import type { SocialPlatform } from "../lib/types";
+import type { ConnectionInfo, ConnectorConfig, SocialPlatform } from "../lib/types";
 
 const ICONS: Record<string, typeof PenTool> = {
   "pen-tool": PenTool,
   twitter: Twitter,
   linkedin: Linkedin,
   layers: Layers,
+  cloud: Cloud,
+  tool: Wrench,
+  github: Github,
+  globe: Globe,
+  "message-square": MessageSquare,
+  "credit-card": CreditCard,
+  target: Target,
+  search: Search,
+  "bar-chart": BarChart,
+  "pie-chart": PieChart,
+  activity: Activity,
+  server: Server,
+  database: Database,
+  users: Users,
+  "cloud-lightning": CloudLightning,
 };
 
 const BRAND_ACCENTS = [
@@ -31,30 +62,28 @@ const BRAND_ACCENTS = [
 ];
 
 export function ConnectionsPage() {
-  const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
+  const [available, setAvailable] = useState<ConnectorConfig[]>([]);
+  const [active, setActive] = useState<ConnectionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectTarget, setConnectTarget] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState("");
-  const [username, setUsername] = useState("");
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [metadata, setMetadata] = useState<Record<string, string>>({});
   const [showKey, setShowKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [disconnecting, setDisconnecting] = useState<string | null>(null);
-
-  const FALLBACK_PLATFORMS: SocialPlatform[] = [
-    { id: "typefully", name: "Typefully", description: "Schedule and publish to Twitter/X and LinkedIn via Typefully's API.", auth_type: "api_key", docs_url: "https://typefully.com/settings/api", icon: "pen-tool", scopes: "drafts,schedule,analytics", connected: false, username: null, connected_at: null },
-    { id: "twitter", name: "Twitter / X", description: "Direct Twitter API access for posting and analytics.", auth_type: "api_key", docs_url: "https://developer.twitter.com/en/portal/dashboard", icon: "twitter", scopes: "tweet.read,tweet.write,users.read", connected: false, username: null, connected_at: null },
-    { id: "linkedin", name: "LinkedIn", description: "Publish posts and articles to your LinkedIn profile or company page.", auth_type: "api_key", docs_url: "https://www.linkedin.com/developers/apps", icon: "linkedin", scopes: "w_member_social,r_liteprofile", connected: false, username: null, connected_at: null },
-    { id: "buffer", name: "Buffer", description: "Multi-platform social scheduling via Buffer's publishing API.", auth_type: "api_key", docs_url: "https://buffer.com/developers/api", icon: "layers", scopes: "publish", connected: false, username: null, connected_at: null },
-  ];
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     try {
-      const res = await api.listSocialPlatforms();
-      setPlatforms(res.platforms);
-    } catch {
-      setPlatforms(FALLBACK_PLATFORMS);
+      const [availRes, activeRes] = await Promise.all([
+        api.listAvailableConnectors(),
+        api.listConnections(),
+      ]);
+      setAvailable(availRes.connectors);
+      setActive(activeRes.connections);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load connections");
     } finally {
       setLoading(false);
     }
@@ -65,15 +94,25 @@ export function ConnectionsPage() {
   }, []);
 
   async function connect() {
-    if (!connectTarget || !apiKey) return;
+    if (!connectTarget) return;
+
+    const provider = available.find((x) => x.provider_id === connectTarget);
+    if (provider?.auth_type === "oauth") {
+      if (provider.provider_id === "github") {
+        window.location.assign("/api/github/connect");
+        return;
+      }
+      setError("OAuth flow not implemented for this provider yet.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
-      await api.connectSocial(connectTarget, apiKey, username || undefined);
+      await api.createConnection(connectTarget, config, metadata);
       setConnectTarget(null);
-      setApiKey("");
-      setUsername("");
-      setShowKey(false);
+      setConfig({});
+      setMetadata({});
       void load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Connection failed");
@@ -82,37 +121,24 @@ export function ConnectionsPage() {
     }
   }
 
-  async function disconnect(platform: string) {
-    setDisconnecting(platform);
+  async function disconnect(id: string) {
+    setDeleting(id);
     try {
-      await api.disconnectSocial(platform);
+      await api.deleteConnection(id);
       void load();
     } finally {
-      setDisconnecting(null);
+      setDeleting(null);
     }
   }
 
-  useEffect(() => {
-    if (!connectTarget) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setConnectTarget(null);
-        setError(null);
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [connectTarget]);
-
-  const connected = platforms.filter((p) => p.connected);
-  const available = platforms.filter((p) => !p.connected);
+  const categories = Array.from(new Set(available.map((a) => a.category)));
 
   return (
     <div className="page">
       <PageHeader
         eyebrow="Integrations"
-        title="Social Connections"
-        description="Connect your social media accounts to let agents schedule and publish content."
+        title="Connectors"
+        description="Connect your infrastructure, tools, and social accounts to empower your agents."
         actions={
           <button className="secondary-button" onClick={load}>
             <RefreshCw size={14} /> Refresh
@@ -120,293 +146,144 @@ export function ConnectionsPage() {
         }
       />
 
-      {loading && <div className="empty-card">Loading platforms…</div>}
+      {loading && <div className="empty-card">Loading connectors…</div>}
 
       {!loading && (
         <>
-          {/* Connected platforms */}
-          {connected.length > 0 && (
+          {/* Active connections */}
+          {active.length > 0 && (
             <>
-              <h3
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  color: "var(--muted)",
-                  marginBottom: 12,
-                  letterSpacing: "1.5px",
-                }}
-              >
-                Connected
-              </h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                  gap: 16,
-                  marginBottom: 32,
-                }}
-              >
-                {connected.map((p, i) => (
-                  <PlatformCard
-                    key={p.id}
-                    platform={p}
-                    accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
-                    onDisconnect={() => disconnect(p.id)}
-                    disconnecting={disconnecting === p.id}
-                  />
-                ))}
+              <h3 className="section-title">Active Connections</h3>
+              <div className="connection-grid">
+                {active.map((conn, i) => {
+                  const provider = available.find((a) => a.provider_id === conn.provider_id);
+                  return (
+                    <ConnectionCard
+                      key={conn.id}
+                      connection={conn}
+                      provider={provider}
+                      accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
+                      onDisconnect={() => disconnect(conn.id)}
+                      deleting={deleting === conn.id}
+                    />
+                  );
+                })}
               </div>
             </>
           )}
 
-          {/* Available platforms */}
-          {available.length > 0 && (
-            <>
-              <h3
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  color: "var(--muted)",
-                  marginBottom: 12,
-                  letterSpacing: "1.5px",
-                }}
-              >
-                Available
-              </h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-                  gap: 16,
-                  marginBottom: 32,
-                }}
-              >
-                {available.map((p, i) => (
-                  <PlatformCard
-                    key={p.id}
-                    platform={p}
-                    accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
-                    onConnect={() => {
-                      setConnectTarget(p.id);
-                      setError(null);
-                    }}
-                  />
-                ))}
+          {/* Available connectors by category */}
+          {categories.map((cat) => (
+            <div key={cat} style={{ marginBottom: 32 }}>
+              <h3 className="section-title">{cat.charAt(0).toUpperCase() + cat.slice(1)}</h3>
+              <div className="connection-grid">
+                {available
+                  .filter((a) => a.category === cat)
+                  .map((a, i) => (
+                    <AvailableCard
+                      key={a.provider_id}
+                      connector={a}
+                      accent={BRAND_ACCENTS[i % BRAND_ACCENTS.length]}
+                      onConnect={() => setConnectTarget(a.provider_id)}
+                    />
+                  ))}
               </div>
-            </>
-          )}
+            </div>
+          ))}
         </>
       )}
 
-      {/* Connect modal */}
+      {/* Connect Modal */}
       {connectTarget && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(10,10,10,0.3)",
-            display: "grid",
-            placeItems: "center",
-            zIndex: 100,
-            backdropFilter: "blur(4px)",
-          }}
-          onClick={() => {
-            setConnectTarget(null);
-            setError(null);
-          }}
-        >
-          <div
-            style={{
-              background: "var(--canvas)",
-              borderRadius: 24,
-              padding: 32,
-              width: 440,
-              maxWidth: "90vw",
-              border: "1px solid var(--hairline)",
-              boxShadow: "0 20px 60px rgba(10,10,10,.12)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setConnectTarget(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             {(() => {
-              const p = platforms.find((x) => x.id === connectTarget);
-              const Icon = ICONS[p?.icon ?? ""] ?? PenTool;
-              const pIdx = platforms.indexOf(p!);
-              const accent = BRAND_ACCENTS[pIdx >= 0 ? pIdx % BRAND_ACCENTS.length : 0];
+              const c = available.find((x) => x.provider_id === connectTarget);
+              const Icon = ICONS[c?.icon ?? ""] ?? PenTool;
               return (
                 <>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      marginBottom: 24,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 14,
-                        background: accent.bg,
-                        color: accent.fg,
-                        display: "grid",
-                        placeItems: "center",
-                      }}
-                    >
+                  <div className="modal-header">
+                    <div className="modal-icon" style={{ background: "rgba(26,58,58,.06)", color: "var(--brand-teal)" }}>
                       <Icon size={22} />
                     </div>
                     <div>
-                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: "-0.3px" }}>Connect {p?.name}</h2>
-                      <p
-                        style={{
-                          fontSize: 13,
-                          color: "var(--muted)",
-                          margin: 0,
-                        }}
-                      >
-                        {p?.description}
+                      <h2 className="modal-title">Connect {c?.name}</h2>
+                      <p className="modal-description">{c?.description}</p>
+                    </div>
+                  </div>
+
+                  {c?.auth_type === "oauth" ? (
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                      <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 15 }}>
+                        This connection uses OAuth. You will be redirected to the provider to authorize access.
                       </p>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {c?.config_schema?.map((field) => (
+                        <div className="form-group" key={field.name}>
+                          <label className="form-label">{field.label}</label>
+                          {field.type === "textarea" ? (
+                            <textarea
+                              className="form-input"
+                              placeholder={field.placeholder}
+                              required={field.required}
+                              rows={4}
+                              value={config[field.name] || ""}
+                              onChange={(e) => setConfig({ ...config, [field.name]: e.target.value })}
+                            />
+                          ) : (
+                            <div style={{ position: "relative" }}>
+                              <input
+                                className="form-input"
+                                type={field.type === "password" && showKey ? "text" : field.type}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                                value={config[field.name] || ""}
+                                onChange={(e) => setConfig({ ...config, [field.name]: e.target.value })}
+                                style={field.type === "password" ? { paddingRight: 38 } : {}}
+                              />
+                              {field.type === "password" && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowKey(!showKey)}
+                                  style={{
+                                    position: "absolute",
+                                    right: 10,
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    background: "none",
+                                    border: 0,
+                                    cursor: "pointer",
+                                    color: "var(--muted)",
+                                    padding: 2,
+                                  }}
+                                >
+                                  {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
 
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      marginBottom: 6,
-                      color: "var(--muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    API Key
-                  </label>
-                  <div style={{ position: "relative", marginBottom: 14 }}>
+                  <div className="form-group">
+                    <label className="form-label">Display Name (optional)</label>
                     <input
-                      type={showKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={`Paste your ${p?.name} API key`}
-                      style={{
-                        width: "100%",
-                        padding: "10px 38px 10px 14px",
-                        borderRadius: 12,
-                        border: "1px solid var(--hairline)",
-                        fontSize: 14,
-                        background: "var(--canvas)",
-                        color: "var(--ink)",
-                      }}
+                      className="form-input"
+                      placeholder="e.g. Production Cluster"
+                      value={metadata.name || ""}
+                      onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowKey(!showKey)}
-                      style={{
-                        position: "absolute",
-                        right: 10,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "none",
-                        border: 0,
-                        cursor: "pointer",
-                        color: "var(--muted)",
-                        padding: 2,
-                      }}
-                    >
-                      {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
                   </div>
 
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      marginBottom: 6,
-                      color: "var(--muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    Username (optional)
-                  </label>
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="@handle or display name"
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      border: "1px solid var(--hairline)",
-                      fontSize: 14,
-                      background: "var(--canvas)",
-                      marginBottom: 14,
-                      color: "var(--ink)",
-                    }}
-                  />
+                  {error && <div className="error-box">{error}</div>}
 
-                  {p?.docs_url && (
-                    <a
-                      href={p.docs_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 5,
-                        fontSize: 13,
-                        color: "var(--brand-teal)",
-                        marginBottom: 18,
-                        textDecoration: "none",
-                        fontWeight: 600,
-                      }}
-                    >
-                      <ExternalLink size={12} /> Get your API key from{" "}
-                      {p.name}
-                    </a>
-                  )}
-
-                  {error && (
-                    <div
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        background: "rgba(239,68,68,.06)",
-                        color: "var(--error)",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        marginBottom: 14,
-                        border: "1px solid rgba(239,68,68,.2)",
-                      }}
-                    >
-                      {error}
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <button
-                      className="secondary-button"
-                      onClick={() => {
-                        setConnectTarget(null);
-                        setError(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="primary-button"
-                      disabled={!apiKey || saving}
-                      onClick={connect}
-                    >
+                  <div className="modal-actions">
+                    <button className="secondary-button" onClick={() => setConnectTarget(null)}>Cancel</button>
+                    <button className="primary-button" disabled={saving} onClick={connect}>
                       {saving ? "Connecting…" : "Connect"}
                     </button>
                   </div>
@@ -416,182 +293,269 @@ export function ConnectionsPage() {
           </div>
         </div>
       )}
+
+      <style>{`
+        .section-title {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 16px;
+          letter-spacing: 1.5px;
+        }
+        .connection-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(10,10,10,0.3);
+          display: grid;
+          place-Items: center;
+          z-index: 100;
+          backdrop-filter: blur(4px);
+        }
+        .modal-content {
+          background: var(--canvas);
+          border-radius: 24px;
+          padding: 32px;
+          width: 440px;
+          max-width: 90vw;
+          border: 1px solid var(--hairline);
+          box-shadow: 0 20px 60px rgba(10,10,10,.12);
+        }
+        .modal-header {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 24px;
+        }
+        .modal-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          display: grid;
+          place-items: center;
+        }
+        .modal-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 500;
+          letter-spacing: -0.3px;
+        }
+        .modal-description {
+          font-size: 13px;
+          color: var(--muted);
+          margin: 0;
+        }
+        .form-group {
+          margin-bottom: 14px;
+        }
+        .form-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 6px;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .form-input {
+          width: 100%;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 1px solid var(--hairline);
+          font-size: 14px;
+          background: var(--canvas);
+          color: var(--ink);
+        }
+        .error-box {
+          padding: 10px 14px;
+          border-radius: 12px;
+          background: rgba(239,68,68,.06);
+          color: var(--error);
+          font-size: 13px;
+          font-weight: 600;
+          margin-bottom: 14px;
+          border: 1px solid rgba(239,68,68,.2);
+        }
+        .modal-actions {
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+          margin-top: 24px;
+        }
+      `}</style>
     </div>
   );
 }
 
-function PlatformCard({
-  platform,
+function ConnectionCard({
+  connection,
+  provider,
   accent,
-  onConnect,
   onDisconnect,
-  disconnecting,
+  deleting,
 }: {
-  platform: SocialPlatform;
+  connection: ConnectionInfo;
+  provider?: ConnectorConfig;
   accent: { bg: string; fg: string };
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  disconnecting?: boolean;
+  onDisconnect: () => void;
+  deleting: boolean;
 }) {
-  const Icon = ICONS[platform.icon] ?? PenTool;
+  const Icon = ICONS[provider?.icon || ""] || PenTool;
+  const name = connection.metadata.name || provider?.name || connection.provider_id;
 
   return (
-    <article
-      style={{
-        border: `1px solid ${platform.connected ? "rgba(34,197,94,.2)" : "var(--hairline)"}`,
-        borderRadius: 16,
-        background: "var(--canvas)",
-        padding: "20px 22px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        transition: "transform 150ms, box-shadow 150ms",
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(10,10,10,.06)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: platform.connected
-                ? "rgba(34,197,94,.08)"
-                : accent.bg,
-              color: platform.connected ? "var(--success)" : accent.fg,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
+    <article className="card">
+      <div className="card-header">
+        <div className="card-identity">
+          <div className="card-icon" style={{ background: accent.bg, color: accent.fg }}>
             <Icon size={20} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 16, letterSpacing: "-0.2px" }}>
-              {platform.name}
-            </div>
-            {platform.connected && platform.username && (
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                @{platform.username}
-              </div>
-            )}
+            <div className="card-title">{name}</div>
+            <div className="card-subtitle">{provider?.name} • {connection.connector_type}</div>
           </div>
         </div>
-        {platform.connected ? (
+        {connection.status === "connected" ? (
           <CheckCircle2 size={18} color="var(--success)" />
         ) : (
-          <XCircle size={16} color="var(--muted-soft)" />
+          <XCircle size={18} color="var(--error)" />
         )}
       </div>
 
-      <p
-        style={{
-          fontSize: 14,
-          color: "var(--muted)",
-          lineHeight: 1.5,
-          margin: 0,
-        }}
-      >
-        {platform.description}
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 6,
-        }}
-      >
-        {platform.scopes.split(",").map((scope) => (
-          <span
-            key={scope}
-            style={{
-              padding: "3px 9px",
-              borderRadius: 9999,
-              fontSize: 10,
-              fontWeight: 600,
-              background: "var(--surface-card)",
-              color: "var(--muted)",
-              border: "1px solid var(--hairline)",
-            }}
-          >
-            {scope.trim()}
-          </span>
-        ))}
+      <div className="card-footer">
+        <span className="card-timestamp">
+          Connected {new Date(connection.created_at).toLocaleDateString()}
+        </span>
+        <button className="disconnect-button" onClick={onDisconnect} disabled={deleting}>
+          <Unplug size={12} /> {deleting ? "Removing…" : "Disconnect"}
+        </button>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderTop: "1px solid var(--hairline)",
-          paddingTop: 12,
-          marginTop: 2,
-        }}
-      >
-        {platform.connected && platform.connected_at ? (
-          <span style={{ fontSize: 11, color: "var(--muted)" }}>
-            Connected{" "}
-            {new Date(platform.connected_at).toLocaleDateString()}
-          </span>
-        ) : (
-          <span style={{ fontSize: 11, color: "var(--muted-soft)" }}>
-            Not connected
-          </span>
-        )}
+      <style>{`
+        .card {
+          border: 1px solid var(--hairline);
+          border-radius: 16px;
+          background: var(--canvas);
+          padding: 20px 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          transition: transform 150ms, box-shadow 150ms;
+        }
+        .card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(10,10,10,.06);
+        }
+        .card-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .card-identity {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .card-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+        }
+        .card-title {
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: -0.2px;
+        }
+        .card-subtitle {
+          font-size: 12px;
+          color: var(--muted);
+          text-transform: capitalize;
+        }
+        .card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid var(--hairline);
+          padding-top: 12px;
+          margin-top: 8px;
+        }
+        .card-timestamp {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .disconnect-button {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 6px 14px;
+          border-radius: 12px;
+          border: 1px solid rgba(239,68,68,.2);
+          background: rgba(239,68,68,.04);
+          color: var(--error);
+          font-weight: 600;
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 150ms;
+        }
+      `}</style>
+    </article>
+  );
+}
 
-        {platform.connected ? (
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 14px",
-              borderRadius: 12,
-              border: "1px solid rgba(239,68,68,.2)",
-              background: "rgba(239,68,68,.04)",
-              color: "var(--error)",
-              fontWeight: 600,
-              fontSize: 12,
-              cursor: "pointer",
-              opacity: disconnecting ? 0.6 : 1,
-              transition: "all 150ms",
-            }}
-            onClick={onDisconnect}
-            disabled={disconnecting}
-          >
-            <Unplug size={12} /> {disconnecting ? "Removing…" : "Disconnect"}
-          </button>
-        ) : (
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "6px 14px",
-              borderRadius: 12,
-              border: 0,
-              background: "var(--primary)",
-              color: "var(--on-primary)",
-              fontWeight: 600,
-              fontSize: 12,
-              cursor: "pointer",
-              transition: "background 150ms",
-            }}
-            onClick={onConnect}
-          >
-            Connect
-          </button>
-        )}
+function AvailableCard({
+  connector,
+  accent,
+  onConnect,
+}: {
+  connector: ConnectorConfig;
+  accent: { bg: string; fg: string };
+  onConnect: () => void;
+}) {
+  const Icon = ICONS[connector.icon || ""] || PenTool;
+
+  return (
+    <article className="card available">
+      <div className="card-header">
+        <div className="card-identity">
+          <div className="card-icon" style={{ background: accent.bg, color: accent.fg }}>
+            <Icon size={20} />
+          </div>
+          <div className="card-title">{connector.name}</div>
+        </div>
+        <button className="primary-button compact" onClick={onConnect}>
+          <Plus size={14} /> Connect
+        </button>
       </div>
+      <p className="card-description">{connector.description}</p>
+      <style>{`
+        .card.available {
+          border: 1px dashed var(--hairline);
+          opacity: 0.8;
+        }
+        .card.available:hover {
+          opacity: 1;
+          border-style: solid;
+        }
+        .card-description {
+          font-size: 13px;
+          color: var(--muted);
+          line-height: 1.5;
+          margin: 0;
+        }
+        .primary-button.compact {
+          padding: 6px 12px;
+          font-size: 12px;
+          border-radius: 10px;
+        }
+      `}</style>
     </article>
   );
 }

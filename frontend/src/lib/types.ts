@@ -11,7 +11,8 @@ export type PageKey =
   | "activity"
   | "connections"
   | "safety"
-  | "settings";
+  | "settings"
+  | "chat";
 
 export type MeshEvent = {
   id: string;
@@ -122,6 +123,24 @@ export type SessionMessage = {
   time: Date;
   status?: "idle" | "planning" | "executing" | "blocked" | "success" | "failed";
   event?: MeshEvent;
+  metadata?: {
+    codeBlocks?: { language: string; code: string }[];
+    files?: string[];
+    toolName?: string;
+    toolOutput?: string;
+    collapsed?: boolean;
+  };
+};
+
+export type ChatSession = {
+  id: string;
+  title: string;
+  agent_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+  last_message_preview: string;
 };
 
 export type AgentSession = {
@@ -272,4 +291,33 @@ export type SafetyStats = {
   avg_eval_duration_ms: number;
   counterfactual_blocks: number;
   open_escalations: number;
+};
+
+export type ConfigField = {
+  name: string;
+  label: string;
+  type: string;
+  required: boolean;
+  placeholder?: string;
+};
+
+export type ConnectorConfig = {
+  provider_id: string;
+  connector_type: "direct" | "mcp" | "oauth";
+  name: string;
+  description: string;
+  icon?: string;
+  category: string;
+  auth_type: string;
+  config_schema: ConfigField[];
+};
+
+export type ConnectionInfo = {
+  id: string;
+  provider_id: string;
+  connector_type: string;
+  status: "connected" | "error" | "disconnected";
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 };
