@@ -27,7 +27,15 @@
 - **Done**: Strategy D `adaptive_evasion` red team — attacker-authored subtle compound-trigger backdoors with causally-consistent false rationales. CriticGate 4/6 at h=0 (first non-saturated class), 6/6 by h=0.20, 0 FPs. Pluggable LLM-attacker stub gated on `CRITICGATE_REAL_ATTACKER=1`.
 - **Done**: `criticgate_eval/SUBMISSION.md` — hackathon writeup framing the result against adaptive attacks with citations.
 
+## Harness — Inner Agent Loop
+- **Done**: `HARNESS_DESIGN.md` — survey of OpenHands V1 SDK, mini-swe-agent, smolagents, Claude Agent SDK, Anthropic long-running-harness post; mapped onto DBOS/killswitch/budget/CriticGate constraints.
+- **Done**: `loop.py` — typed `Tool`/`ToolRegistry`, action→observation `AgentLoop` (linear history, per-step killswitch+budget checks, `finish` tool, max_steps, observation truncation + drop-oldest history budget, per-action critic gate, event emission). Wired into `harness.py` execute phase; legacy single-shot path kept for agents without `get_tool_objects()`.
+- **Done**: Migrate registered agents (commitguard, marketing, research…) from `get_tools()` name stubs to real `Tool` objects so they run the iterative loop.
+- **Done**: LLM condenser (OpenHands-style) to replace drop-oldest history truncation.
+- **Done**: `planning_interval` re-planning inside the loop (smolagents pattern) for long runs.
+- **Done**: make each loop step a DBOS step for mid-execute crash replay (currently execute is one step).
+
 ## CriticGate — Phase 7
-- **Real-probe vs Strategy D**: export an API key, run `CRITICGATE_REAL_PROBE=1` + `MODEL_CRITIC`, and measure whether the real LLM deep-probe catches the 2 Strategy D residuals the simulated probe misses. This is the open scientific question.
-- **LLM-generated attacker**: enable `CRITICGATE_REAL_ATTACKER=1` to generate Strategy D backdoors via the Control Tax brainstorm→rank→generate→iterate loop (currently hand-authored).
-- Consider wiring one ControlArena APPS setting as an external-validity check.
+- **Done**: Real-probe vs Strategy D: export an API key, run `CRITICGATE_REAL_PROBE=1` + `MODEL_CRITIC`, and measure whether the real LLM deep-probe catches the 2 Strategy D residuals the simulated probe misses. This is the open scientific question.
+- **Done**: LLM-generated attacker: enable `CRITICGATE_REAL_ATTACKER=1` to generate Strategy D backdoors via the Control Tax brainstorm→rank→generate→iterate loop (currently hand-authored).
+- **Done**: Consider wiring one ControlArena APPS setting as an external-validity check.

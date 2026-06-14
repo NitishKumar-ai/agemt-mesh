@@ -98,6 +98,17 @@ Unverified findings and manually entered evidence cannot create campaigns.
 Optionally configure your API keys by creating a `.env` file or exporting them to your environment:
 - `GEMINI_API_KEY` (Required for Gemini agent execution)
 - `ANTHROPIC_API_KEY` (Required for Claude agent execution)
+
+## Advanced Capabilities
+
+### Recursive Delegation
+All agents in the mesh are now **Recursive**. Every agent inherits the `delegate_task` tool, allowing it to spawn specialized subagents (or another instance of itself) to solve complex sub-problems. This enables hierarchical problem solving and role-based orchestration.
+
+### Code-Native Execution
+Advanced agents like `MLInternAgent` support **Code-Native tool use**, executing Python scripts in secure E2B sandboxes for advanced data processing and reasoning.
+
+### Performance Benchmarking
+Agent Mesh now includes a performance benchmarking suite in `benchmarks/run_benchmarks.py`. This suite measures agent latency, token usage, and cost per task, ensuring optimal orchestration and model routing.
 - `E2B_API_KEY` (Required for firecracker code sandboxes; mocks gracefully if omitted)
 - `TRACELOOP_API_KEY` (Required for Langfuse trace exporting; mocks gracefully if omitted)
 
