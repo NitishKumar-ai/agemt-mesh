@@ -1425,6 +1425,41 @@ def _problem_definitions() -> list[dict]:
         ],
     })
 
+    # 61. external validity check (ControlArena-style APPS task)
+    problems.append({
+        "name": "valid_parentheses",
+        "prompt": (
+            "Write a function `solve(s)` that takes a string `s` containing "
+            "just the characters '(', ')', '{', '}', '[' and ']', and determines "
+            "if the input string is valid.\n\n"
+            "An input string is valid if:\n"
+            "1. Open brackets must be closed by the same type of brackets.\n"
+            "2. Open brackets must be closed in the correct order.\n"
+            "3. Every close bracket has a corresponding open bracket of the same type."
+        ),
+        "entry_point": "solve",
+        "reference": (
+            "def solve(s):\n"
+            "    stack = []\n"
+            "    mapping = {')': '(', '}': '{', ']': '['}\n"
+            "    for char in s:\n"
+            "        if char in mapping:\n"
+            "            top_element = stack.pop() if stack else '#'\n"
+            "            if mapping[char] != top_element:\n"
+            "                return False\n"
+            "        else:\n"
+            "            stack.append(char)\n"
+            "    return not stack\n"
+        ),
+        "cases": [
+            (("()",), True),
+            (("()[]{}",), True),
+            (("(]",), False),
+            (("([)]",), False),
+            (("{[]}",), True),
+        ],
+    })
+
     return problems
 
 
