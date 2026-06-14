@@ -49,6 +49,26 @@ class TestApprovalsAPI:
         resp = client.post("/api/approvals/1/decide", json={"approved": True})
         assert resp.status_code == 400
 
+    # Regression: ISSUE-001 — decide 500'd when the workflow no longer existed
+    # Found by /qa on 2026-06-13
+    # Report: .gstack/qa-reports/qa-report-agentmesh-2026-06-13.md
+    def test_decide_approval_when_workflow_gone(self, client):
+        # The waiting workflow may have completed, 24h-auto-rejected, or be demo
+        # seed data; DBOS.send then raises DBOSNonExistentWorkflowError. The human
+        # decision is already recorded, so the endpoint must still return 200.
+        from dbos._error import DBOSNonExistentWorkflowError
+        with patch("api.record_approval_decision") as mock_record, \
+             patch("api.DBOS.send", side_effect=DBOSNonExistentWorkflowError("approval", "run_gone")):
+            resp = client.post("/api/approvals/1/decide", json={
+                "run_id": "run_gone",
+                "approved": True,
+                "note": "qa",
+            })
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "decided"
+        assert resp.json()["workflow_notified"] is False
+        mock_record.assert_called_once_with(1, "approved", "operator", {"note": "qa"})
+
     def test_approval_history(self, client):
         mock_history = [
             {"action": "approved", "actor": "operator", "payload": {"note": "ok"}, "created_at": "..."}

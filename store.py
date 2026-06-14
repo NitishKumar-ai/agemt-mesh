@@ -128,6 +128,18 @@ def init_business_tables(engine=None) -> None:
             )
         """))
         conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS connections (
+                id TEXT PRIMARY KEY,
+                provider_id TEXT NOT NULL,
+                connector_type TEXT NOT NULL,
+                config_encrypted TEXT NOT NULL,
+                metadata TEXT,
+                status TEXT DEFAULT 'connected',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
             CREATE TABLE IF NOT EXISTS marketing_audit_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 entity_type TEXT NOT NULL,
@@ -1215,6 +1227,66 @@ def safety_stats() -> dict:
         "counterfactual_blocks": counterfactual_blocks,
         "open_escalations": open_escalations,
     }
+
+
+# ── Connections ───────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def connection_save(id: str, provider_id: str, connector_type: str, config: dict, metadata: dict) -> None:
+    DBOS.sql_session.execute(text("""
+        INSERT INTO connections (id, provider_id, connector_type, config_encrypted, metadata, updated_at)
+        VALUES (:id, :provider, :type, :config, :metadata, CURRENT_TIMESTAMP)
+        ON CONFLICT (id) DO UPDATE SET
+            provider_id = EXCLUDED.provider_id,
+            connector_type = EXCLUDED.connector_type,
+            config_encrypted = EXCLUDED.config_encrypted,
+            metadata = EXCLUDED.metadata,
+            status = 'connected',
+            updated_at = CURRENT_TIMESTAMP
+    """), {
+        "id": id,
+        "provider": provider_id,
+        "type": connector_type,
+        "config": encrypt_token(json.dumps(config)),
+        "metadata": json.dumps(metadata)
+    })
+
+@DBOS.transaction()
+def connection_get(id: str) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT * FROM connections WHERE id=:id"
+    ), {"id": id}).fetchone()
+    if not row:
+        return None
+    res = dict(row._mapping)
+    res["config"] = json.loads(decrypt_token(res.pop("config_encrypted")))
+    res["metadata"] = json.loads(res["metadata"]) if res["metadata"] else {}
+    return res
+
+@DBOS.transaction()
+def connection_list() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, provider_id, connector_type, metadata, status, created_at, updated_at "
+        "FROM connections ORDER BY created_at DESC"
+    )).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r._mapping)
+        d["metadata"] = json.loads(d["metadata"]) if d["metadata"] else {}
+        result.append(d)
+    return result
+
+@DBOS.transaction()
+def connection_delete(id: str) -> None:
+    DBOS.sql_session.execute(text(
+        "DELETE FROM connections WHERE id=:id"
+    ), {"id": id})
+
+@DBOS.transaction()
+def connection_update_status(id: str, status: str) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE connections SET status=:status, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"id": id, "status": status})
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
