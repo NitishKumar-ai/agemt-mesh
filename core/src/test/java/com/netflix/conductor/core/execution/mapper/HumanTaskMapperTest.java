@@ -1,0 +1,56 @@
+package com.netflix.conductor.core.execution.mapper;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.Test;
+
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskType;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.core.utils.IDGenerator;
+import com.netflix.conductor.core.utils.ParametersUtils;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
+
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_HUMAN;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+
+public class HumanTaskMapperTest {
+
+    @Test
+    public void getMappedTasks() {
+
+        // Given
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setName("human_task");
+        workflowTask.setType(TaskType.HUMAN.name());
+        String taskId = new IDGenerator().generate();
+
+        ParametersUtils parametersUtils = mock(ParametersUtils.class);
+        WorkflowModel workflow = new WorkflowModel();
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflow.setWorkflowDefinition(workflowDef);
+
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowModel(workflow)
+                        .withTaskDefinition(new TaskDef())
+                        .withWorkflowTask(workflowTask)
+                        .withTaskInput(new HashMap<>())
+                        .withRetryCount(0)
+                        .withTaskId(taskId)
+                        .build();
+
+        HumanTaskMapper humanTaskMapper = new HumanTaskMapper(parametersUtils);
+        // When
+        List<TaskModel> mappedTasks = humanTaskMapper.getMappedTasks(taskMapperContext);
+
+        // Then
+        assertEquals(1, mappedTasks.size());
+        assertEquals(TASK_TYPE_HUMAN, mappedTasks.get(0).getTaskType());
+    }
+}
