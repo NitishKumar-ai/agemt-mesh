@@ -14,6 +14,7 @@ from dbos._error import DBOSNonExistentWorkflowError
 from main import (agent_loop, generate, MODEL_PLAN, scan_suggested_tasks, self_heal_pr,
                   commitguard_workflow, _update_scan_step,
                   HermesAgent, MLInternAgent)
+from agents.inmodel import InModelBrainAgent
 from harness import (
     BaseAgent, AgentConfig, register_agent, list_agents_info,
     run_agent as harness_run_agent,
@@ -372,6 +373,28 @@ register_agent("ml_intern", MLInternAgent,
     default_config=AgentConfig(
         agent_id="ml_intern", model_plan=_H_MODEL_PLAN,
         model_execute=_H_MODEL_EXECUTE, cost_budget_usd=1.5,
+    ))
+
+register_agent("inmodel_brain", InModelBrainAgent,
+    name="InModel Brain (Gemma 4)",
+    description=(
+        "Company brain for InModel Labs — a fine-tuned Gemma 4 model whose sole objective "
+        "is company growth. Executes via Google Cloud CLI: gcloud, bq, gsutil, Vertex AI, "
+        "Cloud Run, Pub/Sub, Secret Manager, and BigQuery."
+    ),
+    capabilities=[
+        "vertex_fine_tune", "vertex_deploy", "gcs_upload", "gcs_list",
+        "bq_query", "pubsub_publish", "cloud_run_deploy",
+        "secret_get", "model_registry_list", "firestore_export",
+        "check_growth_metrics", "check_model_health",
+    ],
+    default_config=AgentConfig(
+        agent_id="inmodel_brain",
+        model_plan=os.getenv("INMODEL_BRAIN_MODEL", "vertex_ai/gemma-4-it"),
+        model_execute=os.getenv("INMODEL_BRAIN_MODEL", "vertex_ai/gemma-4-it"),
+        requires_approval=True,
+        cost_budget_usd=2.0,
+        token_budget=1_000_000,
     ))
 
 

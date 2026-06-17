@@ -150,16 +150,19 @@ class InModelBrainAgent(BaseAgent):
         if not endpoint_id:
             return _json.dumps({"ok": False, "stderr": "VERTEX_ENDPOINT_ID not set"})
 
-        proc = subprocess.run(
-            ["gcloud", "ai", "endpoints", "describe", endpoint_id,
-             f"--project={project}", f"--region={region}", "--format=json"],
-            capture_output=True, text=True, timeout=30,
-        )
-        return _json.dumps({
-            "ok": proc.returncode == 0,
-            "endpoint": proc.stdout.strip(),
-            "stderr": proc.stderr.strip(),
-        })
+        try:
+            proc = subprocess.run(
+                ["gcloud", "ai", "endpoints", "describe", endpoint_id,
+                 f"--project={project}", f"--region={region}", "--format=json"],
+                capture_output=True, text=True, timeout=30,
+            )
+            return _json.dumps({
+                "ok": proc.returncode == 0,
+                "endpoint": proc.stdout.strip()[:2000],
+                "stderr": proc.stderr.strip(),
+            })
+        except Exception as e:
+            return _json.dumps({"ok": False, "stderr": str(e)})
 
     # ── Planning override — growth-first system prompt ────────────────────────
 
@@ -187,6 +190,7 @@ class InModelBrainAgent(BaseAgent):
             if "steps" not in plan_dict:
                 raise ValueError
         except (json.JSONDecodeError, ValueError):
+            logger.warning("InModelBrainAgent: plan JSON parse failed, falling back to line-split. raw=%s", raw[:200])
             plan_dict = {"steps": [s.strip() for s in raw.split("\n") if s.strip()][:3] or [raw[:200]]}
 
         self.write_event("plan_created", {

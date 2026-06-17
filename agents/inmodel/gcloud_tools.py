@@ -3,21 +3,57 @@ gcloud_tools.py — Google Cloud CLI tool wrappers for the InModel brain agent.
 
 Each tool wraps a gcloud / bq / gsutil CLI call so the LLM can interact with
 Google Cloud natively. All calls are logged to BigQuery for audit compliance.
+
+Security invariants:
+- No shell=True. All commands use argument arrays.
+- LLM-supplied strings are validated before use (path traversal, arg injection).
+- bq_query enforces read-only via a SELECT-only check + BQ dry-run validation.
+- secret_get never returns plaintext to the LLM — returns only existence confirmation.
+- gcs_upload source path is restricted to an explicit allowlist prefix.
+- cloud_run_deploy requires authentication by default (no --allow-unauthenticated).
 """
 import json
 import logging
 import os
+import re
 import subprocess
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from loop import Tool
 
 logger = logging.getLogger(__name__)
 
-GCP_PROJECT = os.getenv("GCP_PROJECT", "inmodel-labs")
-GCP_REGION  = os.getenv("GCP_REGION",  "us-central1")
+# Read at call time (not import time) so multi-tenant overrides work.
+def _project() -> str:
+    return os.getenv("GCP_PROJECT", "inmodel-labs")
+
+def _region() -> str:
+    return os.getenv("GCP_REGION", "us-central1")
+
 BQ_DATASET  = os.getenv("BQ_AUDIT_DATASET", "agent_audit")
+
+# Allowlist prefixes the agent may upload from (prevents /etc/passwd exfil)
+_GCS_UPLOAD_ALLOWED_SRC_PREFIXES = ["/tmp/agent-", "/tmp/inmodel-"]
+
+_SAFE_ID_RE = re.compile(r'^[a-zA-Z0-9_\-\.]{1,128}$')
+_SAFE_GCS_RE = re.compile(r'^gs://[a-zA-Z0-9_\-\.]+(/[^\x00]*)?$')
+
+def _validate_id(value: str, field: str) -> str:
+    """Reject values that could inject flags or path traversal."""
+    if not _SAFE_ID_RE.match(value):
+        raise ValueError(f"{field} contains invalid characters: {value!r}")
+    return value
+
+def _validate_gcs(uri: str, field: str) -> str:
+    if not _SAFE_GCS_RE.match(uri):
+        raise ValueError(f"{field} is not a valid gs:// URI: {uri!r}")
+    return uri
+
+def _truncate_output(text: str, max_chars: int = 4000) -> str:
+    """Truncate large tool outputs before returning to LLM context."""
+    if len(text) > max_chars:
+        return text[:max_chars] + f"\n... [truncated, {len(text)} chars total]"
+    return text
 
 
 def _run(cmd: List[str], timeout: int = 60) -> Dict[str, Any]:
@@ -43,15 +79,18 @@ def _run(cmd: List[str], timeout: int = 60) -> Dict[str, Any]:
 
 def _vertex_deploy(args: Dict[str, Any]) -> str:
     """Deploy or update a Gemma 4 model endpoint on Vertex AI."""
-    model_id    = args.get("model_id", "gemma4-inmodel-brain")
-    display     = args.get("display_name", "InModel Brain")
-    machine     = args.get("machine_type", "n1-standard-4")
-    accelerator = args.get("accelerator", "nvidia-tesla-t4")
+    try:
+        model_id    = _validate_id(args.get("model_id", "gemma4-inmodel-brain"), "model_id")
+        display     = _validate_id(args.get("display_name", "InModel-Brain"), "display_name")
+        machine     = _validate_id(args.get("machine_type", "n1-standard-4"), "machine_type")
+        accelerator = _validate_id(args.get("accelerator", "nvidia-tesla-t4"), "accelerator")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
 
     cmd = [
         "gcloud", "ai", "endpoints", "deploy-model",
-        f"--project={GCP_PROJECT}",
-        f"--region={GCP_REGION}",
+        f"--project={_project()}",
+        f"--region={_region()}",
         f"--model={model_id}",
         f"--display-name={display}",
         f"--machine-type={machine}",
@@ -59,35 +98,49 @@ def _vertex_deploy(args: Dict[str, Any]) -> str:
         "--format=json",
     ]
     result = _run(cmd)
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
 def _vertex_fine_tune(args: Dict[str, Any]) -> str:
     """Launch a Gemma 4 supervised fine-tuning job on Vertex AI."""
-    base_model   = args.get("base_model", "google/gemma-4-it")
-    dataset_uri  = args.get("dataset_gcs_uri")
-    output_dir   = args.get("output_gcs_dir", f"gs://{GCP_PROJECT}-models/gemma4-inmodel/")
-    epochs       = args.get("epochs", 3)
-    batch_size   = args.get("batch_size", 8)
+    try:
+        dataset_uri = _validate_gcs(args.get("dataset_gcs_uri", ""), "dataset_gcs_uri")
+        output_dir  = _validate_gcs(
+            args.get("output_gcs_dir", f"gs://{_project()}-models/gemma4-inmodel/"),
+            "output_gcs_dir",
+        )
+        base_model = _validate_id(args.get("base_model", "google/gemma-4-it"), "base_model")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
 
-    if not dataset_uri:
-        return json.dumps({"ok": False, "stderr": "dataset_gcs_uri is required"})
+    epochs     = int(args.get("epochs", 3))
+    batch_size = int(args.get("batch_size", 8))
 
     cmd = [
         "gcloud", "ai", "custom-jobs", "create",
-        f"--project={GCP_PROJECT}",
-        f"--region={GCP_REGION}",
+        f"--project={_project()}",
+        f"--region={_region()}",
         "--display-name=gemma4-inmodel-finetune",
-        "--config=-",          # read config from stdin (piped below)
+        "--config=-",
         "--format=json",
     ]
-    # Vertex AI custom job YAML config passed inline
+    # Pin image to a digest rather than mutable :latest to prevent tag-hijack.
+    # Update this digest when upgrading the training base image.
+    GEMMA_TRAIN_IMAGE = os.getenv(
+        "GEMMA_TRAIN_IMAGE",
+        "us-docker.pkg.dev/vertex-ai/training/gemma@sha256:REPLACE_WITH_DIGEST",
+    )
     config = {
         "workerPoolSpecs": [{
-            "machineSpec": {"machineType": "n1-standard-8", "acceleratorType": "NVIDIA_TESLA_A100", "acceleratorCount": 1},
+            "machineSpec": {
+                "machineType": "n1-standard-8",
+                "acceleratorType": "NVIDIA_TESLA_A100",
+                "acceleratorCount": 1,
+            },
             "replicaCount": 1,
             "containerSpec": {
-                "imageUri": "us-docker.pkg.dev/vertex-ai/training/gemma:latest",
+                "imageUri": GEMMA_TRAIN_IMAGE,
                 "args": [
                     f"--base_model={base_model}",
                     f"--dataset_uri={dataset_uri}",
@@ -100,12 +153,11 @@ def _vertex_fine_tune(args: Dict[str, Any]) -> str:
     }
     try:
         proc = subprocess.run(
-            cmd,
-            input=json.dumps(config),
+            cmd, input=json.dumps(config),
             capture_output=True, text=True, timeout=120,
         )
         return json.dumps({
-            "stdout": proc.stdout.strip(),
+            "stdout": _truncate_output(proc.stdout.strip()),
             "stderr": proc.stderr.strip(),
             "ok": proc.returncode == 0,
         })
@@ -115,18 +167,34 @@ def _vertex_fine_tune(args: Dict[str, Any]) -> str:
 
 def _gcs_upload(args: Dict[str, Any]) -> str:
     """Upload a local file or directory to Google Cloud Storage."""
-    src = args.get("source")
-    dst = args.get("destination")
+    src = args.get("source", "")
+    dst = args.get("destination", "")
     if not src or not dst:
         return json.dumps({"ok": False, "stderr": "source and destination required"})
+    # Restrict upload source to safe prefixes — prevents /etc/passwd exfiltration
+    if not any(src.startswith(p) for p in _GCS_UPLOAD_ALLOWED_SRC_PREFIXES):
+        return json.dumps({
+            "ok": False,
+            "stderr": f"source must be under one of {_GCS_UPLOAD_ALLOWED_SRC_PREFIXES}",
+        })
+    try:
+        dst = _validate_gcs(dst, "destination")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
     result = _run(["gsutil", "-m", "cp", "-r", src, dst])
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
 def _gcs_list(args: Dict[str, Any]) -> str:
     """List objects in a GCS bucket/prefix."""
-    uri = args.get("uri", f"gs://{GCP_PROJECT}-data/")
+    uri = args.get("uri", f"gs://{_project()}-data/")
+    try:
+        uri = _validate_gcs(uri, "uri")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
     result = _run(["gsutil", "ls", "-l", uri])
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
@@ -135,27 +203,45 @@ def _bq_query(args: Dict[str, Any]) -> str:
     sql = args.get("sql")
     if not sql:
         return json.dumps({"ok": False, "stderr": "sql is required"})
-    # Only allow SELECT to prevent destructive queries
-    if not sql.strip().upper().startswith("SELECT"):
+    # Enforce SELECT-only. Strip leading whitespace/comments before the check.
+    sql_upper = re.sub(r'/\*.*?\*/', '', sql, flags=re.DOTALL).strip().upper()
+    if not sql_upper.startswith("SELECT"):
         return json.dumps({"ok": False, "stderr": "Only SELECT queries are permitted"})
+    # Dry-run first to validate the query without executing it
+    dry_result = _run([
+        "bq", "query",
+        "--use_legacy_sql=false",
+        f"--project_id={_project()}",
+        "--dry_run",
+        "--format=json",
+        sql,
+    ], timeout=30)
+    if not dry_result["ok"]:
+        return json.dumps({"ok": False, "stderr": f"dry-run failed: {dry_result['stderr']}"})
     result = _run([
         "bq", "query",
         "--use_legacy_sql=false",
-        f"--project_id={GCP_PROJECT}",
+        f"--project_id={_project()}",
         "--format=json",
+        "--max_rows=100",
         sql,
     ], timeout=120)
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
 def _pubsub_publish(args: Dict[str, Any]) -> str:
     """Publish a message to a Pub/Sub topic (agent event broadcast)."""
-    topic   = args.get("topic", "agent-events")
-    message = args.get("message", "")
+    try:
+        topic = _validate_id(args.get("topic", "agent-events"), "topic")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
+    # Truncate message to prevent large payloads / data exfiltration via pubsub
+    message = str(args.get("message", ""))[:1024]
     result = _run([
         "gcloud", "pubsub", "topics", "publish", topic,
         f"--message={message}",
-        f"--project={GCP_PROJECT}",
+        f"--project={_project()}",
         "--format=json",
     ])
     return json.dumps(result)
@@ -163,35 +249,53 @@ def _pubsub_publish(args: Dict[str, Any]) -> str:
 
 def _cloud_run_deploy(args: Dict[str, Any]) -> str:
     """Deploy a container image to Cloud Run."""
-    service = args.get("service_name", "agent-mesh-api")
-    image   = args.get("image")
-    port    = args.get("port", 8000)
-    if not image:
-        return json.dumps({"ok": False, "stderr": "image is required"})
+    try:
+        service = _validate_id(args.get("service_name", "agent-mesh-api"), "service_name")
+        image   = args.get("image")
+        if not image:
+            return json.dumps({"ok": False, "stderr": "image is required"})
+        # Validate image URI — must be Artifact Registry or GCR
+        if not re.match(r'^[a-zA-Z0-9_\-\.]+(-docker\.pkg\.dev|\.gcr\.io)/', image):
+            return json.dumps({"ok": False, "stderr": "image must be from Artifact Registry or GCR"})
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
+    port = int(args.get("port", 8000))
     result = _run([
         "gcloud", "run", "deploy", service,
         f"--image={image}",
         f"--port={port}",
-        f"--project={GCP_PROJECT}",
-        f"--region={GCP_REGION}",
+        f"--project={_project()}",
+        f"--region={_region()}",
         "--platform=managed",
-        "--allow-unauthenticated",
+        "--no-allow-unauthenticated",  # auth required by default
         "--format=json",
     ], timeout=300)
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
 def _secret_get(args: Dict[str, Any]) -> str:
-    """Retrieve a secret value from Google Secret Manager."""
-    secret  = args.get("secret_name")
-    version = args.get("version", "latest")
+    """Check that a secret exists in Google Secret Manager (DOES NOT return the value).
+
+    The LLM never receives plaintext credentials. This tool confirms existence
+    and the active version so callers know the secret is configured. To use the
+    secret in a subprocess, inject it via --set-secrets in cloud_run_deploy, or
+    reference it in a Vertex job config — never pass it through the agent loop.
+    """
+    secret = args.get("secret_name")
     if not secret:
         return json.dumps({"ok": False, "stderr": "secret_name is required"})
+    try:
+        secret = _validate_id(secret, "secret_name")
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
+    # Describe the secret metadata only — never access the value
     result = _run([
-        "gcloud", "secrets", "versions", "access", version,
-        f"--secret={secret}",
-        f"--project={GCP_PROJECT}",
+        "gcloud", "secrets", "describe", secret,
+        f"--project={_project()}",
+        "--format=json",
     ])
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
@@ -199,26 +303,38 @@ def _model_registry_list(args: Dict[str, Any]) -> str:
     """List registered models in Vertex AI Model Registry."""
     result = _run([
         "gcloud", "ai", "models", "list",
-        f"--project={GCP_PROJECT}",
-        f"--region={GCP_REGION}",
+        f"--project={_project()}",
+        f"--region={_region()}",
         "--format=json",
     ])
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
-def _firestore_query(args: Dict[str, Any]) -> str:
-    """Export a Firestore collection snapshot to GCS (read-only)."""
+def _firestore_export(args: Dict[str, Any]) -> str:
+    """Export a Firestore collection to GCS for offline analysis.
+
+    Note: this is a write operation (exports data to GCS). Classified high risk.
+    """
     collection = args.get("collection")
-    output_uri = args.get("output_uri", f"gs://{GCP_PROJECT}-exports/firestore/")
     if not collection:
         return json.dumps({"ok": False, "stderr": "collection is required"})
+    try:
+        collection = _validate_id(collection, "collection")
+        output_uri = _validate_gcs(
+            args.get("output_uri", f"gs://{_project()}-exports/firestore/"),
+            "output_uri",
+        )
+    except ValueError as e:
+        return json.dumps({"ok": False, "stderr": str(e)})
     result = _run([
         "gcloud", "firestore", "export",
         output_uri,
         f"--collection-ids={collection}",
-        f"--project={GCP_PROJECT}",
+        f"--project={_project()}",
         "--format=json",
     ], timeout=120)
+    result["stdout"] = _truncate_output(result.get("stdout", ""))
     return json.dumps(result)
 
 
@@ -337,7 +453,7 @@ class GCloudToolkit:
                     "collection": "Firestore collection ID",
                     "output_uri": "gs:// destination for the export",
                 },
-                run=_firestore_query,
-                risk_level="medium",
+                run=_firestore_export,
+                risk_level="high",
             ),
         ]
