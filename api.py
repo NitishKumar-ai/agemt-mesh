@@ -92,7 +92,13 @@ async def lifespan(app: FastAPI):
     """FastAPI lifespan handler — runs init_db then yields to DBOS lifespan."""
     from main import init_db
     bus.set_loop(asyncio.get_running_loop())
-    init_db()          # plain function, no DBOS context needed
+    init_db()
+    # Register agent workflows in Conductor (no-op if CONDUCTOR_ENABLED != 1)
+    try:
+        from conductor_bridge.workflows import register_all_agent_workflows
+        register_all_agent_workflows()
+    except Exception as e:
+        logging.getLogger(__name__).warning("Conductor registration skipped: %s", e)
     yield
 
 
@@ -396,6 +402,42 @@ register_agent("inmodel_brain", InModelBrainAgent,
         cost_budget_usd=2.0,
         token_budget=1_000_000,
     ))
+
+
+# ── Conductor integration endpoints ──────────────────────────────────────────
+
+@app.get("/api/conductor/health")
+async def conductor_health():
+    """Check if Conductor server is reachable."""
+    try:
+        from conductor_bridge.bridge import get_bridge
+        bridge = get_bridge()
+        healthy = bridge.is_healthy()
+        return {"conductor": "up" if healthy else "unreachable",
+                "url": os.getenv("CONDUCTOR_SERVER_URL", "http://localhost:8080/api"),
+                "ui": "http://localhost:5001"}
+    except Exception as e:
+        return {"conductor": "error", "detail": str(e)}
+
+
+@app.post("/api/conductor/run")
+async def conductor_run_agent(payload: dict):
+    """Start an agent workflow via Conductor (async — returns execution_id)."""
+    agent_id = payload.get("agent_id")
+    goal     = payload.get("goal", "")
+    context  = payload.get("context", "")
+    if not agent_id:
+        raise HTTPException(status_code=400, detail="agent_id required")
+    from conductor_bridge.bridge import run_agent_via_conductor
+    result = run_agent_via_conductor(agent_id, goal, context)
+    return result
+
+
+@app.get("/api/conductor/status/{execution_id}")
+async def conductor_workflow_status(execution_id: str):
+    """Get the status of a Conductor workflow execution."""
+    from conductor_bridge.bridge import get_bridge
+    return get_bridge().get_workflow_status(execution_id)
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────

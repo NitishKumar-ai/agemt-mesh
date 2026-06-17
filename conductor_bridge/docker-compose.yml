@@ -1,0 +1,77 @@
+version: "3.8"
+
+# Agent Mesh × Conductor
+# Runs Conductor server backed by Postgres (no Redis, no Elasticsearch).
+# The Agent Mesh FastAPI server connects to Conductor via its REST API.
+
+services:
+
+  # ── Conductor Workflow Engine ─────────────────────────────────────────────
+  conductor-server:
+    image: conductoross/conductor-server:3.30.2
+    container_name: agent-mesh-conductor
+    ports:
+      - "8080:8080"   # Conductor REST API
+      - "5000:5000"   # Conductor metrics (Prometheus)
+    environment:
+      - CONFIG_PROP=config.properties
+      - conductor.app.ownerEmailMandatory=false
+      - JAVA_OPTS=-Xms512m -Xmx1g
+    volumes:
+      - ./config/conductor.properties:/app/config/config.properties:ro
+    depends_on:
+      conductor-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
+    networks:
+      - agent-mesh
+    restart: unless-stopped
+
+  # ── Conductor UI ──────────────────────────────────────────────────────────
+  conductor-ui:
+    image: conductoross/conductor-ui:3.30.2
+    container_name: agent-mesh-conductor-ui
+    ports:
+      - "5001:5000"
+    environment:
+      - WF_SERVER=http://conductor-server:8080
+    depends_on:
+      conductor-server:
+        condition: service_healthy
+    networks:
+      - agent-mesh
+    restart: unless-stopped
+
+  # ── Shared Postgres (Conductor + Agent Mesh state) ────────────────────────
+  conductor-postgres:
+    image: postgres:15-alpine
+    container_name: agent-mesh-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: conductor
+      POSTGRES_PASSWORD: conductor
+      POSTGRES_DB: conductor
+    volumes:
+      - conductor-pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conductor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agent-mesh
+    restart: unless-stopped
+
+volumes:
+  conductor-pgdata:
+
+networks:
+  agent-mesh:
+    driver: bridge
