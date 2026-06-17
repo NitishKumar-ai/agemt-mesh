@@ -1,0 +1,25 @@
+# CODEOWNERS
+# These owners are automatically requested for review on PRs that touch their paths.
+
+# Global fallback
+*                               @NitishKumar-ai
+
+# Core agent runtime
+agent_base.py                   @NitishKumar-ai
+loop.py                         @NitishKumar-ai
+harness.py                      @NitishKumar-ai
+
+# Safety — requires explicit review before merge
+agents/safety/                  @NitishKumar-ai
+criticgate_eval/                @NitishKumar-ai
+
+# InModel Brain / GCP tooling
+agents/inmodel/                 @NitishKumar-ai
+
+# CI/CD and deployment pipelines
+.github/                        @NitishKumar-ai
+Dockerfile                      @NitishKumar-ai
+docker-compose.yml              @NitishKumar-ai
+
+# Frontend
+frontend/                       @NitishKumar-ai
