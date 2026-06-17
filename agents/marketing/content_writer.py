@@ -90,9 +90,7 @@ def _parse_subject_body(raw: str, campaign_name: str) -> tuple[str, str]:
     for line in raw.splitlines():
         if line.startswith("SUBJECT:"):
             subject = line[len("SUBJECT:"):].strip()
-        elif line.startswith("BODY:"):
-            body = line[len("BODY:"):].strip()
-    # If the model put body on multiple lines after BODY:
+    # Extract body: everything after BODY: (may be multi-line)
     if "BODY:" in raw:
         body = raw.split("BODY:", 1)[1].strip()
     return subject, body

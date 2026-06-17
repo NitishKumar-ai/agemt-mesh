@@ -6,7 +6,7 @@ same Postgres database as DBOS execution state, so workflow writes and
 API reads are always in sync.
 """
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from dbos import DBOS
@@ -316,6 +316,168 @@ def init_business_tables(engine=None) -> None:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """))
+        # ── Social Studio ─────────────────────────────────────────────────────
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS social_studio_accounts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                platform TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                display_name TEXT NOT NULL,
+                username TEXT,
+                avatar_url TEXT,
+                follower_count INTEGER DEFAULT 0,
+                access_token_encrypted TEXT NOT NULL,
+                refresh_token_encrypted TEXT,
+                token_expires_at TIMESTAMP,
+                scopes TEXT,
+                status TEXT DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(platform, account_id)
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssa_platform ON social_studio_accounts(platform)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS social_studio_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                account_id INTEGER REFERENCES social_studio_accounts(id),
+                platform TEXT NOT NULL,
+                content TEXT NOT NULL,
+                hashtags TEXT,
+                char_count INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'draft',
+                platform_post_id TEXT,
+                platform_post_url TEXT,
+                scheduled_at TIMESTAMP,
+                published_at TIMESTAMP,
+                likes INTEGER DEFAULT 0,
+                comments INTEGER DEFAULT 0,
+                shares INTEGER DEFAULT 0,
+                reach INTEGER DEFAULT 0,
+                impressions INTEGER DEFAULT 0,
+                error TEXT,
+                topic TEXT,
+                tone TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssp_run ON social_studio_posts(run_id)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssp_platform ON social_studio_posts(platform, status)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS social_studio_analytics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL REFERENCES social_studio_accounts(id),
+                platform TEXT NOT NULL,
+                snapshot_date TEXT NOT NULL,
+                followers INTEGER DEFAULT 0,
+                followers_gained INTEGER DEFAULT 0,
+                impressions INTEGER DEFAULT 0,
+                reach INTEGER DEFAULT 0,
+                engagements INTEGER DEFAULT 0,
+                posts_count INTEGER DEFAULT 0,
+                avg_engagement_rate REAL DEFAULT 0.0,
+                top_post_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(account_id, snapshot_date)
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssa_analytics ON social_studio_analytics(account_id, snapshot_date)"
+        ))
+        # Platform-specific post variants with full state machine
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_platform_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id INTEGER NOT NULL REFERENCES social_studio_posts(id) ON DELETE CASCADE,
+                account_id INTEGER REFERENCES social_studio_accounts(id),
+                platform TEXT NOT NULL,
+                caption TEXT,
+                hashtags TEXT,
+                char_count INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'draft',
+                platform_post_id TEXT,
+                platform_post_url TEXT,
+                publish_error TEXT,
+                scheduled_at TIMESTAMP,
+                published_at TIMESTAMP,
+                retry_count INTEGER DEFAULT 0,
+                next_retry_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_sspp_post ON ss_platform_posts(post_id)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_sspp_status ON ss_platform_posts(status, scheduled_at)"
+        ))
+        # Append-only publish attempt log (90-day TTL)
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_publish_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                platform_post_id INTEGER NOT NULL REFERENCES ss_platform_posts(id),
+                attempt_number INTEGER DEFAULT 1,
+                status_code INTEGER,
+                response_body TEXT,
+                error_message TEXT,
+                duration_ms INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssplog_pp ON ss_publish_log(platform_post_id)"
+        ))
+        # Flexible metric-key daily snapshots (from brightbean pattern)
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_metric_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL REFERENCES social_studio_accounts(id),
+                metric_key TEXT NOT NULL,
+                date TEXT NOT NULL,
+                value REAL DEFAULT 0.0,
+                captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(account_id, metric_key, date)
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssms_account ON ss_metric_snapshots(account_id, metric_key, date)"
+        ))
+        # Per-post metric snapshots
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_post_metrics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                platform_post_id INTEGER NOT NULL REFERENCES ss_platform_posts(id),
+                metric_key TEXT NOT NULL,
+                date TEXT NOT NULL,
+                value REAL DEFAULT 0.0,
+                captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(platform_post_id, metric_key, date)
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_sspmet_pp ON ss_post_metrics(platform_post_id, date)"
+        ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_ideas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prompt TEXT NOT NULL,
+                status TEXT DEFAULT 'unassigned',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssideas_status ON ss_ideas(status)"
+        ))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS killswitch_state (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -476,6 +638,7 @@ def marketing_list_audience_embeddings(limit: int = 50) -> list[list[float]]:
         try:
             result.append(json.loads(row[0]))
         except (TypeError, ValueError):
+            logger.warning("marketing_list_audience_embeddings: skipping corrupt embedding row")
             pass
     return result
 
@@ -1309,3 +1472,613 @@ def _audit(entity_type: str, entity_id: int, action: str,
         "VALUES (:etype, :eid, :action, :actor, :payload)"
     ), {"etype": entity_type, "eid": entity_id, "action": action,
         "actor": actor, "payload": json.dumps(payload)})
+
+
+# ── Social Studio — Accounts ──────────────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_list_accounts() -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, platform, account_id, display_name, username, avatar_url, "
+        "follower_count, scopes, status, created_at, updated_at "
+        "FROM social_studio_accounts WHERE status='active' ORDER BY platform, display_name"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_connected_accounts() -> list:
+    """Return all active social accounts. Used by the auto-poster agent."""
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, platform, account_id, display_name, username "
+        "FROM social_studio_accounts WHERE status='active' ORDER BY platform"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_account(account_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, platform, account_id, display_name, username, avatar_url, "
+        "follower_count, access_token_encrypted, refresh_token_encrypted, "
+        "token_expires_at, scopes, status "
+        "FROM social_studio_accounts WHERE id=:id"
+    ), {"id": account_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def ss_get_account_token(account_id: int) -> Optional[str]:
+    """Return decrypted access token for a connected account."""
+    row = DBOS.sql_session.execute(text(
+        "SELECT access_token_encrypted FROM social_studio_accounts WHERE id=:id AND status='active'"
+    ), {"id": account_id}).fetchone()
+    if not row:
+        return None
+    return decrypt_token(row[0])
+
+
+@DBOS.transaction()
+def ss_connect_account(
+    platform: str, account_id: str, display_name: str, username: str,
+    avatar_url: Optional[str], follower_count: int,
+    access_token: str, refresh_token: Optional[str],
+    token_expires_at: Optional[str], scopes: Optional[str],
+) -> int:
+    """Insert or update a connected social account. Returns the row id."""
+    existing = DBOS.sql_session.execute(text(
+        "SELECT id FROM social_studio_accounts WHERE platform=:p AND account_id=:aid"
+    ), {"p": platform, "aid": account_id}).fetchone()
+
+    enc_access = encrypt_token(access_token)
+    enc_refresh = encrypt_token(refresh_token) if refresh_token else None
+
+    if existing:
+        DBOS.sql_session.execute(text(
+            "UPDATE social_studio_accounts SET display_name=:dn, username=:un, "
+            "avatar_url=:av, follower_count=:fc, access_token_encrypted=:at, "
+            "refresh_token_encrypted=:rt, token_expires_at=:exp, scopes=:sc, "
+            "status='active', updated_at=CURRENT_TIMESTAMP "
+            "WHERE id=:id"
+        ), {"dn": display_name, "un": username, "av": avatar_url, "fc": follower_count,
+            "at": enc_access, "rt": enc_refresh, "exp": token_expires_at, "sc": scopes,
+            "id": existing[0]})
+        return existing[0]
+    else:
+        row_id = DBOS.sql_session.execute(text(
+            "INSERT INTO social_studio_accounts "
+            "(platform, account_id, display_name, username, avatar_url, follower_count, "
+            "access_token_encrypted, refresh_token_encrypted, token_expires_at, scopes) "
+            "VALUES (:p, :aid, :dn, :un, :av, :fc, :at, :rt, :exp, :sc) RETURNING id"
+        ), {"p": platform, "aid": account_id, "dn": display_name, "un": username,
+            "av": avatar_url, "fc": follower_count, "at": enc_access,
+            "rt": enc_refresh, "exp": token_expires_at, "sc": scopes}).scalar()
+        return row_id
+
+
+@DBOS.transaction()
+def ss_disconnect_account(account_id: int) -> bool:
+    result = DBOS.sql_session.execute(text(
+        "UPDATE social_studio_accounts SET status='disconnected', updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"id": account_id})
+    return result.rowcount > 0
+
+
+@DBOS.transaction()
+def ss_update_follower_count(account_id: int, follower_count: int) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE social_studio_accounts SET follower_count=:fc, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"fc": follower_count, "id": account_id})
+
+
+# ── Social Studio — Posts ─────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_create_posts(run_id: str, topic: str, tone: str, posts: list[dict]) -> list[int]:
+    """
+    Bulk-insert generated posts for a run. posts is a list of dicts with keys:
+    platform, account_id (optional), content, hashtags, char_count.
+    Returns list of inserted row ids.
+    """
+    # Insert a single parent row
+    parent_id = DBOS.sql_session.execute(text(
+        "INSERT INTO social_studio_posts "
+        "(run_id, platform, content, topic, tone) "
+        "VALUES (:run, 'multi', '', :topic, :tone) RETURNING id"
+    ), {"run": run_id, "topic": topic, "tone": tone}).scalar()
+
+    # Now insert children
+    ids = []
+    for p in posts:
+        row_id = DBOS.sql_session.execute(text(
+            "INSERT INTO ss_platform_posts "
+            "(post_id, account_id, platform, caption, hashtags, char_count, status) "
+            "VALUES (:pid, :aid, :plt, :content, :hashtags, :cc, 'draft') RETURNING id"
+        ), {
+            "pid": parent_id,
+            "aid": p.get("account_id"),
+            "plt": p["platform"],
+            "content": p.get("content", ""),
+            "hashtags": p.get("hashtags", ""),
+            "cc": p.get("char_count", 0),
+        }).scalar()
+        ids.append(row_id)
+    return ids
+
+
+@DBOS.transaction()
+def ss_list_posts(limit: int = 100, platform: Optional[str] = None,
+                  status: Optional[str] = None, run_id: Optional[str] = None) -> list:
+    where_clauses = []
+    params: dict = {"lim": limit}
+    if platform:
+        where_clauses.append("platform=:plt")
+        params["plt"] = platform
+    if status:
+        where_clauses.append("status=:status")
+        params["status"] = status
+    if run_id:
+        where_clauses.append("run_id=:run")
+        params["run"] = run_id
+    where = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+    rows = DBOS.sql_session.execute(text(
+        f"SELECT id, run_id, platform, account_id, content, hashtags, char_count, "
+        f"status, platform_post_id, platform_post_url, scheduled_at, published_at, "
+        f"likes, comments, shares, reach, impressions, topic, tone, error, "
+        f"created_at, updated_at "
+        f"FROM social_studio_posts {where} "
+        f"ORDER BY created_at DESC LIMIT :lim"
+    ), params).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_post(post_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, run_id, platform, account_id, content, hashtags, char_count, "
+        "status, platform_post_id, platform_post_url, scheduled_at, published_at, "
+        "likes, comments, shares, reach, impressions, topic, tone, error "
+        "FROM social_studio_posts WHERE id=:id"
+    ), {"id": post_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def ss_update_post_content(post_id: int, content: str) -> bool:
+    """Edit content of a draft post."""
+    result = DBOS.sql_session.execute(text(
+        "UPDATE social_studio_posts SET content=:content, char_count=:cc, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id AND status='draft'"
+    ), {"content": content, "cc": len(content), "id": post_id})
+    return result.rowcount > 0
+
+
+@DBOS.transaction()
+def ss_mark_post_published(post_id: int, platform_post_id: str,
+                            platform_post_url: Optional[str] = None) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE social_studio_posts SET status='published', platform_post_id=:ppid, "
+        "platform_post_url=:purl, published_at=CURRENT_TIMESTAMP, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"ppid": platform_post_id, "purl": platform_post_url, "id": post_id})
+
+
+@DBOS.transaction()
+def ss_mark_post_scheduled(post_id: int, scheduled_at: str) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE social_studio_posts SET status='scheduled', scheduled_at=:sat, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"sat": scheduled_at, "id": post_id})
+
+
+@DBOS.transaction()
+def ss_mark_post_failed(post_id: int, error: str) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE social_studio_posts SET status='failed', error=:err, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"err": error[:500], "id": post_id})
+
+
+@DBOS.transaction()
+def ss_update_post_metrics(post_id: int, likes: int, comments: int,
+                            shares: int, reach: int, impressions: int) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE social_studio_posts SET likes=:l, comments=:c, shares=:s, "
+        "reach=:r, impressions=:i, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"l": likes, "c": comments, "s": shares, "r": reach, "i": impressions, "id": post_id})
+
+
+@DBOS.transaction()
+def ss_get_run_posts(run_id: str) -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, platform, content, hashtags, char_count, status, "
+        "platform_post_id, platform_post_url, error, topic, tone "
+        "FROM social_studio_posts WHERE run_id=:run ORDER BY platform"
+    ), {"run": run_id}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+# ── Social Studio — Analytics ─────────────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_upsert_analytics(account_id: int, platform: str, snapshot_date: str,
+                         followers: int, followers_gained: int, impressions: int,
+                         reach: int, engagements: int, posts_count: int,
+                         avg_engagement_rate: float) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO social_studio_analytics "
+        "(account_id, platform, snapshot_date, followers, followers_gained, "
+        "impressions, reach, engagements, posts_count, avg_engagement_rate) "
+        "VALUES (:aid, :plt, :sd, :f, :fg, :imp, :r, :eng, :pc, :aer) "
+        "ON CONFLICT(account_id, snapshot_date) DO UPDATE SET "
+        "followers=EXCLUDED.followers, followers_gained=EXCLUDED.followers_gained, "
+        "impressions=EXCLUDED.impressions, reach=EXCLUDED.reach, "
+        "engagements=EXCLUDED.engagements, posts_count=EXCLUDED.posts_count, "
+        "avg_engagement_rate=EXCLUDED.avg_engagement_rate"
+    ), {"aid": account_id, "plt": platform, "sd": snapshot_date, "f": followers,
+        "fg": followers_gained, "imp": impressions, "r": reach, "eng": engagements,
+        "pc": posts_count, "aer": avg_engagement_rate})
+
+
+@DBOS.transaction()
+def ss_list_analytics(days: int = 30) -> list:
+    """Return analytics snapshots for all accounts for the last N days."""
+    rows = DBOS.sql_session.execute(text(
+        "SELECT a.id, a.account_id, a.platform, a.snapshot_date, "
+        "a.followers, a.followers_gained, a.impressions, a.reach, "
+        "a.engagements, a.posts_count, a.avg_engagement_rate, "
+        "acc.display_name, acc.username, acc.avatar_url "
+        "FROM social_studio_analytics a "
+        "JOIN social_studio_accounts acc ON acc.id=a.account_id "
+        "WHERE a.snapshot_date >= date('now', :days) "
+        "ORDER BY a.account_id, a.snapshot_date DESC"
+    ), {"days": f"-{days} days"}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_account_summary() -> list:
+    """Return latest analytics snapshot per account, joined with account info."""
+    rows = DBOS.sql_session.execute(text(
+        "SELECT acc.id, acc.platform, acc.display_name, acc.username, acc.avatar_url, "
+        "acc.follower_count, acc.status, "
+        "COALESCE(an.followers_gained, 0) AS followers_gained_7d, "
+        "COALESCE(an.impressions, 0) AS impressions_7d, "
+        "COALESCE(an.reach, 0) AS reach_7d, "
+        "COALESCE(an.engagements, 0) AS engagements_7d, "
+        "COALESCE(an.posts_count, 0) AS posts_7d, "
+        "COALESCE(an.avg_engagement_rate, 0.0) AS avg_engagement_rate "
+        "FROM social_studio_accounts acc "
+        "LEFT JOIN social_studio_analytics an ON an.account_id=acc.id "
+        "AND an.snapshot_date=( "
+        "  SELECT MAX(snapshot_date) FROM social_studio_analytics WHERE account_id=acc.id "
+        ") "
+        "WHERE acc.status='active' "
+        "ORDER BY acc.platform, acc.display_name"
+    )).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+# ── Social Studio — Platform Posts (state machine) ────────────────────────────
+
+@DBOS.transaction()
+def ss_create_platform_posts(run_id: str, posts: list[dict]) -> list[int]:
+    """
+    Create ss_platform_posts rows linked to a social_studio_posts run.
+    posts: list of {platform, account_id, caption, hashtags, char_count, status, publish_error}
+    """
+    # Resolve or create parent post row
+    parent = DBOS.sql_session.execute(text(
+        "SELECT id FROM social_studio_posts WHERE run_id=:run LIMIT 1"
+    ), {"run": run_id}).fetchone()
+
+    if not parent:
+        raise ValueError(f"No parent post found for run_id={run_id}")
+
+    post_id = parent[0]
+    ids = []
+    for p in posts:
+        row_id = DBOS.sql_session.execute(text(
+            "INSERT INTO ss_platform_posts "
+            "(post_id, account_id, platform, caption, hashtags, char_count, status, publish_error) "
+            "VALUES (:pid, :aid, :plt, :cap, :ht, :cc, :st, :err) RETURNING id"
+        ), {
+            "pid": post_id,
+            "aid": p.get("account_id"),
+            "plt": p["platform"],
+            "cap": p.get("caption", ""),
+            "ht": p.get("hashtags", ""),
+            "cc": p.get("char_count", 0),
+            "st": p.get("status", "draft"),
+            "err": p.get("publish_error"),
+        }).scalar()
+        ids.append(row_id)
+    return ids
+
+
+@DBOS.transaction()
+def ss_list_platform_posts(run_id: Optional[str] = None,
+                            platform: Optional[str] = None,
+                            status: Optional[str] = None,
+                            limit: int = 100) -> list:
+    clauses, params = [], {"lim": limit}
+    if run_id:
+        clauses.append("ssp.run_id=:run")
+        params["run"] = run_id
+    if platform:
+        clauses.append("pp.platform=:plt")
+        params["plt"] = platform
+    if status:
+        clauses.append("pp.status=:status")
+        params["status"] = status
+    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    rows = DBOS.sql_session.execute(text(
+        f"SELECT pp.id, pp.post_id, pp.account_id, pp.platform, pp.caption, "
+        f"pp.hashtags, pp.char_count, pp.status, pp.platform_post_id, "
+        f"pp.platform_post_url, pp.publish_error, pp.scheduled_at, pp.published_at, "
+        f"pp.retry_count, ssp.run_id, ssp.topic, ssp.tone "
+        f"FROM ss_platform_posts pp "
+        f"JOIN social_studio_posts ssp ON ssp.id=pp.post_id "
+        f"{where} "
+        f"ORDER BY pp.created_at DESC LIMIT :lim"
+    ), params).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_platform_post(pp_id: int) -> Optional[dict]:
+    row = DBOS.sql_session.execute(text(
+        "SELECT pp.id, pp.post_id, pp.account_id, pp.platform, pp.caption, "
+        "pp.hashtags, pp.char_count, pp.status, pp.platform_post_id, "
+        "pp.platform_post_url, pp.publish_error, pp.scheduled_at, pp.published_at, "
+        "pp.retry_count, ssp.run_id, ssp.topic, ssp.tone "
+        "FROM ss_platform_posts pp "
+        "JOIN social_studio_posts ssp ON ssp.id=pp.post_id "
+        "WHERE pp.id=:id"
+    ), {"id": pp_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def ss_update_platform_post_caption(pp_id: int, caption: str, hashtags: str = "") -> bool:
+    result = DBOS.sql_session.execute(text(
+        "UPDATE ss_platform_posts SET caption=:cap, hashtags=:ht, char_count=:cc, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id AND status='draft'"
+    ), {"cap": caption, "ht": hashtags, "cc": len(caption) + len(hashtags), "id": pp_id})
+    return result.rowcount > 0
+
+
+@DBOS.transaction()
+def ss_mark_platform_post_published(pp_id: int, ext_post_id: str,
+                                     ext_post_url: Optional[str] = None) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_platform_posts SET status='published', platform_post_id=:ppid, "
+        "platform_post_url=:purl, published_at=CURRENT_TIMESTAMP, "
+        "publish_error=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"ppid": ext_post_id, "purl": ext_post_url, "id": pp_id})
+
+
+@DBOS.transaction()
+def ss_mark_platform_post_scheduled(pp_id: int, scheduled_at: str) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_platform_posts SET status='scheduled', scheduled_at=:sat, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"sat": scheduled_at, "id": pp_id})
+
+
+@DBOS.transaction()
+def ss_mark_platform_post_failed(pp_id: int, error: str,
+                                  retryable: bool = True,
+                                  next_retry_at: Optional[str] = None) -> None:
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_platform_posts SET status='failed', publish_error=:err, "
+        "next_retry_at=:nra, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"err": error[:500], "nra": next_retry_at, "id": pp_id})
+
+
+@DBOS.transaction()
+def ss_get_and_lock_due_posts() -> list:
+    now_str = datetime.now(timezone.utc).isoformat()
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, post_id, account_id, platform, caption, hashtags "
+        "FROM ss_platform_posts "
+        "WHERE (status = 'scheduled' AND scheduled_at <= :now) "
+        "   OR (status = 'failed' AND next_retry_at IS NOT NULL AND next_retry_at <= :now)"
+    ), {"now": now_str}).fetchall()
+    
+    if rows:
+        ids = [r[0] for r in rows]
+        id_list = ",".join(str(i) for i in ids)
+        DBOS.sql_session.execute(text(
+            f"UPDATE ss_platform_posts SET status='publishing', updated_at=CURRENT_TIMESTAMP "
+            f"WHERE id IN ({id_list})"
+        ))
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_increment_retry(pp_id: int) -> int:
+    """Increment retry_count and return new value."""
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_platform_posts SET retry_count=retry_count+1, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"id": pp_id})
+    row = DBOS.sql_session.execute(text(
+        "SELECT retry_count FROM ss_platform_posts WHERE id=:id"
+    ), {"id": pp_id}).fetchone()
+    return row[0] if row else 1
+
+
+# ── Social Studio — Publish Log ───────────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_log_publish_attempt(platform_post_id: int, attempt_number: int,
+                            status_code: int, response_body: str,
+                            error_message: str, duration_ms: int) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO ss_publish_log "
+        "(platform_post_id, attempt_number, status_code, response_body, error_message, duration_ms) "
+        "VALUES (:ppid, :att, :sc, :rb, :em, :dm)"
+    ), {
+        "ppid": platform_post_id, "att": attempt_number,
+        "sc": status_code, "rb": response_body[:1000],
+        "em": error_message[:500], "dm": duration_ms,
+    })
+
+
+@DBOS.transaction()
+def ss_get_publish_log(platform_post_id: int) -> list:
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, attempt_number, status_code, error_message, duration_ms, created_at "
+        "FROM ss_publish_log WHERE platform_post_id=:ppid ORDER BY created_at DESC"
+    ), {"ppid": platform_post_id}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+# ── Social Studio — Metric Snapshots ─────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_upsert_metric_snapshot(account_id: int, metric_key: str,
+                               date: str, value: float) -> None:
+    DBOS.sql_session.execute(text(
+        "INSERT INTO ss_metric_snapshots (account_id, metric_key, date, value) "
+        "VALUES (:aid, :mk, :d, :v) "
+        "ON CONFLICT(account_id, metric_key, date) DO UPDATE SET "
+        "value=EXCLUDED.value, captured_at=CURRENT_TIMESTAMP"
+    ), {"aid": account_id, "mk": metric_key, "d": date, "v": value})
+
+
+@DBOS.transaction()
+def ss_get_account_metrics(account_id: int, metric_keys: list[str],
+                            days: int = 30) -> list:
+    """Return time-series data for charting."""
+    keys_placeholder = ",".join([f":k{i}" for i in range(len(metric_keys))])
+    params = {"aid": account_id, "days": f"-{days} days"}
+    for i, k in enumerate(metric_keys):
+        params[f"k{i}"] = k
+    rows = DBOS.sql_session.execute(text(
+        f"SELECT metric_key, date, value FROM ss_metric_snapshots "
+        f"WHERE account_id=:aid AND metric_key IN ({keys_placeholder}) "
+        f"AND date >= date('now', :days) "
+        f"ORDER BY metric_key, date ASC"
+    ), params).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_analytics_summary() -> list:
+    """
+    Latest snapshot per metric per account — used for the hero KPI cards.
+    Returns per-account dict with all latest metric values.
+    """
+    rows = DBOS.sql_session.execute(text(
+        "SELECT acc.id AS account_id, acc.platform, acc.display_name, "
+        "acc.username, acc.avatar_url, acc.follower_count, acc.status, "
+        "ms.metric_key, ms.value, ms.date "
+        "FROM social_studio_accounts acc "
+        "LEFT JOIN ss_metric_snapshots ms ON ms.account_id=acc.id "
+        "AND ms.date=("
+        "  SELECT MAX(date) FROM ss_metric_snapshots "
+        "  WHERE account_id=acc.id AND metric_key=ms.metric_key"
+        ") "
+        "WHERE acc.status='active' "
+        "ORDER BY acc.platform, acc.display_name, ms.metric_key"
+    )).fetchall()
+
+    # Pivot into per-account dicts
+    accounts: dict = {}
+    for r in rows:
+        d = dict(r._mapping)
+        aid = d["account_id"]
+        if aid not in accounts:
+            accounts[aid] = {
+                "id": aid, "platform": d["platform"],
+                "display_name": d["display_name"], "username": d["username"],
+                "avatar_url": d["avatar_url"], "follower_count": d["follower_count"],
+                "status": d["status"], "metrics": {},
+            }
+        if d["metric_key"]:
+            accounts[aid]["metrics"][d["metric_key"]] = {
+                "value": d["value"], "date": d["date"]
+            }
+    return list(accounts.values())
+
+
+@DBOS.transaction()
+def ss_get_top_posts(limit: int = 20) -> list:
+    """Published posts ordered by engagement (likes + comments + shares)."""
+    rows = DBOS.sql_session.execute(text(
+        "SELECT pp.id, pp.platform, pp.caption, pp.platform_post_url, "
+        "pp.published_at, pp.platform_post_id, "
+        "ssp.topic, acc.display_name AS account_name, acc.username, "
+        "COALESCE(m_l.value,0) AS likes, "
+        "COALESCE(m_c.value,0) AS comments, "
+        "COALESCE(m_s.value,0) AS shares, "
+        "COALESCE(m_r.value,0) AS reach, "
+        "COALESCE(m_i.value,0) AS impressions "
+        "FROM ss_platform_posts pp "
+        "JOIN social_studio_posts ssp ON ssp.id=pp.post_id "
+        "LEFT JOIN social_studio_accounts acc ON acc.id=pp.account_id "
+        "LEFT JOIN ss_post_metrics m_l ON m_l.platform_post_id=pp.id AND m_l.metric_key='likes' "
+        "LEFT JOIN ss_post_metrics m_c ON m_c.platform_post_id=pp.id AND m_c.metric_key='comments' "
+        "LEFT JOIN ss_post_metrics m_s ON m_s.platform_post_id=pp.id AND m_s.metric_key='shares' "
+        "LEFT JOIN ss_post_metrics m_r ON m_r.platform_post_id=pp.id AND m_r.metric_key='reach' "
+        "LEFT JOIN ss_post_metrics m_i ON m_i.platform_post_id=pp.id AND m_i.metric_key='impressions' "
+        "WHERE pp.status='published' "
+        "ORDER BY (COALESCE(m_l.value,0)+COALESCE(m_c.value,0)+COALESCE(m_s.value,0)) DESC "
+        "LIMIT :lim"
+    ), {"lim": limit}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@DBOS.transaction()
+def ss_get_calendar_posts(year: int, month: int) -> list:
+    """Posts scheduled or published in a given month for calendar view."""
+    start = f"{year:04d}-{month:02d}-01"
+    if month == 12:
+        end = f"{year+1:04d}-01-01"
+    else:
+        end = f"{year:04d}-{month+1:02d}-01"
+    rows = DBOS.sql_session.execute(text(
+        "SELECT pp.id, pp.platform, pp.status, pp.caption, "
+        "pp.scheduled_at, pp.published_at, pp.platform_post_url, "
+        "acc.display_name AS account_name, acc.avatar_url "
+        "FROM ss_platform_posts pp "
+        "LEFT JOIN social_studio_accounts acc ON acc.id=pp.account_id "
+        "WHERE (pp.scheduled_at >= :start AND pp.scheduled_at < :end) "
+        "OR (pp.published_at >= :start AND pp.published_at < :end) "
+        "ORDER BY COALESCE(pp.scheduled_at, pp.published_at) ASC"
+    ), {"start": start, "end": end}).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+# ── Ideas ──────────────────────────────────────────────────────────────────────
+
+@DBOS.transaction()
+def ss_create_idea(prompt: str, status: str = "todo") -> int:
+    res = DBOS.sql_session.execute(text(
+        "INSERT INTO ss_ideas (prompt, status) VALUES (:prompt, :status) RETURNING id"
+    ), {"prompt": prompt, "status": status})
+    return res.scalar()
+
+@DBOS.transaction()
+def ss_list_ideas() -> list:
+    res = DBOS.sql_session.execute(text(
+        "SELECT * FROM ss_ideas ORDER BY created_at DESC"
+    )).fetchall()
+    return [dict(r._mapping) for r in res]
+
+@DBOS.transaction()
+def ss_update_idea_status(idea_id: int, status: str) -> bool:
+    res = DBOS.sql_session.execute(text(
+        "UPDATE ss_ideas SET status=:status, updated_at=CURRENT_TIMESTAMP WHERE id=:id"
+    ), {"status": status, "id": idea_id})
+    return res.rowcount > 0
+
+@DBOS.transaction()
+def ss_get_ideas_by_status(status: str) -> list:
+    res = DBOS.sql_session.execute(text(
+        "SELECT * FROM ss_ideas WHERE status=:status ORDER BY created_at ASC"
+    ), {"status": status}).fetchall()
+    return [dict(r._mapping) for r in res]
+
+

@@ -48,7 +48,7 @@ def _scheduled_today() -> int:
     count = DBOS.sql_session.execute(text(
         "SELECT COUNT(*) FROM marketing_audit_events "
         "WHERE action='campaign_scheduled' "
-        "AND created_at > NOW() - INTERVAL '24 hours'"
+        "AND created_at > datetime('now', '-24 hours')"
     )).scalar()
     return int(count or 0)
 
@@ -60,7 +60,7 @@ def _audience_last_scheduled(audience: str) -> Optional[datetime]:
     row = DBOS.sql_session.execute(text(
         "SELECT created_at FROM marketing_audit_events "
         "WHERE action='campaign_scheduled' "
-        "AND payload::text LIKE :audience "
+        "AND payload LIKE :audience "
         "ORDER BY created_at DESC LIMIT 1"
     ), {"audience": f"%{audience}%"}).fetchone()
     return row[0] if row else None

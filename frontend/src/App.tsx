@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Send,
 } from "lucide-react";
 import { AppShell } from "./components/AppShell";
 import { SessionPage } from "./pages/SessionPage";
@@ -23,6 +24,7 @@ import { TasksPage } from "./pages/TasksPage";
 import { SchedulesPage } from "./pages/SchedulesPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import { MarketingPage } from "./pages/MarketingPage";
+import { SocialStudioPage } from "./pages/SocialStudioPage";
 import { CommitGuardPage } from "./pages/CommitGuardPage";
 import { AgentsPage } from "./pages/AgentsPage";
 import { ConnectionsPage } from "./pages/ConnectionsPage";
@@ -92,6 +94,7 @@ export function App() {
       { key: "safety" as const, label: "Safety", icon: Shield },
       { key: "commitguard" as const, label: "CommitGuard", icon: ShieldCheck },
       { key: "marketing" as const, label: "Marketing", icon: Megaphone },
+      { key: "social" as const, label: "Social Studio", icon: Send },
       { key: "tasks" as const, label: "Tasks", icon: CheckCircle2 },
       { key: "schedules" as const, label: "Schedules", icon: Clock3 },
       { key: "activity" as const, label: "Activity", icon: Activity },
@@ -129,6 +132,7 @@ export function App() {
       {page === "agents" && <AgentsPage />}
       {page === "commitguard" && <CommitGuardPage />}
       {page === "marketing" && <MarketingPage />}
+      {page === "social" && <SocialStudioPage />}
       {page === "tasks" && <TasksPage />}
       {page === "schedules" && <SchedulesPage />}
       {page === "activity" && (

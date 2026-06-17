@@ -332,5 +332,138 @@ testConnection(connectionId: string) {
   // Settings
   getSettings() {
     return json<AppSettings>("/api/settings");
+  },
+
+  // ── Social Studio ─────────────────────────────────────────────────────────────
+
+  ssListAccounts() {
+    return json<{ accounts: import("./types").SSAccount[] }>("/api/social-studio/accounts");
+  },
+  ssGetAccount(id: number) {
+    return json<{ account: import("./types").SSAccount, timeseries: import("./types").SSMetricSnapshot[] }>(`/api/social-studio/accounts/${id}`);
+  },
+  ssConnectAccount(payload: any) {
+    return json<{ id: number; status: string }>("/api/social-studio/accounts", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  ssDisconnectAccount(id: number) {
+    return json<{ status: string }>(`/api/social-studio/accounts/${id}`, { method: "DELETE" });
+  },
+  ssHealthCheck(id: number) {
+    return json<{ status: string; follower_count?: number; message?: string }>(`/api/social-studio/accounts/${id}/health-check`, { method: "POST" });
+  },
+  ssGenerate(payload: { topic: string; tone?: string; brand_voice?: string; platforms?: string[]; account_map?: Record<string, number> }) {
+    return json<{ run_id: string; post_ids: number[]; platforms: string[]; status: string }>("/api/social-studio/generate", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  ssGetRun(runId: string) {
+    return json<{ run_id: string; posts: import("./types").SSPlatformPost[] }>(`/api/social-studio/generate/${runId}`);
+  },
+  ssListPosts(platform?: string, status?: string, limit: number = 50) {
+    const params = new URLSearchParams();
+    if (platform) params.append("platform", platform);
+    if (status) params.append("status", status);
+    params.append("limit", limit.toString());
+    return json<{ posts: import("./types").SSPlatformPost[] }>(`/api/social-studio/posts?${params.toString()}`);
+  },
+  ssGetPost(id: number) {
+    return json<{ post: import("./types").SSPlatformPost, publish_log: import("./types").SSPublishLog[] }>(`/api/social-studio/posts/${id}`);
+  },
+  ssPatchPost(id: number, caption: string) {
+    return json<{ status: string }>(`/api/social-studio/posts/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ caption })
+    });
+  },
+  ssPublishPost(id: number) {
+    return json<{ success: boolean; platform_post_id: string; url: string; error: string }>(`/api/social-studio/posts/${id}/publish`, { method: "POST" });
+  },
+  ssSchedulePost(id: number, scheduled_at: string) {
+    return json<{ status: string; scheduled_at: string }>(`/api/social-studio/posts/${id}/schedule`, {
+      method: "POST",
+      body: JSON.stringify({ scheduled_at })
+    });
+  },
+  ssAutopost(payload: {
+    topic: string;
+    tone?: string;
+    brand_voice?: string;
+    platforms?: string[];
+    account_map?: Record<string, number>;
+    publish_now?: boolean;
+  }) {
+    return json<{
+      run_id: string;
+      topic: string;
+      platforms: string[];
+      results: Array<{
+        platform: string;
+        success: boolean;
+        post_id?: number;
+        url?: string;
+        error?: string;
+        caption_preview?: string;
+        content?: string;
+        step?: string;
+      }>;
+    }>("/api/social-studio/autopost", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  ssAutopostSchedule(payload: { topic: string; interval?: string; name?: string }) {
+    return json<{ status: string; task_id: number; interval: string; topic: string }>(
+      "/api/social-studio/autopost/schedule",
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+  },
+  ssAnalyticsSummary() {
+    return json<{ accounts: any[], totals: any, top_posts: any[] }>("/api/social-studio/analytics/summary");
+  },
+  ssAnalyticsTimeseries(accountId: number, metrics: string = "followers,impressions,reach,engagements", days: number = 30) {
+    return json<{ account_id: number; metrics: string[]; data: import("./types").SSMetricSnapshot[] }>(`/api/social-studio/analytics/timeseries?account_id=${accountId}&metrics=${metrics}&days=${days}`);
+  },
+  ssAnalyticsPosts(limit: number = 20) {
+    return json<{ posts: any[] }>(`/api/social-studio/analytics/posts?limit=${limit}`);
+  },
+  ssAnalyticsSync() {
+    return json<{ synced: number; failed: number; details: any[] }>("/api/social-studio/analytics/sync", { method: "POST" });
+  },
+  ssCalendar(year: number = 0, month: number = 0) {
+    return json<{ year: number; month: number; posts: any[] }>(`/api/social-studio/calendar?year=${year}&month=${month}`);
+  },
+  ssPlatforms() {
+    return json<{ platforms: Record<string, import("./types").SSPlatformMeta> }>("/api/social-studio/platforms");
+  },
+  ssLinkedInCompanyPages() {
+    return json<{ pages: Array<{ id: string; name: string; handle: string; access_token: string; picture?: string }> }>("/api/social-studio/oauth/linkedin_company/pages");
+  },
+  ssConnectLinkedInCompany(payload: { org_id: string; name: string; handle?: string; picture?: string; access_token: string }) {
+    return json<{ status: string; org_id: string }>("/api/social-studio/oauth/linkedin_company/connect", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  
+  // Ideas / Auto-Pilot
+  ssCreateIdea(payload: { prompt: string; status?: string }) {
+    return json<{ id: number }>("/api/social-studio/ideas", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  ssListIdeas() {
+    return json<{ ideas: any[] }>("/api/social-studio/ideas");
+  },
+  ssUpdateIdeaStatus(id: number, status: string) {
+    return json<{ success: boolean }>(`/api/social-studio/ideas/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status })
+    });
   }
 };
+

@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import asyncio
 import logging
@@ -9,11 +11,12 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
+from pydantic import BaseModel
 from dbos import DBOS, DBOSConfig  # noqa: F401
 from dbos._error import DBOSNonExistentWorkflowError
 from main import (agent_loop, generate, MODEL_PLAN, scan_suggested_tasks, self_heal_pr,
                   commitguard_workflow, _update_scan_step,
-                  HermesAgent, MLInternAgent)
+                  HermesAgent, MLInternAgent, run_social_studio_autopost_task)
 from harness import (
     BaseAgent, AgentConfig, register_agent, list_agents_info,
     run_agent as harness_run_agent,
@@ -82,6 +85,26 @@ from store import (
     safety_list_escalations,
     safety_resolve_escalation,
     safety_stats,
+    ss_list_accounts,
+    ss_get_account,
+    ss_get_account_token,
+    ss_connect_account,
+    ss_disconnect_account,
+    ss_list_posts,
+    ss_get_post,
+    ss_create_posts,
+    ss_update_post_content,
+    ss_mark_post_scheduled,
+    ss_list_platform_posts,
+    ss_get_platform_post,
+    ss_create_platform_posts,
+    ss_update_platform_post_caption,
+    ss_mark_platform_post_scheduled,
+    ss_get_analytics_summary,
+    ss_get_account_metrics,
+    ss_get_top_posts,
+    ss_get_calendar_posts,
+    ss_upsert_metric_snapshot,
 )
 
 # ── Startup / Shutdown ────────────────────────────────────────────────────────
@@ -1032,7 +1055,13 @@ async def run_schedule_now(task_id: int):
     row = schedule_get(task_id)
     if not row:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    handle = DBOS.start_workflow(agent_loop, row["prompt"])
+    if row["name"].startswith("SocialStudio:"):
+        handle = DBOS.start_workflow(
+            run_social_studio_autopost_task,
+            task_id, row["name"], row["prompt"], row["interval"],
+        )
+    else:
+        handle = DBOS.start_workflow(agent_loop, row["prompt"])
     return {"status": "started", "workflow_id": handle.workflow_id}
 
 
@@ -1384,3 +1413,593 @@ async def resolve_escalation(escalation_id: int, payload: dict):
     if not ok:
         raise HTTPException(404, "Escalation not found")
     return {"status": "resolved", "escalation_id": escalation_id}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Social Studio — 18 routes under /api/social-studio/
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SS_PLATFORMS = {
+    "bluesky":          {"label": "Bluesky",              "char_limit": 300,  "color": "#0085ff"},
+    "linkedin":         {"label": "LinkedIn",             "char_limit": 3000, "color": "#0a66c2"},
+    "linkedin_company": {"label": "LinkedIn (Company)",   "char_limit": 3000, "color": "#0a66c2"},
+    "instagram":        {"label": "Instagram",            "char_limit": 2200, "color": "#e1306c"},
+    "threads":          {"label": "Threads",              "char_limit": 500,  "color": "#000000"},
+    "twitter":          {"label": "Twitter / X",          "char_limit": 280,  "color": "#1da1f2"},
+}
+
+
+# ── Accounts ──────────────────────────────────────────────────────────────────
+
+import os
+from fastapi.responses import RedirectResponse
+from agents.social_studio.providers.linkedin import LinkedInProvider
+
+@app.get("/api/social-studio/oauth/{platform}/login")
+async def ss_oauth_login(platform: str):
+    """Start OAuth flow."""
+    if platform == "linkedin":
+        client_id = os.environ.get("LINKEDIN_CLIENT_ID")
+        if not client_id:
+            raise HTTPException(500, "LINKEDIN_CLIENT_ID not set")
+        provider = LinkedInProvider(credentials={"client_id": client_id, "client_secret": ""})
+        # Store state in cookie or session in a real app, using hardcoded for demo
+        redirect_uri = "http://localhost:8000/api/social-studio/oauth/linkedin/callback"
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth")
+        return RedirectResponse(url)
+    
+    raise HTTPException(400, f"OAuth not implemented for {platform}")
+
+@app.get("/api/social-studio/oauth/{platform}/callback")
+async def ss_oauth_callback(platform: str, code: str = "", state: str = "", error: str = "", error_description: str = ""):
+    """Handle OAuth callback."""
+    frontend_url = "http://localhost:5173/"
+
+    # If the user cancelled or LinkedIn returned an error
+    if error:
+        return RedirectResponse(f"{frontend_url}?oauth_error={error}&desc={error_description}")
+    if not code:
+        return RedirectResponse(f"{frontend_url}?oauth_error=no_code")
+
+    if platform == "linkedin":
+        client_id = os.environ.get("LINKEDIN_CLIENT_ID")
+        client_secret = os.environ.get("LINKEDIN_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+        
+        provider = LinkedInProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+        redirect_uri = "http://localhost:8000/api/social-studio/oauth/linkedin/callback"
+        
+        try:
+            tokens = provider.exchange_code(code, redirect_uri)
+            profile = provider.get_profile(tokens.access_token)
+            
+            # Save to DB
+            ss_connect_account(
+                platform=platform,
+                account_id=profile.platform_id,
+                display_name=profile.name,
+                username=profile.handle or profile.name,
+                avatar_url=profile.avatar_url,
+                follower_count=profile.follower_count or 0,
+                access_token=tokens.access_token,
+                refresh_token=tokens.refresh_token,
+                token_expires_at=None,
+                scopes=tokens.scope
+            )
+            return RedirectResponse(f"{frontend_url}?oauth_success=linkedin")
+        except Exception as e:
+            import logging, traceback
+            logging.getLogger(__name__).error(f"LinkedIn OAuth failed: {e}\n{traceback.format_exc()}")
+            err_msg = str(e)[:200].replace(" ", "+")
+            return RedirectResponse(f"{frontend_url}?oauth_error=exchange_failed&detail={err_msg}")
+            
+    raise HTTPException(400, f"OAuth not implemented for {platform}")
+
+
+@app.get("/api/social-studio/oauth/linkedin_company/pages")
+async def ss_linkedin_company_pages():
+    """List LinkedIn Company Pages the authenticated LinkedIn user administers."""
+    from agents.social_studio.providers.linkedin_company import LinkedInCompanyProvider
+    from agents.social_studio.providers.exceptions import APIError
+    
+    accounts = ss_list_accounts()
+    linkedin_accts = [a for a in accounts if a["platform"] in ("linkedin", "linkedin_company")]
+    if not linkedin_accts:
+        raise HTTPException(400, "No LinkedIn account connected. Connect LinkedIn personal first.")
+    
+    # Get the personal LinkedIn account (not company)
+    personal_acct = next((a for a in linkedin_accts if a["platform"] == "linkedin"), None)
+    if not personal_acct:
+        raise HTTPException(400, "No LinkedIn personal account found. You must connect your LinkedIn personal account first before accessing company pages.")
+    
+    access_token = ss_get_account_token(personal_acct["id"])
+    if not access_token:
+        raise HTTPException(400, "No valid token found. Reconnect your LinkedIn personal account.")
+    
+    client_id = os.environ.get("LINKEDIN_CLIENT_ID", "")
+    client_secret = os.environ.get("LINKEDIN_CLIENT_SECRET", "")
+    provider = LinkedInCompanyProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+    
+    try:
+        pages = provider.get_user_pages(access_token)
+        import logging
+        logging.getLogger(__name__).info(f"Successfully fetched {len(pages)} LinkedIn company pages")
+        return {"pages": pages}
+    except APIError as e:
+        # LinkedIn API error - likely scope or permissions issue
+        if e.status_code == 403:
+            raise HTTPException(403, "LinkedIn API returned 403 Forbidden. Your LinkedIn account may not have the required permissions to access company pages, or your LinkedIn app needs company page scopes enabled in the LinkedIn Developer Portal.")
+        elif e.status_code == 401:
+            raise HTTPException(401, "LinkedIn authentication failed. Please reconnect your LinkedIn personal account.")
+        else:
+            raise HTTPException(500, f"LinkedIn API error ({e.status_code}): {str(e)}")
+    except Exception as e:
+        import logging, traceback
+        logging.getLogger(__name__).error(f"Failed to list LinkedIn pages: {e}\n{traceback.format_exc()}")
+        raise HTTPException(500, f"Failed to list LinkedIn pages: {str(e)}")
+
+
+@app.post("/api/social-studio/oauth/linkedin_company/connect")
+async def ss_linkedin_company_connect(payload: dict):
+    """Connect a specific LinkedIn Company Page as a Social Studio account."""
+    from agents.social_studio.providers.linkedin_company import LinkedInCompanyProvider
+    org_id = str(payload.get("org_id", "")).strip()
+    org_name = payload.get("name", "").strip()
+    access_token = payload.get("access_token", "").strip()
+    if not org_id or not access_token:
+        raise HTTPException(400, "org_id and access_token are required")
+    client_id = os.environ.get("LINKEDIN_CLIENT_ID", "")
+    client_secret = os.environ.get("LINKEDIN_CLIENT_SECRET", "")
+    provider = LinkedInCompanyProvider(credentials={"client_id": client_id, "client_secret": client_secret, "org_id": org_id})
+    follower_count = 0
+    try:
+        metrics = provider.get_account_metrics(access_token)
+        follower_count = metrics.followers or 0
+    except Exception:
+        pass
+    ss_connect_account(
+        platform="linkedin_company",
+        account_id=org_id,
+        display_name=org_name or f"Company Page ({org_id})",
+        username=payload.get("handle", org_id),
+        avatar_url=payload.get("picture"),
+        follower_count=follower_count,
+        access_token=access_token,
+        refresh_token=None,
+        token_expires_at=None,
+        scopes="w_organization_social,r_organization_social"
+    )
+    return {"status": "connected", "platform": "linkedin_company", "org_id": org_id}
+
+
+@app.get("/api/social-studio/accounts")
+async def ss_api_list_accounts():
+    """List all active connected social accounts with latest metrics."""
+    accounts = ss_list_accounts()
+    summary = {a["id"]: a for a in ss_get_analytics_summary()}
+    for acct in accounts:
+        acct["metrics"] = summary.get(acct["id"], {}).get("metrics", {})
+        acct["platform_meta"] = SS_PLATFORMS.get(acct["platform"], {})
+    return {"accounts": accounts}
+
+
+@app.post("/api/social-studio/accounts")
+async def ss_api_connect_account(payload: dict):
+    """
+    Connect a social account.
+    Body: {platform, account_id, display_name, username, avatar_url,
+           follower_count, access_token, refresh_token?, token_expires_at?,
+           scopes?}
+    """
+    required = ["platform", "account_id", "display_name", "access_token"]
+    missing = [f for f in required if not payload.get(f)]
+    if missing:
+        raise HTTPException(400, f"Missing fields: {', '.join(missing)}")
+    if payload["platform"] not in SS_PLATFORMS:
+        raise HTTPException(400, f"Unsupported platform. Choose from: {list(SS_PLATFORMS)}")
+
+    row_id = ss_connect_account(
+        platform=payload["platform"],
+        account_id=payload["account_id"],
+        display_name=payload["display_name"],
+        username=payload.get("username", ""),
+        avatar_url=payload.get("avatar_url"),
+        follower_count=int(payload.get("follower_count", 0)),
+        access_token=payload["access_token"],
+        refresh_token=payload.get("refresh_token"),
+        token_expires_at=payload.get("token_expires_at"),
+        scopes=payload.get("scopes"),
+    )
+    return {"id": row_id, "status": "connected"}
+
+
+@app.get("/api/social-studio/accounts/{account_id}")
+async def ss_api_get_account(account_id: int):
+    acct = ss_get_account(account_id)
+    if not acct:
+        raise HTTPException(404, "Account not found")
+    metrics = ss_get_account_metrics(
+        account_id, ["followers","impressions","reach","engagements","avg_engagement_rate"], days=30
+    )
+    acct.pop("access_token_encrypted", None)
+    acct.pop("refresh_token_encrypted", None)
+    return {"account": acct, "timeseries": metrics}
+
+
+@app.delete("/api/social-studio/accounts/{account_id}")
+async def ss_api_disconnect_account(account_id: int):
+    from store import ss_disconnect_account
+    ok = ss_disconnect_account(account_id)
+    if not ok:
+        raise HTTPException(404, "Account not found")
+    return {"status": "disconnected"}
+
+
+@app.post("/api/social-studio/accounts/{account_id}/health-check")
+async def ss_api_health_check(account_id: int):
+    """Re-validate token by calling provider.get_profile()."""
+    from store import ss_update_follower_count
+    from agents.social_studio.providers import PROVIDERS
+
+    acct = ss_get_account(account_id)
+    if not acct:
+        raise HTTPException(404, "Account not found")
+    token = ss_get_account_token(account_id)
+    if not token:
+        raise HTTPException(400, "No token stored")
+
+    cls = PROVIDERS.get(acct["platform"])
+    if not cls:
+        return {"status": "unknown", "message": "Provider not found"}
+    try:
+        provider = cls()
+        profile = provider.get_profile(token)
+        ss_update_follower_count(account_id, profile.follower_count)
+        return {"status": "healthy", "follower_count": profile.follower_count}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# ── AI Content Generation ─────────────────────────────────────────────────────
+
+@app.post("/api/social-studio/generate")
+async def ss_api_generate(payload: dict):
+    """
+    Start an AI content generation run.
+    Body: {topic, tone?, brand_voice?, platforms: ["linkedin","bluesky",...],
+           account_map?: {platform: account_id}}
+    Returns: {run_id, post_id, platforms}
+    """
+    topic = (payload.get("topic") or "").strip()
+    if not topic:
+        raise HTTPException(400, "topic is required")
+
+    platforms = payload.get("platforms") or list(SS_PLATFORMS.keys())
+    bad = [p for p in platforms if p not in SS_PLATFORMS]
+    if bad:
+        raise HTTPException(400, f"Unknown platforms: {bad}")
+
+    tone = payload.get("tone", "professional")
+    brand_voice = payload.get("brand_voice", "")
+    account_map: dict = payload.get("account_map") or {}
+
+    run_id = secrets.token_hex(16)
+
+    # Create parent post row first
+    post_ids = ss_create_posts(
+        run_id=run_id,
+        topic=topic,
+        tone=tone,
+        posts=[{"platform": p, "account_id": account_map.get(p), "content": "", "hashtags": "", "char_count": 0} for p in platforms],
+    )
+
+    return {
+        "run_id": run_id,
+        "post_ids": post_ids,
+        "platforms": platforms,
+        "status": "generating",
+    }
+
+
+@app.get("/api/social-studio/generate/{run_id}/stream")
+async def ss_api_generate_stream(run_id: str, request: Request):
+    """
+    SSE stream — generates content for all platforms concurrently.
+    Emits one event per platform as it completes.
+    Body params from query: topic, tone, brand_voice, platforms (comma-sep)
+    """
+    topic = request.query_params.get("topic", "")
+    tone = request.query_params.get("tone", "professional")
+    brand_voice = request.query_params.get("brand_voice", "")
+    platforms_str = request.query_params.get("platforms", ",".join(SS_PLATFORMS.keys()))
+    platforms = [p.strip() for p in platforms_str.split(",") if p.strip() in SS_PLATFORMS]
+    account_map_str = request.query_params.get("account_map", "{}")
+    try:
+        account_map = json.loads(account_map_str)
+    except Exception:
+        account_map = {}
+
+    from agents.social_studio.content_generator import generate_all_platforms
+
+    async def event_gen():
+        yield {"event": "start", "data": json.dumps({"run_id": run_id, "platforms": platforms})}
+        try:
+            async for result in generate_all_platforms(topic, tone, brand_voice, platforms):
+                platform = result["platform"]
+                # Persist to DB
+                existing = ss_list_platform_posts(run_id=run_id, platform=platform)
+                if existing:
+                    ss_update_platform_post_caption(
+                        existing[0]["id"],
+                        result.get("content", ""),
+                        result.get("hashtags", "")
+                    )
+                yield {"event": "platform_done", "data": json.dumps(result)}
+            yield {"event": "complete", "data": json.dumps({"run_id": run_id})}
+        except Exception as e:
+            yield {"event": "error", "data": json.dumps({"error": str(e)})}
+
+    return EventSourceResponse(event_gen())
+
+
+@app.get("/api/social-studio/generate/{run_id}")
+async def ss_api_get_run(run_id: str):
+    """Poll: get all platform posts for a generation run."""
+    posts = ss_list_platform_posts(run_id=run_id)
+    if not posts:
+        # Fall back to social_studio_posts table
+        posts = ss_list_posts(run_id=run_id)
+    return {"run_id": run_id, "posts": posts}
+
+
+# ── Posts ─────────────────────────────────────────────────────────────────────
+
+@app.get("/api/social-studio/posts")
+async def ss_api_list_posts(
+    platform: str = "",
+    status: str = "",
+    limit: int = 50,
+):
+    posts = ss_list_platform_posts(
+        platform=platform or None,
+        status=status or None,
+        limit=limit,
+    )
+    return {"posts": posts}
+
+
+@app.get("/api/social-studio/posts/{post_id}")
+async def ss_api_get_post(post_id: int):
+    post = ss_get_platform_post(post_id)
+    if not post:
+        raise HTTPException(404, "Post not found")
+    from store import ss_get_publish_log
+    log = ss_get_publish_log(post_id)
+    return {"post": post, "publish_log": log}
+
+
+@app.patch("/api/social-studio/posts/{post_id}")
+async def ss_api_patch_post(post_id: int, payload: dict):
+    """Edit caption of a draft platform post."""
+    caption = payload.get("caption", "")
+    if not caption:
+        raise HTTPException(400, "caption required")
+    ok = ss_update_platform_post_caption(post_id, caption)
+    if not ok:
+        raise HTTPException(400, "Cannot edit — post is not in draft status")
+    return {"status": "updated"}
+
+
+@app.post("/api/social-studio/posts/{post_id}/publish")
+async def ss_api_publish_post(post_id: int):
+    """Publish a platform post immediately via provider API."""
+    from agents.social_studio.publisher import publish_platform_post
+
+    post = ss_get_platform_post(post_id)
+    if not post:
+        raise HTTPException(404, "Post not found")
+    if post["status"] not in ("draft", "approved", "failed", "scheduled"):
+        raise HTTPException(400, f"Cannot publish post in status: {post['status']}")
+
+    account_id = post.get("account_id")
+    token = ss_get_account_token(account_id) if account_id else None
+    if not token:
+        raise HTTPException(400, "No connected account token for this post. Connect an account first.")
+
+    result = publish_platform_post(
+        platform_post_id=post_id,
+        platform=post["platform"],
+        content=post.get("caption") or post.get("content", ""),
+        hashtags=post.get("hashtags", ""),
+        access_token=token,
+        account_id=account_id,
+    )
+    return result
+
+
+@app.post("/api/social-studio/posts/{post_id}/schedule")
+async def ss_api_schedule_post(post_id: int, payload: dict):
+    """Schedule a post for a future datetime."""
+    scheduled_at = payload.get("scheduled_at")
+    if not scheduled_at:
+        raise HTTPException(400, "scheduled_at (ISO 8601) required")
+    post = ss_get_platform_post(post_id)
+    if not post:
+        raise HTTPException(404, "Post not found")
+    ss_mark_platform_post_scheduled(post_id, scheduled_at)
+    return {"status": "scheduled", "scheduled_at": scheduled_at}
+
+
+# ── Auto-Post Agent ───────────────────────────────────────────────────────────
+
+@app.post("/api/social-studio/autopost")
+async def ss_api_autopost(payload: dict):
+    """
+    Generate content from a topic and publish immediately.
+    Body: {topic, tone?, brand_voice?, platforms?: ["linkedin"], account_map?, publish_now?: true}
+    """
+    from agents.social_studio.autoposter import run_autopost
+
+    topic = (payload.get("topic") or "").strip()
+    if not topic:
+        raise HTTPException(400, "topic is required")
+
+    platforms = payload.get("platforms")
+    if not platforms:
+        from store import ss_get_connected_accounts
+        accounts = ss_get_connected_accounts()
+        platforms = [a["platform"] for a in accounts] or ["linkedin"]
+    bad = [p for p in platforms if p not in SS_PLATFORMS]
+    if bad:
+        raise HTTPException(400, f"Unknown platforms: {bad}")
+
+    tone = payload.get("tone", "professional")
+    brand_voice = payload.get("brand_voice", "")
+    account_map = payload.get("account_map") or {}
+    publish_now = payload.get("publish_now", True)
+
+    try:
+        result = await run_autopost(
+            topic,
+            tone=tone,
+            brand_voice=brand_voice,
+            platforms=platforms,
+            account_map=account_map,
+            publish_now=publish_now,
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    return result
+
+
+@app.post("/api/social-studio/autopost/schedule")
+async def ss_api_autopost_schedule(payload: dict):
+    """
+    Create a recurring auto-post task. The prompt/topic runs on the given interval.
+    Body: {topic, interval?: "daily", name?: "LinkedIn Auto-Post"}
+    """
+    topic = (payload.get("topic") or "").strip()
+    if not topic:
+        raise HTTPException(400, "topic is required")
+    interval = payload.get("interval", "daily")
+    if interval not in _VALID_INTERVALS:
+        raise HTTPException(400, "interval must be hourly/daily/weekly/monthly")
+    label = (payload.get("name") or "LinkedIn Auto-Post").strip()
+    task_id = schedule_create(f"SocialStudio: {label}", topic, interval)
+    return {"status": "created", "task_id": task_id, "interval": interval, "topic": topic}
+
+
+# ── Analytics ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/social-studio/analytics/summary")
+async def ss_api_analytics_summary():
+    """Hero KPI cards — latest metrics per account."""
+    summary = ss_get_analytics_summary()
+    top_posts = ss_get_top_posts(limit=5)
+
+    # Compute aggregates across all accounts
+    total_reach = sum(
+        a["metrics"].get("reach", {}).get("value", 0) for a in summary
+    )
+    total_impressions = sum(
+        a["metrics"].get("impressions", {}).get("value", 0) for a in summary
+    )
+    total_engagements = sum(
+        a["metrics"].get("engagements", {}).get("value", 0) for a in summary
+    )
+    total_followers = sum(a.get("follower_count", 0) for a in summary)
+
+    return {
+        "accounts": summary,
+        "totals": {
+            "reach": total_reach,
+            "impressions": total_impressions,
+            "engagements": total_engagements,
+            "followers": total_followers,
+        },
+        "top_posts": top_posts,
+    }
+
+
+@app.get("/api/social-studio/analytics/timeseries")
+async def ss_api_analytics_timeseries(
+    account_id: int,
+    metrics: str = "followers,impressions,reach,engagements",
+    days: int = 30,
+):
+    """Time-series data for charting a specific account."""
+    metric_keys = [m.strip() for m in metrics.split(",") if m.strip()]
+    data = ss_get_account_metrics(account_id, metric_keys, days=days)
+    return {"account_id": account_id, "metrics": metric_keys, "data": data}
+
+
+@app.get("/api/social-studio/analytics/posts")
+async def ss_api_analytics_posts(limit: int = 20):
+    """Published posts with engagement metrics — for the analytics table."""
+    posts = ss_get_top_posts(limit=limit)
+    return {"posts": posts}
+
+
+@app.post("/api/social-studio/analytics/sync")
+async def ss_api_analytics_sync():
+    """Trigger a live analytics pull from all connected platform accounts."""
+    from agents.social_studio.analytics import sync_all_accounts
+    results = await asyncio.get_event_loop().run_in_executor(None, sync_all_accounts)
+    synced = sum(1 for r in results if not r.get("error"))
+    failed = len(results) - synced
+    return {"synced": synced, "failed": failed, "details": results}
+
+
+# ── Calendar ──────────────────────────────────────────────────────────────────
+
+@app.get("/api/social-studio/calendar")
+async def ss_api_calendar(year: int = 0, month: int = 0):
+    """Posts for calendar month view."""
+    from datetime import date as dt
+    today = dt.today()
+    y = year or today.year
+    m = month or today.month
+    posts = ss_get_calendar_posts(y, m)
+    return {"year": y, "month": m, "posts": posts}
+
+
+# ── Ideas ─────────────────────────────────────────────────────────────────────
+
+class IdeaCreateReq(BaseModel):
+    prompt: str
+    status: str = "todo"
+
+class IdeaUpdateReq(BaseModel):
+    status: str
+
+@app.post("/api/social-studio/ideas")
+async def ss_api_create_idea(req: IdeaCreateReq):
+    """Create a new idea for the kanban board."""
+    from store import ss_create_idea
+    idea_id = ss_create_idea(req.prompt, req.status)
+    return {"id": idea_id}
+
+@app.get("/api/social-studio/ideas")
+async def ss_api_list_ideas():
+    """List all ideas for the kanban board."""
+    from store import ss_list_ideas
+    ideas = ss_list_ideas()
+    return {"ideas": ideas}
+
+@app.patch("/api/social-studio/ideas/{idea_id}/status")
+async def ss_api_update_idea_status(idea_id: int, req: IdeaUpdateReq):
+    """Update the status of an idea."""
+    from store import ss_update_idea_status
+    success = ss_update_idea_status(idea_id, req.status)
+    if not success:
+        raise HTTPException(status_code=404, detail="Idea not found")
+    return {"success": True}
+
+# ── Platform Metadata ─────────────────────────────────────────────────────────
+
+@app.get("/api/social-studio/platforms")
+async def ss_api_platforms():
+    """Return all supported platforms with char limits and metadata."""
+    return {"platforms": SS_PLATFORMS}

@@ -30,7 +30,7 @@ class AgentMeshError(Exception):
 
 
 # Model name config — override via env vars; swap any tier with a config change.
-MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash-lite-preview-06-17")
+MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash")
 MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
 
 
@@ -450,7 +450,103 @@ def scheduled_dispatcher(scheduled_time: datetime, actual_time: datetime):
     from store import schedule_get_due
     due = schedule_get_due()
     for task in due:
-        DBOS.start_workflow(run_scheduled_task, task["id"], task["name"], task["prompt"], task["interval"])
+        if task["name"].startswith("SocialStudio:"):
+            DBOS.start_workflow(run_social_studio_autopost_task, task["id"], task["name"], task["prompt"], task["interval"])
+        else:
+            DBOS.start_workflow(run_scheduled_task, task["id"], task["name"], task["prompt"], task["interval"])
+
+
+@DBOS.scheduled(cron="* * * * *")
+@DBOS.workflow()
+def social_studio_publisher_daemon(scheduled_time: datetime, actual_time: datetime):
+    try:
+        check_killswitch()
+    except KillswitchEngaged:
+        return
+    from store import ss_get_and_lock_due_posts
+    posts = ss_get_and_lock_due_posts()
+    for post in posts:
+        DBOS.start_workflow(run_publish_platform_post, post)
+
+
+@DBOS.step()
+def step_publish_platform_post(post: dict, token: str):
+    from agents.social_studio.publisher import publish_platform_post
+    return publish_platform_post(
+        platform_post_id=post["id"],
+        platform=post["platform"],
+        content=post.get("caption") or "",
+        hashtags=post.get("hashtags") or "",
+        access_token=token,
+        account_id=post.get("account_id"),
+    )
+
+
+@DBOS.workflow()
+def run_publish_platform_post(post: dict):
+    from store import ss_get_account_token, ss_mark_platform_post_failed
+    token = ss_get_account_token(post["account_id"]) if post.get("account_id") else None
+    if not token:
+        ss_mark_platform_post_failed(post["id"], "No connected account token.", retryable=False)
+        return
+    step_publish_platform_post(post, token)
+
+
+@DBOS.workflow()
+def run_social_studio_autopost_task(task_id: int, name: str, prompt: str, interval: str):
+    import uuid
+    run_id = f"autopost-{uuid.uuid4().hex[:8]}"
+    step_social_studio_autopost(run_id, prompt)
+    from store import schedule_mark_ran
+    schedule_mark_ran(task_id, "success", interval)
+
+
+@DBOS.step()
+def step_social_studio_autopost(run_id: str, prompt: str):
+    import asyncio
+    from agents.social_studio.autoposter import run_autopost
+
+    asyncio.run(run_autopost(
+        prompt,
+        tone="professional",
+        brand_voice="Agent Mesh",
+        platforms=["linkedin"],
+        publish_now=True,
+        run_id=run_id,
+    ))
+
+
+@DBOS.scheduled(cron="*/2 * * * *")
+@DBOS.workflow()
+def social_studio_ideas_daemon(scheduled_time: datetime, actual_time: datetime):
+    try:
+        check_killswitch()
+    except KillswitchEngaged:
+        return
+
+    from store import ss_get_ideas_by_status, ss_update_idea_status
+    import uuid
+
+    # Find ideas that are in "todo"
+    todos = ss_get_ideas_by_status("todo")
+    for idea in todos:
+        idea_id = idea["id"]
+        prompt = idea["prompt"]
+        
+        # Mark in progress
+        ss_update_idea_status(idea_id, "in_progress")
+        
+        run_id = f"idea-{idea_id}-{uuid.uuid4().hex[:8]}"
+        try:
+            # Generate and schedule posts based on the idea
+            step_social_studio_autopost(run_id, prompt)
+            
+            # Mark done
+            ss_update_idea_status(idea_id, "done")
+        except Exception as e:
+            logger.error(f"Failed to process idea {idea_id}: {e}")
+            # Revert to todo if failed so it can be retried or debugged
+            ss_update_idea_status(idea_id, "todo")
 
 
 # ── Jules: Self-Healing PRs ──────────────────────────────────────────────────

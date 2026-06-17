@@ -154,7 +154,7 @@ class HFInternHarness:
 
     def classify_risk(self, text: str) -> dict:
         """
-        Zero-shot classify finding text against risk labels using bart-large-mnli.
+        Zero-shot classify finding text against risk labels using DeBERTa-v3-base-mnli-fever-anli.
 
         HF zero-shot response shape:
           {"labels": ["high", "critical", ...], "scores": [0.72, 0.15, ...]}

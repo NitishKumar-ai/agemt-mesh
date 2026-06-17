@@ -36,7 +36,7 @@ type Props = {
 
 // Group nav items by section
 const PRIMARY_KEYS: PageKey[] = ["sessions", "workflows", "approvals"];
-const TOOLS_KEYS: PageKey[] = ["agents", "tasks", "schedules", "commitguard", "marketing"];
+const TOOLS_KEYS: PageKey[] = ["agents", "tasks", "schedules", "commitguard", "marketing", "social"];
 const SYSTEM_KEYS: PageKey[] = ["connections", "safety", "activity"];
 
 export function AppShell({

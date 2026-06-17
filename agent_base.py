@@ -15,7 +15,7 @@ from loop import AgentLoop, LoopConfig, ToolRegistry
 logger = logging.getLogger(__name__)
 
 # Model name config — defaults
-MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash-lite-preview-06-17")
+MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash")
 MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
 
 @dataclass

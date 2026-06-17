@@ -6,6 +6,7 @@ export type PageKey =
   | "agents"
   | "commitguard"
   | "marketing"
+  | "social"
   | "tasks"
   | "schedules"
   | "activity"
@@ -320,4 +321,67 @@ export type ConnectionInfo = {
   metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
+};
+
+// ── Social Studio ─────────────────────────────────────────────────────────────
+
+export type SSPlatformMeta = {
+  label: string;
+  char_limit: number;
+  color: string;
+};
+
+export type SSAccount = {
+  id: number;
+  platform: string;
+  display_name: string;
+  username: string;
+  avatar_url: string;
+  follower_count: number;
+  status: string;
+  metrics: Record<string, { value: number; date: string }>;
+  platform_meta?: SSPlatformMeta;
+};
+
+export type SSMetricSnapshot = {
+  metric_key: string;
+  date: string;
+  value: number;
+};
+
+export type SSPlatformPost = {
+  id: number;
+  post_id: number;
+  account_id: number;
+  platform: string;
+  caption: string;
+  content?: string; // used during SSE streaming
+  hashtags: string;
+  char_count: number;
+  status: "draft" | "pending_review" | "approved" | "scheduled" | "publishing" | "published" | "failed";
+  platform_post_id: string;
+  platform_post_url: string;
+  publish_error: string;
+  scheduled_at: string;
+  published_at: string;
+  retry_count: number;
+  run_id?: string;
+  topic?: string;
+  tone?: string;
+  account_name?: string;
+  username?: string;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  reach?: number;
+  impressions?: number;
+};
+
+export type SSPublishLog = {
+  id: number;
+  attempt_number: number;
+  status_code: number;
+  error_message: string;
+  duration_ms: number;
+  created_at: string;
 };

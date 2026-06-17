@@ -209,7 +209,7 @@ def _research_finding(run_id: str, finding_summary: str, evidence: str, hf_resul
         "  technical_detail: two sentences of technical depth for an engineering audience (string)\n"
         "  remediation_hint: one sentence on how this class of issue is typically fixed (string)\n"
         "  cve_ids: list of CVE IDs mentioned (list of strings, empty if none)\n\n"
-        f"Finding: {finding_summary}\nEvidence excerpt: {evidence[:500]}"
+        f"Finding: {finding_summary}\nEvidence excerpt: {evidence[:1500]}"
         f"{nvd_context}"
         f"{hf_risk_hint}\n"
         "Reply with ONLY valid JSON, no markdown fences."
