@@ -8,5 +8,10 @@
     "build": "tsc",
     "lint": "eslint src/",
     "test": "vitest run"
-  }
+  },
+  "dependencies": {
+    "@conductor/common": "workspace:*",
+    "@conductor/core": "workspace:*"
+  },
+  "type": "module"
 }

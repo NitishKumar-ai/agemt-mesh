@@ -1,1 +1,1 @@
-export const name = 'http-task';
+export * from "./HttpTask.js";
