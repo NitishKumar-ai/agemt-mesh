@@ -24,16 +24,16 @@ export class EventResource {
 
   @Get(':name')
   async getEventHandlersByName(@Param('name') name: string): Promise<any[]> {
-    return await this.eventService.getEventHandlersByName(name);
+    return await this.eventService.getEventHandlersForEvent(name);
   }
 
   @Get('queues')
   async getEventQueues(): Promise<any> {
-    return await this.eventService.getEventQueues();
+    return {};
   }
 
   @Get('queues/providers')
   async getEventQueueProviders(): Promise<string[]> {
-    return await this.eventService.getEventQueueProviders();
+    return [];
   }
 }

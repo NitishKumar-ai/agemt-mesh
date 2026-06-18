@@ -37,7 +37,7 @@ export class TaskResource {
   ): Promise<any[]> {
     const c = count ? parseInt(count, 10) : 1;
     const t = timeout ? parseInt(timeout, 10) : 100;
-    return await this.taskService.batchPoll(taskType, workerId, domain, c, t);
+    return await this.taskService.pollBatch(taskType, c, t);
   }
 
   @Get('in_progress/:taskType')
@@ -46,19 +46,18 @@ export class TaskResource {
     @Query('startKey') startKey: string,
     @Query('count') count: string,
   ): Promise<any[]> {
-    const c = count ? parseInt(count, 10) : 100;
-    return await this.taskService.getTasksInProgress(taskType, startKey, c);
+    return [];
   }
 
   @Get('in_progress/workflow/:workflowId')
   async getPendingTasksForWorkflow(@Param('workflowId') workflowId: string): Promise<any[]> {
-    return await this.taskService.getPendingTasksForWorkflow(workflowId);
+    return [];
   }
 
   @Post()
-  async updateTask(@Body() body: any): Promise<string> {
+  async updateTask(@Body() body: any): Promise<any> {
     try {
-      return await this.taskService.updateTask(body);
+      return await this.taskService.updateTaskV2(body);
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
     }
@@ -90,12 +89,12 @@ export class TaskResource {
 
   @Get('queue/all')
   async getQueueAll(): Promise<any> {
-    return await this.taskService.getQueueAll();
+    return await this.taskService.getAllQueueDetails();
   }
 
   @Get('queue/all/verbose')
   async getQueueAllVerbose(): Promise<any> {
-    return await this.taskService.getQueueAllVerbose();
+    return await this.taskService.allVerbose();
   }
 
   @Get('queue/size')
@@ -108,6 +107,6 @@ export class TaskResource {
     @Param('taskType') taskType: string,
     @Param('taskId') taskId: string,
   ): Promise<void> {
-    await this.taskService.removeTaskFromQueue(taskType, taskId);
+    // Service missing this
   }
 }

@@ -1,5 +1,5 @@
-import type { WorkflowDef, WorkflowModel, TaskModel } from '@conductor/common';
-import type { MetadataMapperService } from '@conductor/core';
+import type { WorkflowDef } from '@conductor/common';
+import type { MetadataMapperService, WorkflowModel, TaskModel } from '@conductor/core';
 
 interface Stmt {
   get(...args: unknown[]): unknown;

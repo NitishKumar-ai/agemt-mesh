@@ -23,12 +23,12 @@ export class WorkflowBulkResource {
     @Query('useLatestDefinitions') useLatestStr: string,
   ): Promise<any> {
     const useLatest = useLatestStr === 'true';
-    return await this.workflowBulkService.restartWorkflow(workflowIds, useLatest);
+    return await this.workflowBulkService.restart(workflowIds, useLatest);
   }
 
   @Post('retry')
   async retryWorkflow(@Body() workflowIds: string[]): Promise<any> {
-    return await this.workflowBulkService.retryWorkflow(workflowIds);
+    return await this.workflowBulkService.retry(workflowIds);
   }
 
   @Post('terminate')
@@ -36,6 +36,6 @@ export class WorkflowBulkResource {
     @Body() workflowIds: string[],
     @Query('reason') reason: string,
   ): Promise<any> {
-    return await this.workflowBulkService.terminateWorkflow(workflowIds, reason);
+    return await this.workflowBulkService.terminate(workflowIds, reason);
   }
 }

@@ -37,9 +37,10 @@ export class WorkflowResource {
     @Query('requestId') requestId?: string,
     @Query('waitUntilTaskRef') _waitUntilTaskRef?: string,
     @Body() body?: Record<string, unknown>,
-  ): Promise<WorkflowModel> {
+  ): Promise<any> {
     try {
-      return await this.workflowService.executeWorkflow({ name, version, input: body ?? {}, requestId });
+      const workflowId = await this.workflowService.startWorkflow({ name, version, input: body ?? {}, correlationId: requestId });
+      return await this.workflowService.getWorkflow(workflowId);
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
     }
@@ -67,7 +68,7 @@ export class WorkflowResource {
 
   @Get('search')
   async searchWorkflows(): Promise<any> {
-    return await this.workflowService.searchWorkflows();
+    return await this.workflowService.searchWorkflows(0, 100);
   }
 
   @Get(':workflowId/tasks')

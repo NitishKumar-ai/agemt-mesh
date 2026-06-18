@@ -4,6 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 export const START_TIME = 'START_TIME';
 export const VERSION = 'VERSION';
 export const DB_PROBE = 'DB_PROBE';
+export type DbProbe = () => Promise<void>;
 
 @ApiTags('health')
 @Controller('health')

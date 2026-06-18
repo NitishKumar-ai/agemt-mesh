@@ -80,6 +80,26 @@ export class WorkflowService {
     return workflow.workflowId;
   }
 
+  async executeWorkflow(req: { name: string; version: number; input: Record<string, unknown>; requestId?: string }): Promise<WorkflowModel> {
+    const workflowId = await this.startWorkflow({
+      name: req.name,
+      version: req.version,
+      input: req.input,
+      correlationId: req.requestId,
+    });
+    // Poll for completion (up to 30s)
+    for (let i = 0; i < 60; i++) {
+      const wf = await this.getWorkflow(workflowId, true);
+      if (wf && (wf.status === WorkflowStatus.COMPLETED || wf.status === WorkflowStatus.FAILED || wf.status === WorkflowStatus.TERMINATED || wf.status === 'COMPLETED' || wf.status === 'FAILED' || wf.status === 'TERMINATED')) {
+        return wf;
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    const wf = await this.getWorkflow(workflowId, true);
+    if (!wf) throw new Error(`Workflow ${workflowId} not found after execution`);
+    return wf;
+  }
+
   async getWorkflow(workflowId: string, includeTasks = true): Promise<WorkflowModel | undefined> {
     return this.executionDAO.getWorkflow(workflowId, includeTasks);
   }

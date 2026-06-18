@@ -1,6 +1,5 @@
 import { isWorkflowTerminal, isTaskTerminal } from '@conductor/common';
-import type { TaskModel, WorkflowModel } from '@conductor/common';
-import type { ExecutionDAOFacade, QueueDAO } from '@conductor/core';
+import type { TaskModel, WorkflowModel, ExecutionDAOFacade, QueueDAO } from '@conductor/core';
 
 interface Stmt {
   run(...args: unknown[]): { changes: number };
@@ -175,13 +174,13 @@ export class SyncSqliteAdapter implements ExecutionDAOFacade, QueueDAO {
         JSON.stringify(workflow),
       );
       this.stmtInsertWorkflowDefToWorkflow.run(
-        workflow.workflowName ?? workflow.workflowType,
+        workflow.workflowName,
         this.dateStr(workflow.createTime ?? undefined),
         workflow.workflowId,
       );
-      if (!isWorkflowTerminal(workflow.status)) {
+      if (!isWorkflowTerminal(workflow.status!)) {
         this.stmtInsertWorkflowPending.run(
-          workflow.workflowType ?? workflow.workflowName,
+          workflow.workflowName,
           workflow.workflowId,
         );
       }
@@ -195,14 +194,14 @@ export class SyncSqliteAdapter implements ExecutionDAOFacade, QueueDAO {
     workflow.tasks = [];
     try {
       this.stmtUpdateWorkflow.run(JSON.stringify(workflow), workflow.workflowId);
-      if (isWorkflowTerminal(workflow.status)) {
+      if (isWorkflowTerminal(workflow.status!)) {
         this.stmtDeleteWorkflowPending.run(
-          workflow.workflowType ?? workflow.workflowName,
+          workflow.workflowName,
           workflow.workflowId,
         );
       } else {
         this.stmtInsertWorkflowPending.run(
-          workflow.workflowType ?? workflow.workflowName,
+          workflow.workflowName,
           workflow.workflowId,
         );
       }
@@ -254,7 +253,7 @@ export class SyncSqliteAdapter implements ExecutionDAOFacade, QueueDAO {
     const wf = this.getWorkflowModel(workflowId, false);
     if (wf) {
       this.stmtDeleteWorkflowPending.run(
-        wf.workflowType ?? wf.workflowName,
+        wf.workflowName,
         workflowId,
       );
     }

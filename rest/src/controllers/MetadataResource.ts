@@ -30,7 +30,7 @@ export class MetadataResource {
   @Put('workflow')
   async updateWorkflowDef(@Body() body: any[]): Promise<void> {
     try {
-      await this.metadataService.updateWorkflowDef(body);
+      await this.metadataService.updateWorkflowDefs(body);
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
     }
@@ -51,7 +51,7 @@ export class MetadataResource {
 
   @Get('workflow')
   async getAllWorkflowDefs(): Promise<any[]> {
-    return await this.metadataService.getAllWorkflowDefs();
+    return await this.metadataService.getWorkflowDefs();
   }
 
   @Delete('workflow/:name/:version')
@@ -59,12 +59,12 @@ export class MetadataResource {
     @Param('name') name: string,
     @Param('version') version: string,
   ): Promise<void> {
-    await this.metadataService.unregisterWorkflowDef(name, Number(version));
+    await this.metadataService.removeWorkflowDef(name, Number(version));
   }
 
   @Post('taskdefs')
   async registerTaskDef(@Body() body: any[]): Promise<void> {
-    await this.metadataService.registerTaskDef(body);
+    await this.metadataService.registerTaskDefs(body);
   }
 
   @Put('taskdefs')
@@ -83,11 +83,11 @@ export class MetadataResource {
 
   @Get('taskdefs')
   async getAllTaskDefs(): Promise<any[]> {
-    return await this.metadataService.getAllTaskDefs();
+    return await this.metadataService.getTaskDefs();
   }
 
   @Delete('taskdefs/:name')
   async unregisterTaskDef(@Param('name') name: string): Promise<void> {
-    await this.metadataService.unregisterTaskDef(name);
+    await this.metadataService.removeTaskDef(name);
   }
 }
