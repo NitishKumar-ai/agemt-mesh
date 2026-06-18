@@ -1,0 +1,29 @@
+{
+  "name": "@conductor/sandbox",
+  "version": "0.0.0",
+  "description": "Sandbox for Code Execution",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@e2b/code-interpreter": "^1.0.5",
+    "@conductor/core": "workspace:*",
+    "@conductor/common": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vitest": "^2.0.0"
+  }
+}
