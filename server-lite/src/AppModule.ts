@@ -1,5 +1,8 @@
 import { Module, DynamicModule, Global } from '@nestjs/common';
 import { RestModule } from '@conductor/rest';
+import type { WorkflowExecutor } from '@conductor/core';
+
+export const WORKFLOW_EXECUTOR = 'WORKFLOW_EXECUTOR';
 
 export interface AppModuleOptions {
   executionDAO: any;
@@ -9,6 +12,7 @@ export interface AppModuleOptions {
   version: string;
   dbProbe?: () => Promise<void>;
   startTime: number;
+  workflowExecutor?: WorkflowExecutor;
 }
 
 @Global()
@@ -26,6 +30,7 @@ export class AppModule {
         { provide: 'VERSION', useValue: options.version },
         { provide: 'START_TIME', useValue: options.startTime },
         { provide: 'DB_PROBE', useValue: options.dbProbe },
+        { provide: WORKFLOW_EXECUTOR, useValue: options.workflowExecutor ?? null },
       ],
       exports: [
         'EXECUTION_DAO',
@@ -35,6 +40,7 @@ export class AppModule {
         'VERSION',
         'START_TIME',
         'DB_PROBE',
+        WORKFLOW_EXECUTOR,
       ],
     };
   }

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { WorkflowDef, WorkflowModel, TaskModel } from '@conductor/common';
 import { TaskType, WorkflowStatus, NotFoundException, SearchResult } from '@conductor/common';
 import { createWorkflowModel, DECIDER_QUEUE } from '@conductor/core';
+import type { WorkflowExecutor } from '@conductor/core';
 import type { ExecutionDAO, MetadataDAO, QueueDAO } from '@conductor/common-persistence';
 
 export interface StartWorkflowRequest {
@@ -27,9 +28,24 @@ export class WorkflowService {
     private readonly executionDAO: ExecutionDAO,
     private readonly metadataDAO: MetadataDAO,
     private readonly queueDAO: QueueDAO,
+    private readonly workflowExecutor?: WorkflowExecutor | null,
   ) {}
 
   async startWorkflow(req: StartWorkflowRequest): Promise<string> {
+    if (this.workflowExecutor) {
+      return this.workflowExecutor.startWorkflow({
+        name: req.name,
+        version: req.version ?? 1,
+        workflowInput: req.input ?? {},
+        correlationId: req.correlationId,
+        priority: req.priority ?? 0,
+        taskToDomain: req.taskToDomain ?? undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        workflowDefinition: (req.workflowDef as any) ?? null,
+      });
+    }
+
+    // Fallback: manual creation (no engine wired)
     let def: WorkflowDef;
     if (req.workflowDef) {
       def = req.workflowDef;
@@ -122,6 +138,13 @@ export class WorkflowService {
   }
 
   async rerunWorkflow(workflowId: string, _request: RerunWorkflowRequest): Promise<string> {
+    if (this.workflowExecutor) {
+      return this.workflowExecutor.rerun({
+        reRunFromWorkflowId: workflowId,
+        workflowInput: _request.workflowInput,
+        correlationId: _request.correlationId,
+      });
+    }
     const workflow = await this.executionDAO.getWorkflow(workflowId, true);
     if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
     const newWfId = randomUUID();
@@ -140,7 +163,11 @@ export class WorkflowService {
     return newWfId;
   }
 
-  async restartWorkflow(workflowId: string, _useLatestDefinitions = false): Promise<void> {
+  async restartWorkflow(workflowId: string, useLatestDefinitions = false): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.restart(workflowId, useLatestDefinitions);
+      return;
+    }
     const workflow = await this.executionDAO.getWorkflow(workflowId, true);
     if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,7 +180,11 @@ export class WorkflowService {
     await this.queueDAO.pushIfNotExists(DECIDER_QUEUE, workflowId, 0, 0);
   }
 
-  async retryWorkflow(workflowId: string, _resumeSubworkflowTasks = false): Promise<void> {
+  async retryWorkflow(workflowId: string, resumeSubworkflowTasks = false): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.retry(workflowId, resumeSubworkflowTasks);
+      return;
+    }
     const workflow = await this.executionDAO.getWorkflow(workflowId, true);
     if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,6 +197,10 @@ export class WorkflowService {
   }
 
   async resetWorkflow(workflowId: string): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.resetCallbacksForWorkflow(workflowId);
+      return;
+    }
     const workflow = await this.executionDAO.getWorkflow(workflowId, true);
     if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
     await this.queueDAO.pushIfNotExists(DECIDER_QUEUE, workflowId, 0, 0);

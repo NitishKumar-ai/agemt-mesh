@@ -20,6 +20,7 @@ export const EXECUTION_DAO = 'EXECUTION_DAO';
 export const METADATA_DAO = 'METADATA_DAO';
 export const QUEUE_DAO = 'QUEUE_DAO';
 export const POLL_DATA_DAO = 'POLL_DATA_DAO';
+export const WORKFLOW_EXECUTOR = 'WORKFLOW_EXECUTOR';
 
 @Module({})
 export class RestModule {
@@ -44,9 +45,9 @@ export class RestModule {
         },
         {
           provide: WorkflowService,
-          useFactory: (executionDAO, metadataDAO, queueDAO) =>
-            new WorkflowService(executionDAO, metadataDAO, queueDAO),
-          inject: [EXECUTION_DAO, METADATA_DAO, QUEUE_DAO],
+          useFactory: (executionDAO, metadataDAO, queueDAO, workflowExecutor) =>
+            new WorkflowService(executionDAO, metadataDAO, queueDAO, workflowExecutor),
+          inject: [EXECUTION_DAO, METADATA_DAO, QUEUE_DAO, WORKFLOW_EXECUTOR],
         },
         {
           provide: TaskService,
@@ -90,6 +91,7 @@ export class RestModule {
         VERSION,
         START_TIME,
         DB_PROBE,
+        WORKFLOW_EXECUTOR,
       ],
     };
   }
