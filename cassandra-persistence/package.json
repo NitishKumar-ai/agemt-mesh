@@ -8,5 +8,15 @@
     "build": "tsc",
     "lint": "eslint src/",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "cassandra-driver": "^4.9.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
