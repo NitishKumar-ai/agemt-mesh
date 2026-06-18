@@ -1,19 +1,15 @@
 # Worktrees
 .worktrees/
 
-# Java Build
-.gradle
-.classpath
-dump.rdb
-out
-bin
-target
-buildscan.log
-/docs/site
+# Package manager cache
+.pnpm-store/
+
+# Turbo
+.turbo/
 
 # Python
-/polyglot-clients/python/conductor.egg-info
 *.pyc
+__pycache__/
 
 # OS & IDE
 .DS_Store
@@ -23,10 +19,11 @@ buildscan.log
 .project
 *.iml
 
-# JS & UI Related
-node_modules
-/ui/build
-/ui/public/monaco-editor
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+yarn.lock
 
 # publishing secrets
 secrets/signing-key
@@ -39,23 +36,15 @@ build/
 # asdf version file
 .tool-versions
 
-# jenv version file
-.java-version
-
-
-.qodo
-conductorosstest.db
-conductorosstest.db
-/server-lite/src/main/resources/static
-yarn.lock
-.java-version
-server-lite/conductorosstest.db-shm
-server-lite/conductorosstest.db-wal
-/server/src/main/resources/static
-*.factorypath
-server/*.db*
-/site
+# Database files
 *.db
 *.db-shm
 *.db-wal
-docs/superpowers
+*.sqlite
+
+# Python virtual env
+.venv/
+.venv
+
+# Agent runtime data
+agent-runtime/

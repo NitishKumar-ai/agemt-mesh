@@ -22,10 +22,8 @@ dependencies {
     implementation project(':conductor-ai')
 
     //Event Systems
-    implementation project(':conductor-amqp')
+
     implementation project(':conductor-nats')
-    implementation project(':conductor-nats-streaming')
-    implementation project(':conductor-awssqs-event-queue')
     implementation project(':conductor-kafka-event-queue')
 
     //External Payload Storage
@@ -50,7 +48,6 @@ dependencies {
     if (indexingBackend == 'opensearch3' || indexingBackend == 'os3') {
         implementation project(':conductor-os-persistence-v3')
     } else if (indexingBackend == 'opensearch' || indexingBackend == 'os') {
-        implementation project(':conductor-os-persistence')
         implementation project(':conductor-os-persistence-v2')
     } else if (indexingBackend == 'elasticsearch8' || indexingBackend == 'es8') {
         implementation project(':conductor-es8-persistence')

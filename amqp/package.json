@@ -1,0 +1,25 @@
+{
+  "name": "amqp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "amqplib": "^2.0.1",
+    "rxjs": "^7.8.2",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.8",
+    "@types/node": "^25.9.3",
+    "@types/uuid": "^10.0.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3"
+  }
+}

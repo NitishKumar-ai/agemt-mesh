@@ -1,0 +1,34 @@
+packages:
+  - 'agent-runtime'
+  - 'common'
+  - 'common-persistence'
+  - 'core'
+  - 'rest'
+  - 'ai'
+  - 'server-lite'
+  - 'server'
+  - 'telemetry'
+  - 'sandbox'
+  - 'secrets'
+  - '*-persistence'
+  - 'redis-*'
+  - 'http-task'
+  - 'json-jq-task'
+  - 'kafka*'
+  - 'nats*'
+  - '*-storage'
+  - 'workflow-event-listener'
+  - 'task-status-listener'
+  - 'scheduler/*'
+  - 'conductor-amqp-node'
+allowBuilds:
+  '3': true
+  '-': true
+  b: true
+  e: true
+  i: true
+  l: true
+  q: true
+  r: true
+  s: true
+  t: true

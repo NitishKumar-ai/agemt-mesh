@@ -1,0 +1,27 @@
+{
+  "name": "@conductor/rest",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@conductor/common": "workspace:*",
+    "@conductor/common-persistence": "workspace:*",
+    "@conductor/core": "workspace:*",
+    "@conductor/sqlite-persistence": "workspace:*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^7.2.0",
+    "better-sqlite3": "^12.11.1",
+    "kysely": "^0.29.2",
+    "supertest": "^7.2.2"
+  }
+}

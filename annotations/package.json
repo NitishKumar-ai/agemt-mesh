@@ -1,0 +1,17 @@
+{
+  "name": "@conductor/annotations",
+  "version": "1.0.0",
+  "description": "Protogen annotations for TypeScript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

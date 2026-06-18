@@ -400,7 +400,7 @@ register_agent("inmodel_brain", InModelBrainAgent,
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
-from agent_mesh.connectors import registry
+from connectors import registry
 import uuid
 
 # ── Unified Connections ──────────────────────────────────────────────────────

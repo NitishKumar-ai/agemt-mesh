@@ -1,0 +1,30 @@
+{
+  "name": "conductor-ts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript transformation of Conductor — durable engine for the 24/7 Agent Mesh OS",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
+  }
+}

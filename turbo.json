@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["tsconfig.base.json", "vitest.shared.ts", "eslint.config.js"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "test/**/*.ts", "vitest.config.ts"]
+    },
+    "lint": {
+      "inputs": ["src/**/*.ts", "tests/**/*.ts", "test/**/*.ts"]
+    }
+  }
+}
