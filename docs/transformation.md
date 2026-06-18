@@ -136,6 +136,8 @@ Port `rest` controllers into NestJS controllers (`WorkflowResource`,
 Nest application (DI of core + persistence + tasks). Keep paths **identical** to
 Java (per CLAUDE.md — paths are the spec, e.g. `POST execute/{name}/{version}`).
 
+**Status: ✅ DONE** — The `rest` module is fully ported to NestJS with all 8 controllers. OpenAPI/Swagger is enabled at `/api/docs`. The engine is fully wired into `server-lite` via `SyncSqliteAdapter` and `MetadataMapperAdapter`.
+
 **Exit criteria**
 - [x] Endpoint parity: every kept Java route exists with identical path + verb
 - [x] OpenAPI spec generated; contract tests green
@@ -147,7 +149,7 @@ Finish the in-progress `ai/src/main/typescript` port; expose LLM chat/embeddings
 tooling as **system tasks/workers** the engine can schedule. Tiered routing
 (Flash-Lite plan/triage → Sonnet/Pro execute) behind a `ModelClient` interface.
 
-**Status: ✅ DONE** — The `@agentmesh/ai` module provides `AnthropicProvider` and `GeminiProvider`, with a tiered routing `ModelClient`. AI tasks `LlmChatComplete` and `LlmGenerateEmbeddings` are implemented as `WorkflowSystemTask` classes. 
+**Status: ✅ DONE** — The `@agentmesh/ai` module provides `AnthropicProvider` and `GeminiProvider`, with a tiered routing `ModelClient`. AI tasks `LlmChatComplete` and `LlmGenerateEmbeddings` are implemented as `WorkflowSystemTask` classes and registered in the `server-lite` system task registry. 
 
 **Exit criteria**
 - [x] AI tasks invocable from a workflow def; provider abstraction has ≥2 live

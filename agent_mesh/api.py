@@ -90,6 +90,8 @@ from store import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan handler — runs init_db then yields to DBOS lifespan."""
+    logging.warning("DEPRECATION: This Python agent_mesh engine is deprecated and will be removed in Phase 9.")
+    logging.warning("Please migrate all flows to the new TypeScript/NestJS engine in /server-lite.")
     from main import init_db
     bus.set_loop(asyncio.get_running_loop())
     init_db()          # plain function, no DBOS context needed

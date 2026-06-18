@@ -90,7 +90,8 @@ export class WorkflowService {
     // Poll for completion (up to 30s)
     for (let i = 0; i < 60; i++) {
       const wf = await this.getWorkflow(workflowId, true);
-      if (wf && (wf.status === WorkflowStatus.COMPLETED || wf.status === WorkflowStatus.FAILED || wf.status === WorkflowStatus.TERMINATED || wf.status === 'COMPLETED' || wf.status === 'FAILED' || wf.status === 'TERMINATED')) {
+      const status = wf?.status as any;
+      if (wf && (status === WorkflowStatus.COMPLETED || status === WorkflowStatus.FAILED || status === WorkflowStatus.TERMINATED)) {
         return wf;
       }
       await new Promise(resolve => setTimeout(resolve, 500));
