@@ -48,3 +48,4 @@ build/
 
 # Agent runtime data
 agent-runtime/
+.claude/worktrees/
