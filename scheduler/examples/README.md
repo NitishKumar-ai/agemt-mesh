@@ -36,6 +36,7 @@ curl -s -X POST http://localhost:8080/api/scheduler/schedules \
 ```
 
 Expected response:
+
 ```json
 {
   "name": "every-minute-demo-schedule",
@@ -67,6 +68,7 @@ curl -s "http://localhost:8080/api/scheduler/search/executions?freeText=every-mi
 ```
 
 Expected output:
+
 ```json
 { "state": "EXECUTED", "workflowId": "abc123...", "scheduledTime": 1708300860000 }
 { "state": "EXECUTED", "workflowId": "def456...", "scheduledTime": 1708300800000 }
@@ -81,6 +83,7 @@ curl -s "http://localhost:8080/api/scheduler/schedules/every-minute-demo-schedul
 ```
 
 Verify it's paused:
+
 ```bash
 curl -s http://localhost:8080/api/scheduler/schedules/every-minute-demo-schedule | jq '{paused, pausedReason}'
 ```
@@ -102,6 +105,7 @@ curl -s http://localhost:8080/api/scheduler/schedules | jq '[.[] | {name, cronEx
 ```
 
 Filter by workflow name:
+
 ```bash
 curl -s "http://localhost:8080/api/scheduler/schedules?workflowName=daily_report_workflow" | jq .
 ```
@@ -118,17 +122,17 @@ curl -s -X DELETE http://localhost:8080/api/scheduler/schedules/every-minute-dem
 
 ## API Reference
 
-| Method   | Path                                                   | Description                                    |
-|----------|--------------------------------------------------------|------------------------------------------------|
-| `POST`   | `/api/scheduler/schedules`                             | Create or update a schedule                    |
-| `GET`    | `/api/scheduler/schedules`                             | List all (optional `?workflowName=` filter)    |
-| `GET`    | `/api/scheduler/schedules/search`                      | Search schedules (filter by name, workflow, paused) |
-| `GET`    | `/api/scheduler/schedules/{name}`                      | Get a schedule by name                         |
-| `DELETE` | `/api/scheduler/schedules/{name}`                      | Delete a schedule                              |
-| `GET`    | `/api/scheduler/schedules/{name}/pause`                | Pause (optional `?reason=`)                    |
-| `GET`    | `/api/scheduler/schedules/{name}/resume`               | Resume                                         |
-| `GET`    | `/api/scheduler/nextFewSchedules`                      | Preview next N times (`?cronExpression=&limit=5`) |
-| `GET`    | `/api/scheduler/search/executions`                     | Search execution history (`?freeText=&size=100`) |
+| Method   | Path                                     | Description                                         |
+| -------- | ---------------------------------------- | --------------------------------------------------- |
+| `POST`   | `/api/scheduler/schedules`               | Create or update a schedule                         |
+| `GET`    | `/api/scheduler/schedules`               | List all (optional `?workflowName=` filter)         |
+| `GET`    | `/api/scheduler/schedules/search`        | Search schedules (filter by name, workflow, paused) |
+| `GET`    | `/api/scheduler/schedules/{name}`        | Get a schedule by name                              |
+| `DELETE` | `/api/scheduler/schedules/{name}`        | Delete a schedule                                   |
+| `GET`    | `/api/scheduler/schedules/{name}/pause`  | Pause (optional `?reason=`)                         |
+| `GET`    | `/api/scheduler/schedules/{name}/resume` | Resume                                              |
+| `GET`    | `/api/scheduler/nextFewSchedules`        | Preview next N times (`?cronExpression=&limit=5`)   |
+| `GET`    | `/api/scheduler/search/executions`       | Search execution history (`?freeText=&size=100`)    |
 
 ---
 
@@ -147,12 +151,12 @@ The scheduler uses **6-field Spring cron** (second-level precision):
 * * * * * *
 ```
 
-| Expression                    | Meaning                          |
-|-------------------------------|----------------------------------|
-| `0 * * * * *`                 | Every minute                     |
-| `0 0 9 * * MON-FRI`           | Weekdays at 9:00 AM              |
-| `0 0 0 1 * *`                 | First day of every month         |
-| `0 0/30 9-17 * * MON-FRI`     | Every 30 min, business hours     |
+| Expression                | Meaning                      |
+| ------------------------- | ---------------------------- |
+| `0 * * * * *`             | Every minute                 |
+| `0 0 9 * * MON-FRI`       | Weekdays at 9:00 AM          |
+| `0 0 0 1 * *`             | First day of every month     |
+| `0 0/30 9-17 * * MON-FRI` | Every 30 min, business hours |
 
 ---
 
@@ -161,14 +165,14 @@ The scheduler uses **6-field Spring cron** (second-level precision):
 ```yaml
 agentmesh:
   scheduler:
-    enabled: true                      # default: true
-    polling-interval: 1000             # ms between polls; default: 100
-    polling-thread-count: 1            # default: 1
-    poll-batch-size: 5                 # schedules processed per cycle; default: 5
-    scheduler-time-zone: UTC           # default: UTC
-    archival-max-records: 5            # history rows to keep per schedule; default: 5
-    archival-max-record-threshold: 10  # prune when over threshold; default: 10
-    jitter-max-ms: 0                   # dispatch jitter per schedule; default: 0 (disabled)
+    enabled: true # default: true
+    polling-interval: 1000 # ms between polls; default: 100
+    polling-thread-count: 1 # default: 1
+    poll-batch-size: 5 # schedules processed per cycle; default: 5
+    scheduler-time-zone: UTC # default: UTC
+    archival-max-records: 5 # history rows to keep per schedule; default: 5
+    archival-max-record-threshold: 10 # prune when over threshold; default: 10
+    jitter-max-ms: 0 # dispatch jitter per schedule; default: 0 (disabled)
 ```
 
 > **Tip:** For deployments with many schedules firing at the same cron tick, increase
@@ -187,6 +191,7 @@ matching schedule definition. All were tested live.
 Fires every minute, fetches a sample JSON dataset via HTTP. Good first test after setup.
 
 **Register and run:**
+
 ```bash
 curl -s -X POST http://localhost:8080/api/metadata/workflow \
   -H "Content-Type: application/json" -d @daily-report-workflow.json
@@ -291,6 +296,7 @@ injected by the scheduler. Static keys from `startWorkflowRequest.input` are pre
 An INLINE JavaScript task computes a 24-hour report window from `scheduledTime`.
 
 Sample output from a live run:
+
 ```
 scheduledAt:       2026-02-19T23:22:00.000Z   ← exact cron slot
 triggeredAt:       2026-02-19T23:22:00.837Z   ← actual dispatch (~837ms poll overhead)
@@ -334,6 +340,7 @@ All require `curl`, `python3`, and a running AgentMesh instance.
 ### test-09-concurrent-write.sh — simultaneous schedule registration
 
 Run on two machines at the same epoch second to verify UPSERT correctness:
+
 ```bash
 # Both machines run this pointing at the same AgentMesh instance
 ./scripts/test-09-concurrent-write.sh http://localhost:8080
@@ -342,6 +349,7 @@ Run on two machines at the same epoch second to verify UPSERT correctness:
 ### test-10-concurrent-resume.sh — simultaneous resume
 
 Verifies that a paused schedule resumed from two machines fires exactly once:
+
 ```bash
 # Machine 1 (setup + fire)
 ./scripts/test-10-concurrent-resume.sh setup http://localhost:8080
@@ -351,6 +359,7 @@ Verifies that a paused schedule resumed from two machines fires exactly once:
 ### test-11-thundering-herd.sh — N schedules at the same tick
 
 Registers N schedules all firing at `0 * * * * *`, then verifies each fires exactly once:
+
 ```bash
 ./scripts/test-11-thundering-herd.sh 50 http://localhost:8080
 ```
@@ -361,6 +370,7 @@ Registers N schedules all firing at `0 * * * * *`, then verifies each fires exac
 ### test-12-load-blast.py — concurrent workflow submissions
 
 Blasts N `POST /api/workflow` requests simultaneously, reports latency percentiles:
+
 ```bash
 # Single machine
 python3 scripts/test-12-load-blast.py --url http://localhost:8080 --count 25

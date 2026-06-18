@@ -1,4 +1,5 @@
-# Annotations 
+# Annotations
+
 Used for AgentMesh to convert TypeScript classes to metadata for protobuf generation.
 
 - `protogen` Annotations (TypeScript Decorators)
@@ -14,7 +15,7 @@ import { ProtoMessage, ProtoField } from '@agentmesh/annotations';
 
 @ProtoMessage()
 class MyMessage {
-    @ProtoField({ id: 1 })
-    name: string;
+  @ProtoField({ id: 1 })
+  name: string;
 }
 ```

@@ -17,7 +17,6 @@ When a workflow executes, AgentMesh persists:
 
 All state is written to the configured persistence store (Redis, PostgreSQL, MySQL, or Cassandra) before the next step proceeds. If the server restarts, execution resumes from the last persisted state.
 
-
 ## Task delivery guarantees
 
 AgentMesh provides **at-least-once delivery** for all tasks:
@@ -29,24 +28,22 @@ AgentMesh provides **at-least-once delivery** for all tasks:
 
 A task is never silently lost. If a worker polls a task but never responds, the response timeout triggers redelivery.
 
-
 ## Failure matrix
 
 Here is exactly what happens in each failure scenario:
 
-| Scenario | What AgentMesh does | Outcome |
-|---|---|---|
-| **Worker crashes after poll, before any work** | Response timeout fires. Task returns to `SCHEDULED`. New worker picks it up. | Task is retried automatically. No data loss. |
-| **Worker crashes after side effect, before completion update** | Response timeout fires. Task is redelivered to another worker. | Task executes again. Workers must be idempotent for side effects, or use the task's `updateTime` to detect redelivery. |
-| **Worker reports FAILED** | AgentMesh creates a new task execution based on retry configuration (`retryCount`, `retryDelaySeconds`, `retryLogic`). | Retried up to the configured limit. After exhaustion, task moves to `FAILED` and the workflow's failure handling kicks in. |
-| **Worker reports FAILED_WITH_TERMINAL_ERROR** | No retry. Task is terminal. | Workflow fails or executes the configured `failureWorkflow`. |
-| **Server restarts during workflow execution** | On restart, the sweeper service picks up in-progress workflows from persistent storage and re-evaluates them. | Execution resumes from the last persisted state. No manual intervention needed. |
-| **Long wait across deploys** | WAIT and HUMAN tasks remain `IN_PROGRESS` in persistent storage. The timer or signal resolution is durable. | When the duration elapses or signal arrives (even days later, after multiple deploys), the task completes and the workflow advances. |
-| **Signal/webhook arrives for a paused workflow** | The Task Update API or event handler sets the WAIT/HUMAN task to `COMPLETED` with the provided output. | Workflow resumes immediately with the signal payload available as task output. |
-| **Workflow definition updated while executions are running** | Running executions continue using the **snapshot** of the definition taken at start time. New executions use the updated definition. | No running execution is affected by definition changes. Zero-downtime upgrades. |
-| **Workflow version deleted while executions are running** | Running executions are decoupled from the metadata store. They continue using their embedded definition snapshot. | Existing executions complete normally. Only new starts are affected. |
-| **Network partition between worker and server** | Worker's updates don't reach the server. Response timeout fires, task is requeued. | After partition heals, a new worker (or the same one) picks up the task. |
-
+| Scenario                                                       | What AgentMesh does                                                                                                                  | Outcome                                                                                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Worker crashes after poll, before any work**                 | Response timeout fires. Task returns to `SCHEDULED`. New worker picks it up.                                                         | Task is retried automatically. No data loss.                                                                                         |
+| **Worker crashes after side effect, before completion update** | Response timeout fires. Task is redelivered to another worker.                                                                       | Task executes again. Workers must be idempotent for side effects, or use the task's `updateTime` to detect redelivery.               |
+| **Worker reports FAILED**                                      | AgentMesh creates a new task execution based on retry configuration (`retryCount`, `retryDelaySeconds`, `retryLogic`).               | Retried up to the configured limit. After exhaustion, task moves to `FAILED` and the workflow's failure handling kicks in.           |
+| **Worker reports FAILED_WITH_TERMINAL_ERROR**                  | No retry. Task is terminal.                                                                                                          | Workflow fails or executes the configured `failureWorkflow`.                                                                         |
+| **Server restarts during workflow execution**                  | On restart, the sweeper service picks up in-progress workflows from persistent storage and re-evaluates them.                        | Execution resumes from the last persisted state. No manual intervention needed.                                                      |
+| **Long wait across deploys**                                   | WAIT and HUMAN tasks remain `IN_PROGRESS` in persistent storage. The timer or signal resolution is durable.                          | When the duration elapses or signal arrives (even days later, after multiple deploys), the task completes and the workflow advances. |
+| **Signal/webhook arrives for a paused workflow**               | The Task Update API or event handler sets the WAIT/HUMAN task to `COMPLETED` with the provided output.                               | Workflow resumes immediately with the signal payload available as task output.                                                       |
+| **Workflow definition updated while executions are running**   | Running executions continue using the **snapshot** of the definition taken at start time. New executions use the updated definition. | No running execution is affected by definition changes. Zero-downtime upgrades.                                                      |
+| **Workflow version deleted while executions are running**      | Running executions are decoupled from the metadata store. They continue using their embedded definition snapshot.                    | Existing executions complete normally. Only new starts are affected.                                                                 |
+| **Network partition between worker and server**                | Worker's updates don't reach the server. Response timeout fires, task is requeued.                                                   | After partition heals, a new worker (or the same one) picks up the task.                                                             |
 
 ## Task state transitions
 
@@ -68,21 +65,19 @@ SCHEDULED ──→ IN_PROGRESS ──→ COMPLETED
 
 Each transition is persisted before any subsequent action is taken.
 
-
 ## Timeout and retry configuration
 
 Durability is configurable per task via the [task definition](../documentation/configuration/taskdef.md):
 
-| Parameter | What it controls |
-|---|---|
-| `timeoutSeconds` | Maximum wall-clock time for the task to reach a terminal state. |
+| Parameter                | What it controls                                                  |
+| ------------------------ | ----------------------------------------------------------------- |
+| `timeoutSeconds`         | Maximum wall-clock time for the task to reach a terminal state.   |
 | `responseTimeoutSeconds` | Maximum time to wait for a worker status update before requeuing. |
-| `pollTimeoutSeconds` | Maximum time a scheduled task waits to be polled before timeout. |
-| `retryCount` | Number of retry attempts on failure or timeout. |
-| `retryLogic` | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF`. |
-| `retryDelaySeconds` | Base delay between retries. |
-| `timeoutPolicy` | `RETRY`, `TIME_OUT_WF`, or `ALERT_ONLY`. |
-
+| `pollTimeoutSeconds`     | Maximum time a scheduled task waits to be polled before timeout.  |
+| `retryCount`             | Number of retry attempts on failure or timeout.                   |
+| `retryLogic`             | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF`.              |
+| `retryDelaySeconds`      | Base delay between retries.                                       |
+| `timeoutPolicy`          | `RETRY`, `TIME_OUT_WF`, or `ALERT_ONLY`.                          |
 
 ## Workflow-level durability
 
@@ -93,19 +88,17 @@ Beyond individual tasks, AgentMesh provides workflow-level durability:
 - **Restart, rerun, and retry**: See [Replay and recovery](#replay-and-recovery) below for full details on re-executing workflows.
 - **Versioning**: Multiple workflow versions can run concurrently. Running executions are immutable against definition changes. Restarts can optionally use the latest definition.
 
-
 ## Replay and recovery
 
 Every workflow execution is fully replayable. AgentMesh preserves the complete execution graph — inputs, outputs, and state for every task — so you can re-execute workflows at any time.
 
-| Operation | What it does | When to use |
-|-----------|-------------|-------------|
-| **Restart** | Re-executes the entire workflow from the beginning | Definition changed, need a clean run |
-| **Rerun** | Re-executes from a specific task, reusing outputs of prior tasks | Fix a task in the middle without re-running everything |
-| **Retry** | Retries the last failed task and continues from that point | Transient failure, external dependency was down |
+| Operation   | What it does                                                     | When to use                                            |
+| ----------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
+| **Restart** | Re-executes the entire workflow from the beginning               | Definition changed, need a clean run                   |
+| **Rerun**   | Re-executes from a specific task, reusing outputs of prior tasks | Fix a task in the middle without re-running everything |
+| **Retry**   | Retries the last failed task and continues from that point       | Transient failure, external dependency was down        |
 
 All three operations work on workflows in any terminal state (COMPLETED, FAILED, TIMED_OUT, TERMINATED) and are available indefinitely — AgentMesh preserves the full execution graph. Restart can optionally use the latest workflow definition, so you can fix a bug in the definition and replay immediately.
-
 
 ## Distributed consistency
 
@@ -116,7 +109,6 @@ In multi-node deployments, AgentMesh ensures consistency through:
 - **Persistent queues**: Task queues survive node failures. Configurable sharding strategies (round-robin or local-only) trade off distribution vs. consistency.
 
 See the [deployment guide](../devguide/running/deploy.md#locking) for distributed lock configuration.
-
 
 ## What this means for your code
 

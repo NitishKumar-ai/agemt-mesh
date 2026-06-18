@@ -19,6 +19,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 **Purpose**: Defines the structure of a workflow definition (template/blueprint).
 
 **Key Features**:
+
 - Workflow metadata (name, version, description, owner)
 - List of tasks that comprise the workflow
 - Input/output parameters and templates
@@ -27,6 +28,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 - Schema enforcement for input/output validation
 
 **Important Details**:
+
 - Contains a recursive `WorkflowTask` definition that supports complex workflow patterns:
   - **Decision tasks**: Branch based on conditions (`decisionCases`, `defaultCase`)
   - **Fork-Join tasks**: Execute tasks in parallel (`forkTasks`)
@@ -43,6 +45,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 **Purpose**: Defines the structure of a task definition (reusable task template).
 
 **Key Features**:
+
 - Task metadata (name, description, owner)
 - Retry configuration (count, delay, logic type)
 - Timeout policies and durations
@@ -51,6 +54,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 - Concurrency controls
 
 **Important Details**:
+
 - Task definitions are registered separately and can be reused across multiple workflows
 - Supports three retry strategies: FIXED, EXPONENTIAL_BACKOFF, LINEAR_BACKOFF
 - Timeout policies determine workflow behavior: RETRY, TIME_OUT_WF, ALERT_ONLY
@@ -64,6 +68,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 **Purpose**: Represents a runtime workflow instance (actual execution).
 
 **Key Features**:
+
 - Current execution status (RUNNING, COMPLETED, FAILED, etc.)
 - List of task instances that have been scheduled or executed
 - Input/output data for the workflow execution
@@ -72,6 +77,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 - Workflow variables and correlation IDs
 
 **Important Details**:
+
 - Contains a **recursive `history` field** that stores previous executions for workflow versioning and auditing
 - References the `WorkflowDef` that defines the workflow structure
 - Each workflow has a unique `workflowId`
@@ -87,6 +93,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 **Purpose**: Represents a runtime task instance (actual task execution).
 
 **Key Features**:
+
 - Current task status with detailed state information
 - Input/output data for the task execution
 - Worker information (workerId, domain)
@@ -95,6 +102,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 - Sub-workflow references for SUB_WORKFLOW tasks
 
 **Important Details**:
+
 - Task status enum includes:
   - **Running states**: IN_PROGRESS, SCHEDULED
   - **Success states**: COMPLETED, COMPLETED_WITH_ERRORS, SKIPPED
@@ -112,6 +120,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
 ### Inheritance Hierarchy
 
 All definition schemas (WorkflowDef, TaskDef, SchemaDef) inherit audit fields from the `Auditable` base class:
+
 - `ownerApp`: Application that owns this definition
 - `createTime`: Timestamp when created (milliseconds since epoch)
 - `updateTime`: Timestamp when last updated
@@ -119,6 +128,7 @@ All definition schemas (WorkflowDef, TaskDef, SchemaDef) inherit audit fields fr
 - `updatedBy`: User who last updated the definition
 
 Additionally, definitions implement the `Metadata` interface requiring:
+
 - `name`: Unique identifier
 - `version`: Version number
 
@@ -127,13 +137,15 @@ Additionally, definitions implement the `Metadata` interface requiring:
 The schemas correctly model two important recursive relationships in AgentMesh:
 
 **WorkflowTask recursion**: Tasks can contain nested tasks for control flow
-   ```
-   WorkflowTask
-   ├── decisionCases: Map<String, List<WorkflowTask>>
-   ├── defaultCase: List<WorkflowTask>
-   ├── forkTasks: List<List<WorkflowTask>>
-   └── loopOver: List<WorkflowTask>
-   ```
+
+```
+WorkflowTask
+├── decisionCases: Map<String, List<WorkflowTask>>
+├── defaultCase: List<WorkflowTask>
+├── forkTasks: List<List<WorkflowTask>>
+└── loopOver: List<WorkflowTask>
+```
+
 ### Schema Validation
 
 Schemas are defined to support JSON Schema validation using the `$ref` keyword. Both internal references (`#/definitions/...`) and external references are supported.
@@ -141,6 +153,7 @@ Schemas are defined to support JSON Schema validation using the `$ref` keyword. 
 ### Enumerations
 
 All enum types from the Java code are represented as string enums with allowed values explicitly listed:
+
 - Workflow status: `RUNNING`, `COMPLETED`, `FAILED`, `TIMED_OUT`, `TERMINATED`, `PAUSED`
 - Task status: `IN_PROGRESS`, `CANCELED`, `FAILED`, `FAILED_WITH_TERMINAL_ERROR`, `COMPLETED`, `COMPLETED_WITH_ERRORS`, `SCHEDULED`, `TIMED_OUT`, `SKIPPED`
 - Timeout policies: `RETRY`, `TIME_OUT_WF`, `ALERT_ONLY`
@@ -176,6 +189,7 @@ print('Valid workflow definition!')
 Most modern IDEs support JSON Schema for validation and autocomplete:
 
 **VS Code**: Add this to the top of your JSON file:
+
 ```json
 {
   "$schema": "./schemas/WorkflowDef.json",
@@ -191,6 +205,7 @@ Most modern IDEs support JSON Schema for validation and autocomplete:
 All schemas conform to **JSON Schema Draft 07** specification (`http://json-schema.org/draft-07/schema#`).
 
 Key validation features used:
+
 - `type`: Data type constraints
 - `required`: Required fields
 - `minimum`/`maximum`: Numeric bounds
@@ -207,14 +222,15 @@ Key validation features used:
 
 These schemas are derived from the Java model classes in the AgentMesh codebase:
 
-| Schema File | Java Class | Package |
-|-------------|------------|---------|
+| Schema File      | Java Class    | Package                                            |
+| ---------------- | ------------- | -------------------------------------------------- |
 | WorkflowDef.json | `WorkflowDef` | `com.agentmesh.agentmesh.common.metadata.workflow` |
-| TaskDef.json | `TaskDef` | `com.agentmesh.agentmesh.common.metadata.tasks` |
-| Workflow.json | `Workflow` | `com.agentmesh.agentmesh.common.run` |
-| Task.json | `Task` | `com.agentmesh.agentmesh.common.metadata.tasks` |
+| TaskDef.json     | `TaskDef`     | `com.agentmesh.agentmesh.common.metadata.tasks`    |
+| Workflow.json    | `Workflow`    | `com.agentmesh.agentmesh.common.run`               |
+| Task.json        | `Task`        | `com.agentmesh.agentmesh.common.metadata.tasks`    |
 
 The schemas accurately reflect:
+
 - All fields including inherited fields from `Auditable` and `Metadata`
 - Jackson annotations for serialization behavior
 - Jakarta validation constraints

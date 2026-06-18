@@ -1,6 +1,7 @@
 ---
-description: "OpenSearch Integration — configure OpenSearch as the indexing backend for searching AgentMesh workflows and tasks."
+description: 'OpenSearch Integration — configure OpenSearch as the indexing backend for searching AgentMesh workflows and tasks.'
 ---
+
 # OpenSearch
 
 AgentMesh supports OpenSearch as an indexing backend for searching workflows and tasks via the UI.
@@ -26,10 +27,10 @@ AgentMesh will create its indices on first startup and begin indexing workflows 
 
 ## Supported Versions
 
-| Module | `agentmesh.indexing.type` | OpenSearch Version | Client Library |
-|---|---|---|---|
-| `os-persistence-v2` | `opensearch2` | 2.x (2.0 – 2.18+) | opensearch-java 2.18.0 |
-| `os-persistence-v3` | `opensearch3` | 3.x (3.0+) | opensearch-java 3.0.0 |
+| Module              | `agentmesh.indexing.type` | OpenSearch Version | Client Library         |
+| ------------------- | ------------------------- | ------------------ | ---------------------- |
+| `os-persistence-v2` | `opensearch2`             | 2.x (2.0 – 2.18+)  | opensearch-java 2.18.0 |
+| `os-persistence-v3` | `opensearch3`             | 3.x (3.0+)         | opensearch-java 3.0.0  |
 
 OpenSearch 1.x is no longer supported. If you need 1.x support, see the
 [archived os-persistence-v1 module](https://github.com/agentmesh-oss/agentmesh-os-persistence-v1).
@@ -41,11 +42,11 @@ modules share the same property names — only `agentmesh.indexing.type` differs
 
 ### Connection
 
-| Property | Default | Description |
-|---|---|---|
-| `agentmesh.opensearch.url` | `localhost:9201` | Comma-separated OpenSearch node URLs. HTTP and HTTPS are both supported. |
-| `agentmesh.opensearch.username` | _(none)_ | Username for basic authentication. |
-| `agentmesh.opensearch.password` | _(none)_ | Password for basic authentication. |
+| Property                        | Default          | Description                                                              |
+| ------------------------------- | ---------------- | ------------------------------------------------------------------------ |
+| `agentmesh.opensearch.url`      | `localhost:9201` | Comma-separated OpenSearch node URLs. HTTP and HTTPS are both supported. |
+| `agentmesh.opensearch.username` | _(none)_         | Username for basic authentication.                                       |
+| `agentmesh.opensearch.password` | _(none)_         | Password for basic authentication.                                       |
 
 Multi-node example:
 
@@ -55,24 +56,24 @@ agentmesh.opensearch.url=http://os-node1:9200,http://os-node2:9200,http://os-nod
 
 ### Index Management
 
-| Property | Default | Description |
-|---|---|---|
-| `agentmesh.opensearch.indexPrefix` | `agentmesh` | Prefix for all AgentMesh-managed indices. |
-| `agentmesh.opensearch.indexShardCount` | `5` | Primary shards per index. |
-| `agentmesh.opensearch.indexReplicasCount` | `0` | Replica shards per index. |
-| `agentmesh.opensearch.autoIndexManagementEnabled` | `true` | Whether AgentMesh creates and manages indices automatically. Set to `false` to manage indices externally. |
-| `agentmesh.opensearch.clusterHealthColor` | `green` | Cluster health color AgentMesh waits for before starting. Use `yellow` for single-node clusters. |
+| Property                                          | Default     | Description                                                                                               |
+| ------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
+| `agentmesh.opensearch.indexPrefix`                | `agentmesh` | Prefix for all AgentMesh-managed indices.                                                                 |
+| `agentmesh.opensearch.indexShardCount`            | `5`         | Primary shards per index.                                                                                 |
+| `agentmesh.opensearch.indexReplicasCount`         | `0`         | Replica shards per index.                                                                                 |
+| `agentmesh.opensearch.autoIndexManagementEnabled` | `true`      | Whether AgentMesh creates and manages indices automatically. Set to `false` to manage indices externally. |
+| `agentmesh.opensearch.clusterHealthColor`         | `green`     | Cluster health color AgentMesh waits for before starting. Use `yellow` for single-node clusters.          |
 
 ### Performance Tuning
 
-| Property | Default | Description |
-|---|---|---|
-| `agentmesh.opensearch.indexBatchSize` | `1` | Documents per batch in async mode. |
-| `agentmesh.opensearch.asyncWorkerQueueSize` | `100` | Async indexing task queue depth. |
-| `agentmesh.opensearch.asyncMaxPoolSize` | `12` | Maximum async indexing threads. |
-| `agentmesh.opensearch.asyncBufferFlushTimeout` | `10s` | Maximum time an async buffer is held before flushing. |
-| `agentmesh.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per search. |
-| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1` | REST client connection request timeout in ms. `-1` means unlimited. |
+| Property                                                  | Default | Description                                                         |
+| --------------------------------------------------------- | ------- | ------------------------------------------------------------------- |
+| `agentmesh.opensearch.indexBatchSize`                     | `1`     | Documents per batch in async mode.                                  |
+| `agentmesh.opensearch.asyncWorkerQueueSize`               | `100`   | Async indexing task queue depth.                                    |
+| `agentmesh.opensearch.asyncMaxPoolSize`                   | `12`    | Maximum async indexing threads.                                     |
+| `agentmesh.opensearch.asyncBufferFlushTimeout`            | `10s`   | Maximum time an async buffer is held before flushing.               |
+| `agentmesh.opensearch.taskLogResultLimit`                 | `10`    | Maximum task log entries returned per search.                       |
+| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1`    | REST client connection request timeout in ms. `-1` means unlimited. |
 
 ## Example Configurations
 
@@ -157,18 +158,18 @@ detected, those values are used and a deprecation warning is logged at startup. 
 ### Legacy property mapping
 
 | Legacy (`agentmesh.elasticsearch.*`) | New (`agentmesh.opensearch.*`) |
-|---|---|
-| `url` | `url` |
-| `indexName` | `indexPrefix` |
-| `clusterHealthColor` | `clusterHealthColor` |
-| `indexBatchSize` | `indexBatchSize` |
-| `asyncWorkerQueueSize` | `asyncWorkerQueueSize` |
-| `asyncMaxPoolSize` | `asyncMaxPoolSize` |
-| `indexShardCount` | `indexShardCount` |
-| `indexReplicasCount` | `indexReplicasCount` |
-| `taskLogResultLimit` | `taskLogResultLimit` |
-| `username` | `username` |
-| `password` | `password` |
+| ------------------------------------ | ------------------------------ |
+| `url`                                | `url`                          |
+| `indexName`                          | `indexPrefix`                  |
+| `clusterHealthColor`                 | `clusterHealthColor`           |
+| `indexBatchSize`                     | `indexBatchSize`               |
+| `asyncWorkerQueueSize`               | `asyncWorkerQueueSize`         |
+| `asyncMaxPoolSize`                   | `asyncMaxPoolSize`             |
+| `indexShardCount`                    | `indexShardCount`              |
+| `indexReplicasCount`                 | `indexReplicasCount`           |
+| `taskLogResultLimit`                 | `taskLogResultLimit`           |
+| `username`                           | `username`                     |
+| `password`                           | `password`                     |
 
 ## Disabling Indexing
 

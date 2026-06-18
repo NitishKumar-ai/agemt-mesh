@@ -1,11 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.AMQPObservableQueue = void 0;
-const buffer_1 = require("buffer");
-const rxjs_1 = require("rxjs");
-const uuid_1 = require("uuid");
-const AMQPSettings_1 = require("./config/AMQPSettings");
-const AMQPConnection_1 = require("./AMQPConnection");
+const buffer_1 = require('buffer');
+const rxjs_1 = require('rxjs');
+const uuid_1 = require('uuid');
+const AMQPSettings_1 = require('./config/AMQPSettings');
+const AMQPConnection_1 = require('./AMQPConnection');
 class AMQPObservableQueue {
   settings;
   retrySettings;
@@ -15,62 +15,47 @@ class AMQPObservableQueue {
   amqpConnection;
   messages = [];
   running = false;
-  constructor(
-    connectionUrl,
-    useExchange,
-    settings,
-    retrySettings,
-    batchSize,
-    pollTimeInMS,
-  ) {
-    if (!settings) throw new Error("Settings are undefined");
-    if (batchSize <= 0) throw new Error("Batch size must be greater than 0");
-    if (pollTimeInMS <= 0)
-      throw new Error("Poll time must be greater than 0 ms");
+  constructor(connectionUrl, useExchange, settings, retrySettings, batchSize, pollTimeInMS) {
+    if (!settings) throw new Error('Settings are undefined');
+    if (batchSize <= 0) throw new Error('Batch size must be greater than 0');
+    if (pollTimeInMS <= 0) throw new Error('Poll time must be greater than 0 ms');
     this.useExchange = useExchange;
     this.settings = settings;
     this.batchSize = batchSize;
     this.retrySettings = retrySettings;
     this.pollTimeInMS = pollTimeInMS;
-    this.amqpConnection = AMQPConnection_1.AMQPConnection.getInstance(
-      connectionUrl,
-      retrySettings,
-    );
+    this.amqpConnection = AMQPConnection_1.AMQPConnection.getInstance(connectionUrl, retrySettings);
   }
   observe() {
     return new rxjs_1.Observable((subscriber) => {
       if (this.settings.sequentialProcessing) {
-        console.log("Subscribing for the message processing on schedule basis");
+        console.log('Subscribing for the message processing on schedule basis');
         this.receiveMessages().catch((e) => subscriber.error(e));
-        const subscription = (0, rxjs_1.interval)(this.pollTimeInMS).subscribe(
-          async () => {
-            if (!this.isRunning()) {
-              console.debug("Component stopped, skip listening for messages");
-              return;
+        const subscription = (0, rxjs_1.interval)(this.pollTimeInMS).subscribe(async () => {
+          if (!this.isRunning()) {
+            console.debug('Component stopped, skip listening for messages');
+            return;
+          }
+          if (this.messages.length > 0) {
+            const batch = this.messages.splice(0, this.messages.length);
+            console.log(
+              `Batch from ${this.settings.queueOrExchangeName} is ${batch.map((b) => b.id).join(',')}`,
+            );
+            for (const msg of batch) {
+              subscriber.next(msg);
             }
-            if (this.messages.length > 0) {
-              const batch = this.messages.splice(0, this.messages.length);
-              console.log(
-                `Batch from ${this.settings.queueOrExchangeName} is ${batch.map((b) => b.id).join(",")}`,
-              );
-              for (const msg of batch) {
-                subscriber.next(msg);
-              }
-            }
-          },
-        );
+          }
+        });
         return () => subscription.unsubscribe();
       } else {
-        console.log("Subscribing for the event based AMQP message processing");
-        this.receiveMessagesWithSubscriber(subscriber).catch((e) =>
-          subscriber.error(e),
-        );
-        console.log("Subscribed for the event based AMQP message processing");
+        console.log('Subscribing for the event based AMQP message processing');
+        this.receiveMessagesWithSubscriber(subscriber).catch((e) => subscriber.error(e));
+        console.log('Subscribed for the event based AMQP message processing');
       }
     });
   }
   getType() {
-    return this.useExchange ? "amqp_exchange" : "amqp_queue";
+    return this.useExchange ? 'amqp_exchange' : 'amqp_queue';
   }
   getName() {
     return this.settings.eventName;
@@ -85,10 +70,7 @@ class AMQPObservableQueue {
         try {
           await this.ackMsg(message);
         } catch (e) {
-          console.error(
-            `Cannot ACK message with delivery tag ${message.receipt}`,
-            e,
-          );
+          console.error(`Cannot ACK message with delivery tag ${message.receipt}`, e);
           if (message.receipt) failedMessages.push(message.receipt);
         }
       }
@@ -104,10 +86,7 @@ class AMQPObservableQueue {
           this.settings.queueOrExchangeName,
         );
         if (message.receipt) {
-          chn.ack(
-            { fields: { deliveryTag: parseInt(message.receipt, 10) } },
-            false,
-          );
+          chn.ack({ fields: { deliveryTag: parseInt(message.receipt, 10) } }, false);
         }
         break;
       } catch (e) {
@@ -123,26 +102,22 @@ class AMQPObservableQueue {
   }
   async publish(messages) {
     try {
-      let exchange = "";
-      let routingKey = "";
+      let exchange = '';
+      let routingKey = '';
       if (this.useExchange) {
-        await this.getOrCreateExchange(
-          AMQPConnection_1.ConnectionType.PUBLISHER,
-        );
+        await this.getOrCreateExchange(AMQPConnection_1.ConnectionType.PUBLISHER);
         exchange = this.settings.queueOrExchangeName;
         routingKey = this.settings.routingKey;
       } else {
-        const q = await this.getOrCreateQueue(
-          AMQPConnection_1.ConnectionType.PUBLISHER,
-        );
-        exchange = "";
+        const q = await this.getOrCreateQueue(AMQPConnection_1.ConnectionType.PUBLISHER);
+        exchange = '';
         routingKey = q.queue;
       }
       for (const message of messages) {
         await this.publishMessage(message, exchange, routingKey);
       }
     } catch (ex) {
-      console.error("Failed to publish messages:", ex);
+      console.error('Failed to publish messages:', ex);
       throw ex;
     }
   }
@@ -183,19 +158,16 @@ class AMQPObservableQueue {
       } finally {
         if (chn) {
           try {
-            await this.amqpConnection.returnChannel(
-              AMQPConnection_1.ConnectionType.PUBLISHER,
-              chn,
-            );
+            await this.amqpConnection.returnChannel(AMQPConnection_1.ConnectionType.PUBLISHER, chn);
           } catch (e) {
-            console.error("Failed to return the channel", e);
+            console.error('Failed to return the channel', e);
           }
         }
       }
     }
   }
   setUnackTimeout(message, unackTimeout) {
-    throw new Error("UnsupportedOperationException");
+    throw new Error('UnsupportedOperationException');
   }
   async size() {
     let chn = null;
@@ -214,10 +186,7 @@ class AMQPObservableQueue {
       throw e;
     } finally {
       if (chn) {
-        await this.amqpConnection.returnChannel(
-          AMQPConnection_1.ConnectionType.SUBSCRIBER,
-          chn,
-        );
+        await this.amqpConnection.returnChannel(AMQPConnection_1.ConnectionType.SUBSCRIBER, chn);
       }
     }
   }
@@ -258,7 +227,7 @@ class AMQPObservableQueue {
     );
     const args = {
       ...this.settings.arguments,
-      "x-queue-type": this.settings.queueType,
+      'x-queue-type': this.settings.queueType,
     };
     const repl = await chn.assertQueue(targetName, {
       durable: this.settings.durable,
@@ -275,25 +244,17 @@ class AMQPObservableQueue {
       this.settings.queueOrExchangeName,
     );
     await chn.prefetch(this.batchSize);
-    let queueName = "";
+    let queueName = '';
     if (this.useExchange) {
-      await this.getOrCreateExchange(
-        AMQPConnection_1.ConnectionType.SUBSCRIBER,
-      );
+      await this.getOrCreateExchange(AMQPConnection_1.ConnectionType.SUBSCRIBER);
       const q = await this.getOrCreateQueue(
         AMQPConnection_1.ConnectionType.SUBSCRIBER,
         this.settings.getExchangeBoundQueueName(),
       );
       queueName = q.queue;
-      await chn.bindQueue(
-        queueName,
-        this.settings.queueOrExchangeName,
-        this.settings.routingKey,
-      );
+      await chn.bindQueue(queueName, this.settings.queueOrExchangeName, this.settings.routingKey);
     } else {
-      const q = await this.getOrCreateQueue(
-        AMQPConnection_1.ConnectionType.SUBSCRIBER,
-      );
+      const q = await this.getOrCreateQueue(AMQPConnection_1.ConnectionType.SUBSCRIBER);
       queueName = q.queue;
     }
     await chn.consume(
@@ -317,25 +278,17 @@ class AMQPObservableQueue {
       this.settings.queueOrExchangeName,
     );
     await chn.prefetch(this.batchSize);
-    let queueName = "";
+    let queueName = '';
     if (this.useExchange) {
-      await this.getOrCreateExchange(
-        AMQPConnection_1.ConnectionType.SUBSCRIBER,
-      );
+      await this.getOrCreateExchange(AMQPConnection_1.ConnectionType.SUBSCRIBER);
       const q = await this.getOrCreateQueue(
         AMQPConnection_1.ConnectionType.SUBSCRIBER,
         this.settings.getExchangeBoundQueueName(),
       );
       queueName = q.queue;
-      await chn.bindQueue(
-        queueName,
-        this.settings.queueOrExchangeName,
-        this.settings.routingKey,
-      );
+      await chn.bindQueue(queueName, this.settings.queueOrExchangeName, this.settings.routingKey);
     } else {
-      const q = await this.getOrCreateQueue(
-        AMQPConnection_1.ConnectionType.SUBSCRIBER,
-      );
+      const q = await this.getOrCreateQueue(AMQPConnection_1.ConnectionType.SUBSCRIBER);
       queueName = q.queue;
     }
     await chn.consume(

@@ -1,11 +1,11 @@
 ---
-description: "Build AgentMesh workers in Go with type-safe task definitions and workflow management."
+description: 'Build AgentMesh workers in Go with type-safe task definitions and workflow management.'
 ---
 
 # Go SDK
 
 !!! info "Source"
-    GitHub: [agentmesh-oss/go-sdk](https://github.com/agentmesh-oss/go-sdk) | Report issues and contribute on GitHub.
+GitHub: [agentmesh-oss/go-sdk](https://github.com/agentmesh-oss/go-sdk) | Report issues and contribute on GitHub.
 
 ## Installation
 
@@ -25,22 +25,20 @@ go get github.com/agentmesh-sdk/agentmesh-go
 
 ## Hello World
 
-In this repo you will find a basic "Hello World" under [examples/hello_world](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/). 
+In this repo you will find a basic "Hello World" under [examples/hello_world](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/).
 
 Let's analyze the app in 3 steps.
 
-
 > [!note]
-> You will need an up & running AgentMesh Server. 
+> You will need an up & running AgentMesh Server.
 >
 > For details on how to run AgentMesh take a look at [our guide](https://agentmesh-oss.github.io/agentmesh/devguide/running/deploy.html).
 >
 > The examples expect the server to be listening on http://localhost:8080.
 
-
 ### Step 1: Creating the workflow by code
 
-The "greetings" workflow is going to be created by code and registered in AgentMesh. 
+The "greetings" workflow is going to be created by code and registered in AgentMesh.
 
 Check the `CreateWorkflow` function in [examples/hello_world/src/workflow.go](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/src/workflow.go).
 
@@ -65,22 +63,23 @@ func CreateWorkflow(executor *executor.WorkflowExecutor) *workflow.AgentMeshWork
 }
 ```
 
-In the above code first we create a workflow by calling `workflow.NewAgentMeshWorkflow(..)` and set its properties `Name`, `Version`, `Description` and `TimeoutPolicy`. 
+In the above code first we create a workflow by calling `workflow.NewAgentMeshWorkflow(..)` and set its properties `Name`, `Version`, `Description` and `TimeoutPolicy`.
 
 Then we create a [Simple Task](https://orkes.io/content/reference-docs/worker-task) of type `"greet"` with reference name `"greet_ref"` and add it to the workflow. That task gets the workflow input `"name"` as an input with key `"person_to_be_greated"`.
 
 > [!note]
->`"person_to_be_greated"` is too verbose! Why would you name it like that?
+> `"person_to_be_greated"` is too verbose! Why would you name it like that?
 >
-> It's just to make it clear that the workflow input is not passed automatically. 
+> It's just to make it clear that the workflow input is not passed automatically.
 >
-> The worker will get the actual value of the workflow input because of this mapping  `Input("person_to_be_greated", "${workflow.input.name}")` in the workflow definition. 
+> The worker will get the actual value of the workflow input because of this mapping `Input("person_to_be_greated", "${workflow.input.name}")` in the workflow definition.
 >
->Expressions like `"${workflow.input.name}"` will be replaced by their value during execution.
+> Expressions like `"${workflow.input.name}"` will be replaced by their value during execution.
 
-Last but not least, the output of the workflow is set by calling `wf.OutputParameters(..)`. 
+Last but not least, the output of the workflow is set by calling `wf.OutputParameters(..)`.
 
 The value of `"greetings"` is going to be whatever `"hello"` is in the output of the executed `"greet"` task, e.g.: if the task output is:
+
 ```
 {
 	"hello" : "Hello, John"
@@ -88,6 +87,7 @@ The value of `"greetings"` is going to be whatever `"hello"` is in the output of
 ```
 
 The expected workflow output will be:
+
 ```
 {
 	"greetings": "Hello, John"
@@ -122,13 +122,13 @@ The Go code translates to this JSON defininition. You can view this in your Agen
 
 > [!note]
 > Workflows can also be registered using the API. Using the JSON you can make the following request:
+>
 > ```shell
 > curl -X POST -H "Content-Type:application/json" \
 > http://localhost:8080/api/metadata/workflow -d @greetings_workflow.json
 > ```
 
 In [Step 3](#step-3-running-the-application) you will see how to create an instance of `executor.WorkflowExecutor`.
-
 
 ### Step 2: Creating the worker
 
@@ -165,7 +165,7 @@ var (
 
 ```
 
-First we create an `APIClient` instance. This is a REST client. 
+First we create an `APIClient` instance. This is a REST client.
 
 We need to provide the correct settings to our client. In this example, `client.NewAPIClientFromEnv()` is used, which initializes a new client by reading the settings from the following environment variables: `AGENTMESH_SERVER_URL`, `AGENTMESH_AUTH_KEY`, and `AGENTMESH_AUTH_SECRET`.
 `AGENTMESH_CLIENT_HTTP_TIMEOUT` lets you configure the HTTP timeout for our client, in seconds. If not set, defaults to 30 seconds.
@@ -189,7 +189,7 @@ func main() {
 	}
 	// Till Here after registering the workflow
 
-	// Start the greetings workflow 
+	// Start the greetings workflow
 	id, err := workflowExecutor.StartWorkflow(
 		&model.StartWorkflowRequest{
 			Name:    "greetings",
@@ -222,6 +222,7 @@ That simple line `taskRunner.StartWorker("greet", hello_world.Greet, 1, time.Mil
 The `workflowExecutor` gives us an abstraction on top of the `apiClient` to manage workflows. It is used under the hood by `AgentMeshWorkflow` to register the workflow and it's also used to start and monitor the execution.
 
 #### Running the example with a local AgentMesh OSS server:
+
 ```shell
 export AGENTMESH_SERVER_URL="http://localhost:8080/api"
 cd examples
@@ -229,6 +230,7 @@ go run hello_world/main.go
 ```
 
 #### Running the example with an [Orkes developer account](https://developer.orkescloud.com).
+
 ```shell
 export AGENTMESH_SERVER_URL="https://developer.orkescloud.com/api"
 export AGENTMESH_AUTH_KEY="..."
@@ -241,15 +243,18 @@ go run hello_world/main.go
 > Orkes AgentMesh requires authentication. [Get a key and secret from the server](https://orkes.io/content/how-to-videos/access-key-and-secret) to set those variables.
 
 The above commands should give an output similar to
+
 ```shell
-INFO[0000] Updated poll interval for task: greet, to: 100ms 
-INFO[0000] Started 1 worker(s) for taskName greet, polling in interval of 100 ms 
-INFO[0000] Started workflow with Id:14a9fcc5-3d74-11ef-83dc-acde48001122 
-INFO[0000] Output of the workflow:map[Greetings:Hello, Gopher] 
+INFO[0000] Updated poll interval for task: greet, to: 100ms
+INFO[0000] Started 1 worker(s) for taskName greet, polling in interval of 100 ms
+INFO[0000] Started workflow with Id:14a9fcc5-3d74-11ef-83dc-acde48001122
+INFO[0000] Output of the workflow:map[Greetings:Hello, Gopher]
 ```
 
 ## Deprecated Methods
+
 Some methods in the SDK client interfaces are now deprecated. They’ve been replaced with newer methods that follow more consistent naming. Please refer to our [Migration Guide](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/migration_guide.md) for detailed information on how to update your code.
+
 # Further Reading
 
 - [Writing Workers with the Go SDK](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/workers_sdk.md)
@@ -259,14 +264,13 @@ Some methods in the SDK client interfaces are now deprecated. They’ve been rep
 - [API Client Configuration](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/api_client/README.md) - Complete guide to API client setup, authentication, and proxy configuration
 - [TLS Configuration Guide](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/api_client/tls_configuration.md) - TLS/SSL configuration for self-signed certificates and mTLS
 
-
 ## Examples
 
 Browse all examples on GitHub: [agentmesh-oss/go-sdk/examples](https://github.com/agentmesh-oss/go-sdk/tree/main/examples)
 
-| Example | Type |
-|---|---|
-| [Readme](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/README.md) | file |
+| Example                                                                               | Type      |
+| ------------------------------------------------------------------------------------- | --------- |
+| [Readme](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/README.md)        | file      |
 | [Api Gateway](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/api_gateway) | directory |
 | [Hello World](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/hello_world) | directory |
-| [Workflow](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/workflow) | directory |
+| [Workflow](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/workflow)       | directory |

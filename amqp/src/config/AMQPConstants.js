@@ -1,12 +1,12 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.AMQPConstants = void 0;
 class AMQPConstants {
-  static AMQP_QUEUE_TYPE = "amqp_queue";
-  static AMQP_EXCHANGE_TYPE = "amqp_exchange";
-  static DEFAULT_CONTENT_TYPE = "application/json";
-  static DEFAULT_CONTENT_ENCODING = "UTF-8";
-  static DEFAULT_EXCHANGE_TYPE = "topic";
+  static AMQP_QUEUE_TYPE = 'amqp_queue';
+  static AMQP_EXCHANGE_TYPE = 'amqp_exchange';
+  static DEFAULT_CONTENT_TYPE = 'application/json';
+  static DEFAULT_CONTENT_ENCODING = 'UTF-8';
+  static DEFAULT_EXCHANGE_TYPE = 'topic';
   static DEFAULT_DURABLE = true;
   static DEFAULT_EXCLUSIVE = false;
   static DEFAULT_AUTO_DELETE = false;

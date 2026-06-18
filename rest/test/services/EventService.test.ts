@@ -83,6 +83,8 @@ describe('EventService', () => {
   });
 
   it('removeEventHandlerStatus throws on missing handler', async () => {
-    await expect(service.removeEventHandlerStatus('does_not_exist')).rejects.toThrow(NotFoundException);
+    await expect(service.removeEventHandlerStatus('does_not_exist')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

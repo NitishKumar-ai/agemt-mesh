@@ -26,7 +26,7 @@ fs.mkdirSync(protosDir, { recursive: true });
 
 const gen = new ProtoGen('protoPackage', 'abc.protogen.example', 'goPackage');
 gen['protoFiles'].push(
-  new ProtoFile(SmokeTest, 'protoPackage', 'abc.protogen.example', 'goPackage')
+  new ProtoFile(SmokeTest, 'protoPackage', 'abc.protogen.example', 'goPackage'),
 );
 gen.writeMapper(mapperDir, 'mapperPackage');
 gen.writeProtos(protosDir);

@@ -1,26 +1,27 @@
 ---
-description: "Event Handlers Lab — hands-on tutorial for publishing events and triggering AgentMesh workflows with event handlers."
+description: 'Event Handlers Lab — hands-on tutorial for publishing events and triggering AgentMesh workflows with event handlers.'
 ---
+
 # Events and Event Handlers
 
 In this exercise, we shall:
 
-* Publish an Event to AgentMesh using `Event` task.
-* Subscribe to Events, and perform actions:
-    * Start a Workflow
-    * Complete Task
+- Publish an Event to AgentMesh using `Event` task.
+- Subscribe to Events, and perform actions:
+  - Start a Workflow
+  - Complete Task
 
 AgentMesh supports eventing with two Interfaces:
 
-* [Event Task](../../documentation/configuration/workflowdef/systemtasks/event-task.md)
-* [Event Handlers](../../documentation/configuration/eventhandlers.md)
+- [Event Task](../../documentation/configuration/workflowdef/systemtasks/event-task.md)
+- [Event Handlers](../../documentation/configuration/eventhandlers.md)
 
 ## Create Workflow Definitions
 
 Let's create two workflows:
 
-* `test_workflow_for_eventHandler` which will have an `Event` task to start another workflow, and a `WAIT` System task that will be completed by an event.
-* `test_workflow_startedBy_eventHandler` which will have an `Event` task to generate an event to complete `WAIT` task in the above workflow.
+- `test_workflow_for_eventHandler` which will have an `Event` task to start another workflow, and a `WAIT` System task that will be completed by an event.
+- `test_workflow_startedBy_eventHandler` which will have an `Event` task to generate an event to complete `WAIT` task in the above workflow.
 
 Send `POST` requests to `/metadata/workflow` endpoint with below payloads:
 
@@ -85,13 +86,13 @@ Event Handler definitions are pretty much like Task or Workflow definitions. We 
 
 Event Handler should know the Queue it has to listen to. This should be defined in `event` parameter.
 
-When using AgentMesh queues, define `event` with format: 
+When using AgentMesh queues, define `event` with format:
 
-```agentmesh:{workflow_name}:{taskReferenceName}```
+`agentmesh:{workflow_name}:{taskReferenceName}`
 
-And when using SQS, define with format: 
+And when using SQS, define with format:
 
-```sqs:{my_sqs_queue_name}```
+`sqs:{my_sqs_queue_name}`
 
 ```json
 {
@@ -106,9 +107,7 @@ Event Handler can perform a list of actions defined in `actions` array parameter
 {
   "name": "test_start_workflow",
   "event": "agentmesh:test_workflow_for_eventHandler:start_workflow_with_event",
-  "actions": [
-      "<insert-actions-here>"
-  ],
+  "actions": ["<insert-actions-here>"],
   "active": true
 }
 ```
@@ -117,13 +116,13 @@ Let's define `start_workflow` action. We shall pass the name of workflow we woul
 
 ```json
 {
-    "action": "start_workflow",
-    "start_workflow": {
-        "name": "test_workflow_startedBy_eventHandler",
-        "input": {
-            "sourceWorkflowId": "${workflowInstanceId}"
-        }
+  "action": "start_workflow",
+  "start_workflow": {
+    "name": "test_workflow_startedBy_eventHandler",
+    "input": {
+      "sourceWorkflowId": "${workflowInstanceId}"
     }
+  }
 }
 ```
 
@@ -156,11 +155,11 @@ Similarly, create another Event Handler to complete task.
   "event": "agentmesh:test_workflow_startedBy_eventHandler:complete_task_with_event",
   "actions": [
     {
-    	"action": "complete_task",
-    	"complete_task": {
-	        "workflowId": "${sourceWorkflowId}",
-	        "taskRefName": "test_task_tobe_completed_by_eventHandler"
-	     }
+      "action": "complete_task",
+      "complete_task": {
+        "workflowId": "${sourceWorkflowId}",
+        "taskRefName": "test_task_tobe_completed_by_eventHandler"
+      }
     }
   ],
   "active": true

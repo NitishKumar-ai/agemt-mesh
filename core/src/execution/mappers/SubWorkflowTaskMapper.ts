@@ -30,7 +30,8 @@ export class SubWorkflowTaskMapper implements TaskMapper {
       if (subworkflowParam.taskToDomain) {
         subWorkflowTask.inputData['subWorkflowTaskToDomain'] = subworkflowParam.taskToDomain;
       }
-      subWorkflowTask.inputData['workflowInput'] = (subworkflowParam as Record<string, unknown>)['workflowInput'] ?? taskInput;
+      subWorkflowTask.inputData['workflowInput'] =
+        (subworkflowParam as Record<string, unknown>)['workflowInput'] ?? taskInput;
     }
 
     return [subWorkflowTask];

@@ -161,9 +161,9 @@
     {
       "name": "agentmesh.file-storage.type",
       "values": [
-        { "value": "local",      "description": "Local filesystem storage." },
-        { "value": "s3",         "description": "AWS S3 (or S3-compatible) storage." },
-        { "value": "gcs",        "description": "Google Cloud Storage." },
+        { "value": "local", "description": "Local filesystem storage." },
+        { "value": "s3", "description": "AWS S3 (or S3-compatible) storage." },
+        { "value": "gcs", "description": "Google Cloud Storage." },
         { "value": "azure-blob", "description": "Azure Blob Storage." }
       ]
     }

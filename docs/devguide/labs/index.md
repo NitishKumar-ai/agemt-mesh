@@ -1,9 +1,11 @@
 ---
-description: "Guided Tutorial — learn AgentMesh step by step with hands-on labs covering task workers, definitions, and workflows."
+description: 'Guided Tutorial — learn AgentMesh step by step with hands-on labs covering task workers, definitions, and workflows.'
 ---
+
 # Guided Tutorial
 
 ## High Level Steps
+
 Generally, these are the steps necessary in order to put AgentMesh to work for your business workflow:
 
 1. Create task worker(s) that poll for scheduled tasks at regular interval
@@ -11,16 +13,18 @@ Generally, these are the steps necessary in order to put AgentMesh to work for y
 3. Create the workflow definition
 
 ## Before We Begin
+
 Ensure you have a AgentMesh instance up and running. This includes both the Server and the UI. We recommend following the [Docker Instructions](../running/deploy.md).
 
 ## Tools
+
 For the purpose of testing and issuing API calls, the following tools are useful
 
 - Linux cURL command
 - [Postman](https://www.postman.com) or similar REST client
 
 ## Let's Go
-We will begin by defining a simple workflow that utilizes System Tasks. 
+
+We will begin by defining a simple workflow that utilizes System Tasks.
 
 [Next](first-workflow.md)
-

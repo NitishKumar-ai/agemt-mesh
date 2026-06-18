@@ -110,7 +110,12 @@ export class ProtoGen {
           if (ann !== undefined) {
             console.log(`protogen: found ${exported.name}`);
             this.protoFiles.push(
-              new ProtoFile(exported, this.protoPackageName, this.javaPackageName, this.goPackageName),
+              new ProtoFile(
+                exported,
+                this.protoPackageName,
+                this.javaPackageName,
+                this.goPackageName,
+              ),
             );
           }
         } catch {

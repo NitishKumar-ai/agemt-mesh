@@ -28,7 +28,7 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
   async getAllTaskDefs(): Promise<TaskDef[]> {
     const query = 'SELECT payload FROM task_definitions';
     const result = await this.client.execute(query, [], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 
   async removeTaskDef(name: string): Promise<void> {
@@ -38,7 +38,9 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
 
   async createWorkflowDef(def: WorkflowDef): Promise<void> {
     const query = 'INSERT INTO workflow_definitions (name, version, payload) VALUES (?, ?, ?)';
-    await this.client.execute(query, [def.name, def.version, JSON.stringify(def)], { prepare: true });
+    await this.client.execute(query, [def.name, def.version, JSON.stringify(def)], {
+      prepare: true,
+    });
     const latestQuery = 'INSERT INTO workflow_defs_latest (name, version) VALUES (?, ?)';
     await this.client.execute(latestQuery, [def.name, def.version], { prepare: true });
   }
@@ -70,7 +72,7 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
   async getAllWorkflowDefs(): Promise<WorkflowDef[]> {
     const query = 'SELECT payload FROM workflow_definitions';
     const result = await this.client.execute(query, [], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 
   async getAllWorkflowDefsLatestVersions(): Promise<WorkflowDef[]> {
@@ -87,13 +89,13 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
   async getWorkflowNames(): Promise<string[]> {
     const query = 'SELECT name FROM workflow_defs_latest';
     const result = await this.client.execute(query, [], { prepare: true });
-    return result.rows.map(row => row.get('name'));
+    return result.rows.map((row) => row.get('name'));
   }
 
   async getWorkflowVersions(name: string): Promise<WorkflowDefSummary[]> {
     const query = 'SELECT version, payload FROM workflow_definitions WHERE name = ?';
     const result = await this.client.execute(query, [name], { prepare: true });
-    return result.rows.map(row => {
+    return result.rows.map((row) => {
       const def = JSON.parse(row.get('payload')) as WorkflowDef;
       return {
         name: def.name,
@@ -105,7 +107,11 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
 
   async addEventHandler(handler: EventHandler): Promise<void> {
     const query = 'INSERT INTO event_handlers (name, event, active, payload) VALUES (?, ?, ?, ?)';
-    await this.client.execute(query, [handler.name, handler.event, handler.active, JSON.stringify(handler)], { prepare: true });
+    await this.client.execute(
+      query,
+      [handler.name, handler.event, handler.active, JSON.stringify(handler)],
+      { prepare: true },
+    );
   }
 
   async updateEventHandler(handler: EventHandler): Promise<void> {
@@ -120,11 +126,11 @@ export class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
   async getAllEventHandlers(): Promise<EventHandler[]> {
     const query = 'SELECT payload FROM event_handlers';
     const result = await this.client.execute(query, [], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 
   async getEventHandlersForEvent(event: string, activeOnly: boolean): Promise<EventHandler[]> {
     const handlers = await this.getAllEventHandlers();
-    return handlers.filter(h => h.event === event && (!activeOnly || h.active));
+    return handlers.filter((h) => h.event === event && (!activeOnly || h.active));
   }
 }

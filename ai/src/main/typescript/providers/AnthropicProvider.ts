@@ -1,7 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import {
-  AIModel,
-} from '../AIModel.js';
+import { AIModel } from '../AIModel.js';
 import {
   EmbeddingGenRequest,
   ChatCompletion,
@@ -48,7 +46,10 @@ export class AnthropicChatModel implements ChatModel {
             source: {
               type: 'base64',
               media_type: media.mimeType as any,
-              data: typeof media.data === 'string' ? media.data : Buffer.from(media.data).toString('base64'),
+              data:
+                typeof media.data === 'string'
+                  ? media.data
+                  : Buffer.from(media.data).toString('base64'),
             },
           });
         }

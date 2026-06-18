@@ -1,13 +1,14 @@
 ---
-description: "File Storage — first-class support for binary file payloads in AgentMesh workflows, with pluggable backends (local, S3, Azure Blob, GCS)."
+description: 'File Storage — first-class support for binary file payloads in AgentMesh workflows, with pluggable backends (local, S3, Azure Blob, GCS).'
 ---
+
 # File Storage
 
 ## Context
 
 The file-storage feature lets workflows carry binary file payloads (images, video, archives, model artefacts) without stuffing them into JSON inputs and outputs. Files are uploaded directly to a configured backend via short-lived presigned URLs and tracked in AgentMesh by a metadata record. Workflow tasks pass a small `FileHandle`/`FileHandler` reference instead of the bytes themselves.
 
-This is distinct from [External Payload Storage](externalpayloadstorage.md), which transparently offloads oversized JSON workflow/task payloads. File storage is for *user file content* that the workflow knowingly produces or consumes.
+This is distinct from [External Payload Storage](externalpayloadstorage.md), which transparently offloads oversized JSON workflow/task payloads. File storage is for _user file content_ that the workflow knowingly produces or consumes.
 
 ## Feature flag
 
@@ -23,11 +24,11 @@ When `false` (the default) nothing registers and `/api/files/*` returns `404`.
 
 `agentmesh.file-storage.*`:
 
-| Property | Description | default value |
-| --- | --- | --- |
-| agentmesh.file-storage.enabled | Master flag for the file-storage feature. | `false` |
-| agentmesh.file-storage.type | Backend selector: `local`, `s3`, `azure-blob`, `gcs`. | `local` |
-| agentmesh.file-storage.signed-url-expiration | TTL for presigned upload/download URLs. Spring `Duration`; bare numbers are seconds. | `60s` |
+| Property                                     | Description                                                                          | default value |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ | ------------- |
+| agentmesh.file-storage.enabled               | Master flag for the file-storage feature.                                            | `false`       |
+| agentmesh.file-storage.type                  | Backend selector: `local`, `s3`, `azure-blob`, `gcs`.                                | `local`       |
+| agentmesh.file-storage.signed-url-expiration | TTL for presigned upload/download URLs. Spring `Duration`; bare numbers are seconds. | `60s`         |
 
 ## Backends
 
@@ -35,33 +36,33 @@ When `false` (the default) nothing registers and `/api/files/*` returns `404`.
 
 Server-local filesystem. Intended for development and single-node deployments only — does not scale horizontally and does not support multipart upload.
 
-| Property | Description | default value |
-| --- | --- | --- |
+| Property                               | Description                        | default value                                |
+| -------------------------------------- | ---------------------------------- | -------------------------------------------- |
 | agentmesh.file-storage.local.directory | Directory where files are written. | `${java.io.tmpdir}/agentmesh/files-uploaded` |
 
 ### Amazon S3 (`type=s3`)
 
 Uses the default AWS credential provider chain (environment, instance profile, etc.).
 
-| Property | Description | default value |
-| --- | --- | --- |
-| agentmesh.file-storage.s3.bucket-name | S3 bucket where files are stored. | |
-| agentmesh.file-storage.s3.region | AWS region for the bucket. | `us-east-1` |
+| Property                              | Description                       | default value |
+| ------------------------------------- | --------------------------------- | ------------- |
+| agentmesh.file-storage.s3.bucket-name | S3 bucket where files are stored. |               |
+| agentmesh.file-storage.s3.region      | AWS region for the bucket.        | `us-east-1`   |
 
 ### Azure Blob (`type=azure-blob`)
 
-| Property | Description | default value |
-| --- | --- | --- |
-| agentmesh.file-storage.azure-blob.container-name | Azure Blob container where files are stored. | |
-| agentmesh.file-storage.azure-blob.connection-string | Account connection string. Required for SAS-signed URLs. | |
+| Property                                            | Description                                              | default value |
+| --------------------------------------------------- | -------------------------------------------------------- | ------------- |
+| agentmesh.file-storage.azure-blob.container-name    | Azure Blob container where files are stored.             |               |
+| agentmesh.file-storage.azure-blob.connection-string | Account connection string. Required for SAS-signed URLs. |               |
 
 ### Google Cloud Storage (`type=gcs`)
 
-| Property | Description | default value |
-| --- | --- | --- |
-| agentmesh.file-storage.gcs.bucket-name | GCS bucket where files are stored. | |
-| agentmesh.file-storage.gcs.project-id | GCP project that owns the bucket. | |
-| agentmesh.file-storage.gcs.credentials-file | Path to a service-account JSON key file. Falls back to application default credentials if unset. | |
+| Property                                    | Description                                                                                      | default value |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------- |
+| agentmesh.file-storage.gcs.bucket-name      | GCS bucket where files are stored.                                                               |               |
+| agentmesh.file-storage.gcs.project-id       | GCP project that owns the bucket.                                                                |               |
+| agentmesh.file-storage.gcs.credentials-file | Path to a service-account JSON key file. Falls back to application default credentials if unset. |               |
 
 ### Bring Your Own Storage (BYOS)
 
@@ -73,11 +74,11 @@ File metadata lives in the `file_metadata` table — `fileId`, `fileName`, `cont
 
 Schemas are created by Flyway:
 
-| Backend | Migration |
-| --- | --- |
+| Backend  | Migration                |
+| -------- | ------------------------ |
 | Postgres | `V15__file_metadata.sql` |
-| MySQL | `V9__file_metadata.sql` |
-| SQLite | `V3__file_metadata.sql` |
+| MySQL    | `V9__file_metadata.sql`  |
+| SQLite   | `V3__file_metadata.sql`  |
 
 Redis and Cassandra metadata DAOs are also provided.
 
@@ -87,7 +88,7 @@ Objects are written to `agentmesh/<workflowId>/<fileId>` inside the configured b
 
 ## Access scope
 
-Download URLs are *workflow-family scoped*: the caller must supply a `workflowId` that resolves to the same workflow family (self, ancestors, or descendants in the sub-workflow tree) as the file's `workflowId`. Mismatches return `403 Forbidden`. There is no per-file size cap in this iteration.
+Download URLs are _workflow-family scoped_: the caller must supply a `workflowId` that resolves to the same workflow family (self, ancestors, or descendants in the sub-workflow tree) as the file's `workflowId`. Mismatches return `403 Forbidden`. There is no per-file size cap in this iteration.
 
 ## Worker usage
 

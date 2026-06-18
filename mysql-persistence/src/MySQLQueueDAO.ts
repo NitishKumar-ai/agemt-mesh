@@ -14,11 +14,7 @@ export class MySQLQueueDAO implements QueueDAO {
       .executeTakeFirst();
 
     if (!exists) {
-      await this.db
-        .insertInto('queue')
-        .ignore()
-        .values({ queue_name: queueName })
-        .execute();
+      await this.db.insertInto('queue').ignore().values({ queue_name: queueName }).execute();
     }
   }
 

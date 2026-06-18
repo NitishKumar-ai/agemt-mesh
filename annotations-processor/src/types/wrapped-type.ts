@@ -18,8 +18,7 @@ export class WrappedType extends AbstractType {
     }
 
     const className =
-      (typeof valueType === 'function' ? valueType.name : valueType) +
-      realType.getWrapperSuffix();
+      (typeof valueType === 'function' ? valueType.name : valueType) + realType.getWrapperSuffix();
     const wrappedType = TypeMapper.INSTANCE.getByClassName(className);
     if (!wrappedType) throw new Error(`missing wrapper class: ${className}`);
     return new WrappedType(realType, wrappedType);

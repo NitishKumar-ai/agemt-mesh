@@ -1,7 +1,7 @@
-import * as amqplib from "amqplib";
+import * as amqplib from 'amqplib';
 export declare enum ConnectionType {
-  PUBLISHER = "PUBLISHER",
-  SUBSCRIBER = "SUBSCRIBER",
+  PUBLISHER = 'PUBLISHER',
+  SUBSCRIBER = 'SUBSCRIBER',
 }
 export interface AMQPRetryPattern {
   continueOrPropagate(e: Error, retryIndex: number): void;
@@ -27,10 +27,7 @@ export declare class AMQPConnection {
   ): Promise<amqplib.Channel>;
   private createChannel;
   private borrowChannel;
-  returnChannel(
-    connectionType: ConnectionType,
-    channel: amqplib.Channel,
-  ): Promise<void>;
+  returnChannel(connectionType: ConnectionType, channel: amqplib.Channel): Promise<void>;
   close(): Promise<void>;
 }
 //# sourceMappingURL=AMQPConnection.d.ts.map

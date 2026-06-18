@@ -1,0 +1,25 @@
+[Unit]
+Description=24/7 Agent Mesh OS Server
+After=network.target
+
+[Service]
+Type=simple
+User=friday
+WorkingDirectory=/Users/friday/Downloads/Agent_mesh
+ExecStart=/usr/local/bin/node server-lite/dist/index.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=8080
+Environment=DB_PATH=/Users/friday/Downloads/Agent_mesh/data/agent_mesh.sqlite
+# Environment variables for APIs can also be set here:
+# Environment=GEMINI_API_KEY=your-key
+# Environment=ANTHROPIC_API_KEY=your-key
+# Environment=E2B_API_KEY=your-key
+
+# Limit resource usage if desired
+MemoryMax=2G
+CPUQuota=100%
+
+[Install]
+WantedBy=multi-user.target

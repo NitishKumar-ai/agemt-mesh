@@ -54,37 +54,26 @@ describe('SQLite DAOs Integration', () => {
       'event_execution',
       'meta_workflow_def',
       'meta_task_def',
-      'meta_event_handler'
+      'meta_event_handler',
     ];
     for (const table of tables) {
       await db.deleteFrom(table as any).execute();
     }
   };
 
-  runQueueDAOContractTests(
-    async () => new SqliteQueueDAO(db),
-    clearAllTables,
-  );
+  runQueueDAOContractTests(async () => new SqliteQueueDAO(db), clearAllTables);
 
-  runMetadataDAOContractTests(
-    async () => new SqliteMetadataDAO(db),
-    clearAllTables,
-  );
+  runMetadataDAOContractTests(async () => new SqliteMetadataDAO(db), clearAllTables);
 
-  runExecutionDAOContractTests(
-    async () => new SqliteExecutionDAO(db),
-    clearAllTables,
-  );
+  runExecutionDAOContractTests(async () => new SqliteExecutionDAO(db), clearAllTables);
 
-  runPollDataDAOContractTests(
-    async () => new SqlitePollDataDAO(db),
-    clearAllTables,
-  );
+  runPollDataDAOContractTests(async () => new SqlitePollDataDAO(db), clearAllTables);
 
   runConcurrentExecutionLimitDAOContractTests(
     async () => new SqliteConcurrentExecutionLimitDAO(db),
     async (taskDefName, taskId, workflowId, inProgress) => {
-      await db.insertInto('task_in_progress')
+      await db
+        .insertInto('task_in_progress')
         .values({
           task_def_name: taskDefName,
           task_id: taskId,
@@ -96,10 +85,7 @@ describe('SQLite DAOs Integration', () => {
     clearAllTables,
   );
 
-  runRateLimitingDAOContractTests(
-    async () => new SqliteRateLimitingDAO(db),
-    clearAllTables,
-  );
+  runRateLimitingDAOContractTests(async () => new SqliteRateLimitingDAO(db), clearAllTables);
 
   describe('Crash-safety probe', () => {
     it('does not leave partial task data after a failed createTasks transaction', async () => {

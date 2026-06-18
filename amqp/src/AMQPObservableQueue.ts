@@ -1,16 +1,12 @@
-import { Buffer } from "buffer";
-import { Observable, Subscriber, interval } from "rxjs";
-import { concatMap } from "rxjs/operators";
-import { v4 as uuidv4 } from "uuid";
-import * as amqplib from "amqplib";
-import { Message } from "./core/Message";
-import { ObservableQueue } from "./core/ObservableQueue";
-import { AMQPSettings, Type } from "./config/AMQPSettings";
-import {
-  AMQPConnection,
-  ConnectionType,
-  AMQPRetryPattern,
-} from "./AMQPConnection";
+import { Buffer } from 'buffer';
+import { Observable, Subscriber, interval } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
+import { v4 as uuidv4 } from 'uuid';
+import * as amqplib from 'amqplib';
+import { Message } from './core/Message';
+import { ObservableQueue } from './core/ObservableQueue';
+import { AMQPSettings, Type } from './config/AMQPSettings';
+import { AMQPConnection, ConnectionType, AMQPRetryPattern } from './AMQPConnection';
 
 export class AMQPObservableQueue implements ObservableQueue {
   private readonly settings: AMQPSettings;
@@ -31,37 +27,33 @@ export class AMQPObservableQueue implements ObservableQueue {
     batchSize: number,
     pollTimeInMS: number,
   ) {
-    if (!settings) throw new Error("Settings are undefined");
-    if (batchSize <= 0) throw new Error("Batch size must be greater than 0");
-    if (pollTimeInMS <= 0)
-      throw new Error("Poll time must be greater than 0 ms");
+    if (!settings) throw new Error('Settings are undefined');
+    if (batchSize <= 0) throw new Error('Batch size must be greater than 0');
+    if (pollTimeInMS <= 0) throw new Error('Poll time must be greater than 0 ms');
 
     this.useExchange = useExchange;
     this.settings = settings;
     this.batchSize = batchSize;
     this.retrySettings = retrySettings;
     this.pollTimeInMS = pollTimeInMS;
-    this.amqpConnection = AMQPConnection.getInstance(
-      connectionUrl,
-      retrySettings,
-    );
+    this.amqpConnection = AMQPConnection.getInstance(connectionUrl, retrySettings);
   }
 
   public observe(): Observable<Message> {
     return new Observable<Message>((subscriber) => {
       if (this.settings.sequentialProcessing) {
-        console.log("Subscribing for the message processing on schedule basis");
+        console.log('Subscribing for the message processing on schedule basis');
         this.receiveMessages().catch((e) => subscriber.error(e));
 
         const subscription = interval(this.pollTimeInMS).subscribe(async () => {
           if (!this.isRunning()) {
-            console.debug("Component stopped, skip listening for messages");
+            console.debug('Component stopped, skip listening for messages');
             return;
           }
           if (this.messages.length > 0) {
             const batch = this.messages.splice(0, this.messages.length);
             console.log(
-              `Batch from ${this.settings.queueOrExchangeName} is ${batch.map((b) => b.id).join(",")}`,
+              `Batch from ${this.settings.queueOrExchangeName} is ${batch.map((b) => b.id).join(',')}`,
             );
             for (const msg of batch) {
               subscriber.next(msg);
@@ -71,17 +63,15 @@ export class AMQPObservableQueue implements ObservableQueue {
 
         return () => subscription.unsubscribe();
       } else {
-        console.log("Subscribing for the event based AMQP message processing");
-        this.receiveMessagesWithSubscriber(subscriber).catch((e) =>
-          subscriber.error(e),
-        );
-        console.log("Subscribed for the event based AMQP message processing");
+        console.log('Subscribing for the event based AMQP message processing');
+        this.receiveMessagesWithSubscriber(subscriber).catch((e) => subscriber.error(e));
+        console.log('Subscribed for the event based AMQP message processing');
       }
     });
   }
 
   public getType(): string {
-    return this.useExchange ? "amqp_exchange" : "amqp_queue";
+    return this.useExchange ? 'amqp_exchange' : 'amqp_queue';
   }
 
   public getName(): string {
@@ -99,10 +89,7 @@ export class AMQPObservableQueue implements ObservableQueue {
         try {
           await this.ackMsg(message);
         } catch (e: any) {
-          console.error(
-            `Cannot ACK message with delivery tag ${message.receipt}`,
-            e,
-          );
+          console.error(`Cannot ACK message with delivery tag ${message.receipt}`, e);
           if (message.receipt) failedMessages.push(message.receipt);
         }
       }
@@ -119,10 +106,7 @@ export class AMQPObservableQueue implements ObservableQueue {
           this.settings.queueOrExchangeName,
         );
         if (message.receipt) {
-          chn.ack(
-            { fields: { deliveryTag: parseInt(message.receipt, 10) } } as any,
-            false,
-          );
+          chn.ack({ fields: { deliveryTag: parseInt(message.receipt, 10) } } as any, false);
         }
         break;
       } catch (e: any) {
@@ -139,15 +123,15 @@ export class AMQPObservableQueue implements ObservableQueue {
 
   public async publish(messages: Message[]): Promise<void> {
     try {
-      let exchange = "";
-      let routingKey = "";
+      let exchange = '';
+      let routingKey = '';
       if (this.useExchange) {
         await this.getOrCreateExchange(ConnectionType.PUBLISHER);
         exchange = this.settings.queueOrExchangeName;
         routingKey = this.settings.routingKey;
       } else {
         const q = await this.getOrCreateQueue(ConnectionType.PUBLISHER);
-        exchange = "";
+        exchange = '';
         routingKey = q.queue;
       }
 
@@ -155,7 +139,7 @@ export class AMQPObservableQueue implements ObservableQueue {
         await this.publishMessage(message, exchange, routingKey);
       }
     } catch (ex) {
-      console.error("Failed to publish messages:", ex);
+      console.error('Failed to publish messages:', ex);
       throw ex;
     }
   }
@@ -203,12 +187,9 @@ export class AMQPObservableQueue implements ObservableQueue {
       } finally {
         if (chn) {
           try {
-            await this.amqpConnection.returnChannel(
-              ConnectionType.PUBLISHER,
-              chn,
-            );
+            await this.amqpConnection.returnChannel(ConnectionType.PUBLISHER, chn);
           } catch (e) {
-            console.error("Failed to return the channel", e);
+            console.error('Failed to return the channel', e);
           }
         }
       }
@@ -216,7 +197,7 @@ export class AMQPObservableQueue implements ObservableQueue {
   }
 
   public setUnackTimeout(message: Message, unackTimeout: number): void {
-    throw new Error("UnsupportedOperationException");
+    throw new Error('UnsupportedOperationException');
   }
 
   public async size(): Promise<number> {
@@ -288,7 +269,7 @@ export class AMQPObservableQueue implements ObservableQueue {
     );
     const args = {
       ...this.settings.arguments,
-      "x-queue-type": this.settings.queueType,
+      'x-queue-type': this.settings.queueType,
     };
     const repl = await chn.assertQueue(targetName, {
       durable: this.settings.durable,
@@ -300,16 +281,14 @@ export class AMQPObservableQueue implements ObservableQueue {
     return repl;
   }
 
-  private async receiveMessagesWithSubscriber(
-    subscriber: Subscriber<Message>,
-  ): Promise<void> {
+  private async receiveMessagesWithSubscriber(subscriber: Subscriber<Message>): Promise<void> {
     const chn = await this.amqpConnection.getOrCreateChannel(
       ConnectionType.SUBSCRIBER,
       this.settings.queueOrExchangeName,
     );
     await chn.prefetch(this.batchSize);
 
-    let queueName = "";
+    let queueName = '';
     if (this.useExchange) {
       await this.getOrCreateExchange(ConnectionType.SUBSCRIBER);
       const q = await this.getOrCreateQueue(
@@ -317,11 +296,7 @@ export class AMQPObservableQueue implements ObservableQueue {
         this.settings.getExchangeBoundQueueName(),
       );
       queueName = q.queue;
-      await chn.bindQueue(
-        queueName,
-        this.settings.queueOrExchangeName,
-        this.settings.routingKey,
-      );
+      await chn.bindQueue(queueName, this.settings.queueOrExchangeName, this.settings.routingKey);
     } else {
       const q = await this.getOrCreateQueue(ConnectionType.SUBSCRIBER);
       queueName = q.queue;
@@ -350,7 +325,7 @@ export class AMQPObservableQueue implements ObservableQueue {
     );
     await chn.prefetch(this.batchSize);
 
-    let queueName = "";
+    let queueName = '';
     if (this.useExchange) {
       await this.getOrCreateExchange(ConnectionType.SUBSCRIBER);
       const q = await this.getOrCreateQueue(
@@ -358,11 +333,7 @@ export class AMQPObservableQueue implements ObservableQueue {
         this.settings.getExchangeBoundQueueName(),
       );
       queueName = q.queue;
-      await chn.bindQueue(
-        queueName,
-        this.settings.queueOrExchangeName,
-        this.settings.routingKey,
-      );
+      await chn.bindQueue(queueName, this.settings.queueOrExchangeName, this.settings.routingKey);
     } else {
       const q = await this.getOrCreateQueue(ConnectionType.SUBSCRIBER);
       queueName = q.queue;

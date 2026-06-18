@@ -60,10 +60,7 @@ export class Join extends WorkflowSystemTask {
         return true;
       }
 
-      if (
-        (forkedTask.workflowTask?.optional ?? false) &&
-        taskStatus === 'COMPLETED_WITH_ERRORS'
-      ) {
+      if ((forkedTask.workflowTask?.optional ?? false) && taskStatus === 'COMPLETED_WITH_ERRORS') {
         optionalTaskFailures.push(`${forkedTask.taskDefName}/${forkedTask.taskId}`);
       }
     }

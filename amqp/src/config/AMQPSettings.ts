@@ -1,21 +1,20 @@
-import { AMQPConstants } from "./AMQPConstants";
+import { AMQPConstants } from './AMQPConstants';
 
 export enum Type {
-  QUEUE = "amqp_queue",
-  EXCHANGE = "amqp_exchange",
+  QUEUE = 'amqp_queue',
+  EXCHANGE = 'amqp_exchange',
 }
 
 export class AMQPSettings {
-  private static readonly URI_PATTERN =
-    /^(amqp_(?:queue|exchange))?:?([^?]+)\??(.*)$/i;
+  private static readonly URI_PATTERN = /^(amqp_(?:queue|exchange))?:?([^?]+)\??(.*)$/i;
 
   public type: Type = Type.QUEUE;
-  public queueOrExchangeName: string = "";
-  public eventName: string = "";
+  public queueOrExchangeName: string = '';
+  public eventName: string = '';
   public exchangeType: string = AMQPConstants.DEFAULT_EXCHANGE_TYPE;
-  public exchangeBoundQueueName: string = "";
-  public queueType: string = "classic";
-  public routingKey: string = "";
+  public exchangeBoundQueueName: string = '';
+  public queueType: string = 'classic';
+  public routingKey: string = '';
   public contentEncoding: string = AMQPConstants.DEFAULT_CONTENT_ENCODING;
   public contentType: string = AMQPConstants.DEFAULT_CONTENT_TYPE;
   public durable: boolean = AMQPConstants.DEFAULT_DURABLE;
@@ -29,7 +28,7 @@ export class AMQPSettings {
 
   public setDeliveryMode(deliveryMode: number): this {
     if (deliveryMode !== 1 && deliveryMode !== 2) {
-      throw new Error("Delivery mode must be 1 or 2");
+      throw new Error('Delivery mode must be 1 or 2');
     }
     this.deliveryMode = deliveryMode;
     return this;
@@ -49,35 +48,34 @@ export class AMQPSettings {
     }
 
     if (match[1]) {
-      this.type =
-        match[1].toLowerCase() === Type.EXCHANGE ? Type.EXCHANGE : Type.QUEUE;
+      this.type = match[1].toLowerCase() === Type.EXCHANGE ? Type.EXCHANGE : Type.QUEUE;
     }
     this.queueOrExchangeName = match[2];
     this.eventName = queueURI;
 
     if (match[3]) {
       const queryParams = match[3];
-      const params = queryParams.split("&");
+      const params = queryParams.split('&');
       for (const param of params) {
-        const [key, value] = param.split("=");
+        const [key, value] = param.split('=');
         if (key && value) {
           const lkey = key.toLowerCase();
-          if (lkey === "exchangetype") {
+          if (lkey === 'exchangetype') {
             this.exchangeType = value;
-          } else if (lkey === "queuename" || lkey === "bindqueuename") {
+          } else if (lkey === 'queuename' || lkey === 'bindqueuename') {
             this.exchangeBoundQueueName = value;
-          } else if (lkey === "routingkey") {
+          } else if (lkey === 'routingkey') {
             this.routingKey = value;
-          } else if (lkey === "durable") {
-            this.durable = value.toLowerCase() === "true";
-          } else if (lkey === "exclusive") {
-            this.exclusive = value.toLowerCase() === "true";
-          } else if (lkey === "autodelete") {
-            this.autoDelete = value.toLowerCase() === "true";
-          } else if (lkey === "deliverymode") {
+          } else if (lkey === 'durable') {
+            this.durable = value.toLowerCase() === 'true';
+          } else if (lkey === 'exclusive') {
+            this.exclusive = value.toLowerCase() === 'true';
+          } else if (lkey === 'autodelete') {
+            this.autoDelete = value.toLowerCase() === 'true';
+          } else if (lkey === 'deliverymode') {
             this.setDeliveryMode(parseInt(value, 10));
-          } else if (lkey === "maxpriority") {
-            this.arguments["x-max-priority"] = parseInt(value, 10);
+          } else if (lkey === 'maxpriority') {
+            this.arguments['x-max-priority'] = parseInt(value, 10);
           }
         }
       }

@@ -9,6 +9,7 @@ This document guides the migration from OpenSearch High-Level REST Client (used 
 ### 1. Client Initialization
 
 **Old (v2):**
+
 ```java
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.RestClient;
@@ -19,6 +20,7 @@ RestHighLevelClient client = new RestHighLevelClient(
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -33,6 +35,7 @@ OpenSearchClient client = new OpenSearchClient(transport);
 ### 2. Query Building
 
 **Old (v2):**
+
 ```java
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -44,6 +47,7 @@ BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
@@ -59,6 +63,7 @@ Query query = Query.of(q -> q
 ### 3. Index Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
@@ -72,6 +77,7 @@ IndexResponse response = client.index(request, RequestOptions.DEFAULT);
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.IndexResponse;
@@ -86,6 +92,7 @@ IndexResponse response = client.index(i -> i
 ### 4. Search Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -105,6 +112,7 @@ SearchHit[] hits = response.getHits().getHits();
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -124,6 +132,7 @@ List<Hit<MyDoc>> hits = response.hits().hits();
 ### 5. Bulk Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.action.bulk.BulkRequest;
 import org.opensearch.action.bulk.BulkResponse;
@@ -136,6 +145,7 @@ BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
@@ -150,6 +160,7 @@ BulkResponse response = client.bulk(b -> b
 ### 6. Delete Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.action.delete.DeleteRequest;
 import org.opensearch.action.delete.DeleteResponse;
@@ -159,6 +170,7 @@ DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.DeleteRequest;
 import org.opensearch.client.opensearch.core.DeleteResponse;
@@ -172,6 +184,7 @@ DeleteResponse response = client.delete(d -> d
 ### 7. Get Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.action.get.GetRequest;
 import org.opensearch.action.get.GetResponse;
@@ -182,6 +195,7 @@ String sourceAsString = response.getSourceAsString();
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.GetRequest;
 import org.opensearch.client.opensearch.core.GetResponse;
@@ -197,6 +211,7 @@ MyDoc document = response.source();
 ### 8. Count Operations
 
 **Old (v2):**
+
 ```java
 import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
@@ -209,6 +224,7 @@ long count = response.getCount();
 ```
 
 **New (v3):**
+
 ```java
 import org.opensearch.client.opensearch.core.CountRequest;
 import org.opensearch.client.opensearch.core.CountResponse;
@@ -225,11 +241,13 @@ long count = response.count();
 ### Pattern 1: String-based JSON Source → Typed Documents
 
 **Old:** Frequently used string JSON
+
 ```java
 .source(jsonString, XContentType.JSON)
 ```
 
 **New:** Use typed POJOs
+
 ```java
 .document(myTypedObject)  // Jackson handles serialization
 ```
@@ -237,6 +255,7 @@ long count = response.count();
 ### Pattern 2: Imperative Builder → Functional Builder
 
 **Old:** Imperative chaining
+
 ```java
 BoolQueryBuilder query = QueryBuilders.boolQuery();
 query.must(QueryBuilders.matchQuery("field", "value"));
@@ -244,6 +263,7 @@ query.filter(QueryBuilders.rangeQuery("age").gte(18));
 ```
 
 **New:** Functional lambda builders
+
 ```java
 Query query = Query.of(q -> q.bool(b -> b
     .must(m -> m.match(t -> t.field("field").query("value")))
@@ -254,12 +274,14 @@ Query query = Query.of(q -> q.bool(b -> b
 ### Pattern 3: XContentType → JsonData
 
 **Old:**
+
 ```java
 import org.opensearch.common.xcontent.XContentType;
 .source(jsonBytes, XContentType.JSON)
 ```
 
 **New:**
+
 ```java
 import org.opensearch.client.json.JsonData;
 .document(JsonData.of(value))  // For raw JSON
@@ -268,6 +290,7 @@ import org.opensearch.client.json.JsonData;
 ## Migration Steps for OpenSearchRestDAO
 
 ### Step 1: Update Dependencies (DONE)
+
 ```gradle
 implementation 'org.opensearch.client:opensearch-java:3.0.0'
 implementation "org.opensearch.client:opensearch-rest-client:3.0.0"
@@ -279,6 +302,7 @@ implementation "org.opensearch.client:opensearch-rest-high-level-client:3.0.0"  
 **File:** `OpenSearchRestDAO.java` constructor
 
 **Change:**
+
 ```java
 // Remove:
 private final RestHighLevelClient openSearchClient;
@@ -295,16 +319,19 @@ private final RestClient restClient;
 **Method to migrate:** `boolQueryBuilder(String structuredQuery, String freeTextQuery)`
 
 **Current signature:**
+
 ```java
 private QueryBuilder boolQueryBuilder(String structuredQuery, String freeTextQuery)
 ```
 
 **New signature:**
+
 ```java
 private Query boolQuery(String structuredQuery, String freeTextQuery)
 ```
 
 **Implementation changes:**
+
 - Replace `QueryBuilders.*` with lambda builders
 - Return `Query` instead of `QueryBuilder`
 - Use functional composition instead of imperative building
@@ -312,12 +339,14 @@ private Query boolQuery(String structuredQuery, String freeTextQuery)
 ### Step 4: Migrate Search Methods
 
 Methods to update:
+
 - `searchObjectsViaExpression()`
 - `searchObjects()`
 - `searchWorkflowSummary()`
 - `searchTaskSummary()`
 
 **Key changes:**
+
 - Replace `SearchRequest` import (old → new package)
 - Replace `SearchSourceBuilder` with lambda builders
 - Update response handling (`SearchHits` → `hits().hits()`)
@@ -326,11 +355,13 @@ Methods to update:
 ### Step 5: Migrate Index/Update Methods
 
 Methods to update:
+
 - `indexObject()`
 - `updateObject()`
 - `addTaskExecutionLogs()`
 
 **Key changes:**
+
 - Use lambda builders for `IndexRequest`
 - Replace `XContentType.JSON` with typed documents
 - Update response handling
@@ -338,16 +369,19 @@ Methods to update:
 ### Step 6: Migrate Delete Methods
 
 Methods to update:
+
 - `deleteObject()`
 - `asyncBulkDelete()`
 
 ### Step 7: Migrate Bulk Operations
 
 Methods to update:
+
 - `bulkIndexObjects()`
 - `asyncBulkIndexObjects()`
 
 **Major changes needed:**
+
 - Replace `BulkRequest.add()` with lambda builders
 - Use `BulkOperation` for each operation
 - Update `BulkProcessor` initialization (if used)
@@ -355,6 +389,7 @@ Methods to update:
 ### Step 8: Fix Sorting
 
 **Old:**
+
 ```java
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortOrder;
@@ -363,6 +398,7 @@ searchSourceBuilder.sort(new FieldSortBuilder(field).order(order));
 ```
 
 **New:**
+
 ```java
 import org.opensearch.client.opensearch._types.SortOrder;
 
@@ -372,6 +408,7 @@ import org.opensearch.client.opensearch._types.SortOrder;
 ### Step 9: Update Exception Handling
 
 **Old:**
+
 ```java
 catch (IOException e) {
     // Handle
@@ -379,6 +416,7 @@ catch (IOException e) {
 ```
 
 **New:** Same, but also handle:
+
 ```java
 catch (OpenSearchException e) {
     // New exception types from opensearch-java client

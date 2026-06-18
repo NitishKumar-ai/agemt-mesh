@@ -1,5 +1,5 @@
 ---
-description: "Choose the right task type for your AgentMesh workflow — system tasks, operators, and worker tasks for microservice orchestration and workflow automation."
+description: 'Choose the right task type for your AgentMesh workflow — system tasks, operators, and worker tasks for microservice orchestration and workflow automation.'
 ---
 
 # Choosing Tasks
@@ -10,41 +10,40 @@ Tasks are the building blocks of AgentMesh workflows. In this guide, familiarise
 
 Built-in tasks allow you to easily run common tasks on the AgentMesh server without needing to build and deploy your own task workers. Here is an introduction of the built-in tasks available in AgentMesh:
 
-* **[System tasks](../../../documentation/configuration/workflowdef/systemtasks/index.md)** common tasks that allow you to get started quickly without needing custom workers. 
-* **[Operators](../../../documentation/configuration/workflowdef/operators/index.md)** enable you to declaratively design the workflow's control flow and logic with minimal code required.
+- **[System tasks](../../../documentation/configuration/workflowdef/systemtasks/index.md)** common tasks that allow you to get started quickly without needing custom workers.
+- **[Operators](../../../documentation/configuration/workflowdef/operators/index.md)** enable you to declaratively design the workflow's control flow and logic with minimal code required.
 
 ### System tasks
 
-Here are the system tasks available in AgentMesh OSS for common use: 
+Here are the system tasks available in AgentMesh OSS for common use:
 
-| System Task                  | Description                          |
-| :-------------------- | :----------------------------------- |
-| [Event](../../../documentation/configuration/workflowdef/systemtasks/event-task.md)       | Publish events to an external eventing system (AMQP, SQS, Kafka, and so on).              |
-| [HTTP](../../../documentation/configuration/workflowdef/systemtasks/http-task.md)         | Call an API or HTTP endpoint.                                 |
-| [Human](../../../documentation/configuration/workflowdef/systemtasks/human-task.md)       | Wait for an external signal.                                  |
-| [Inline](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md)     | Execute lightweight JavaScript code inline.                   |
-| [No Op](../../../documentation/configuration/workflowdef/systemtasks/noop-task.md)        | Do nothing.                                                   |
-| [JSON JQ Transform](../../../documentation/configuration/workflowdef/systemtasks/json-jq-transform-task.md) | Clean or transform JSON data using jq.      |
-| [Kafka Publish](../../../documentation/configuration/workflowdef/systemtasks/kafka-publish-task.md)  | Publish messages to Kafka.                         |
-| [Wait](../../../documentation/configuration/workflowdef/systemtasks/wait-task.md)         | Wait until a set time or duration has passed.                 |
-
+| System Task                                                                                                 | Description                                                                  |
+| :---------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| [Event](../../../documentation/configuration/workflowdef/systemtasks/event-task.md)                         | Publish events to an external eventing system (AMQP, SQS, Kafka, and so on). |
+| [HTTP](../../../documentation/configuration/workflowdef/systemtasks/http-task.md)                           | Call an API or HTTP endpoint.                                                |
+| [Human](../../../documentation/configuration/workflowdef/systemtasks/human-task.md)                         | Wait for an external signal.                                                 |
+| [Inline](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md)                       | Execute lightweight JavaScript code inline.                                  |
+| [No Op](../../../documentation/configuration/workflowdef/systemtasks/noop-task.md)                          | Do nothing.                                                                  |
+| [JSON JQ Transform](../../../documentation/configuration/workflowdef/systemtasks/json-jq-transform-task.md) | Clean or transform JSON data using jq.                                       |
+| [Kafka Publish](../../../documentation/configuration/workflowdef/systemtasks/kafka-publish-task.md)         | Publish messages to Kafka.                                                   |
+| [Wait](../../../documentation/configuration/workflowdef/systemtasks/wait-task.md)                           | Wait until a set time or duration has passed.                                |
 
 ### Operators
 
 Here are the operators available in AgentMesh OSS for managing the flow of execution:
 
-| Operator                        | Description         |
-| -------------------------- | ----------------------------------------- |
-| [Do While](../../../documentation/configuration/workflowdef/operators/do-while-task.md)         | Execute tasks repeatedly, like a _do…while…_ statement.     | 
-| [Dynamic](../../../documentation/configuration/workflowdef/operators/dynamic-task.md)           | Execute a task dynamically, like a function pointer.           | 
-| [Dynamic Fork](../../../documentation/configuration/workflowdef/operators/dynamic-fork-task.md) | Execute a dynamic number of tasks in parallel. |
-| [Fork](../../../documentation/configuration/workflowdef/operators/fork-task.md)                 | Execute a static number of tasks in parallel.  | 
-| [Join](../../../documentation/configuration/workflowdef/operators/join-task.md)                 | Join the forks after a Fork or Dynamic Fork before proceeding to the next task.                        |
-| [Set Variable](../../../documentation/configuration/workflowdef/operators/set-variable-task.md)     | Create or update workflow variables.        |
-| [Start Workflow](../../../documentation/configuration/workflowdef/operators/start-workflow-task.md) | Asynchronously start another workflow, like an entry point.   | 
-| [Sub Workflow](../../../documentation/configuration/workflowdef/operators/sub-workflow-task.md) | Synchronously start another workflow, like a subroutine.  | 
-| [Switch](../../../documentation/configuration/workflowdef/operators/switch-task.md)             | Execute tasks conditionally, like an _if…else…_ statement.     | 
-| [Terminate](../../../documentation/configuration/workflowdef/operators/terminate-task.md)       | Terminate the current workflow, like a _return_ statement.                       |
+| Operator                                                                                            | Description                                                                     |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [Do While](../../../documentation/configuration/workflowdef/operators/do-while-task.md)             | Execute tasks repeatedly, like a _do…while…_ statement.                         |
+| [Dynamic](../../../documentation/configuration/workflowdef/operators/dynamic-task.md)               | Execute a task dynamically, like a function pointer.                            |
+| [Dynamic Fork](../../../documentation/configuration/workflowdef/operators/dynamic-fork-task.md)     | Execute a dynamic number of tasks in parallel.                                  |
+| [Fork](../../../documentation/configuration/workflowdef/operators/fork-task.md)                     | Execute a static number of tasks in parallel.                                   |
+| [Join](../../../documentation/configuration/workflowdef/operators/join-task.md)                     | Join the forks after a Fork or Dynamic Fork before proceeding to the next task. |
+| [Set Variable](../../../documentation/configuration/workflowdef/operators/set-variable-task.md)     | Create or update workflow variables.                                            |
+| [Start Workflow](../../../documentation/configuration/workflowdef/operators/start-workflow-task.md) | Asynchronously start another workflow, like an entry point.                     |
+| [Sub Workflow](../../../documentation/configuration/workflowdef/operators/sub-workflow-task.md)     | Synchronously start another workflow, like a subroutine.                        |
+| [Switch](../../../documentation/configuration/workflowdef/operators/switch-task.md)                 | Execute tasks conditionally, like an _if…else…_ statement.                      |
+| [Terminate](../../../documentation/configuration/workflowdef/operators/terminate-task.md)           | Terminate the current workflow, like a _return_ statement.                      |
 
 ## Custom tasks
 
@@ -56,8 +55,7 @@ To help you decide on which tasks to use, here is a detailed comparison of simil
 
 ### Inline vs Worker tasks
 
-The [Inline task](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md) is used to execute custom JavaScript code directly within the workflow. It’s ideal for lightweight operations like **simple data transformations, conditional checks, or small calculations**. Because the code executes within the AgentMesh JVM, Inline tasks benefit from low latency, no network overhead, and easier debugging. However, it also has limitations on using other languages, custom libraries, frameworks, or stacks. 
-
+The [Inline task](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md) is used to execute custom JavaScript code directly within the workflow. It’s ideal for lightweight operations like **simple data transformations, conditional checks, or small calculations**. Because the code executes within the AgentMesh JVM, Inline tasks benefit from low latency, no network overhead, and easier debugging. However, it also has limitations on using other languages, custom libraries, frameworks, or stacks.
 
 The Worker task is handled by external task workers that execute a custom function or service
 is an external custom function or service that performs a specific task in a workflow. Written in any language of choice (Python, Java, etc), it can execute **complex business logic, custom algorithms, or long-running operations**. Worker tasks run outside the AgentMesh server, meaning they require additional infrastructure set-up and logging mechanisms.
@@ -68,10 +66,9 @@ If you only need to publish messages to a Kafka topic for external services to u
 
 In contrast, the [Event](../../../documentation/configuration/workflowdef/systemtasks/event-task.md) task supports more involved set-ups, such as using events to start a AgentMesh workflow, or having AgentMesh consume messages. It also supports a wider range of event brokers across AMQP, NATS, SQS, Kafka, and AgentMesh's own internal queue.
 
-
 ### Wait vs Human tasks
 
-The [Wait](../../../documentation/configuration/workflowdef/systemtasks/wait-task.md) task and [Human](../../../documentation/configuration/workflowdef/systemtasks/human-task.md) task both support waiting  until a specific condition is met. Use the Wait task for cases when the workflow needs to wait for specific wait duration or timestamp, and use the Human task when the workflow needs to wait for an external trigger.
+The [Wait](../../../documentation/configuration/workflowdef/systemtasks/wait-task.md) task and [Human](../../../documentation/configuration/workflowdef/systemtasks/human-task.md) task both support waiting until a specific condition is met. Use the Wait task for cases when the workflow needs to wait for specific wait duration or timestamp, and use the Human task when the workflow needs to wait for an external trigger.
 
 ### Start Workflow vs Sub Workflow tasks
 
@@ -79,13 +76,11 @@ Both [Start Workflow](../../../documentation/configuration/workflowdef/operators
 
 The Sub Workflow task provides a tighter coupling between the parent workflow and the subworkflow. This is useful for cases when you need to associate workflow progress and states, or if you need to pass the output of the subworkflow back into the parent workflow.
 
-
 ### Fork vs Dynamic Fork tasks
 
-Both [Fork](../../../documentation/configuration/workflowdef/operators/fork-task.md) and [Dynamic Fork](../../../documentation/configuration/workflowdef/operators/dynamic-fork-task.md) facilitate parallel execution of tasks. The Fork task executes a predetermined number of forks, while the Dynamic Fork executes a variable number of forks at runtime. 
+Both [Fork](../../../documentation/configuration/workflowdef/operators/fork-task.md) and [Dynamic Fork](../../../documentation/configuration/workflowdef/operators/dynamic-fork-task.md) facilitate parallel execution of tasks. The Fork task executes a predetermined number of forks, while the Dynamic Fork executes a variable number of forks at runtime.
 
 If each fork must run a different set of tasks, it is best to use the Fork task, because Dynamic Forks can only run the same task for all its forks.
-
 
 ### Dynamic vs Switch tasks
 
@@ -95,14 +90,12 @@ In the workflow diagram, the Dynamic task will produce a more simplified view, a
 
 Here are some scenarios for deciding between a Dynamic task and a Switch task:
 
-
-| Scenario                        | Task to Use         |
-| -------------------------- | ----------------------------------------- |
-| You have a huge number of case options or the specific case options are not yet determined.         | Dynamic    | 
-| You need a default case option.       | Switch    |
-| Each case option involves multiple tasks.       | Switch    |
-| The conditions for each switch case is relatively straightforward.         | Switch    | 
-| The conditions for each switch case is constantly changing, or requires more complicated logic.      | Dynamic    | 
+| Scenario                                                                                        | Task to Use |
+| ----------------------------------------------------------------------------------------------- | ----------- |
+| You have a huge number of case options or the specific case options are not yet determined.     | Dynamic     |
+| You need a default case option.                                                                 | Switch      |
+| Each case option involves multiple tasks.                                                       | Switch      |
+| The conditions for each switch case is relatively straightforward.                              | Switch      |
+| The conditions for each switch case is constantly changing, or requires more complicated logic. | Dynamic     |
 
 If you opt for the Dynamic task, you must set up the control flow for how the task to run will be determined at runtime. For example, using a preceding task that must pass the task name into the Dynamic task.
-

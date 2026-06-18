@@ -3,10 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  WorkflowDefSchema,
-  WorkflowSchema,
-} from '../src/index.js';
+import { WorkflowDefSchema, WorkflowSchema } from '../src/index.js';
 
 /** Load a real Java-side JSON fixture (copied from core/src/test/resources). */
 function loadFixture(name: string): unknown {

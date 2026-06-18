@@ -1,5 +1,5 @@
 ---
-description: "Configure HTTP tasks in AgentMesh to call remote APIs and services. Supports GET, POST, PUT, DELETE methods with headers, body, and timeout options."
+description: 'Configure HTTP tasks in AgentMesh to call remote APIs and services. Supports GET, POST, PUT, DELETE methods with headers, body, and timeout options.'
 ---
 
 # HTTP Task
@@ -12,22 +12,21 @@ The HTTP task (`HTTP`) is useful for make calls to remote services exposed over 
 
 The data returned in the HTTP call can be referenced in subsequent tasks as inputs, enabling you to chain multiple tasks or HTTP calls to create complex flows without writing any additional code.
 
-
 ## Task parameters
 
 The HTTP request parameters can be specified directly in `inputParameters` or nested inside `inputParameters.http_request`. Both forms are supported — the flat form is simpler for most use cases.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| uri | String        | The URI for the HTTP service. Supports dynamic references like `${workflow.input.url}`.                                  | Required. |
-| method            | String           | The HTTP method. Supported methods: `GET`, `PUT`, `POST`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`, `TRACE`.                                       | Required. |
-| accept            | String           | The accept header required by the server. Default: `application/json`.                                     | Optional. |
-| contentType       | String           | The content type for the request. Default: `application/json`.                                                              | Optional. |
-| headers           | Map[String, Any] | A map of additional HTTP headers to be sent along with the request. See [Sending headers](#sending-headers) below.                | Optional. |
-| body              | Map[String, Any]            | The request body.                                          | Required for POST, PUT, or PATCH methods. |
-| asyncComplete     | Boolean          | Whether the task is completed asynchronously. Default: `false`. When `true`, the task stays `IN_PROGRESS` until an external event marks it as complete. | Optional. |
-| connectionTimeOut | Integer          | The connection timeout in milliseconds. Default: 100. Set to 0 for no timeout.                       | Optional. |
-| readTimeOut       | Integer          | Read timeout in milliseconds. Default: 150. Set to 0 for no timeout.                       | Optional. |
+| Parameter         | Type             | Description                                                                                                                                             | Required / Optional                       |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| uri               | String           | The URI for the HTTP service. Supports dynamic references like `${workflow.input.url}`.                                                                 | Required.                                 |
+| method            | String           | The HTTP method. Supported methods: `GET`, `PUT`, `POST`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`, `TRACE`.                                                | Required.                                 |
+| accept            | String           | The accept header required by the server. Default: `application/json`.                                                                                  | Optional.                                 |
+| contentType       | String           | The content type for the request. Default: `application/json`.                                                                                          | Optional.                                 |
+| headers           | Map[String, Any] | A map of additional HTTP headers to be sent along with the request. See [Sending headers](#sending-headers) below.                                      | Optional.                                 |
+| body              | Map[String, Any] | The request body.                                                                                                                                       | Required for POST, PUT, or PATCH methods. |
+| asyncComplete     | Boolean          | Whether the task is completed asynchronously. Default: `false`. When `true`, the task stays `IN_PROGRESS` until an external event marks it as complete. | Optional.                                 |
+| connectionTimeOut | Integer          | The connection timeout in milliseconds. Default: 100. Set to 0 for no timeout.                                                                          | Optional.                                 |
+| readTimeOut       | Integer          | Read timeout in milliseconds. Default: 150. Set to 0 for no timeout.                                                                                    | Optional.                                 |
 
 ## Configuration JSON
 
@@ -53,8 +52,8 @@ Here is the task configuration for an HTTP task. Note that parameters are specif
 ```
 
 !!! note "Legacy `http_request` form"
-    The nested `inputParameters.http_request` form is still supported for backward compatibility:
-    ```json
+The nested `inputParameters.http_request` form is still supported for backward compatibility:
+`json
     "inputParameters": {
       "http_request": {
         "uri": "https://api.example.com/data",
@@ -62,8 +61,8 @@ Here is the task configuration for an HTTP task. Note that parameters are specif
         "body": { "key": "value" }
       }
     }
-    ```
-    Both forms work identically. The flat form (shown above) is recommended for new workflows.
+    `
+Both forms work identically. The flat form (shown above) is recommended for new workflows.
 
 ## Sending headers
 
@@ -147,24 +146,23 @@ Use the `headers` parameter to send custom HTTP headers, including authenticatio
 
 The HTTP task will return the following parameters.
 
-| Name   | Type | Description                                                                                               |
-| ------ | ---- | --------------------------------------------------------------------------------------------------------- |
-| response     | Map[String, Any]              | The JSON body containing the request response, if available.                         |
-| response.headers      | Map[String, Any] | The response headers.                                                            |
+| Name                  | Type             | Description                                                                                                     |
+| --------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| response              | Map[String, Any] | The JSON body containing the request response, if available.                                                    |
+| response.headers      | Map[String, Any] | The response headers.                                                                                           |
 | response.statusCode   | Integer          | The [HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) indicating the request outcome. |
-| response.reasonPhrase | String           | The reason phrase associated with the HTTP status code.                                            |
-| response.body | Map[String, Any] | The response body containing the data returned by the endpoint.
+| response.reasonPhrase | String           | The reason phrase associated with the HTTP status code.                                                         |
+| response.body         | Map[String, Any] | The response body containing the data returned by the endpoint.                                                 |
 
 ## Execution
 
 The HTTP task is moved to COMPLETED status once the remote service responds successfully.
 
-If your HTTP tasks are not getting picked up, you might have too many HTTP tasks in the task queue. Consider using Isolation Groups to prioritize certain HTTP tasks over others. 
+If your HTTP tasks are not getting picked up, you might have too many HTTP tasks in the task queue. Consider using Isolation Groups to prioritize certain HTTP tasks over others.
 
 ## Examples
 
 Here are some examples for using the HTTP task.
-
 
 ### GET Method
 
@@ -200,6 +198,7 @@ Here are some examples for using the HTTP task.
 ```
 
 ### PUT Method
+
 ```json
 {
   "name": "http_put_example",
@@ -218,6 +217,7 @@ Here are some examples for using the HTTP task.
 ```
 
 ### DELETE Method
+
 ```json
 {
   "name": "DELETE Example",

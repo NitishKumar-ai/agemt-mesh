@@ -4,8 +4,8 @@
 
 Group: `com.agentmesh.agentmesh`
 
-| Published Artifact | Description |
-| ----------- | ----------- |
+| Published Artifact          | Description                                                    |
+| --------------------------- | -------------------------------------------------------------- |
 | agentmesh-kafka-event-queue | Support for integration with Kafka and consume events from it. |
 
 ## Modules
@@ -26,21 +26,21 @@ Example:
 
 ```json
 {
-    "name": "kafka_test_event_handler",
-    "event": "kafka:agentmesh-event",
-    "actions": [
-      {
-        "action": "start_workflow",
-        "start_workflow": {
-          "name": "workflow_triggered_by_kafka",
-          "input": {
-            "payload": "${payload}"
-          }
-        },
-        "expandInlineJSON": true
-      }
-    ],
-    "active": true
+  "name": "kafka_test_event_handler",
+  "event": "kafka:agentmesh-event",
+  "actions": [
+    {
+      "action": "start_workflow",
+      "start_workflow": {
+        "name": "workflow_triggered_by_kafka",
+        "input": {
+          "payload": "${payload}"
+        }
+      },
+      "expandInlineJSON": true
+    }
+  ],
+  "active": true
 }
 ```
 
@@ -48,21 +48,21 @@ The data from the kafka event has the format:
 
 ```json
 {
-    "key": "key-1",
-    "headers": {
-        "header-1": "value1"
-    },
-    "payload": {
-        "first": "Marcelo",
-        "middle": "Billie",
-        "last": "Mertz"
-    }
+  "key": "key-1",
+  "headers": {
+    "header-1": "value1"
+  },
+  "payload": {
+    "first": "Marcelo",
+    "middle": "Billie",
+    "last": "Mertz"
+  }
 }
 ```
 
-* `key` is the key field in Kafka message.
-* `headers` is the headers in the kafka message.
-* `payload` is the message of the Kafka message.
+- `key` is the key field in Kafka message.
+- `headers` is the headers in the kafka message.
+- `payload` is the message of the Kafka message.
 
 To access them in the event handler use for example `"${payload}"` to access the payload property, which contains the kafka message data.
 
@@ -80,7 +80,7 @@ There are is a set of shared properties these are:
 # If kafka should be used with event queues like SQS or AMPQ
 agentmesh.default-event-queue.type=kafka
 
-# the bootstrap server ot use. 
+# the bootstrap server ot use.
 agentmesh.event-queues.kafka.bootstrap-servers=kafka:29092
 
 # The dead letter queue to use for events that had some error.

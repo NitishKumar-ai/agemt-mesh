@@ -1,5 +1,5 @@
 ---
-description: "Start workflow executions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Pass inputs and track executions with a unique workflow ID."
+description: 'Start workflow executions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Pass inputs and track executions with a unique workflow ID.'
 ---
 
 # Starting Workflows
@@ -13,7 +13,7 @@ The AgentMesh UI is useful for sandbox testing before deploying the workflows to
 **To start a workflow:**
 
 1. Go to [Workbench](http://localhost:8080/workbench) in the AgentMesh UI.
-2. Select the  **Workflow Name** and **Workflow version**.
+2. Select the **Workflow Name** and **Workflow version**.
 3. If required, provide the workflow inputs in **Input (JSON)**.
 4. (Optional) Specify the **Correlation ID** and **Task to Domain (JSON)** for the execution.
 5. Select the ▶ icon (Execute Workflow) at the top to run the workflow.
@@ -37,7 +37,7 @@ agentmesh workflow start -w sample_workflow -i '{"service":"fedex"}'
 You can also start workflow executions using the Start Workflow API (`POST api/workflow/{name}`). `{name}` is the placeholder for the workflow name, and the request body contains the workflow inputs if any.
 
 ??? note "Example using cURL"
-    In this example, a cURL request is used to invoke the workflow `sample_workflow` with the input `service` specified as `fedex`.
+In this example, a cURL request is used to invoke the workflow `sample_workflow` with the input `service` specified as `fedex`.
 
     ```bash
     curl '{{ server_host }}/api/workflow/sample_workflow' \
@@ -52,17 +52,15 @@ AgentMesh offers client SDKs for popular languages which have library methods fo
 
 ### Example using JavaScript
 
-In this example, the JavaScript Fetch API is used to invoke the workflow `sample_workflow` with the input `service`  specified as `fedex`.
+In this example, the JavaScript Fetch API is used to invoke the workflow `sample_workflow` with the input `service` specified as `fedex`.
 
 ```javascript
-fetch("{{ server_host }}/api/workflow/sample_workflow", {
-    "headers": {
-        "accept": "text/plain",
-        "content-type": "application/json",
-    },
-    "body": "{\"service\":\"fedex\"}",
-    "method": "POST",
+fetch('{{ server_host }}/api/workflow/sample_workflow', {
+  headers: {
+    accept: 'text/plain',
+    'content-type': 'application/json',
+  },
+  body: '{"service":"fedex"}',
+  method: 'POST',
 });
 ```
-
-

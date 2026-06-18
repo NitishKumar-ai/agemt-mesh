@@ -19,7 +19,11 @@ import { createTaskModel, copyTaskModel, createWorkflowModel } from './types.js'
 import { DeciderService, DeciderOutcome, TerminateWorkflowError } from './DeciderService.js';
 import type { SystemTaskRegistry } from './SystemTaskRegistry.js';
 import { WorkflowSystemTask } from './WorkflowSystemTask.js';
-import { Terminate, TERMINATION_STATUS_PARAMETER, TERMINATION_REASON_PARAMETER } from './tasks/Terminate.js';
+import {
+  Terminate,
+  TERMINATION_STATUS_PARAMETER,
+  TERMINATION_REASON_PARAMETER,
+} from './tasks/Terminate.js';
 import { DECIDER_QUEUE, hasInProgressHumanTask, getTaskByRefName } from './ExecutorUtils.js';
 
 export type QueueDAO = {
@@ -49,7 +53,10 @@ export type ExecutionDAOFacade = {
   addTaskExecLog(logs: Array<{ log: string; taskId?: string; createdTime?: number }>): void;
   extendLease(task: TaskModel): void;
   removeFromPendingWorkflow(workflowName: string, workflowId: string): void;
-  getTaskPollDataByDomain(taskType: string, domain: string): { domain: string; lastPollTime: number } | null;
+  getTaskPollDataByDomain(
+    taskType: string,
+    domain: string,
+  ): { domain: string; lastPollTime: number } | null;
   getPendingWorkflowsByName(workflowName: string, version: number): WorkflowModel[];
   getWorkflowsByName(name: string, startTime: number, endTime: number): WorkflowModel[];
   getRunningWorkflowIds(workflowName: string, version: number): string[];
@@ -320,10 +327,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     for (const task of workflow.tasks) {
       switch (task.status) {
         case 'FAILED':
-          if (
-            task.taskType === 'JOIN' ||
-            task.taskType === 'EXCLUSIVE_JOIN'
-          ) {
+          if (task.taskType === 'JOIN' || task.taskType === 'EXCLUSIVE_JOIN') {
             const joinOn = task.inputData['joinOn'] as string[] | undefined;
             if (joinOn && this.isJoinOnFailedPermissive(joinOn, workflow)) {
               task.status = 'IN_PROGRESS';
@@ -414,7 +418,9 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     let raiseFinalizedNotification = false;
 
     if (terminateTask) {
-      const terminationStatus = terminateTask.inputData[TERMINATION_STATUS_PARAMETER] as string | undefined;
+      const terminationStatus = terminateTask.inputData[TERMINATION_STATUS_PARAMETER] as
+        | string
+        | undefined;
       let reason = terminateTask.inputData[TERMINATION_REASON_PARAMETER] as string | undefined;
       if (!reason) {
         reason = `Workflow is ${terminationStatus} by TERMINATE task: ${terminateTask.taskId}`;
@@ -724,10 +730,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
   }
 
-  private isLazyEvaluateWorkflow(
-    workflowDef: WorkflowDef | null,
-    task: TaskModel,
-  ): boolean {
+  private isLazyEvaluateWorkflow(workflowDef: WorkflowDef | null, task: TaskModel): boolean {
     if (!workflowDef) return false;
     if (task.loopOverTask) return false;
 
@@ -820,15 +823,9 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
         for (const task of outcome.tasksToBeScheduled) {
           this.executionDAOFacade.populateTaskData(task);
-          if (
-            this.systemTaskRegistry.isSystemTask(task.taskType) &&
-            !isTaskTerminal(task.status)
-          ) {
+          if (this.systemTaskRegistry.isSystemTask(task.taskType) && !isTaskTerminal(task.status)) {
             const workflowSystemTask = this.systemTaskRegistry.get(task.taskType);
-            if (
-              !workflowSystemTask.isAsync() &&
-              workflowSystemTask.execute(workflow, task, this)
-            ) {
+            if (!workflowSystemTask.isAsync() && workflowSystemTask.execute(workflow, task, this)) {
               tasksToBeUpdated.push(task);
               stateChanged = true;
             }
@@ -854,21 +851,14 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
         }
 
         if (!isWorkflowTerminal(workflow.status)) {
-          if (
-            this.properties.humanTaskPreventsDeciderQueue &&
-            hasInProgressHumanTask(workflow)
-          ) {
+          if (this.properties.humanTaskPreventsDeciderQueue && hasInProgressHumanTask(workflow)) {
             this.queueDAO.remove(DECIDER_QUEUE, workflow.workflowId);
           } else {
             const updatedOffset = Math.min(
               this.properties.workflowOffsetTimeout,
               this.properties.maxPostponeDurationSeconds,
             );
-            this.queueDAO.setUnackTimeout(
-              DECIDER_QUEUE,
-              workflow.workflowId,
-              updatedOffset * 1000,
-            );
+            this.queueDAO.setUnackTimeout(DECIDER_QUEUE, workflow.workflowId, updatedOffset * 1000);
           }
         }
       }
@@ -885,8 +875,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
   private adjustStateIfSubWorkflowChanged(workflow: WorkflowModel): void {
     const changedTask = workflow.tasks.find(
-      (t) =>
-        t.taskType === 'SUB_WORKFLOW' && t.subworkflowChanged && !t.retried,
+      (t) => t.taskType === 'SUB_WORKFLOW' && t.subworkflowChanged && !t.retried,
     );
     if (changedTask) {
       changedTask.subworkflowChanged = false;
@@ -897,15 +886,11 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
   private resetUnsuccessfulJoinTasksWithActiveBranches(workflow: WorkflowModel): void {
     const wfDef = workflow.workflowDefinition;
-    const hasJoin = wfDef?.tasks.some(
-      (t) => t.type === 'JOIN' || t.type === 'FORK_JOIN_DYNAMIC',
-    );
+    const hasJoin = wfDef?.tasks.some((t) => t.type === 'JOIN' || t.type === 'FORK_JOIN_DYNAMIC');
     if (!hasJoin) return;
 
     const activeReferenceTaskNames = new Set(
-      workflow.tasks
-        .filter((t) => !isTaskTerminal(t.status))
-        .map((t) => t.referenceTaskName),
+      workflow.tasks.filter((t) => !isTaskTerminal(t.status)).map((t) => t.referenceTaskName),
     );
 
     if (activeReferenceTaskNames.size === 0) return;
@@ -926,10 +911,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
   }
 
-  private cancelNonTerminalTasks(
-    workflow: WorkflowModel,
-    raiseFinalized = true,
-  ): string[] {
+  private cancelNonTerminalTasks(workflow: WorkflowModel, raiseFinalized = true): string[] {
     const erroredTasks: string[] = [];
 
     for (const task of workflow.tasks) {
@@ -969,19 +951,13 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     return erroredTasks;
   }
 
-  private dedupAndAddTasks(
-    workflow: WorkflowModel,
-    tasks: TaskModel[],
-  ): TaskModel[] {
+  private dedupAndAddTasks(workflow: WorkflowModel, tasks: TaskModel[]): TaskModel[] {
     const tasksInWorkflow = new Set(
-      workflow.tasks.map(
-        (t) => `${t.referenceTaskName}_${t.retryCount}`,
-      ),
+      workflow.tasks.map((t) => `${t.referenceTaskName}_${t.retryCount}`),
     );
 
     const dedupedTasks = tasks.filter(
-      (t) =>
-        !tasksInWorkflow.has(`${t.referenceTaskName}_${t.retryCount}`),
+      (t) => !tasksInWorkflow.has(`${t.referenceTaskName}_${t.retryCount}`),
     );
 
     workflow.tasks.push(...dedupedTasks);
@@ -1101,12 +1077,9 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     const taskQueueName = task.taskDefName || task.taskType;
 
     if (task.callbackAfterMs > 0) {
-      this.queueDAO.pushDuration(
-        taskQueueName,
-        task.taskId,
-        task.workflowPriority,
-        { seconds: Math.ceil(task.callbackAfterMs / 1000) },
-      );
+      this.queueDAO.pushDuration(taskQueueName, task.taskId, task.workflowPriority, {
+        seconds: Math.ceil(task.callbackAfterMs / 1000),
+      });
     } else if (task.callbackAfterSeconds > 0) {
       this.queueDAO.push(
         taskQueueName,
@@ -1150,10 +1123,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
       const trimmed = domain.trim();
       if (trimmed.toLowerCase() === 'no_domain') continue;
       const pollData = this.executionDAOFacade.getTaskPollDataByDomain(taskType, trimmed);
-      if (
-        pollData &&
-        pollData.lastPollTime > Date.now() - this.activeWorkerLastPollMs
-      ) {
+      if (pollData && pollData.lastPollTime > Date.now() - this.activeWorkerLastPollMs) {
         return pollData.domain;
       }
     }
@@ -1183,9 +1153,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
       this.executionDAOFacade.createTasks(tasks);
 
-      const systemTasks = tasks.filter((t) =>
-        this.systemTaskRegistry.isSystemTask(t.taskType),
-      );
+      const systemTasks = tasks.filter((t) => this.systemTaskRegistry.isSystemTask(t.taskType));
       const tasksToBeQueued = tasks.filter(
         (t) => !this.systemTaskRegistry.isSystemTask(t.taskType),
       );
@@ -1196,11 +1164,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
           throw new Error(`No system task found by name ${task.taskType}`);
         }
 
-        if (
-          task.status != null &&
-          !isTaskTerminal(task.status) &&
-          task.startTime === 0
-        ) {
+        if (task.status != null && !isTaskTerminal(task.status) && task.startTime === 0) {
           task.startTime = Date.now();
         }
 
@@ -1261,7 +1225,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     if (failureWorkflow?.startsWith('$')) {
       const parts = failureWorkflow.split('.');
       const name = parts[2];
-      failureWorkflow = name ? (workflow.input[name] as string) ?? null : null;
+      failureWorkflow = name ? ((workflow.input[name] as string) ?? null) : null;
     }
 
     if (terminateWorkflowException.task) {
@@ -1327,7 +1291,10 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
       for (const task of workflow.tasks) {
         if (task.taskType === 'SUB_WORKFLOW') {
           const subWorkflowId = task.subWorkflowId;
-          if (subWorkflowId && this.rerunWF(subWorkflowId, taskId, taskInput ?? undefined, undefined, undefined)) {
+          if (
+            subWorkflowId &&
+            this.rerunWF(subWorkflowId, taskId, taskInput ?? undefined, undefined, undefined)
+          ) {
             rerunFromTask = task;
             break;
           }
@@ -1439,10 +1406,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
   }
 
-  private isJoinOnFailedPermissive(
-    joinOn: string[],
-    workflow: WorkflowModel,
-  ): boolean {
+  private isJoinOnFailedPermissive(joinOn: string[], workflow: WorkflowModel): boolean {
     return joinOn.some((ref) => {
       const t = workflow.tasks.find((x) => x.referenceTaskName === ref);
       return (
@@ -1544,6 +1508,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
 
     try {
+      this.metadataMapperService.populateWorkflowWithDefinitions(workflow);
       this.executionDAOFacade.createWorkflow(workflow);
       this.executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
       this.notifyWorkflowStatusListener(workflow, 'STARTED');
@@ -1554,6 +1519,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
   }
 
   private createAndQueueEvaluationWithLock(workflow: WorkflowModel): void {
+    this.metadataMapperService.populateWorkflowWithDefinitions(workflow);
     this.executionDAOFacade.createWorkflow(workflow);
     this.executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
     this.notifyWorkflowStatusListener(workflow, 'STARTED');
@@ -1565,10 +1531,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
   }
 
-  private notifyWorkflowStatusListener(
-    workflow: WorkflowModel,
-    event: string,
-  ): void {
+  private notifyWorkflowStatusListener(workflow: WorkflowModel, event: string): void {
     try {
       switch (event) {
         case 'STARTED':

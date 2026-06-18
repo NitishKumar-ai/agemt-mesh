@@ -1,5 +1,5 @@
 ---
-description: "Frequently asked questions about AgentMesh — open source workflow engine, self-hosted deployment, AI agent orchestration, LLM orchestration, workflow automation, durable execution, microservice orchestration, saga pattern, scaling, and how AgentMesh compares to Temporal, Airflow, and Step Functions."
+description: 'Frequently asked questions about AgentMesh — open source workflow engine, self-hosted deployment, AI agent orchestration, LLM orchestration, workflow automation, durable execution, microservice orchestration, saga pattern, scaling, and how AgentMesh compares to Temporal, Airflow, and Step Functions.'
 ---
 
 # Frequently Asked Questions
@@ -48,7 +48,7 @@ AgentMesh combines durable execution, 14+ native LLM providers, JSON-native work
 
 ### Isn't JSON too limited for complex workflows?
 
-No — JSON makes workflows *more* capable, not less. A JSON workflow definition is pure orchestration: it describes what runs, in what order, with what inputs. It cannot open connections, mutate state, or produce side effects. This means every execution is deterministic by construction — given the same inputs, the same task graph executes every time. That is why replay, restart, and retry work unconditionally.
+No — JSON makes workflows _more_ capable, not less. A JSON workflow definition is pure orchestration: it describes what runs, in what order, with what inputs. It cannot open connections, mutate state, or produce side effects. This means every execution is deterministic by construction — given the same inputs, the same task graph executes every time. That is why replay, restart, and retry work unconditionally.
 
 Code-based workflow engines embed orchestration logic alongside business logic, which means your workflow code can introduce non-determinism (system clocks, random values, uncontrolled I/O). These engines must impose restrictions on what your code is allowed to do — and bugs from violating those restrictions are subtle and hard to debug.
 
@@ -118,27 +118,27 @@ Kafka, NATS, NATS Streaming, AMQP (RabbitMQ), SQS, and AgentMesh's internal queu
 
 ## How do you schedule a task to be put in the queue after some time (e.g. 1 hour, 1 day etc.)
 
-After polling for the task update the status of the task to `IN_PROGRESS` and set the `callbackAfterSeconds` value to the desired time.  The task will remain in the queue until the specified second before worker polling for it will receive it again.
+After polling for the task update the status of the task to `IN_PROGRESS` and set the `callbackAfterSeconds` value to the desired time. The task will remain in the queue until the specified second before worker polling for it will receive it again.
 
 If there is a timeout set for the task, and the `callbackAfterSeconds` exceeds the timeout value, it will result in task being TIMED_OUT.
 
-## How long can a workflow be in running state?  Can I have a workflow that keeps running for days or months?
+## How long can a workflow be in running state? Can I have a workflow that keeps running for days or months?
 
-Yes.  As long as the timeouts on the tasks are set to handle long running workflows, it will stay in running state.
+Yes. As long as the timeouts on the tasks are set to handle long running workflows, it will stay in running state.
 
 ## My workflow fails to start with missing task error
 
-Ensure all the tasks are registered via `/metadata/taskdefs` APIs.  Add any missing task definition (as reported in the error) and try again.
+Ensure all the tasks are registered via `/metadata/taskdefs` APIs. Add any missing task definition (as reported in the error) and try again.
 
-## Where does my worker run?  How does agentmesh run my tasks?
+## Where does my worker run? How does agentmesh run my tasks?
 
-AgentMesh does not run the workers.  When a task is scheduled, it is put into the queue maintained by AgentMesh.  Workers are required to poll for tasks using `/tasks/poll` API at periodic interval, execute the business logic for the task and report back the results using `POST {{ api_prefix }}/tasks` API call.
+AgentMesh does not run the workers. When a task is scheduled, it is put into the queue maintained by AgentMesh. Workers are required to poll for tasks using `/tasks/poll` API at periodic interval, execute the business logic for the task and report back the results using `POST {{ api_prefix }}/tasks` API call.
 AgentMesh, however will run [system tasks](../documentation/configuration/workflowdef/systemtasks/index.md) on the AgentMesh server.
 
 ## How can I schedule workflows to run at a specific time?
 
-AgentMesh itself does not provide any scheduling mechanism.  But there is a community project [_Schedule AgentMesh Workflows_](https://github.com/jas34/scheduledwf) which provides workflow scheduling capability as a pluggable module as well as workflow server.
-Other way is you can use any of the available scheduling systems to make REST calls to AgentMesh to start a workflow.  Alternatively, publish a message to a supported eventing system like SQS to trigger a workflow.
+AgentMesh itself does not provide any scheduling mechanism. But there is a community project [_Schedule AgentMesh Workflows_](https://github.com/jas34/scheduledwf) which provides workflow scheduling capability as a pluggable module as well as workflow server.
+Other way is you can use any of the available scheduling systems to make REST calls to AgentMesh to start a workflow. Alternatively, publish a message to a supported eventing system like SQS to trigger a workflow.
 More details about [eventing](../documentation/configuration/eventhandlers.md).
 
 ## Can I use AgentMesh with Ruby / Go / Python / JavaScript / C# / Rust?
@@ -172,21 +172,21 @@ If you are running a single server instance, the cause is more likely the sweepe
 
 Make sure that the worker is actively polling for this task. Navigate to the `Task Queues` tab on the AgentMesh UI and select your task name in the search box. Ensure that `Last Poll Time` for this task is current.
 
-In AgentMesh 3.x, ```agentmesh.redis.availabilityZone``` defaults to ```us-east-1c```.  Ensure that this matches where your workers are, and that it also matches```agentmesh.redis.hosts```.
+In AgentMesh 3.x, `agentmesh.redis.availabilityZone` defaults to `us-east-1c`. Ensure that this matches where your workers are, and that it also matches`agentmesh.redis.hosts`.
 
 ## How do I configure a notification when my workflow completes or fails?
 
-When a workflow fails, you can configure a "failure workflow" to run using the```failureWorkflow``` parameter. By default, three parameters are passed:
+When a workflow fails, you can configure a "failure workflow" to run using the`failureWorkflow` parameter. By default, three parameters are passed:
 
-* reason
-* workflowId: use this to pull the details of the failed workflow.
-* failureStatus
+- reason
+- workflowId: use this to pull the details of the failed workflow.
+- failureStatus
 
 You can also use the Workflow Status Listener:
 
-* Set the workflowStatusListenerEnabled field in your workflow definition to true which enables [notifications](../documentation/configuration/workflowdef/index.md#workflow-status-listener).
-* Add a custom implementation of the Workflow Status Listener. Refer to the [Workflow Status Listener extension guide](../documentation/advanced/extend.md#workflow-status-listener).
-* This notification can be implemented in such a way as to either send a notification to an external system or to send an event on the agentmesh queue to complete/fail another task in another workflow as described in the [event handlers documentation](../documentation/configuration/eventhandlers.md).
+- Set the workflowStatusListenerEnabled field in your workflow definition to true which enables [notifications](../documentation/configuration/workflowdef/index.md#workflow-status-listener).
+- Add a custom implementation of the Workflow Status Listener. Refer to the [Workflow Status Listener extension guide](../documentation/advanced/extend.md#workflow-status-listener).
+- This notification can be implemented in such a way as to either send a notification to an external system or to send an event on the agentmesh queue to complete/fail another task in another workflow as described in the [event handlers documentation](../documentation/configuration/eventhandlers.md).
 
 Refer to this [documentation](../documentation/configuration/workflowdef/index.md#workflow-status-listener) to extend agentmesh to send out events/notifications upon workflow completion/failure.
 

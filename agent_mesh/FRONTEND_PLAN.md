@@ -13,12 +13,14 @@ This plan follows `DESIGN.md`: Apple Developer-inspired refined minimalism, Inte
 Agent Mesh OS is not a generic terminal dashboard. It is an operations cockpit for autonomous developer/security agents.
 
 Primary users:
+
 - Founder/operator running agents locally or on a small server.
 - Developer reviewing proposed agent actions.
 - Security-minded evaluator watching sandboxed code execution and approval gates.
 - Future team admin managing agents, credentials, budgets, and schedules.
 
 Core product promise:
+
 - Tell the agent what outcome you want.
 - Watch the plan, tool calls, logs, and results unfold in one thread.
 - Review risky actions before they happen.
@@ -28,6 +30,7 @@ Core product promise:
 ## Current Frontend State
 
 Existing `dashboard.html` already covers useful MVP surfaces:
+
 - Overview metrics.
 - Suggested tasks from TODO/FIXME scans.
 - Scheduled tasks.
@@ -36,6 +39,7 @@ Existing `dashboard.html` already covers useful MVP surfaces:
 - Approval UI for DBOS workflow gates.
 
 Key gaps before production:
+
 - Visual direction has drifted from `DESIGN.md` into a darker command-center SaaS style.
 - Navigation and page hierarchy are MVP-level, not task-complete operator workflows.
 - There is no persistent workflow detail page.
@@ -49,6 +53,7 @@ Key gaps before production:
 Use a durable app shell with a translucent top bar and compact left rail. The default route should open the latest or new agent session, not an analytics dashboard.
 
 Primary workspace layout:
+
 - Left rail: sessions, agents, tasks, schedules, settings.
 - Center: conversation/run transcript.
 - Right pane: context, files, diffs, approvals, logs, artifacts.
@@ -107,17 +112,19 @@ Primary sections:
    - Failed repair diagnostics.
 
 10. **Activity**
-   - Full live event stream.
-   - Searchable, filterable by agent/workflow/event type.
-   - JSON detail drawer for raw payloads.
+
+- Full live event stream.
+- Searchable, filterable by agent/workflow/event type.
+- JSON detail drawer for raw payloads.
 
 11. **Settings**
-   - Model providers and routing policy.
-   - Sandbox provider status.
-   - Observability/Langfuse config status.
-   - Token/cost budgets.
-   - Approval policy.
-   - Kill switch scope and audit log.
+
+- Model providers and routing policy.
+- Sandbox provider status.
+- Observability/Langfuse config status.
+- Token/cost budgets.
+- Approval policy.
+- Kill switch scope and audit log.
 
 ## Core Screens
 
@@ -126,6 +133,7 @@ Primary sections:
 Purpose: deliver the Codex/Claude-like working experience.
 
 Layout:
+
 - Left session rail: new session, recent sessions, blocked sessions, pinned runs.
 - Center transcript:
   - User prompts.
@@ -149,6 +157,7 @@ Layout:
   - Optional mode selector: Plan, Execute, Review.
 
 Interaction feel:
+
 - The user should never feel like they are filling out backend forms.
 - Actions happen from the composer or inline cards.
 - The app should continuously explain current state through compact status text: planning, waiting for approval, executing in sandbox, reviewing, completed.
@@ -160,6 +169,7 @@ Interaction feel:
 Purpose: make durable runs feel resumable.
 
 Each row/card should show:
+
 - Initial prompt or title.
 - Agent.
 - Status.
@@ -169,6 +179,7 @@ Each row/card should show:
 - Result summary.
 
 Primary actions:
+
 - Resume session.
 - Start similar session.
 - Archive.
@@ -179,12 +190,14 @@ Primary actions:
 Purpose: answer "Is the mesh healthy, and what needs my attention?"
 
 Layout:
+
 - Top status strip: mesh health, DBOS connected, event stream connected, sandbox availability, tracing availability.
 - Four metric panels: active workflows, blocked approvals, failed runs, scheduled automations.
 - Main split: active workflow timeline on the left, attention queue on the right.
 - Agent roster as a horizontal or right-side module, depending on viewport.
 
 Production states:
+
 - Healthy.
 - Degraded, e.g. tracing disabled or event stream reconnecting.
 - Critical, e.g. DB unavailable or kill switch engaged.
@@ -195,6 +208,7 @@ Production states:
 Purpose: make one agent run inspectable and auditable.
 
 Sections:
+
 - Header: workflow ID, agent, status, started time, duration, model route.
 - Step timeline: planning, approval, execution, review, DLQ/failure.
 - Plan panel: generated steps and confidence.
@@ -208,6 +222,7 @@ Sections:
 Purpose: make risky decisions safe and fast.
 
 Each approval item should show:
+
 - Agent and workflow.
 - Risk level: low, medium, high, critical.
 - Proposed action summary.
@@ -217,6 +232,7 @@ Each approval item should show:
 - Consequence copy for approve/reject.
 
 Actions:
+
 - Approve.
 - Reject.
 - Request changes.
@@ -228,6 +244,7 @@ Actions:
 Purpose: turn code TODOs into agent-executable work.
 
 Task card/list fields:
+
 - Marker: TODO/FIXME/HACK/XXX.
 - File and line.
 - Comment.
@@ -237,6 +254,7 @@ Task card/list fields:
 - Last run and linked workflow.
 
 Controls:
+
 - Scan codebase.
 - Filter by marker/status/confidence.
 - Sort by confidence, file, newest.
@@ -247,6 +265,7 @@ Controls:
 Purpose: manage recurring autonomous work safely.
 
 Table fields:
+
 - Name.
 - Prompt.
 - Interval.
@@ -256,6 +275,7 @@ Table fields:
 - Linked last workflow.
 
 Required production API work:
+
 - `PATCH /api/schedule/{id}` for edits and pause/resume.
 - `DELETE /api/schedule/{id}` for removal.
 - `POST /api/schedule/{id}/run` for manual run now.
@@ -265,6 +285,7 @@ Required production API work:
 Purpose: keep operational risk visible.
 
 Settings groups:
+
 - Providers: Gemini, Anthropic, E2B, Langfuse status.
 - Routing: planner model, executor model, reviewer model.
 - Safety: approvals required for file edits, shell commands, git push, external webhooks.
@@ -276,6 +297,7 @@ Settings groups:
 Use reusable components before adding new page-specific styling.
 
 Core components:
+
 - `AppShell`
 - `TopBar`
 - `SideNav`
@@ -304,6 +326,7 @@ Core components:
 - `ArtifactCard`
 
 Visual rules:
+
 - Panels use white/dark-panel surfaces from `DESIGN.md`.
 - Border radius follows `DESIGN.md`, with 8px for compact controls and 12px/18px only for larger panels.
 - Primary actions use Apple blue.
@@ -316,6 +339,7 @@ Visual rules:
 The frontend should eventually consume normalized resources instead of reconstructing state from event payloads.
 
 Needed resources:
+
 - `AgentSession`
 - `SessionMessage`
 - `SessionContextItem`
@@ -331,6 +355,7 @@ Needed resources:
 - `BudgetStatus`
 
 Recommended backend API additions:
+
 - `GET /api/sessions`
 - `POST /api/sessions`
 - `GET /api/sessions/{id}`
@@ -352,6 +377,7 @@ Recommended backend API additions:
 ## Interaction States
 
 Every production screen needs these states:
+
 - Loading skeleton.
 - Empty state.
 - Success state.
@@ -366,17 +392,20 @@ Every production screen needs these states:
 ## Responsive Behavior
 
 Desktop:
+
 - Left icon rail plus full content.
 - Multi-column overview.
 - Tables for schedules/workflows.
 - Detail drawers where context should remain visible.
 
 Tablet:
+
 - Collapsible navigation.
 - Two-column overview becomes stacked modules.
 - Tables become denser cards if horizontal space is tight.
 
 Mobile:
+
 - Bottom navigation or collapsed drawer.
 - Approval queue and workflow details are primary.
 - Tables become card lists.
@@ -395,12 +424,14 @@ Mobile:
 ## Implementation Direction
 
 Near-term pragmatic path:
+
 - Keep FastAPI backend.
 - Replace the dashboard-first shell with a session-first shell.
 - If staying static: split CSS/JS into `static/app.css` and `static/app.js` first.
 - If moving to app framework: use Vite + React + TypeScript, keeping API calls thin and typed.
 
 Recommendation:
+
 - For production readiness, move to Vite + React + TypeScript once backend tests are stabilized.
 - Keep the first implementation API-compatible with the existing endpoints.
 - Build the UI around durable sessions and workflows, not transient event-feed-only state.
@@ -454,6 +485,7 @@ Recommendation:
 ## Next Implementation Slice
 
 The highest-leverage first slice is:
+
 - Rename visible product surface consistently.
 - Reframe `dashboard.html` around a Codex/Claude-style agent session.
 - Add a transcript fed by current SSE events.

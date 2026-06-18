@@ -61,7 +61,10 @@ export class RedisExecutionDAO implements ExecutionDAO {
   async removeFromPendingWorkflow(workflowType: string, workflowId: string): Promise<void> {
     // Skeleton
   }
-  async getWorkflow(workflowId: string, includeTasks?: boolean): Promise<WorkflowModel | undefined> {
+  async getWorkflow(
+    workflowId: string,
+    includeTasks?: boolean,
+  ): Promise<WorkflowModel | undefined> {
     const val = await this.redis.get(`WORKFLOW:${workflowId}`);
     return val ? JSON.parse(val) : undefined;
   }
@@ -77,10 +80,18 @@ export class RedisExecutionDAO implements ExecutionDAO {
   async getInProgressTaskCount(taskDefName: string): Promise<number> {
     return 0;
   }
-  async getWorkflowsByType(workflowName: string, startTime: number, endTime: number): Promise<WorkflowModel[]> {
+  async getWorkflowsByType(
+    workflowName: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<WorkflowModel[]> {
     return [];
   }
-  async getWorkflowsByCorrelationId(workflowName: string, correlationId: string, includeTasks: boolean): Promise<WorkflowModel[]> {
+  async getWorkflowsByCorrelationId(
+    workflowName: string,
+    correlationId: string,
+    includeTasks: boolean,
+  ): Promise<WorkflowModel[]> {
     return [];
   }
   canSearchAcrossWorkflows(): boolean {

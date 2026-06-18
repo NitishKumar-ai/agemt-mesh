@@ -1,11 +1,10 @@
 ---
-description: "MCP (Model Context Protocol) integration with AgentMesh — connect AI agents to external tools, discover tools at runtime, execute with durable retry, and expose workflows as MCP tools."
+description: 'MCP (Model Context Protocol) integration with AgentMesh — connect AI agents to external tools, discover tools at runtime, execute with durable retry, and expose workflows as MCP tools.'
 ---
 
 # MCP integration
 
 MCP (Model Context Protocol) is the open standard for connecting AI agents to tools and data sources. AgentMesh provides native MCP integration — discover tools, call them with full durability, and expose your own workflows as MCP tools.
-
 
 ## What is MCP
 
@@ -16,7 +15,6 @@ MCP defines a protocol for how AI agents discover and use tools. Instead of hard
 **With MCP:** Tools are standardized. Connect once, use any MCP-compatible tool server.
 
 AgentMesh supports MCP as a first-class integration with two native system tasks.
-
 
 ## Native MCP system tasks
 
@@ -38,7 +36,6 @@ Queries an MCP server and returns the list of tools it offers, including names, 
 **Output:** A structured list of tools with their schemas. Pass this directly to an LLM so it can decide which tool to call.
 
 **Why this matters:** Tool discovery happens at runtime. Your agent doesn't need to know which tools exist at design time — it discovers them dynamically. Add a new tool to the MCP server, and every agent using it gains that capability immediately.
-
 
 ### CALL_MCP_TOOL — execute a tool
 
@@ -63,7 +60,6 @@ Calls a specific tool on an MCP server with the given arguments.
 - **Full audit trail** — every tool call is persisted: the method, arguments, response, timing, and retry history. You can inspect exactly what your agent did.
 - **Crash recovery** — if the server crashes between tool calls, the workflow resumes from the last completed step. The tool call is never silently lost.
 - **Timeout handling** — configure `responseTimeoutSeconds` to prevent stuck tool calls from blocking your agent.
-
 
 ## Connecting to MCP servers
 
@@ -121,7 +117,6 @@ An agent can connect to multiple MCP servers in the same workflow. Discover tool
 }
 ```
 
-
 ## Exposing workflows as MCP tools
 
 Any AgentMesh workflow can be exposed as an MCP tool via the MCP Gateway. This means other agents and LLMs can discover and invoke your workflows using the MCP protocol.
@@ -135,19 +130,17 @@ Agent → receives structured output
 
 Your workflow's `inputParameters` become the tool's input schema, and `outputParameters` become the tool's output. The workflow runs with full durable execution guarantees — retries, persistence, compensation — while appearing to the calling agent as a simple tool call.
 
-This creates a composable architecture: workflows call MCP tools, and workflows *are* MCP tools. Agents can invoke other agents' workflows without knowing they're workflows.
-
+This creates a composable architecture: workflows call MCP tools, and workflows _are_ MCP tools. Agents can invoke other agents' workflows without knowing they're workflows.
 
 ## MCP vs HTTP vs custom workers
 
-| Approach | When to use |
-|----------|-------------|
+| Approach                                     | When to use                                                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **MCP** (`LIST_MCP_TOOLS` + `CALL_MCP_TOOL`) | Tools exposed via MCP servers. Dynamic tool discovery. Agent decides which tool to call at runtime. |
-| **HTTP** (`HTTP` system task) | Direct API calls with known endpoints. No tool discovery needed. |
-| **Custom workers** (`SIMPLE` task) | Complex business logic that needs custom code. Multi-step processing. |
+| **HTTP** (`HTTP` system task)                | Direct API calls with known endpoints. No tool discovery needed.                                    |
+| **Custom workers** (`SIMPLE` task)           | Complex business logic that needs custom code. Multi-step processing.                               |
 
 MCP is the best choice when your agent needs to **discover tools dynamically** or when you want to **standardize tool access** across multiple agents. Use HTTP for simple, known API calls. Use custom workers for logic that doesn't fit into a single API call.
-
 
 ## Complete example: MCP agent with approval
 
@@ -235,7 +228,6 @@ A production-ready agent that discovers tools, plans, gets human approval, execu
 ```
 
 Every task type here — `LIST_MCP_TOOLS`, `LLM_CHAT_COMPLETE`, `CALL_MCP_TOOL`, `HUMAN` — is a native AgentMesh system task. No custom code needed.
-
 
 ## Next steps
 

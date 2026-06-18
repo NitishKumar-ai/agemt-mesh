@@ -1,34 +1,29 @@
 ---
-description: "Isolation Groups — isolate AgentMesh system task execution into dedicated queues and thread pools for predictable performance."
+description: 'Isolation Groups — isolate AgentMesh system task execution into dedicated queues and thread pools for predictable performance.'
 ---
+
 # Isolation Groups
 
 Consider an HTTP task where the latency of an API is high, task queue piles up effecting execution of other HTTP tasks which have low latency.
 
 We can isolate the execution of such tasks to have predictable performance using `isolationgroupId`, a property of task definition.
 
-When we set isolationGroupId,  the executor `SystemTaskWorkerCoordinator` will allocate an isolated queue and an isolated thread pool for execution of those tasks.
+When we set isolationGroupId, the executor `SystemTaskWorkerCoordinator` will allocate an isolated queue and an isolated thread pool for execution of those tasks.
 
-If no `isolationgroupId` is specified in task definition, then fallback is default behaviour where the executor executes the task in shared thread-pool for all tasks. 
+If no `isolationgroupId` is specified in task definition, then fallback is default behaviour where the executor executes the task in shared thread-pool for all tasks.
 
 ## Example
 
 ** Task Definition **
+
 ```json
 {
   "name": "encode_task",
   "retryCount": 3,
 
   "timeoutSeconds": 1200,
-  "inputKeys": [
-    "sourceRequestId",
-    "qcElementType"
-  ],
-  "outputKeys": [
-    "state",
-    "skipped",
-    "result"
-  ],
+  "inputKeys": ["sourceRequestId", "qcElementType"],
+  "outputKeys": ["state", "skipped", "result"],
   "timeoutPolicy": "TIME_OUT_WF",
   "retryLogic": "FIXED",
   "retryDelaySeconds": 600,
@@ -39,7 +34,9 @@ If no `isolationgroupId` is specified in task definition, then fallback is defau
   "isolationgroupId": "myIsolationGroupId"
 }
 ```
+
 ** Workflow Definition **
+
 ```json
 {
   "name": "encode_and_deploy",
@@ -49,7 +46,7 @@ If no `isolationgroupId` is specified in task definition, then fallback is defau
     {
       "name": "encode",
       "taskReferenceName": "encode",
-      "type": "HTTP", 
+      "type": "HTTP",
       "inputParameters": {
         "http_request": {
           "uri": "http://localhost:9200/agentmesh/_search?size=10",
@@ -68,27 +65,25 @@ If no `isolationgroupId` is specified in task definition, then fallback is defau
 }
 ```
 
-
 - puts `encode` in `HTTP-myIsolationGroupId` queue, and allocates a new thread pool for this for execution.
 
-<b>Note: </b>  To enable this feature, the `workflow.isolated.system.task.enable` property needs to be made `true`,its default value is `false`
+<b>Note: </b> To enable this feature, the `workflow.isolated.system.task.enable` property needs to be made `true`,its default value is `false`
 
-The property `workflow.isolated.system.task.worker.thread.count`  sets the thread pool size for isolated tasks; default is `1`.
+The property `workflow.isolated.system.task.worker.thread.count` sets the thread pool size for isolated tasks; default is `1`.
 
-isolationGroupId is currently supported only in HTTP and kafka Task. 
+isolationGroupId is currently supported only in HTTP and kafka Task.
 
 ### Execution Name Space
 
 `executionNameSpace` A property of taskdef can be used to provide JVM isolation to task execution and scale executor deployments horizontally.
 
-Limitation of using isolationGroupId is that we need to scale executors vertically as the executor allocates a new thread pool per `isolationGroupId`.  Also, since the executor runs the tasks in the same JVM, task execution is not isolated completely. 
+Limitation of using isolationGroupId is that we need to scale executors vertically as the executor allocates a new thread pool per `isolationGroupId`. Also, since the executor runs the tasks in the same JVM, task execution is not isolated completely.
 
 To support JVM isolation, and also allow the executors to scale horizontally, we can use `executionNameSpace` property in taskdef.
 
 Executor consumes tasks whose executionNameSpace matches with the configuration property `workflow.system.task.worker.executionNameSpace`
 
-If the property is not set, the executor executes tasks without any executionNameSpace set. 
-
+If the property is not set, the executor executes tasks without any executionNameSpace set.
 
 ```json
 {
@@ -96,15 +91,8 @@ If the property is not set, the executor executes tasks without any executionNam
   "retryCount": 3,
 
   "timeoutSeconds": 1200,
-  "inputKeys": [
-    "sourceRequestId",
-    "qcElementType"
-  ],
-  "outputKeys": [
-    "state",
-    "skipped",
-    "result"
-  ],
+  "inputKeys": ["sourceRequestId", "qcElementType"],
+  "outputKeys": ["state", "skipped", "result"],
   "timeoutPolicy": "TIME_OUT_WF",
   "retryLogic": "FIXED",
   "retryDelaySeconds": 600,
@@ -119,15 +107,15 @@ If the property is not set, the executor executes tasks without any executionNam
 #### Example Workflow task
 
 ```json
-{ 
+{
   "name": "encode_and_deploy",
   "description": "Encodes a file and deploys to CDN",
   "version": 1,
   "tasks": [
-    { 
+    {
       "name": "encode",
       "taskReferenceName": "encode",
-      "type": "HTTP", 
+      "type": "HTTP",
       "inputParameters": {
         "http_request": {
           "uri": "http://localhost:9200/agentmesh/_search?size=10",
@@ -144,13 +132,10 @@ If the property is not set, the executor executes tasks without any executionNam
   "workflowStatusListenerEnabled": true,
   "schemaVersion": 2
 }
-``` 
- 
-- `encode` task is executed by the executor deployment whose `workflow.system.task.worker.executionNameSpace` property is `myExecutionNameSpace` 
+```
+
+- `encode` task is executed by the executor deployment whose `workflow.system.task.worker.executionNameSpace` property is `myExecutionNameSpace`
 
 `executionNameSpace` can be used along with `isolationGroupId`
 
 If the above task contains a isolationGroupId `myIsolationGroupId`, the tasks will be scheduled in a queue HTTP@myExecutionNameSpace-myIsolationGroupId, and have a new threadpool for execution in the deployment group with myExecutionNameSpace
-
-
-

@@ -46,31 +46,37 @@ const baseThemeOptions: ThemeOptions = {
     fontWeightMedium: fontWeights.fontWeight1,
     fontWeightBold: fontWeights.fontWeight2,
     h1: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize10,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,
     },
     h2: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize9,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,
     },
     h3: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize8,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,
     },
     h4: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize7,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,
     },
     h5: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize6,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,
     },
     h6: {
+      fontFamily: '"Outfit", sans-serif',
       fontSize: fontSizes.fontSize5,
       lineHeight: lineHeights.lineHeight0,
       fontWeight: fontWeights.fontWeight2,

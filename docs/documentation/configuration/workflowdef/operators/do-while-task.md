@@ -1,7 +1,9 @@
 ---
-description: "Do-While Task — loop over tasks in a AgentMesh workflow until a condition is met, with configurable iteration limits."
+description: 'Do-While Task — loop over tasks in a AgentMesh workflow until a condition is met, with configurable iteration limits.'
 ---
+
 # Do While
+
 ```json
 "type" : "DO_WHILE"
 ```
@@ -12,25 +14,26 @@ The Do While task (`DO_WHILE`) sequentially executes a list of tasks as long as 
 
 Use these parameters in top level of the Do While task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| loopCondition | String      | The condition that is evaluated after each iteration. This is a JavaScript expression, evaluated using the Nashorn engine. When using `items` for list iteration, this is optional. | Required (for counter-based iteration). <br/>Optional (for list iteration). |
-| loopOver      | List[Task] | The list of task configurations that will be executed as long as the condition is true.                                                                                                                                               | Required. |
-| items         | String      | A workflow expression that evaluates to a list/array to iterate over (e.g., `${workflow.input.myList}`). When specified, the loop automatically iterates through each item without requiring a `loopCondition`. Loop tasks can access the current item via `${do_while_ref.output.loopItem}` and the zero-based index via `${do_while_ref.output.loopIndex}`. | Optional. |
+| Parameter     | Type       | Description                                                                                                                                                                                                                                                                                                                                                   | Required / Optional                                                         |
+| ------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| loopCondition | String     | The condition that is evaluated after each iteration. This is a JavaScript expression, evaluated using the Nashorn engine. When using `items` for list iteration, this is optional.                                                                                                                                                                           | Required (for counter-based iteration). <br/>Optional (for list iteration). |
+| loopOver      | List[Task] | The list of task configurations that will be executed as long as the condition is true.                                                                                                                                                                                                                                                                       | Required.                                                                   |
+| items         | String     | A workflow expression that evaluates to a list/array to iterate over (e.g., `${workflow.input.myList}`). When specified, the loop automatically iterates through each item without requiring a `loopCondition`. Loop tasks can access the current item via `${do_while_ref.output.loopItem}` and the zero-based index via `${do_while_ref.output.loopIndex}`. | Optional.                                                                   |
 
 ## Input parameters
 
 Use these parameters in the `inputParameters` section of the Do While task configuration.
 
-| Parameter     | Type    | Description                                                                                                                                                                                                                                                                                        | Required / Optional |
-| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| keepLastN     | Integer | Number of most recent iterations to keep in the database and task output. Older iterations are automatically removed to prevent database bloat. When not specified, all iterations are retained (default behavior). This is useful for long-running loops with many iterations. Minimum value: 1. | Optional.           |
+| Parameter | Type    | Description                                                                                                                                                                                                                                                                                       | Required / Optional |
+| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| keepLastN | Integer | Number of most recent iterations to keep in the database and task output. Older iterations are automatically removed to prevent database bloat. When not specified, all iterations are retained (default behavior). This is useful for long-running loops with many iterations. Minimum value: 1. | Optional.           |
 
 ## JSON configuration
 
 Here is the task configuration for a Do While task.
 
 **Counter-based iteration:**
+
 ```json
 {
   "name": "do_while",
@@ -40,18 +43,20 @@ Here is the task configuration for a Do While task.
   },
   "type": "DO_WHILE",
   "loopCondition": "(function () {\n  if ($.do_while_ref['iteration'] < 5) {\n    return true;\n  }\n  return false;\n})();",
-  "loopOver": [ // List of tasks to be executed in the loop
+  "loopOver": [
+    // List of tasks to be executed in the loop
     {
-        // task configuration
+      // task configuration
     },
     {
-        // task configuration
+      // task configuration
     }
   ]
 }
 ```
 
 **List iteration:**
+
 ```json
 {
   "name": "do_while",
@@ -76,11 +81,11 @@ Here is the task configuration for a Do While task.
 
 The Do While task will return the following parameters.
 
-| Name             | Type         | Description                                                   |
-| ---------------- | ------------ | ------------------------------------------------------------- |
-| iteration | Integer          | The number of iterations. <br/><br/> If the Do While task is in progress, `iteration` will show the current iteration number. When completed, `iteration` will show the final number of iterations.                          |
-| loopItem | Any | **(List iteration only)** The current item from the `items` list for this iteration. Available when using the `items` parameter. |
-| loopIndex | Integer | **(List iteration only)** The zero-based index of the current item (0, 1, 2, ...). Available when using the `items` parameter. |
+| Name      | Type    | Description                                                                                                                                                                                         |
+| --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iteration | Integer | The number of iterations. <br/><br/> If the Do While task is in progress, `iteration` will show the current iteration number. When completed, `iteration` will show the final number of iterations. |
+| loopItem  | Any     | **(List iteration only)** The current item from the `items` list for this iteration. Available when using the `items` parameter.                                                                    |
+| loopIndex | Integer | **(List iteration only)** The zero-based index of the current item (0, 1, 2, ...). Available when using the `items` parameter.                                                                      |
 
 In addition, a map will be created for each iteration, keyed by its iteration number (e.g., 1, 2, 3), and will contain the task outputs for all of the `loopOver` tasks.
 
@@ -91,7 +96,6 @@ Furthermore, if `loopCondition` declares any parameter, it will also appear in t
 When a Do While loop is executed, each task in the loop will have its `taskReferenceName` concatenated with _\_\_i_, with _i_ as the iteration number starting at 1. If one of the loop tasks fails, the Do While task status will be set as FAILED, and upon retry, the iteration number will restart from 1.
 
 Each loop task output is stored as part of the Do While task, indexed by the iteration value, allowing `loopCondition` to reference the output of a task for a specific iteration (e.g., `$.LoopTask['iteration]['first_task']`).
-
 
 ## Iteration cleanup
 
@@ -175,6 +179,7 @@ When you have a list of items to iterate over, use the `items` parameter for a s
 ```
 
 In this example:
+
 - The loop automatically iterates through each item in `workflow.input.itemList`
 - `loopItem` contains the current item (e.g., first iteration gets `itemList[0]`)
 - `loopIndex` contains the zero-based index (0, 1, 2, ...)
@@ -214,92 +219,92 @@ This loop will stop either when all items are processed OR when the HTTP respons
 
 In this example task configuration, the Do While task evaluates two criteria:
 
-
 ```json
 {
-    "name": "Loop",
-    "taskReferenceName": "LoopTask",
-    "type": "DO_WHILE",
-    "inputParameters": {
-      "value": "${workflow.input.value}"
-    },
-    "loopCondition": "if ( ($.LoopTask['iteration'] < $.value ) || ( $.first_task['response']['body'] > 10)) { false; } else { true; }",
-    "loopOver": [
-        {
-            "name": "firstTask",
-            "taskReferenceName": "first_task",
-            "inputParameters": {
-                "http_request": {
-                    "uri": "http://localhost:8082",
-                    "method": "POST"
-                }
-            },
-            "type": "HTTP"
-        },{
-            "name": "secondTask",
-            "taskReferenceName": "second_task",
-            "inputParameters": {
-                "http_request": {
-                    "uri": "http://localhost:8082",
-                    "method": "POST"
-                }
-            },
-            "type": "HTTP"
+  "name": "Loop",
+  "taskReferenceName": "LoopTask",
+  "type": "DO_WHILE",
+  "inputParameters": {
+    "value": "${workflow.input.value}"
+  },
+  "loopCondition": "if ( ($.LoopTask['iteration'] < $.value ) || ( $.first_task['response']['body'] > 10)) { false; } else { true; }",
+  "loopOver": [
+    {
+      "name": "firstTask",
+      "taskReferenceName": "first_task",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://localhost:8082",
+          "method": "POST"
         }
-    ],
-    "startDelay": 0,
-    "optional": false
+      },
+      "type": "HTTP"
+    },
+    {
+      "name": "secondTask",
+      "taskReferenceName": "second_task",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://localhost:8082",
+          "method": "POST"
+        }
+      },
+      "type": "HTTP"
+    }
+  ],
+  "startDelay": 0,
+  "optional": false
 }
 ```
 
 Assuming three executions occurred (`first_task__1`, `first_task__2`, `first_task__3`,
-`second_task__1`, `second_task__2`, and `second_task__3`), the Do While task will return the following will produce the following output: 
+`second_task__1`, `second_task__2`, and `second_task__3`), the Do While task will return the following will produce the following output:
 
 ```json
 {
-    "iteration": 3,
-    "1": {
-        "first_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        },
-        "second_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
+  "iteration": 3,
+  "1": {
+    "first_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
-    "2": {
-        "first_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        },
-        "second_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    },
-    "3": {
-        "first_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        },
-        "second_task": {
-            "response": {},
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
+    "second_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
     }
+  },
+  "2": {
+    "first_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "second_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "3": {
+    "first_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "second_task": {
+      "response": {},
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
 }
 ```
 
@@ -309,37 +314,35 @@ Sometimes, you may want to use the Do While iteration value/counter inside your 
 
 To evaluate the current iteration, the parameter `$.get_all_stars_loop_ref['iteration']` is used in `loopCondition`. In the HTTP task embedded in the loop, `${get_all_stars_loop_ref.output.iteration}` is used to define which page the API should return.
 
-
 ```json
 {
-    "name": "get_all_stars",
-    "taskReferenceName": "get_all_stars_loop_ref",
-    "inputParameters": {
-        "stargazers": "4000"
-    },
-    "type": "DO_WHILE",
-    "loopCondition": "if ($.get_all_stars_loop_ref['iteration'] < Math.ceil($.stargazers/100)) { true; } else { false; }",
-    "loopOver": [
-        {
-            "name": "100_stargazers",
-            "taskReferenceName": "hundred_stargazers_ref",
-            "inputParameters": {
-                "counter": "${get_all_stars_loop_ref.output.iteration}",
-                "http_request": {
-                    "uri": "https://api.github.com/repos/ntflix/agentmesh/stargazers?page=${get_all_stars_loop_ref.output.iteration}&per_page=100",
-                    "method": "GET",
-                    "headers": {
-                        "Authorization": "token ${workflow.input.gh_token}",
-                        "Accept": "application/vnd.github.v3.star+json"
-                    }
-                }
-            },
-            "type": "HTTP"
+  "name": "get_all_stars",
+  "taskReferenceName": "get_all_stars_loop_ref",
+  "inputParameters": {
+    "stargazers": "4000"
+  },
+  "type": "DO_WHILE",
+  "loopCondition": "if ($.get_all_stars_loop_ref['iteration'] < Math.ceil($.stargazers/100)) { true; } else { false; }",
+  "loopOver": [
+    {
+      "name": "100_stargazers",
+      "taskReferenceName": "hundred_stargazers_ref",
+      "inputParameters": {
+        "counter": "${get_all_stars_loop_ref.output.iteration}",
+        "http_request": {
+          "uri": "https://api.github.com/repos/ntflix/agentmesh/stargazers?page=${get_all_stars_loop_ref.output.iteration}&per_page=100",
+          "method": "GET",
+          "headers": {
+            "Authorization": "token ${workflow.input.gh_token}",
+            "Accept": "application/vnd.github.v3.star+json"
+          }
         }
-    ]
+      },
+      "type": "HTTP"
+    }
+  ]
 }
 ```
-
 
 ## Orkes AgentMesh compatibility
 

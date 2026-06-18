@@ -1,5 +1,7 @@
 # Workflow Event Listeners
+
 Workflow Event listeners can be configured for the purpose in AgentMesh:
+
 1. Remove and/or archive workflows from primary datasource (e.g. Redis) once the workflow reaches a terminal status.
 2. Publish a message to a agentmesh queue as the workflows complete that can be used to trigger other workflows.
 3. Publish workflow status changes to Kafka as it moves along its lifecycle.
@@ -8,11 +10,12 @@ Workflow Event listeners can be configured for the purpose in AgentMesh:
 
 Group: `com.agentmesh.agentmesh`
 
-| Published Artifact | Description |
-| ----------- | ----------- | 
-| agentmesh-workflow-event-listener | Event Listeners for AgentMesh  |
+| Published Artifact                | Description                   |
+| --------------------------------- | ----------------------------- |
+| agentmesh-workflow-event-listener | Event Listeners for AgentMesh |
 
 ## Backward Compatibility
+
 Workflow event listeners are part of `agentmesh-contribs` binary as well - if you are already consuming contribs module as part of your build,
 you do not need to add this as a separate dependency.
 Core agentmesh-server also includes event listeners via contribs dependency.
@@ -20,8 +23,10 @@ Core agentmesh-server also includes event listeners via contribs dependency.
 ## Configuration
 
 ### Workflow Archival
+
 Set the following properties to archive the workflows as they complete.  
 When archived, the workflow execution is removed from the primary DAO and pushed to index store (e.g. Elasticsearch)
+
 ```properties
 agentmesh.workflow-status-listener.type=archive
 
@@ -33,7 +38,8 @@ agentmesh.workflow-status-listener.archival.delayQueueWorkerThreadCount=5
 ```
 
 ### Queue publisher
-Publish a summary of workflow [WorkflowSummary](https://github.com/agentmesh-oss/agentmesh/blob/main/common/src/main/java/com/agentmesh/agentmesh/common/run/WorkflowSummary.java) 
+
+Publish a summary of workflow [WorkflowSummary](https://github.com/agentmesh-oss/agentmesh/blob/main/common/src/main/java/com/agentmesh/agentmesh/common/run/WorkflowSummary.java)
 to a queue as the workflow gets completed.
 
 ```properties
@@ -50,9 +56,11 @@ agentmesh.workflow-status-listener.queue-publisher.finalizeQueue=_callbackFinali
 ```
 
 ### Kafka Publisher
+
 Publish a summary of workflow WorkflowSummary to a Kafka topic(s) as a workflow moves through its lifecycle.
 
 This publisher introduced some new events
+
 - STARTED
 - RERAN
 - RETRIED
@@ -68,7 +76,7 @@ Example of a default configuration:
 ```properties
 agentmesh.workflow-status-listener.type=kafka
 
-# Kafka Producer Configurations 
+# Kafka Producer Configurations
 agentmesh.workflow-status-listener.kafka.producer[bootstrap.servers]=kafka:29092
 
 # Serializers
@@ -101,10 +109,11 @@ agentmesh.workflow-status-listener.kafka.default-topic=workflow-status-events
 
 For configuration it supports the Kafka Producer clients settings prefixed with `agentmesh.workflow-status-listener.kafka.producer`.
 
-`agentmesh.workflow-status-listener.kafka.default-topic`  defines the default topic to use for all events.
+`agentmesh.workflow-status-listener.kafka.default-topic` defines the default topic to use for all events.
 Each event can also have its dedicated topic prefix the proeprty with `agentmesh.workflow-status-listener.kafka.event-topics.` followed by the event name in lowercase.
 
 Example of using specific topics for the events:
+
 ```properties
 # Custom Topics for Specific Events
 agentmesh.workflow-status-listener.kafka.event-topics.completed=workflow-completed-events
@@ -113,9 +122,10 @@ agentmesh.workflow-status-listener.kafka.event-topics.started=workflow-started-e
 ```
 
 ### Composite Publisher (Multiple Listeners)
+
 Publish workflow events to multiple destinations simultaneously.
 
-This allows you to enable multiple workflow status listeners at once, such as publishing to both Kafka and webhooks, 
+This allows you to enable multiple workflow status listeners at once, such as publishing to both Kafka and webhooks,
 or archiving workflows while also sending them to queues.
 
 ```properties
@@ -143,18 +153,21 @@ agentmesh.workflow-status-listener.queue-publisher.finalizeQueue=_callbackFinali
 ```
 
 **Supported listener types:**
+
 - `kafka` - Publish to Kafka topics
 - `queue_publisher` - Publish to AgentMesh queues
 - `workflow_publisher` - Publish to HTTP webhooks
 - `archive` - Archive workflows to storage
 
 **Benefits:**
+
 - **Independent failure domains** - If one listener fails (e.g., Kafka is down), others continue working
 - **Different consumption patterns** - Stream to Kafka, queue for internal automations, webhook for external integrations
 - **Backward compatible** - Existing single-listener configurations continue to work unchanged
 - **Error isolation** - Exceptions in one listener don't affect others
 
 **Example use case:**
+
 ```properties
 # Send to Kafka for analytics + Archive completed workflows
 agentmesh.workflow-status-listener.type=composite

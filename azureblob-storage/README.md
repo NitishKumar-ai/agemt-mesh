@@ -1,4 +1,4 @@
-# Azure Blob External Storage Module 
+# Azure Blob External Storage Module
 
 This module use azure blob to store and retrieve workflows/tasks input/output payload that
 went over the thresholds defined in properties named `agentmesh.[workflow|task].[input|output].payload.threshold.kb`.
@@ -11,9 +11,10 @@ It has only been tested with **v12.2.0**.
 
 ### Usage
 
-Documentation [External Payload Storage]([https://agentmesh.github.io/agentmesh/externalpayloadstorage/#azure-blob-storage](https://docs.agentmesh-oss.org/documentation/advanced/externalpayloadstorage.html))
+Documentation [External Payload Storage](<[https://agentmesh.github.io/agentmesh/externalpayloadstorage/#azure-blob-storage](https://docs.agentmesh-oss.org/documentation/advanced/externalpayloadstorage.html)>)
 
 See [https://docs.agentmesh-oss.org/documentation/advanced/externalpayloadstorage.html]() for more details
+
 ### Example
 
 ```properties
@@ -31,7 +32,7 @@ You can use [Azurite](https://github.com/Azure/Azurite) to simulate an Azure Sto
 
 ### Troubleshoots
 
-* When using **es5 persistance** you will receive an `java.lang.IllegalStateException` because the Netty lib will call `setAvailableProcessors` two times. To resolve this issue you need to set the following system property
+- When using **es5 persistance** you will receive an `java.lang.IllegalStateException` because the Netty lib will call `setAvailableProcessors` two times. To resolve this issue you need to set the following system property
 
 ```
 es.set.netty.runtime.available.processors=false

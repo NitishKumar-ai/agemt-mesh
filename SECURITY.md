@@ -1,4 +1,5 @@
 # Security Policy
+
 - [Reporting a vulnerability](#reporting-a-vulnerability)
 - [Supported AgentMesh versions](#supported-versions)
 

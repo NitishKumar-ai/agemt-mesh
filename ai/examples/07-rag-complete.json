@@ -89,7 +89,11 @@
     }
   ],
   "outputParameters": {
-    "indexed_docs": ["${index_doc_1_ref.output}", "${index_doc_2_ref.output}", "${index_doc_3_ref.output}"],
+    "indexed_docs": [
+      "${index_doc_1_ref.output}",
+      "${index_doc_2_ref.output}",
+      "${index_doc_3_ref.output}"
+    ],
     "search_results": "${search_ref.output.result}",
     "answer": "${answer_ref.output.result}"
   }

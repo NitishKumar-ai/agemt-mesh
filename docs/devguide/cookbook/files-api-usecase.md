@@ -43,12 +43,12 @@ flowchart TD
 
 ### Files Produced
 
-| Stage | File | Format |
-|-------|------|--------|
-| RMA Generation | `rma_RET-9001.pdf` | PDF |
-| Shipping Label | `label_RET-9001.png` | 4×6 ZPL/PNG |
-| Refund Receipt | `receipt_RET-9001.pdf` | PDF |
-| Denial Letter | `denial_RET-9001.pdf` | PDF (if ineligible) |
+| Stage          | File                   | Format              |
+| -------------- | ---------------------- | ------------------- |
+| RMA Generation | `rma_RET-9001.pdf`     | PDF                 |
+| Shipping Label | `label_RET-9001.png`   | 4×6 ZPL/PNG         |
+| Refund Receipt | `receipt_RET-9001.pdf` | PDF                 |
+| Denial Letter  | `denial_RET-9001.pdf`  | PDF (if ineligible) |
 
 ### AgentMesh Primitives
 
@@ -94,14 +94,14 @@ flowchart TD
 
 ### Files Produced
 
-| Stage | File | Format |
-|-------|------|--------|
-| Extracted Text | `extracted_{doc_id}.txt` | Plain text |
-| Chunk Manifest | `chunks_{doc_id}.jsonl` | JSONL |
-| Embedding Vectors | `embeddings_{doc_id}.npy` | NumPy binary |
-| Metadata Index | `index_{doc_id}.json` | JSON |
-| Master Manifest | `kb_manifest_{run_id}.json` | JSON |
-| Pipeline Log | `pipeline_log_{run_id}.txt` | Text |
+| Stage             | File                        | Format       |
+| ----------------- | --------------------------- | ------------ |
+| Extracted Text    | `extracted_{doc_id}.txt`    | Plain text   |
+| Chunk Manifest    | `chunks_{doc_id}.jsonl`     | JSONL        |
+| Embedding Vectors | `embeddings_{doc_id}.npy`   | NumPy binary |
+| Metadata Index    | `index_{doc_id}.json`       | JSON         |
+| Master Manifest   | `kb_manifest_{run_id}.json` | JSON         |
+| Pipeline Log      | `pipeline_log_{run_id}.txt` | Text         |
 
 ### AgentMesh Primitives
 
@@ -119,19 +119,19 @@ A media company uploads a master video file. AgentMesh fans out transcoding jobs
 flowchart TD
     A["Master Video<br/>Uploaded (4K ProRes)"] --> B["INLINE Task:<br/>Validate & Extract<br/>Media Metadata"]
     B --> C["FORK (3 Branches)"]
-    
+
     C --> D["Branch 1:<br/>DYNAMIC_FORK<br/>Transcode Variants"]
     D --> D1["1080p H.264 MP4"]
     D --> D2["720p H.264 MP4"]
     D --> D3["480p H.264 MP4"]
     D --> D4["1080p WebM VP9"]
     D --> D5["HLS Adaptive<br/>Playlist (.m3u8)"]
-    
+
     C --> E["Branch 2:<br/>Thumbnail Generation"]
     E --> E1["Extract Keyframes<br/>(every 30s)"]
     E1 --> E2["Resize to<br/>320×180 JPG"]
     E2 --> E3["Generate Poster<br/>Image 1920×1080"]
-    
+
     C --> F["Branch 3:<br/>Speech-to-Text"]
     F --> F1["LLM_TEXT_COMPLETE:<br/>Transcribe Audio"]
     F1 --> F2["Generate SRT<br/>Subtitle File"]
@@ -144,7 +144,7 @@ flowchart TD
     D5 --> G
     E3 --> G
     F3 --> G
-    
+
     G --> H["Generate<br/>Manifest JSON"]
     H --> I["HTTP Task:<br/>Upload All Assets<br/>to CDN"]
     I --> J["HTTP Task:<br/>Update CMS<br/>with URLs"]
@@ -159,14 +159,14 @@ flowchart TD
 
 ### Files Produced
 
-| Stage | File | Format |
-|-------|------|--------|
-| Transcoded Videos | `video_{res}.mp4`, `video_1080p.webm` | MP4, WebM |
-| HLS Playlist | `stream.m3u8` + segment `.ts` files | HLS |
-| Thumbnails | `thumb_{timestamp}.jpg` | JPEG |
-| Poster Image | `poster.jpg` | JPEG 1920×1080 |
-| Subtitles | `subs_en.srt`, `subs_en.vtt` | SRT, VTT |
-| Manifest | `publish_manifest.json` | JSON |
+| Stage             | File                                  | Format         |
+| ----------------- | ------------------------------------- | -------------- |
+| Transcoded Videos | `video_{res}.mp4`, `video_1080p.webm` | MP4, WebM      |
+| HLS Playlist      | `stream.m3u8` + segment `.ts` files   | HLS            |
+| Thumbnails        | `thumb_{timestamp}.jpg`               | JPEG           |
+| Poster Image      | `poster.jpg`                          | JPEG 1920×1080 |
+| Subtitles         | `subs_en.srt`, `subs_en.vtt`          | SRT, VTT       |
+| Manifest          | `publish_manifest.json`               | JSON           |
 
 ### AgentMesh Primitives
 
@@ -185,18 +185,18 @@ flowchart TD
     A["Order Placed<br/>(Webhook)"] --> B["HTTP Task:<br/>Fetch Order +<br/>Customer Profile"]
     B --> C["INLINE Task:<br/>Calculate Totals<br/>(tax, discounts, shipping)"]
     C --> D["FORK (3 Branches)"]
-    
+
     D --> E["Branch 1:<br/>Generate Invoice PDF"]
     E --> E1["Apply Branding<br/>(logo, colors, footer)"]
     E1 --> E2["Format Line Items<br/>+ Tax Breakdown"]
     E2 --> E3["Render PDF<br/>invoice_ORD-12345.pdf"]
-    
+
     D --> F["Branch 2:<br/>Generate Packing Slip"]
     F --> F1["Strip Pricing Info"]
     F1 --> F2["Add Pick Locations<br/>+ Bin Numbers"]
     F2 --> F3["Add Warehouse<br/>Barcode"]
     F3 --> F4["Render PDF<br/>packslip_ORD-12345.pdf"]
-    
+
     D --> G["Branch 3:<br/>Generate Shipping Label"]
     G --> G1{"SWITCH:<br/>Carrier?"}
     G1 -- FedEx --> G2["Call FedEx API"]
@@ -206,11 +206,11 @@ flowchart TD
     G3 --> G5
     G4 --> G5
     G5 --> G6["Render Label<br/>label_ORD-12345.png"]
-    
+
     E3 --> H["JOIN"]
     F4 --> H
     G6 --> H
-    
+
     H --> I["Bundle 3 Files<br/>into Order Package"]
     I --> J["Upload to S3<br/>orders/ORD-12345/"]
     J --> K["FORK (2 Branches)"]
@@ -231,11 +231,11 @@ flowchart TD
 
 ### Files Produced
 
-| Stage | File | Format |
-|-------|------|--------|
-| Invoice | `invoice_ORD-12345.pdf` | PDF |
-| Packing Slip | `packslip_ORD-12345.pdf` | PDF |
-| Shipping Label | `label_ORD-12345.png` | 4×6 ZPL/PNG |
+| Stage          | File                     | Format      |
+| -------------- | ------------------------ | ----------- |
+| Invoice        | `invoice_ORD-12345.pdf`  | PDF         |
+| Packing Slip   | `packslip_ORD-12345.pdf` | PDF         |
+| Shipping Label | `label_ORD-12345.png`    | 4×6 ZPL/PNG |
 
 ### AgentMesh Primitives
 
@@ -255,27 +255,27 @@ flowchart TD
     B --> C["Upload Raw Segment<br/>to Cold Storage<br/>(S3 Glacier)"]
     C --> D["HTTP Task:<br/>AI Anomaly Detection<br/>Model Inference"]
     D --> E{"SWITCH:<br/>Anomaly Detected?"}
-    
+
     E -- No --> F["Log: Normal<br/>Update Daily Counter"]
-    
+
     E -- Yes --> G["FORK (3 Branches)"]
     G --> H["Branch 1:<br/>Clip 30s Around<br/>Anomaly Timestamp"]
     H --> H1["Overlay Bounding<br/>Boxes + Labels"]
     H1 --> H2["Render Alert Clip<br/>alert_CAM04_1712345678.mp4"]
-    
+
     G --> I["Branch 2:<br/>Generate Alert<br/>Snapshot"]
     I --> I1["Extract Best Frame"]
     I1 --> I2["Annotate with<br/>Detection Metadata"]
     I2 --> I3["Save Snapshot<br/>alert_CAM04_1712345678.jpg"]
-    
+
     G --> J["Branch 3:<br/>Create Incident<br/>Report"]
     J --> J1["LLM_TEXT_COMPLETE:<br/>Summarize Event"]
     J1 --> J2["Generate PDF<br/>incident_1712345678.pdf"]
-    
+
     H2 --> K["JOIN"]
     I3 --> K
     J2 --> K
-    
+
     K --> L["Upload Alert Bundle<br/>to Hot Storage (S3)"]
     L --> M["HTTP Task:<br/>Push Notification<br/>to Security Team"]
     M --> N["Log Incident<br/>to SIEM"]
@@ -297,13 +297,13 @@ flowchart TD
 
 ### Files Produced
 
-| Stage | File | Format |
-|-------|------|--------|
-| Raw Segment | `raw_CAM04_1712345678.mp4` | MP4 (60s) |
-| Alert Clip | `alert_CAM04_1712345678.mp4` | MP4 (30s, annotated) |
-| Alert Snapshot | `alert_CAM04_1712345678.jpg` | JPEG (annotated) |
-| Incident Report | `incident_1712345678.pdf` | PDF |
-| Daily Summary | `daily_report_2026-04-08.pdf` | PDF |
+| Stage           | File                          | Format               |
+| --------------- | ----------------------------- | -------------------- |
+| Raw Segment     | `raw_CAM04_1712345678.mp4`    | MP4 (60s)            |
+| Alert Clip      | `alert_CAM04_1712345678.mp4`  | MP4 (30s, annotated) |
+| Alert Snapshot  | `alert_CAM04_1712345678.jpg`  | JPEG (annotated)     |
+| Incident Report | `incident_1712345678.pdf`     | PDF                  |
+| Daily Summary   | `daily_report_2026-04-08.pdf` | PDF                  |
 
 ### AgentMesh Primitives
 
@@ -311,4 +311,4 @@ FORK/JOIN, SWITCH, DO_WHILE, TIMER, LLM_TEXT_COMPLETE, HTTP, INLINE
 
 ---
 
-*Generated for AgentMesh OSS file management use case exploration.*
+_Generated for AgentMesh OSS file management use case exploration._

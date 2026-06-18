@@ -33,7 +33,10 @@ export class NonRetryableError extends AgentMeshError {
  * Exception thrown when a workflow or task validation fails.
  */
 export class ValidationError extends AgentMeshError {
-  constructor(message: string, public readonly errors: string[] = []) {
+  constructor(
+    message: string,
+    public readonly errors: string[] = [],
+  ) {
     super(message);
   }
 }

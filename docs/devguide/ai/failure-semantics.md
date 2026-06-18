@@ -6,7 +6,6 @@ description: "The exact failure contract for AI agents on AgentMesh — what hap
 
 This page defines exactly what happens when things go wrong in an agent workflow. Not "AgentMesh is durable" — but the precise behavior under every failure scenario an agent can encounter.
 
-
 ## LLM task failure
 
 **Scenario:** The `LLM_CHAT_COMPLETE` task calls an LLM provider and the call fails (rate limit, timeout, provider outage, malformed response).
@@ -38,7 +37,6 @@ This page defines exactly what happens when things go wrong in an agent workflow
 
 This retries the LLM call up to 3 times with exponential backoff (5s, 10s, 20s). If the LLM doesn't respond within 60 seconds, the task times out and retries.
 
-
 ## LLM returns malformed output
 
 **Scenario:** The LLM responds, but the output is not valid JSON or doesn't match the expected schema (e.g., missing `action` field).
@@ -68,7 +66,6 @@ The `LLM_CHAT_COMPLETE` task completes successfully — the LLM did respond. The
 
 If validation fails, use a `SWITCH` to re-run the LLM with a corrective prompt, or fail the workflow.
 
-
 ## Tool call timeout
 
 **Scenario:** A `CALL_MCP_TOOL` or `HTTP` task calls an external tool and the tool doesn't respond within the configured timeout.
@@ -82,7 +79,6 @@ If validation fails, use a `SWITCH` to re-run the LLM with a corrective prompt, 
 **Critical implication:** The tool call may execute more than once. **Tool workers and MCP tools should be idempotent.** Use the task's `taskId` or a correlation ID as an idempotency key.
 
 **What is preserved:** The timed-out attempt is recorded with its input, the timeout event, and the timing. Every retry attempt is separately recorded.
-
 
 ## Tool call fails after side effects
 
@@ -102,7 +98,6 @@ If validation fails, use a `SWITCH` to re-run the LLM with a corrective prompt, 
 - Make side-effecting operations idempotent. Use an idempotency key (the `taskId` is unique per attempt).
 - Use the task's `updateTime` to detect redelivery — if the task was already processed, skip the side effect.
 - For irreversible side effects, configure a `failureWorkflow` with compensation tasks.
-
 
 ## Human never responds
 
@@ -134,13 +129,14 @@ This times out after 24 hours and fails the workflow. Alternatively, use `timeou
 {
   "type": "FORK",
   "forkTasks": [
-    [{"type": "HUMAN", "taskReferenceName": "approval"}],
-    [{"type": "WAIT", "inputParameters": {"duration": "4 hours"}},
-     {"type": "LLM_CHAT_COMPLETE", "taskReferenceName": "escalation_notify"}]
+    [{ "type": "HUMAN", "taskReferenceName": "approval" }],
+    [
+      { "type": "WAIT", "inputParameters": { "duration": "4 hours" } },
+      { "type": "LLM_CHAT_COMPLETE", "taskReferenceName": "escalation_notify" }
+    ]
   ]
 }
 ```
-
 
 ## Callback delivered twice
 
@@ -155,7 +151,6 @@ The first call moves the task from `IN_PROGRESS` to `COMPLETED` and advances the
 - The second call returns an error indicating the task is already in a terminal state.
 
 **This is safe by default.** AgentMesh's task state machine enforces that a task can only transition to a terminal state once. Duplicate callbacks are harmless.
-
 
 ## Branch partially completes in a FORK/JOIN
 
@@ -172,7 +167,6 @@ The first call moves the task from `IN_PROGRESS` to `COMPLETED` and advances the
 
 **What is preserved:** Each branch's completed tasks retain their outputs. If you retry the workflow from the failed task, only the failed branch re-executes. Successful branches are not re-run.
 
-
 ## Workflow definition changes mid-flight
 
 **Scenario:** You update the workflow definition (add a task, change a parameter) while executions are running.
@@ -186,7 +180,6 @@ Running executions are **not affected**. Each execution uses an immutable snapsh
 - You can have multiple versions running concurrently.
 
 **If you want to apply the new definition:** Use [restart with latest definitions](../../architecture/durable-execution.md#replay-and-recovery). This re-executes the workflow from the beginning using the updated definition.
-
 
 ## Worker deploy during active executions
 
@@ -209,7 +202,6 @@ Running executions are **not affected**. Each execution uses an immutable snapsh
 
 **What is never lost:** Completed task outputs. The workflow state. The execution history. Only the in-progress task is affected, and it is automatically retried.
 
-
 ## Dynamic task type no longer exists
 
 **Scenario:** A `DYNAMIC` task resolves to a task type based on LLM output. The LLM returns a task name that doesn't exist (not registered, was deleted, or is misspelled).
@@ -219,7 +211,6 @@ Running executions are **not affected**. Each execution uses an immutable snapsh
 The `DYNAMIC` task fails with a resolution error — the specified task type cannot be found. The task moves to `FAILED` and retries according to its retry policy.
 
 **How to handle it:** Validate the LLM output before the `DYNAMIC` task. Use an `INLINE` or `SWITCH` task to check that the resolved task name is in a known allowlist.
-
 
 ## Network partition between worker and server
 
@@ -234,7 +225,6 @@ The `DYNAMIC` task fails with a resolution error — the specified task type can
 5. When the partition heals, a worker (possibly the same one) picks up the task and re-executes the LLM call.
 
 **Tokens are consumed twice in this scenario.** The original LLM call succeeded but the result was lost. This is the cost of at-least-once delivery. For long-running or expensive LLM calls, consider implementing client-side caching in your worker to avoid re-execution.
-
 
 ## Long-running agent loops over hours/days/weeks
 
@@ -254,24 +244,22 @@ This is a normal operating mode for AgentMesh. The workflow stays `RUNNING` with
 - Execution data grows linearly with the number of completed tasks. For very long loops (thousands of iterations), consider offloading large payloads to external storage and storing only pointers in task output. See [external payload storage](../../documentation/advanced/externalpayloadstorage.md).
 - Workflow-level `timeoutSeconds` applies to the total execution. Set it high enough for your expected duration, or omit it for unlimited execution time.
 
-
 ## Summary: the failure contract
 
-| Failure | What AgentMesh does | What you should do |
-|---------|--------------------|--------------------|
-| LLM call fails | Retries with configured backoff | Set retry policy on task definition |
-| LLM returns bad output | Downstream task fails on input resolution | Add a validation step after LLM calls |
-| Tool call times out | Retries after `responseTimeoutSeconds` | Make tools idempotent |
-| Tool call has side effects, then crashes | Retries — side effect may execute twice | Use idempotency keys |
-| Human never responds | Task stays `IN_PROGRESS` forever | Set `timeoutSeconds` or build escalation |
-| Duplicate callback | Second call rejected, no duplicate execution | Safe by default |
-| FORK branch fails | JOIN waits for all branches; workflow fails if branch exhausts retries | Configure retry policies per branch |
-| Definition changes while running | Running executions unaffected (snapshot) | Use restart to apply new definitions |
-| Worker deploy | In-flight tasks requeued after response timeout | Keep response timeouts short; use graceful shutdown |
-| Dynamic task doesn't exist | Task fails, retries | Validate LLM output before DYNAMIC resolution |
-| Network partition | Task requeued after timeout, may re-execute | Make workers idempotent; consider client-side caching |
-| Multi-day execution | Normal operation, fully durable | Offload large payloads; set appropriate timeouts |
-
+| Failure                                  | What AgentMesh does                                                    | What you should do                                    |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- |
+| LLM call fails                           | Retries with configured backoff                                        | Set retry policy on task definition                   |
+| LLM returns bad output                   | Downstream task fails on input resolution                              | Add a validation step after LLM calls                 |
+| Tool call times out                      | Retries after `responseTimeoutSeconds`                                 | Make tools idempotent                                 |
+| Tool call has side effects, then crashes | Retries — side effect may execute twice                                | Use idempotency keys                                  |
+| Human never responds                     | Task stays `IN_PROGRESS` forever                                       | Set `timeoutSeconds` or build escalation              |
+| Duplicate callback                       | Second call rejected, no duplicate execution                           | Safe by default                                       |
+| FORK branch fails                        | JOIN waits for all branches; workflow fails if branch exhausts retries | Configure retry policies per branch                   |
+| Definition changes while running         | Running executions unaffected (snapshot)                               | Use restart to apply new definitions                  |
+| Worker deploy                            | In-flight tasks requeued after response timeout                        | Keep response timeouts short; use graceful shutdown   |
+| Dynamic task doesn't exist               | Task fails, retries                                                    | Validate LLM output before DYNAMIC resolution         |
+| Network partition                        | Task requeued after timeout, may re-execute                            | Make workers idempotent; consider client-side caching |
+| Multi-day execution                      | Normal operation, fully durable                                        | Offload large payloads; set appropriate timeouts      |
 
 ## Next steps
 

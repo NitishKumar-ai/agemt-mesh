@@ -163,9 +163,9 @@ function generateReceipt(topicName: string): string {
  */
 export class KafkaQueue implements QueueDAO {
   private readonly kafka: Kafka;
-  private readonly config: Required<
-    Omit<KafkaQueueConfig, 'kafkaConfig'>
-  > & { kafkaConfig?: Partial<KafkaConfig> };
+  private readonly config: Required<Omit<KafkaQueueConfig, 'kafkaConfig'>> & {
+    kafkaConfig?: Partial<KafkaConfig>;
+  };
 
   private producer: Producer | null = null;
   private admin: Admin | null = null;
@@ -301,9 +301,7 @@ export class KafkaQueue implements QueueDAO {
    */
   private getProducer(): Producer {
     if (!this.producer) {
-      throw new Error(
-        'KafkaQueue: producer is not connected. Call connect() first.',
-      );
+      throw new Error('KafkaQueue: producer is not connected. Call connect() first.');
     }
     return this.producer;
   }
@@ -313,9 +311,7 @@ export class KafkaQueue implements QueueDAO {
    */
   private getAdmin(): Admin {
     if (!this.admin) {
-      throw new Error(
-        'KafkaQueue: admin is not connected. Call connect() first.',
-      );
+      throw new Error('KafkaQueue: admin is not connected. Call connect() first.');
     }
     return this.admin;
   }
@@ -372,7 +368,12 @@ export class KafkaQueue implements QueueDAO {
           parsed = JSON.parse(value) as Message;
         } catch {
           // Malformed message — treat the raw value as the payload.
-          parsed = { id: message.key?.toString() ?? undefined, payload: value, priority: 0, timeout: 0 };
+          parsed = {
+            id: message.key?.toString() ?? undefined,
+            payload: value,
+            priority: 0,
+            timeout: 0,
+          };
         }
 
         // Assign a receipt handle if one was not included in the message body.
@@ -437,10 +438,7 @@ export class KafkaQueue implements QueueDAO {
    * This records that the messages have been handed to a consumer; the unack
    * registry tracks whether they have been processed successfully.
    */
-  private async commitOffsets(
-    queueName: string,
-    _messages: Message[],
-  ): Promise<void> {
+  private async commitOffsets(queueName: string, _messages: Message[]): Promise<void> {
     const consumer = this.consumers.get(queueName);
     if (!consumer) return;
 
@@ -460,19 +458,13 @@ export class KafkaQueue implements QueueDAO {
   private async sweepUnacks(): Promise<void> {
     const now = Date.now();
     for (const [receipt, entry] of this.unackRegistry.entries()) {
-      if (
-        entry.unackDeadlineMs !== undefined &&
-        now >= entry.unackDeadlineMs
-      ) {
+      if (entry.unackDeadlineMs !== undefined && now >= entry.unackDeadlineMs) {
         this.unackRegistry.delete(receipt);
         // Re-publish the message so it can be consumed again.
         try {
           await this.pushMessages(entry.queueName, [entry.message]);
         } catch (err) {
-          console.error(
-            `KafkaQueue: failed to re-publish unacked message ${receipt}:`,
-            err,
-          );
+          console.error(`KafkaQueue: failed to re-publish unacked message ${receipt}:`, err);
         }
       }
     }
@@ -601,9 +593,7 @@ export class KafkaQueue implements QueueDAO {
    */
   async pop(queueName: string, count: number, timeout: number): Promise<string[]> {
     const messages = await this.drainMessages(queueName, count, timeout);
-    return messages
-      .map((m) => m.id)
-      .filter((id): id is string => id !== undefined);
+    return messages.map((m) => m.id).filter((id): id is string => id !== undefined);
   }
 
   /**
@@ -613,11 +603,7 @@ export class KafkaQueue implements QueueDAO {
    * @param count     - Maximum number of messages to return.
    * @param timeout   - Maximum wait time in milliseconds.
    */
-  async pollMessages(
-    queueName: string,
-    count: number,
-    timeout: number,
-  ): Promise<Message[]> {
+  async pollMessages(queueName: string, count: number, timeout: number): Promise<Message[]> {
     return this.drainMessages(queueName, count, timeout);
   }
 
@@ -745,10 +731,7 @@ export class KafkaQueue implements QueueDAO {
     if (!entry) return false;
 
     const candidate = Date.now() + unackTimeout;
-    if (
-      entry.unackDeadlineMs === undefined ||
-      candidate < entry.unackDeadlineMs
-    ) {
+    if (entry.unackDeadlineMs === undefined || candidate < entry.unackDeadlineMs) {
       entry.unackDeadlineMs = candidate;
       return true;
     }
@@ -795,9 +778,7 @@ export class KafkaQueue implements QueueDAO {
    * partition number as a string, and the value map contains "size" (message
    * count for that partition, approximated as total / numPartitions).
    */
-  async queuesDetailVerbose(): Promise<
-    Record<string, Record<string, Record<string, number>>>
-  > {
+  async queuesDetailVerbose(): Promise<Record<string, Record<string, Record<string, number>>>> {
     const detail: Record<string, Record<string, Record<string, number>>> = {};
     for (const queueName of this.pendingMessages.keys()) {
       const size = await this.getSize(queueName);
@@ -874,8 +855,7 @@ export class KafkaQueue implements QueueDAO {
     if (!entry) return false;
 
     const additionalMs = postponeDurationInSeconds * 1000;
-    entry.unackDeadlineMs =
-      (entry.unackDeadlineMs ?? Date.now()) + additionalMs;
+    entry.unackDeadlineMs = (entry.unackDeadlineMs ?? Date.now()) + additionalMs;
     return true;
   }
 
@@ -929,20 +909,14 @@ export class KafkaQueue implements QueueDAO {
    * Find an {@link UnackEntry} by either the message ID or the receipt handle,
    * scoped to the given queue.
    */
-  private findUnackEntry(
-    queueName: string,
-    messageIdOrReceipt: string,
-  ): UnackEntry | undefined {
+  private findUnackEntry(queueName: string, messageIdOrReceipt: string): UnackEntry | undefined {
     // Direct receipt lookup.
     const direct = this.unackRegistry.get(messageIdOrReceipt);
     if (direct && direct.queueName === queueName) return direct;
 
     // Scan by message ID.
     for (const entry of this.unackRegistry.values()) {
-      if (
-        entry.queueName === queueName &&
-        entry.message.id === messageIdOrReceipt
-      ) {
+      if (entry.queueName === queueName && entry.message.id === messageIdOrReceipt) {
         return entry;
       }
     }

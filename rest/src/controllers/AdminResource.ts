@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AdminService } from '../services/AdminService.js';
@@ -32,10 +25,7 @@ export class AdminResource {
   }
 
   @Post('sweep/requeue/:workflowId')
-  async requeueSweep(
-    @Param('workflowId') workflowId: string,
-    @Res() res: Response,
-  ): Promise<void> {
+  async requeueSweep(@Param('workflowId') workflowId: string, @Res() res: Response): Promise<void> {
     const result = await this.adminService.requeueSweep(workflowId);
     res.type('text/plain').send(result);
   }

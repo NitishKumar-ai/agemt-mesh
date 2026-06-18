@@ -27,7 +27,9 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
     const workflowIndex = this.getIndexName('workflow');
     const taskIndex = this.getIndexName('task');
 
-    const { body: workflowIndexExists } = await this.client.indices.exists({ index: workflowIndex });
+    const { body: workflowIndexExists } = await this.client.indices.exists({
+      index: workflowIndex,
+    });
     if (!workflowIndexExists) {
       await this.client.indices.create({ index: workflowIndex });
     }
@@ -64,12 +66,9 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
 
   async addTaskExecutionLogs(logs: TaskExecLog[]): Promise<void> {
     if (logs.length === 0) return;
-    
-    const body = logs.flatMap(log => [
-      { index: { _index: this.getIndexName('task_log') } },
-      log
-    ]);
-    
+
+    const body = logs.flatMap((log) => [{ index: { _index: this.getIndexName('task_log') } }, log]);
+
     await this.client.bulk({ refresh: true, body });
   }
 
@@ -82,11 +81,11 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       index: this.getIndexName('task_log'),
       body: {
         query: {
-          term: { taskId: taskId }
-        }
-      }
+          term: { taskId: taskId },
+        },
+      },
     });
-    
+
     return body.hits.hits.map((hit: Record<string, unknown>) => hit._source as TaskExecLog);
   }
 
@@ -107,9 +106,9 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       index: this.getIndexName('message'),
       body: {
         query: {
-          term: { queue: queue }
-        }
-      }
+          term: { queue: queue },
+        },
+      },
     });
     return body.hits.hits.map((hit: Record<string, unknown>) => hit._source as Message);
   }
@@ -131,28 +130,28 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       index: this.getIndexName('event_execution'),
       body: {
         query: {
-          term: { event: event }
-        }
-      }
+          term: { event: event },
+        },
+      },
     });
     return body.hits.hits.map((hit: Record<string, unknown>) => hit._source as EventExecution);
   }
 
   private buildQuery(query: string, freeText: string): Record<string, unknown> {
     const boolQuery: { must: Record<string, unknown>[] } = { must: [] };
-    
+
     if (freeText && freeText !== '*') {
       boolQuery.must.push({ query_string: { query: freeText } });
     } else {
       boolQuery.must.push({ match_all: {} });
     }
-    
+
     // In a real implementation, 'query' would be parsed using a custom parser
     // like GroupedExpression/Expression in the Java code.
     if (query && query !== '') {
       boolQuery.must.push({ query_string: { query: query } });
     }
-    
+
     return { bool: boolQuery };
   }
 
@@ -168,14 +167,14 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       from: start,
       size: count,
       body: {
-        query: this.buildQuery(query, freeText)
-      }
+        query: this.buildQuery(query, freeText),
+      },
     });
 
     const results = body.hits.hits.map((hit: Record<string, unknown>) => hit._id);
     return {
       totalHits: body.hits.total.value,
-      results
+      results,
     };
   }
 
@@ -191,14 +190,16 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       from: start,
       size: count,
       body: {
-        query: this.buildQuery(query, freeText)
-      }
+        query: this.buildQuery(query, freeText),
+      },
     });
 
-    const results = body.hits.hits.map((hit: Record<string, unknown>) => hit._source as WorkflowModel);
+    const results = body.hits.hits.map(
+      (hit: Record<string, unknown>) => hit._source as WorkflowModel,
+    );
     return {
       totalHits: body.hits.total.value,
-      results
+      results,
     };
   }
 
@@ -214,14 +215,14 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       from: start,
       size: count,
       body: {
-        query: this.buildQuery(query, freeText)
-      }
+        query: this.buildQuery(query, freeText),
+      },
     });
 
     const results = body.hits.hits.map((hit: Record<string, unknown>) => hit._id);
     return {
       totalHits: body.hits.total.value,
-      results
+      results,
     };
   }
 
@@ -237,24 +238,26 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       from: start,
       size: count,
       body: {
-        query: this.buildQuery(query, freeText)
-      }
+        query: this.buildQuery(query, freeText),
+      },
     });
 
     const results = body.hits.hits.map((hit: Record<string, unknown>) => hit._source as TaskModel);
     return {
       totalHits: body.hits.total.value,
-      results
+      results,
     };
   }
 
   async removeWorkflow(workflowId: string): Promise<void> {
-    await this.client.delete({
-      index: this.getIndexName('workflow'),
-      id: workflowId,
-    }).catch(e => {
-      if (e.meta?.statusCode !== 404) throw e;
-    });
+    await this.client
+      .delete({
+        index: this.getIndexName('workflow'),
+        id: workflowId,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
   async asyncRemoveWorkflow(workflowId: string): Promise<void> {
@@ -262,55 +265,81 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
   }
 
   async removeTask(workflowId: string, taskId: string): Promise<void> {
-    await this.client.delete({
-      index: this.getIndexName('task'),
-      id: taskId,
-    }).catch(e => {
-      if (e.meta?.statusCode !== 404) throw e;
-    });
+    await this.client
+      .delete({
+        index: this.getIndexName('task'),
+        id: taskId,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
   async asyncRemoveTask(workflowId: string, taskId: string): Promise<void> {
     await this.removeTask(workflowId, taskId);
   }
 
-  async updateWorkflow(workflowInstanceId: string, keys: string[], values: unknown[]): Promise<void> {
+  async updateWorkflow(
+    workflowInstanceId: string,
+    keys: string[],
+    values: unknown[],
+  ): Promise<void> {
     const doc: Record<string, unknown> = {};
     for (let i = 0; i < keys.length; i++) {
-      const key = keys[i]; if (key !== undefined) doc[key] = values[i];
+      const key = keys[i];
+      if (key !== undefined) doc[key] = values[i];
     }
-    await this.client.update({
-      index: this.getIndexName('workflow'),
-      id: workflowInstanceId,
-      body: {
-        doc
-      }
-    }).catch(e => {
-      if (e.meta?.statusCode !== 404) throw e;
-    });
+    await this.client
+      .update({
+        index: this.getIndexName('workflow'),
+        id: workflowInstanceId,
+        body: {
+          doc,
+        },
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
-  async asyncUpdateWorkflow(workflowInstanceId: string, keys: string[], values: unknown[]): Promise<void> {
+  async asyncUpdateWorkflow(
+    workflowInstanceId: string,
+    keys: string[],
+    values: unknown[],
+  ): Promise<void> {
     await this.updateWorkflow(workflowInstanceId, keys, values);
   }
 
-  async updateTask(workflowId: string, taskId: string, keys: string[], values: unknown[]): Promise<void> {
+  async updateTask(
+    workflowId: string,
+    taskId: string,
+    keys: string[],
+    values: unknown[],
+  ): Promise<void> {
     const doc: Record<string, unknown> = {};
     for (let i = 0; i < keys.length; i++) {
-      const key = keys[i]; if (key !== undefined) doc[key] = values[i];
+      const key = keys[i];
+      if (key !== undefined) doc[key] = values[i];
     }
-    await this.client.update({
-      index: this.getIndexName('task'),
-      id: taskId,
-      body: {
-        doc
-      }
-    }).catch(e => {
-      if (e.meta?.statusCode !== 404) throw e;
-    });
+    await this.client
+      .update({
+        index: this.getIndexName('task'),
+        id: taskId,
+        body: {
+          doc,
+        },
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
-  async asyncUpdateTask(workflowId: string, taskId: string, keys: string[], values: unknown[]): Promise<void> {
+  async asyncUpdateTask(
+    workflowId: string,
+    taskId: string,
+    keys: string[],
+    values: unknown[],
+  ): Promise<void> {
     await this.updateTask(workflowId, taskId, keys, values);
   }
 
@@ -318,10 +347,10 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
     const { body } = await this.client.get({
       index: this.getIndexName('workflow'),
       id: workflowInstanceId,
-      _source: [fieldToGet]
+      _source: [fieldToGet],
     });
-    
-    return body._source ? body._source[fieldToGet] : ("" as unknown as string);
+
+    return body._source ? body._source[fieldToGet] : ('' as unknown as string);
   }
 
   async searchArchivableWorkflows(indexName: string, archiveTtlDays: number): Promise<string[]> {
@@ -330,24 +359,20 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
       body: {
         query: {
           bool: {
-            must: [
-              { range: { updateTime: { lt: `now-${archiveTtlDays}d` } } }
-            ],
+            must: [{ range: { updateTime: { lt: `now-${archiveTtlDays}d` } } }],
             should: [
               { term: { status: 'COMPLETED' } },
               { term: { status: 'FAILED' } },
               { term: { status: 'TIMED_OUT' } },
-              { term: { status: 'TERMINATED' } }
+              { term: { status: 'TERMINATED' } },
             ],
             minimum_should_match: 1,
-            must_not: [
-              { exists: { field: 'archived' } }
-            ]
-          }
-        }
-      }
+            must_not: [{ exists: { field: 'archived' } }],
+          },
+        },
+      },
     });
-    
+
     return body.hits.hits.map((hit: Record<string, unknown>) => hit._id);
   }
 
@@ -355,10 +380,10 @@ export class ElasticSearchRestDAOV7 implements IndexDAO {
     const { body } = await this.client.count({
       index: this.getIndexName('workflow'),
       body: {
-        query: this.buildQuery(query, freeText)
-      }
+        query: this.buildQuery(query, freeText),
+      },
     });
-    
+
     return body.count;
   }
 }

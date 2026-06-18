@@ -29,9 +29,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('timezone', 'varchar(64)', (col: ColumnDefinitionBuilder) =>
       col.notNull().defaultTo('UTC'),
     )
-    .addColumn('paused', 'integer', (col: ColumnDefinitionBuilder) =>
-      col.notNull().defaultTo(0),
-    )
+    .addColumn('paused', 'integer', (col: ColumnDefinitionBuilder) => col.notNull().defaultTo(0))
     .addColumn('paused_reason', 'text')
     .addColumn('next_run_time', 'bigint')
     .addColumn('created_at', 'bigint', (col: ColumnDefinitionBuilder) => col.notNull())
@@ -58,9 +56,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('completion_tokens', 'integer', (col: ColumnDefinitionBuilder) =>
       col.notNull().defaultTo(0),
     )
-    .addColumn('cost_usd', 'real', (col: ColumnDefinitionBuilder) =>
-      col.notNull().defaultTo(0.0),
-    )
+    .addColumn('cost_usd', 'real', (col: ColumnDefinitionBuilder) => col.notNull().defaultTo(0.0))
     .addColumn('created_at', 'bigint', (col: ColumnDefinitionBuilder) => col.notNull())
     .execute();
 

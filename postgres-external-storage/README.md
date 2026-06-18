@@ -1,4 +1,4 @@
-# PostgreSQL External Storage Module 
+# PostgreSQL External Storage Module
 
 This module use PostgreSQL to store and retrieve workflows/tasks input/output payload that
 went over the thresholds defined in properties named `agentmesh.[workflow|task].[input|output].payload.threshold.kb`.

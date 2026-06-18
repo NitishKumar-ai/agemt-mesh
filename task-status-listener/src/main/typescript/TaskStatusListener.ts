@@ -2,7 +2,13 @@ import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 
 import type { QueueDAO } from '@agentmesh/common-persistence';
-import { type Task, type EventExecution, EventExecutionStatus, TaskStatus } from '@agentmesh/common';
+import {
+  type Task,
+  type EventExecution,
+  type Message,
+  EventExecutionStatus,
+  TaskStatus,
+} from '@agentmesh/common';
 
 import type { TaskStatusListenerConfig } from './TaskStatusListenerConfig.js';
 
@@ -188,11 +194,7 @@ export class TaskStatusListener extends EventEmitter<TaskStatusListenerEvents> {
    * @param taskRefName - The task reference name (queue routing key).
    * @param status      - The new TaskStatus value.
    */
-  private async publishTaskStatus(
-    task: Task,
-    taskRefName: string,
-    status: string,
-  ): Promise<void> {
+  private async publishTaskStatus(task: Task, taskRefName: string, status: string): Promise<void> {
     const queueName = this.config.queueNameResolver(taskRefName, status);
     const executionId = randomUUID();
 
@@ -207,9 +209,17 @@ export class TaskStatusListener extends EventEmitter<TaskStatusListenerEvents> {
       output: buildTaskSnapshot(task),
     };
 
-    // Offset of 0 means the message is immediately eligible for consumption.
-    // Priority mirrors the task's workflow-level priority for correct ordering.
-    await this.dao.push(queueName, executionId, 0, task.workflowPriority);
+    // Serialise the EventExecution as the queue message payload.
+    const payload = JSON.stringify(execution);
+
+    await this.dao.pushMessages(queueName, [
+      {
+        id: executionId,
+        payload,
+        priority: task.workflowPriority ?? 0,
+        timeout: 0,
+      },
+    ]);
   }
 }
 

@@ -7,32 +7,24 @@ import {
   ListChecks,
   Package,
   ScrollText,
-} from "lucide-react";
-import { useState } from "react";
-import type { MeshEvent } from "../lib/types";
-import { shortTime } from "../lib/format";
+} from 'lucide-react';
+import { useState } from 'react';
+import type { MeshEvent } from '../lib/types';
+import { shortTime } from '../lib/format';
 
-type Tab = "details" | "files" | "diff" | "logs" | "artifacts" | "events";
+type Tab = 'details' | 'files' | 'diff' | 'logs' | 'artifacts' | 'events';
 
-export function ContextPane({
-  events,
-  workflowId,
-}: {
-  events: MeshEvent[];
-  workflowId?: string;
-}) {
-  const [tab, setTab] = useState<Tab>("details");
-  const latestApproval = events.find((event) =>
-    event.eventType.includes("approval")
-  );
+export function ContextPane({ events, workflowId }: { events: MeshEvent[]; workflowId?: string }) {
+  const [tab, setTab] = useState<Tab>('details');
+  const latestApproval = events.find((event) => event.eventType.includes('approval'));
 
   const tabs: { key: Tab; label: string; icon: typeof ListChecks }[] = [
-    { key: "details", label: "Details", icon: ListChecks },
-    { key: "files", label: "Files", icon: FolderTree },
-    { key: "diff", label: "Diff", icon: GitPullRequest },
-    { key: "logs", label: "Logs", icon: ScrollText },
-    { key: "artifacts", label: "Artifacts", icon: Package },
-    { key: "events", label: "Events", icon: Braces },
+    { key: 'details', label: 'Details', icon: ListChecks },
+    { key: 'files', label: 'Files', icon: FolderTree },
+    { key: 'diff', label: 'Diff', icon: GitPullRequest },
+    { key: 'logs', label: 'Logs', icon: ScrollText },
+    { key: 'artifacts', label: 'Artifacts', icon: Package },
+    { key: 'events', label: 'Events', icon: Braces },
   ];
 
   return (
@@ -43,7 +35,7 @@ export function ContextPane({
           return (
             <button
               key={t.key}
-              className={tab === t.key ? "active" : ""}
+              className={tab === t.key ? 'active' : ''}
               onClick={() => setTab(t.key)}
             >
               <Icon size={14} />
@@ -53,7 +45,7 @@ export function ContextPane({
         })}
       </div>
 
-      {tab === "details" && (
+      {tab === 'details' && (
         <div className="pane-section">
           <h3>Session details</h3>
           <dl className="detail-list">
@@ -63,7 +55,7 @@ export function ContextPane({
             </div>
             <div>
               <dt>Workflow</dt>
-              <dd>{workflowId ?? "Not started"}</dd>
+              <dd>{workflowId ?? 'Not started'}</dd>
             </div>
             <div>
               <dt>Mode</dt>
@@ -77,7 +69,7 @@ export function ContextPane({
         </div>
       )}
 
-      {tab === "files" && (
+      {tab === 'files' && (
         <div className="pane-section">
           <h3>Files touched</h3>
           {events.length === 0 ? (
@@ -92,74 +84,54 @@ export function ContextPane({
                 new Set(
                   events
                     .filter((e) => e.payload.file || e.payload.path)
-                    .map(
-                      (e) => String(e.payload.file || e.payload.path)
-                    )
-                )
+                    .map((e) => String(e.payload.file || e.payload.path)),
+                ),
               ).map((filePath) => (
                 <div key={filePath} className="file-tree-item">
                   <File size={13} />
                   <span>{filePath}</span>
                 </div>
               ))}
-              {events.filter((e) => e.payload.file || e.payload.path)
-                .length === 0 && (
-                <EmptyPane
-                  icon={FolderTree}
-                  text="No files modified in current events."
-                />
+              {events.filter((e) => e.payload.file || e.payload.path).length === 0 && (
+                <EmptyPane icon={FolderTree} text="No files modified in current events." />
               )}
             </div>
           )}
         </div>
       )}
 
-      {tab === "diff" && (
+      {tab === 'diff' && (
         <div className="pane-section">
           <h3>Proposed change</h3>
           {latestApproval ? (
             <pre className="diff-block">
               <span className="diff-add">
-                +{" "}
-                {String(
-                  latestApproval.payload.add ??
-                    "No additions in current payload"
-                )}
+                + {String(latestApproval.payload.add ?? 'No additions in current payload')}
               </span>
               <span className="diff-remove">
-                -{" "}
-                {String(
-                  latestApproval.payload.sub ??
-                    "No removals in current payload"
-                )}
+                - {String(latestApproval.payload.sub ?? 'No removals in current payload')}
               </span>
             </pre>
           ) : (
-            <EmptyPane
-              icon={FileText}
-              text="Diffs appear here when an agent asks for approval."
-            />
+            <EmptyPane icon={FileText} text="Diffs appear here when an agent asks for approval." />
           )}
         </div>
       )}
 
-      {tab === "logs" && (
+      {tab === 'logs' && (
         <div className="pane-section">
           <h3>Sandbox logs</h3>
           <pre className="log-block">
             {events.length
               ? events
-                  .map(
-                    (event) =>
-                      `[${shortTime(event.time)}] ${event.agentId}: ${event.eventType}`
-                  )
-                  .join("\n")
-              : "No tool logs yet."}
+                  .map((event) => `[${shortTime(event.time)}] ${event.agentId}: ${event.eventType}`)
+                  .join('\n')
+              : 'No tool logs yet.'}
           </pre>
         </div>
       )}
 
-      {tab === "artifacts" && (
+      {tab === 'artifacts' && (
         <div className="pane-section">
           <h3>Artifacts</h3>
           <EmptyPane
@@ -169,25 +141,17 @@ export function ContextPane({
         </div>
       )}
 
-      {tab === "events" && (
+      {tab === 'events' && (
         <div className="pane-section">
           <h3>Raw events</h3>
-          <pre className="json-block">
-            {JSON.stringify(events.slice(0, 12), null, 2)}
-          </pre>
+          <pre className="json-block">{JSON.stringify(events.slice(0, 12), null, 2)}</pre>
         </div>
       )}
     </aside>
   );
 }
 
-function EmptyPane({
-  icon: Icon,
-  text,
-}: {
-  icon: typeof FileText;
-  text: string;
-}) {
+function EmptyPane({ icon: Icon, text }: { icon: typeof FileText; text: string }) {
   return (
     <div className="empty-pane">
       <Icon size={22} />

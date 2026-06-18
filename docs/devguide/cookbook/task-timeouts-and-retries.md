@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — task timeout and retry recipes covering responseTimeout with lease extension, totalTimeoutSeconds, exponential backoff with cap and jitter, and thundering herd prevention."
+description: 'AgentMesh cookbook — task timeout and retry recipes covering responseTimeout with lease extension, totalTimeoutSeconds, exponential backoff with cap and jitter, and thundering herd prevention.'
 ---
 
 # Task timeouts and retries
@@ -30,13 +30,13 @@ Retries with exponential backoff for a task that calls an external API. The cap 
 **Delay schedule** (`retryDelaySeconds=2`, `maxRetryDelaySeconds=60`, `backoffJitterMs=3000`):
 
 | Attempt | Base delay | After cap | Actual range |
-| :--- | :--- | :--- | :--- |
-| 1 | 2s | 2s | 2.0 – 5.0s |
-| 2 | 4s | 4s | 4.0 – 7.0s |
-| 3 | 8s | 8s | 8.0 – 11.0s |
-| 4 | 16s | 16s | 16.0 – 19.0s |
-| 5 | 32s | 32s | 32.0 – 35.0s |
-| 6 | 64s | **60s** | 60.0 – 63.0s |
+| :------ | :--------- | :-------- | :----------- |
+| 1       | 2s         | 2s        | 2.0 – 5.0s   |
+| 2       | 4s         | 4s        | 4.0 – 7.0s   |
+| 3       | 8s         | 8s        | 8.0 – 11.0s  |
+| 4       | 16s        | 16s       | 16.0 – 19.0s |
+| 5       | 32s        | 32s       | 32.0 – 35.0s |
+| 6       | 64s        | **60s**   | 60.0 – 63.0s |
 
 ---
 
@@ -176,12 +176,12 @@ With `backoffJitterMs: 5000`, 500 tasks that all fail at `t=0` will retry at uni
 
 ### Choosing the right combination
 
-| Scenario | Recommended config |
-| :--- | :--- |
-| External API with rate limits | `EXPONENTIAL_BACKOFF` + `maxRetryDelaySeconds` + `backoffJitterMs` |
-| Long-running processing job | `responseTimeoutSeconds` (short) + heartbeats from worker + `timeoutSeconds` (long) |
-| SLA-bounded task | `totalTimeoutSeconds` + `FIXED` or `EXPONENTIAL_BACKOFF` |
-| High fan-out with many concurrent failures | `backoffJitterMs` + `concurrentExecLimit` |
-| Non-retryable error | Return `FAILED_WITH_TERMINAL_ERROR` from the worker |
+| Scenario                                   | Recommended config                                                                  |
+| :----------------------------------------- | :---------------------------------------------------------------------------------- |
+| External API with rate limits              | `EXPONENTIAL_BACKOFF` + `maxRetryDelaySeconds` + `backoffJitterMs`                  |
+| Long-running processing job                | `responseTimeoutSeconds` (short) + heartbeats from worker + `timeoutSeconds` (long) |
+| SLA-bounded task                           | `totalTimeoutSeconds` + `FIXED` or `EXPONENTIAL_BACKOFF`                            |
+| High fan-out with many concurrent failures | `backoffJitterMs` + `concurrentExecLimit`                                           |
+| Non-retryable error                        | Return `FAILED_WITH_TERMINAL_ERROR` from the worker                                 |
 
 See the [Task Definition reference](../../documentation/configuration/taskdef.md) for all available parameters.

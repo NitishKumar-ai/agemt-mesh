@@ -1,10 +1,5 @@
 import { Kysely, sql, Transaction } from 'kysely';
-import {
-  ExecutionDAO,
-  ConcurrentExecutionLimitDAO,
-  RateLimitingDAO,
-  Database,
-} from './index.js';
+import { ExecutionDAO, ConcurrentExecutionLimitDAO, RateLimitingDAO, Database } from './index.js';
 import {
   TaskModel,
   WorkflowModel,
@@ -25,10 +20,7 @@ export abstract class BaseKyselyExecutionDAO
   protected abstract booleanFalse(): unknown;
   protected abstract toBoolean(val: boolean): unknown;
 
-  protected abstract doInsertTask(
-    tx: Transaction<Database>,
-    task: TaskModel,
-  ): Promise<void>;
+  protected abstract doInsertTask(tx: Transaction<Database>, task: TaskModel): Promise<void>;
 
   protected dateStr(timeInMs?: number): string {
     const date = timeInMs ? new Date(timeInMs) : new Date();

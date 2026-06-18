@@ -1,6 +1,6 @@
 export declare enum Type {
-  QUEUE = "amqp_queue",
-  EXCHANGE = "amqp_exchange",
+  QUEUE = 'amqp_queue',
+  EXCHANGE = 'amqp_exchange',
 }
 export declare class AMQPSettings {
   private static readonly URI_PATTERN;

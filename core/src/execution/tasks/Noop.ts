@@ -8,7 +8,11 @@ export class Noop extends WorkflowSystemTask {
     super(TaskType.NOOP);
   }
 
-  override execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
+  override execute(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): boolean {
     task.status = 'COMPLETED';
     return true;
   }

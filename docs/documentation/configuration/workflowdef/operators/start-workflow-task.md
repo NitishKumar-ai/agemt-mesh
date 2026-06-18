@@ -1,7 +1,9 @@
 ---
-description: "Start Workflow Task — asynchronously launch a new AgentMesh workflow execution from within a running workflow."
+description: 'Start Workflow Task — asynchronously launch a new AgentMesh workflow execution from within a running workflow.'
 ---
+
 # Start Workflow
+
 ```json
 "type" : "START_WORKFLOW"
 ```
@@ -14,11 +16,12 @@ A Start Workflow task is marked as COMPLETED when the requested workflow enters 
 
 Use these parameters inside `inputParameters` in the Start Workflow task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| startWorkflow | Map[String, Any] | A map that includes the requested workflow’s configuration, such as the name and version. Refer to the [Start Workflow API](../../../api/startworkflow.md#request-body) for what to include in this parameter. | Required. |
+| Parameter     | Type             | Description                                                                                                                                                                                                    | Required / Optional |
+| ------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| startWorkflow | Map[String, Any] | A map that includes the requested workflow’s configuration, such as the name and version. Refer to the [Start Workflow API](../../../api/startworkflow.md#request-body) for what to include in this parameter. | Required.           |
 
 ## Task configuration
+
 Here is the task configuration for a Start Workflow task.​
 
 ```json
@@ -42,13 +45,11 @@ Here is the task configuration for a Start Workflow task.​
 
 ## Output
 
-
 The Start Workflow task will return the following parameters.
 
-| Name             | Type         | Description                                                   |
-| ---------------- | ------------ | ------------------------------------------------------------- |
+| Name       | Type   | Description                                        |
+| ---------- | ------ | -------------------------------------------------- |
 | workflowId | String | The workflow execution ID of the started workflow. |
-
 
 ## Limitations
 

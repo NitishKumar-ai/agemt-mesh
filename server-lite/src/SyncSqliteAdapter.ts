@@ -43,9 +43,7 @@ export class SyncSqliteAdapter {
   private readonly stmtMarkPopped: Stmt;
 
   constructor(db: RawDb) {
-    this.stmtGetWorkflow = db.prepare(
-      'SELECT json_data FROM workflow WHERE workflow_id = ?',
-    );
+    this.stmtGetWorkflow = db.prepare('SELECT json_data FROM workflow WHERE workflow_id = ?');
     this.stmtGetTasksForWorkflow = db.prepare(
       'SELECT t.json_data FROM task t JOIN workflow_to_task wtt ON t.task_id = wtt.task_id WHERE wtt.workflow_id = ?',
     );
@@ -78,18 +76,12 @@ export class SyncSqliteAdapter {
     this.stmtInsertTaskInProgress = db.prepare(
       'INSERT OR IGNORE INTO task_in_progress (task_def_name, task_id, workflow_id, in_progress_status) VALUES (?, ?, ?, 0)',
     );
-    this.stmtDeleteTaskInProgress = db.prepare(
-      'DELETE FROM task_in_progress WHERE task_id = ?',
-    );
+    this.stmtDeleteTaskInProgress = db.prepare('DELETE FROM task_in_progress WHERE task_id = ?');
     this.stmtInsertTaskScheduled = db.prepare(
       'INSERT OR IGNORE INTO task_scheduled (workflow_id, task_key, task_id) VALUES (?, ?, ?)',
     );
-    this.stmtInsertTaskLog = db.prepare(
-      'INSERT INTO task_log (task_id, json_data) VALUES (?, ?)',
-    );
-    this.stmtDeleteWorkflow = db.prepare(
-      'DELETE FROM workflow WHERE workflow_id = ?',
-    );
+    this.stmtInsertTaskLog = db.prepare('INSERT INTO task_log (task_id, json_data) VALUES (?, ?)');
+    this.stmtDeleteWorkflow = db.prepare('DELETE FROM workflow WHERE workflow_id = ?');
     this.stmtRunningWorkflowIds = db.prepare(
       'SELECT workflow_id FROM workflow_pending WHERE workflow_type = ?',
     );
@@ -102,9 +94,7 @@ export class SyncSqliteAdapter {
     this.stmtRemovePendingWorkflow = db.prepare(
       'DELETE FROM workflow_pending WHERE workflow_type = ? AND workflow_id = ?',
     );
-    this.stmtEnsureQueue = db.prepare(
-      'INSERT OR IGNORE INTO queue (queue_name) VALUES (?)',
-    );
+    this.stmtEnsureQueue = db.prepare('INSERT OR IGNORE INTO queue (queue_name) VALUES (?)');
     this.stmtPushQueueMessage = db.prepare(
       `INSERT OR IGNORE INTO queue_message (queue_name, message_id, priority, popped, deliver_on)
        VALUES (?, ?, ?, 0, datetime('now', '+' || ? || ' seconds'))`,
@@ -179,10 +169,7 @@ export class SyncSqliteAdapter {
         workflow.workflowId,
       );
       if (!isWorkflowTerminal(workflow.status!)) {
-        this.stmtInsertWorkflowPending.run(
-          workflow.workflowName,
-          workflow.workflowId,
-        );
+        this.stmtInsertWorkflowPending.run(workflow.workflowName, workflow.workflowId);
       }
     } finally {
       workflow.tasks = tasks;
@@ -195,15 +182,9 @@ export class SyncSqliteAdapter {
     try {
       this.stmtUpdateWorkflow.run(JSON.stringify(workflow), workflow.workflowId);
       if (isWorkflowTerminal(workflow.status!)) {
-        this.stmtDeleteWorkflowPending.run(
-          workflow.workflowName,
-          workflow.workflowId,
-        );
+        this.stmtDeleteWorkflowPending.run(workflow.workflowName, workflow.workflowId);
       } else {
-        this.stmtInsertWorkflowPending.run(
-          workflow.workflowName,
-          workflow.workflowId,
-        );
+        this.stmtInsertWorkflowPending.run(workflow.workflowName, workflow.workflowId);
       }
     } finally {
       workflow.tasks = tasks;
@@ -252,10 +233,7 @@ export class SyncSqliteAdapter {
   removeWorkflow(workflowId: string, _removeFromIndex: boolean): void {
     const wf = this.getWorkflowModel(workflowId, false);
     if (wf) {
-      this.stmtDeleteWorkflowPending.run(
-        wf.workflowName,
-        workflowId,
-      );
+      this.stmtDeleteWorkflowPending.run(wf.workflowName, workflowId);
     }
     this.stmtDeleteWorkflow.run(workflowId);
   }

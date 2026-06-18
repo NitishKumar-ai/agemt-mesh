@@ -23,7 +23,11 @@ export interface ExecutionDAO {
   getPendingWorkflowsByType(workflowName: string, version: number): Promise<WorkflowModel[]>;
   getPendingWorkflowCount(workflowName: string): Promise<number>;
   getInProgressTaskCount(taskDefName: string): Promise<number>;
-  getWorkflowsByType(workflowName: string, startTime: number, endTime: number): Promise<WorkflowModel[]>;
+  getWorkflowsByType(
+    workflowName: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<WorkflowModel[]>;
   getWorkflowsByCorrelationId(
     workflowName: string,
     correlationId: string,

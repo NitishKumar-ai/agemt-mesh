@@ -88,7 +88,9 @@ describe('MetadataService', () => {
     });
 
     it('registerWorkflowDef throws if workflow def already exists', async () => {
-      await expect(service.registerWorkflowDef(sampleWorkflowDef)).rejects.toThrow('already exists');
+      await expect(service.registerWorkflowDef(sampleWorkflowDef)).rejects.toThrow(
+        'already exists',
+      );
     });
 
     it('getWorkflowDef returns workflow def without version', async () => {

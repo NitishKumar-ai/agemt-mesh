@@ -1,14 +1,11 @@
-"use strict";
+'use strict';
 var __createBinding =
   (this && this.__createBinding) ||
   (Object.create
     ? function (o, m, k, k2) {
         if (k2 === undefined) k2 = k;
         var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (
-          !desc ||
-          ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)
-        ) {
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
           desc = {
             enumerable: true,
             get: function () {
@@ -26,13 +23,13 @@ var __exportStar =
   (this && this.__exportStar) ||
   function (m, exports) {
     for (var p in m)
-      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p))
+      if (p !== 'default' && !Object.prototype.hasOwnProperty.call(exports, p))
         __createBinding(exports, m, p);
   };
-Object.defineProperty(exports, "__esModule", { value: true });
-__exportStar(require("./core/Message"), exports);
-__exportStar(require("./core/ObservableQueue"), exports);
-__exportStar(require("./config/AMQPConstants"), exports);
-__exportStar(require("./config/AMQPSettings"), exports);
-__exportStar(require("./AMQPConnection"), exports);
-__exportStar(require("./AMQPObservableQueue"), exports);
+Object.defineProperty(exports, '__esModule', { value: true });
+__exportStar(require('./core/Message'), exports);
+__exportStar(require('./core/ObservableQueue'), exports);
+__exportStar(require('./config/AMQPConstants'), exports);
+__exportStar(require('./config/AMQPSettings'), exports);
+__exportStar(require('./AMQPConnection'), exports);
+__exportStar(require('./AMQPObservableQueue'), exports);

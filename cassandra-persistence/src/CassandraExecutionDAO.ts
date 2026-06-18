@@ -10,19 +10,19 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
 
   async getPendingTasksByWorkflow(taskName: string, workflowId: string): Promise<TaskModel[]> {
     const tasks = await this.getTasksForWorkflow(workflowId);
-    return tasks.filter(t => t.taskDefName === taskName && t.status === 'IN_PROGRESS');
+    return tasks.filter((t) => t.taskDefName === taskName && t.status === 'IN_PROGRESS');
   }
 
   async getTasks(taskType: string, startKey: string, count: number): Promise<TaskModel[]> {
     const query = 'SELECT payload FROM tasks_in_progress WHERE task_type = ? LIMIT ?';
     const result = await this.client.execute(query, [taskType, count], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 
   async createTasks(tasks: TaskModel[]): Promise<TaskModel[]> {
-    const queries = tasks.map(task => ({
+    const queries = tasks.map((task) => ({
       query: 'INSERT INTO tasks (task_id, workflow_id, payload) VALUES (?, ?, ?)',
-      params: [task.taskId, task.workflowInstanceId, JSON.stringify(task)]
+      params: [task.taskId, task.workflowInstanceId, JSON.stringify(task)],
     }));
     await this.client.batch(queries, { prepare: true });
     return tasks;
@@ -30,7 +30,9 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
 
   async updateTask(task: TaskModel): Promise<void> {
     const query = 'UPDATE tasks SET payload = ? WHERE task_id = ? AND workflow_id = ?';
-    await this.client.execute(query, [JSON.stringify(task), task.taskId, task.workflowInstanceId], { prepare: true });
+    await this.client.execute(query, [JSON.stringify(task), task.taskId, task.workflowInstanceId], {
+      prepare: true,
+    });
   }
 
   async removeTask(taskId: string): Promise<boolean> {
@@ -64,19 +66,23 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
   async getTasksForWorkflow(workflowId: string): Promise<TaskModel[]> {
     const query = 'SELECT payload FROM tasks WHERE workflow_id = ?';
     const result = await this.client.execute(query, [workflowId], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 
   async createWorkflow(workflow: WorkflowModel): Promise<string> {
     const query = 'INSERT INTO workflows (workflow_id, payload) VALUES (?, ?)';
-    await this.client.execute(query, [workflow.workflowId, JSON.stringify(workflow)], { prepare: true });
-    return workflow.workflowId ?? "";
+    await this.client.execute(query, [workflow.workflowId, JSON.stringify(workflow)], {
+      prepare: true,
+    });
+    return workflow.workflowId ?? '';
   }
 
   async updateWorkflow(workflow: WorkflowModel): Promise<string> {
     const query = 'UPDATE workflows SET payload = ? WHERE workflow_id = ?';
-    await this.client.execute(query, [JSON.stringify(workflow), workflow.workflowId], { prepare: true });
-    return workflow.workflowId ?? "";
+    await this.client.execute(query, [JSON.stringify(workflow), workflow.workflowId], {
+      prepare: true,
+    });
+    return workflow.workflowId ?? '';
   }
 
   async removeWorkflow(workflowId: string): Promise<boolean> {
@@ -94,7 +100,10 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
     await this.client.execute(query, [workflowType, workflowId], { prepare: true });
   }
 
-  async getWorkflow(workflowId: string, includeTasks: boolean = false): Promise<WorkflowModel | undefined> {
+  async getWorkflow(
+    workflowId: string,
+    includeTasks: boolean = false,
+  ): Promise<WorkflowModel | undefined> {
     const query = 'SELECT payload FROM workflows WHERE workflow_id = ?';
     const result = await this.client.execute(query, [workflowId], { prepare: true });
     if (result.rowLength === 0) return undefined;
@@ -108,7 +117,7 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
   async getRunningWorkflowIds(workflowName: string, version: number): Promise<string[]> {
     const query = 'SELECT workflow_id FROM pending_workflows WHERE workflow_type = ?';
     const result = await this.client.execute(query, [workflowName], { prepare: true });
-    return result.rows.map(row => row.get('workflow_id'));
+    return result.rows.map((row) => row.get('workflow_id'));
   }
 
   async getPendingWorkflowsByType(workflowName: string, version: number): Promise<WorkflowModel[]> {
@@ -131,14 +140,18 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
     return tasks.length;
   }
 
-  async getWorkflowsByType(workflowName: string, startTime: number, endTime: number): Promise<WorkflowModel[]> {
+  async getWorkflowsByType(
+    workflowName: string,
+    startTime: number,
+    endTime: number,
+  ): Promise<WorkflowModel[]> {
     return [];
   }
 
   async getWorkflowsByCorrelationId(
     workflowName: string,
     correlationId: string,
-    includeTasks: boolean
+    includeTasks: boolean,
   ): Promise<WorkflowModel[]> {
     const query = 'SELECT workflow_id FROM workflow_correlation_index WHERE correlation_id = ?';
     const result = await this.client.execute(query, [correlationId], { prepare: true });
@@ -157,8 +170,18 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
   }
 
   async addEventExecution(eventExecution: EventExecution): Promise<boolean> {
-    const query = 'INSERT INTO event_executions (message_id, event_handler_name, event_name, payload) VALUES (?, ?, ?, ?)';
-    await this.client.execute(query, [eventExecution.messageId, eventExecution.name, eventExecution.event, JSON.stringify(eventExecution)], { prepare: true });
+    const query =
+      'INSERT INTO event_executions (message_id, event_handler_name, event_name, payload) VALUES (?, ?, ?, ?)';
+    await this.client.execute(
+      query,
+      [
+        eventExecution.messageId,
+        eventExecution.name,
+        eventExecution.event,
+        JSON.stringify(eventExecution),
+      ],
+      { prepare: true },
+    );
     return true;
   }
 
@@ -168,7 +191,9 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
 
   async removeEventExecution(eventExecution: EventExecution): Promise<void> {
     const query = 'DELETE FROM event_executions WHERE message_id = ? AND event_handler_name = ?';
-    await this.client.execute(query, [eventExecution.messageId, eventExecution.name], { prepare: true });
+    await this.client.execute(query, [eventExecution.messageId, eventExecution.name], {
+      prepare: true,
+    });
   }
 
   async addTaskLog(taskId: string, log: TaskExecLog): Promise<void> {
@@ -179,6 +204,6 @@ export class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
   async getTaskLogs(taskId: string): Promise<TaskExecLog[]> {
     const query = 'SELECT payload FROM task_logs WHERE task_id = ?';
     const result = await this.client.execute(query, [taskId], { prepare: true });
-    return result.rows.map(row => JSON.parse(row.get('payload')));
+    return result.rows.map((row) => JSON.parse(row.get('payload')));
   }
 }

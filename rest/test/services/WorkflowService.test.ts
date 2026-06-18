@@ -3,7 +3,11 @@ import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
 import { InitialSchemaMigration } from '@agentmesh/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
+import {
+  SqliteExecutionDAO,
+  SqliteMetadataDAO,
+  SqliteQueueDAO,
+} from '@agentmesh/sqlite-persistence';
 import { WorkflowService } from '../../src/services/WorkflowService.js';
 import type { WorkflowDef } from '@agentmesh/common';
 
@@ -67,9 +71,9 @@ describe('WorkflowService', () => {
   });
 
   it('startWorkflow throws if workflow def not found', async () => {
-    await expect(
-      service.startWorkflow({ name: 'nonexistent', version: 1 }),
-    ).rejects.toThrow('not found');
+    await expect(service.startWorkflow({ name: 'nonexistent', version: 1 })).rejects.toThrow(
+      'not found',
+    );
   });
 
   it('getWorkflow returns a started workflow', async () => {

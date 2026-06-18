@@ -1,5 +1,5 @@
 ---
-description: "Understand the task lifecycle in AgentMesh — state transitions, retries, timeouts, and failure handling for durable workflow execution."
+description: 'Understand the task lifecycle in AgentMesh — state transitions, retries, timeouts, and failure handling for durable workflow execution.'
 ---
 
 # Task Lifecycle
@@ -33,18 +33,17 @@ stateDiagram-v2
 
 ## Task statuses
 
-| Status | Description |
-| :--- | :--- |
-| `SCHEDULED` | Task is queued and waiting for a worker to poll it. |
-| `IN_PROGRESS` | A worker has picked up the task and is executing it. |
-| `COMPLETED` | Task completed successfully. |
-| `FAILED` | Task failed due to an error. AgentMesh will retry based on the task definition's retry configuration. |
-| `FAILED_WITH_TERMINAL_ERROR` | Task failed with a non-retryable error. No retries will be attempted. |
-| `TIMED_OUT` | Task exceeded its configured timeout. AgentMesh will retry based on the retry configuration. |
-| `CANCELED` | Task was canceled because the workflow was terminated. |
-| `SKIPPED` | Task was skipped via the Skip Task API. The workflow continues to the next task. |
-| `COMPLETED_WITH_ERRORS` | Task failed but is marked as optional in the workflow definition. The workflow continues. |
-
+| Status                       | Description                                                                                           |
+| :--------------------------- | :---------------------------------------------------------------------------------------------------- |
+| `SCHEDULED`                  | Task is queued and waiting for a worker to poll it.                                                   |
+| `IN_PROGRESS`                | A worker has picked up the task and is executing it.                                                  |
+| `COMPLETED`                  | Task completed successfully.                                                                          |
+| `FAILED`                     | Task failed due to an error. AgentMesh will retry based on the task definition's retry configuration. |
+| `FAILED_WITH_TERMINAL_ERROR` | Task failed with a non-retryable error. No retries will be attempted.                                 |
+| `TIMED_OUT`                  | Task exceeded its configured timeout. AgentMesh will retry based on the retry configuration.          |
+| `CANCELED`                   | Task was canceled because the workflow was terminated.                                                |
+| `SKIPPED`                    | Task was skipped via the Skip Task API. The workflow continues to the next task.                      |
+| `COMPLETED_WITH_ERRORS`      | Task failed but is marked as optional in the workflow definition. The workflow continues.             |
 
 ## Retry behavior
 
@@ -72,15 +71,14 @@ sequenceDiagram
 
 Retry behavior is controlled by the task definition:
 
-| Parameter | Description |
-| :--- | :--- |
-| `retryCount` | Maximum number of retry attempts. |
-| `retryLogic` | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF`. See [Retry Logic](../../../documentation/configuration/taskdef.md#retry-logic). |
-| `retryDelaySeconds` | Base delay between retries. |
-| `maxRetryDelaySeconds` | Caps the computed delay. Prevents exponential growth from becoming arbitrarily large. |
-| `backoffJitterMs` | Adds random milliseconds to each delay to spread concurrent retries over time. |
-| `totalTimeoutSeconds` | Hard wall-clock budget across all attempts. See [Total timeout](#total-timeout). |
-
+| Parameter              | Description                                                                                                                          |
+| :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |
+| `retryCount`           | Maximum number of retry attempts.                                                                                                    |
+| `retryLogic`           | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF`. See [Retry Logic](../../../documentation/configuration/taskdef.md#retry-logic). |
+| `retryDelaySeconds`    | Base delay between retries.                                                                                                          |
+| `maxRetryDelaySeconds` | Caps the computed delay. Prevents exponential growth from becoming arbitrarily large.                                                |
+| `backoffJitterMs`      | Adds random milliseconds to each delay to spread concurrent retries over time.                                                       |
+| `totalTimeoutSeconds`  | Hard wall-clock budget across all attempts. See [Total timeout](#total-timeout).                                                     |
 
 ## Timeout scenarios
 
@@ -174,10 +172,10 @@ This is useful when you need a hard SLA on how long a task can run across all it
 
 ## Timeout configuration summary
 
-| Parameter | Description | Default |
-| :--- | :--- | :--- |
-| `pollTimeoutSeconds` | Max time for a worker to poll the task. | No timeout |
-| `responseTimeoutSeconds` | Max time for a worker to respond after polling. | 600s |
-| `timeoutSeconds` | SLA per individual attempt (from first `IN_PROGRESS` to terminal). | No timeout |
-| `totalTimeoutSeconds` | Hard budget across all attempts combined. Overrides `retryCount`. | No timeout |
-| `timeoutPolicy` | Action on timeout: `RETRY`, `TIME_OUT_WF` (fail workflow), or `ALERT_ONLY`. | `TIME_OUT_WF` |
+| Parameter                | Description                                                                 | Default       |
+| :----------------------- | :-------------------------------------------------------------------------- | :------------ |
+| `pollTimeoutSeconds`     | Max time for a worker to poll the task.                                     | No timeout    |
+| `responseTimeoutSeconds` | Max time for a worker to respond after polling.                             | 600s          |
+| `timeoutSeconds`         | SLA per individual attempt (from first `IN_PROGRESS` to terminal).          | No timeout    |
+| `totalTimeoutSeconds`    | Hard budget across all attempts combined. Overrides `retryCount`.           | No timeout    |
+| `timeoutPolicy`          | Action on timeout: `RETRY`, `TIME_OUT_WF` (fail workflow), or `ALERT_ONLY`. | `TIME_OUT_WF` |

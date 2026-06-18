@@ -20,7 +20,9 @@ export class SwitchTaskMapper implements TaskMapper {
 
     let evalResult = '';
     try {
-      evalResult = String(this.evaluate(evaluatorType, expression, taskInput, workflowTask.caseValueParam));
+      evalResult = String(
+        this.evaluate(evaluatorType, expression, taskInput, workflowTask.caseValueParam),
+      );
     } catch (exception) {
       const switchTask = taskMapperContext.createTaskModel();
       switchTask.taskType = workflowTask.type;
@@ -91,4 +93,3 @@ export class SwitchTaskMapper implements TaskMapper {
     return input[expression];
   }
 }
-

@@ -1,7 +1,9 @@
 <!-- /autoplan restore point: /Users/friday/.gstack/projects/Agent_mesh/main-autoplan-restore-20260603-155423.md -->
+
 # Technical Requirements Document: 24/7 Agent Mesh OS
 
 ## TL;DR
+
 - **Build the orchestration backbone on a durable-execution engine, not a raw task queue.** For a solo founder on Python/TS, start with **DBOS** (Postgres-only, runs in-process as a library, zero new infrastructure) and keep the workflow code behind an interface so you can migrate to **Temporal** later if multi-tenant fan-out demands it. The weekend-MVP fallback is a custom asyncio loop backed by **Redis Streams + Dramatiq**. Avoid plain in-process asyncio queues for anything beyond the scaffold — they lose all state on crash.
 - **Run agents on hosted APIs (Gemini Flash-Lite/Flash + Claude Haiku/Sonnet), not the L4, until you are saturating the GPU.** Self-hosting an 8B model on a GCP L4 (~$516/mo) only beats Gemini 2.5 Flash-Lite ($0.10/$0.40 per M tokens) above ~1.3 billion output tokens/month at near-100% utilization — a volume a single L4 can barely physically produce. Below that, the API is cheaper and zero-ops. Route a cheap model (Flash-Lite) for plan/triage and a stronger model (Sonnet/Gemini Pro) for execution.
 - **Adopt Anthropic's "workflows over agents" discipline:** deterministic orchestrator-worker + evaluator-optimizer code paths, a shared event bus (Redis Streams) for agent memory, Firecracker/gVisor sandboxes for any code execution, and Langfuse for observability. The plan→execute→review 3-pass loop maps directly onto durable-execution steps with human-in-the-loop approval gates.
@@ -81,6 +83,7 @@
 ### 7. Deployment Topology
 
 **Recommended topology (GCP + Cloudflare):**
+
 - **Cloudflare edge:** Workers for API ingress, auth, and webhooks; Durable Objects for per-tenant/per-agent coordination state; optionally Workflows for lightweight durable orchestration if you go Cloudflare-native. Cloudflare also hosts the public dashboard/control plane and provides DDoS/WAF at the edge.
 - **GCP core:** A persistent Compute Engine VM (or GKE node) running the orchestration engine (DBOS-in-process, later Temporal) + the always-on agent worker pool + Postgres (durable-execution state, pgvector, KV) + Redis (event bus/memory). The L4 GPU node runs vLLM for embeddings/reranking and any self-hosted small model — scaled to zero on Cloud Run when bursty, or kept warm on Compute Engine if continuously used (note Cloud Run GPU requires the full vCPU/memory to stay allocated for 24/7 use, so it offers no idle savings for an always-on service).
 - **Sandbox tier:** E2B (managed Firecracker) or self-hosted Firecracker for agent code execution; or GKE Sandbox (gVisor) for managed isolation on infra you control.
@@ -90,6 +93,7 @@
 ## Recommendations
 
 **Stage 1 — Weekend MVP (scaffold orchestration core + 4 stubbed agents):**
+
 - Build a custom asyncio orchestrator implementing the plan→execute→review 3-pass loop, with **Redis Streams** as the event/memory bus and **Dramatiq** for worker task execution. Postgres for state.
 - Define the **base Agent contract** (below) and stub the 4 agents (Research, ML, Marketing, CommitGuard) so each runs the 3-pass loop against a no-op tool and publishes events to the bus.
 - Wire **Gemini 2.5 Flash-Lite** as the single default model (cheapest), with a routing hook stubbed for later escalation.
@@ -97,12 +101,14 @@
 - Run workers under **systemd `Restart=always`** on a single GCP VM. Cron watchdog as backstop.
 
 **Stage 2 — Durability & safety (weeks 2–4):**
+
 - Replace the asyncio orchestrator's persistence with **DBOS** (in-process, Postgres) so the 3-pass loop becomes durable steps that resume after crash. Keep Redis Streams as the bus.
 - Add tiered model routing (Flash-Lite plan/triage → Sonnet/Gemini Pro execute).
 - Introduce **Firecracker/E2B sandboxes** for any agent that executes code (CommitGuard, ML agent).
 - Implement scoped per-agent service accounts + GCP Secret Manager + full tool-call audit logging + a killswitch.
 
 **Stage 3 — Scale & harden (months 2–3):**
+
 - Add human-in-the-loop approval gates (DBOS/Temporal suspend-resume) for high-risk actions.
 - Add pgvector or Mem0 semantic memory.
 - Stand up the **L4 vLLM** node for embeddings + self-hosted CommitGuard triage if volume justifies it; benchmark actual L4 tok/s first.
@@ -110,6 +116,7 @@
 - Evaluate migrating DBOS → **Temporal** only if multi-tenant fan-out demands it.
 
 **Thresholds that change the plan:**
+
 - Sustained LLM volume > **~1.3B output tokens/month** AND you can keep an L4 saturated → self-host the high-volume tier on the L4.
 - Cross-service/multi-tenant orchestration fan-out grows beyond ~3 services → migrate DBOS → Temporal.
 - Event throughput > ~10K msg/s or you need multi-week retention → migrate Redis Streams → NATS JetStream or Kafka.
@@ -118,6 +125,7 @@
 ## Agent Contracts
 
 **Base Agent interface (all agents inherit):**
+
 - Identity & config: `agent_id`, `tenant_id`, scoped service-account credentials, model-tier config, cost/token budget, idempotency key, max retries, killswitch hook.
 - `plan(context) → Plan`: cheap model (Flash-Lite) decomposes the goal into steps (durable step 1).
 - `execute(plan) → Result`: stronger model + sandboxed tools run each step, fetching ground truth at each (durable step 2).
@@ -134,6 +142,7 @@
 **CommitGuard / Security Agent:** Tools = git diff review, secret scanning (TruffleHog/GitGuardian-style patterns), static analysis. Runs continuously on commits. Executes untrusted code review inside a **Firecracker microVM**. Read-only repo access + narrowly scoped write for PR comments. Killswitch + behavioral anomaly detection. Prime candidate for a self-hosted L4 triage model (high volume, privacy-sensitive).
 
 ## Non-Functional Requirements
+
 - **Durability:** No task lost on crash; all multi-step workflows resume from last journaled step (RPO ≈ 0 for orchestration state).
 - **Availability:** 24/7 agents with auto-restart (systemd/supervisor) + durable resume; target 99.5% at MVP, 99.9% at scale.
 - **Idempotency:** Every task carries an idempotency key; steps are replay-safe.
@@ -143,6 +152,7 @@
 - **Scalability:** Horizontal worker scaling; event bus and durable engine scale independently.
 
 ## Open Questions / Risks
+
 - **L4 throughput is unvalidated** — the ~500–1,200 tok/s figure is extrapolated from RTX 4090/A100 benchmarks, not measured on an L4; benchmark before any GPU spend decision.
 - **Model pricing/version churn:** prices fell ~10× in two years and models deprecate fast (Gemini 2.0 Flash shut down June 1, 2026). Abstract the model layer behind the router so swaps are config-only; do not anchor cost models on a single deprecating SKU.
 - **DBOS → Temporal migration cost:** wrap workflow code behind an interface to keep the migration blast radius to one module; the reverse migration (Temporal → DBOS) is rare enough not to plan for.
@@ -151,12 +161,15 @@
 - **Conflicting break-even claims:** some sources put self-hosting break-even far higher (≈11B tokens/month against budget APIs) when DevOps labor and idle-GPU waste are fully loaded; this reinforces "API until saturated" rather than weakening it.
 
 ## Build Roadmap (summary)
+
 - **Weekend MVP:** asyncio orchestrator + Redis Streams + Dramatiq + Postgres; 4 stubbed agents running the 3-pass loop; Gemini 2.5 Flash-Lite default; Langfuse tracing via OpenLLMetry; systemd `Restart=always`.
 - **Weeks 2–4:** DBOS durable execution; tiered routing (Flash-Lite → Sonnet/Pro); Firecracker/E2B sandboxes; scoped per-agent creds + GCP Secret Manager + tool-call audit logs + killswitch.
 - **Months 2–3:** human-in-the-loop approval gates; pgvector/Mem0 memory; benchmarked L4 vLLM node for embeddings/CommitGuard triage; per-agent/per-tenant cost dashboards; Temporal migration only if multi-tenant fan-out requires it.
+
 ## Phase 1: CEO Review
 
 ### CLAUDE SUBAGENT (CEO — strategic independence)
+
 1. **Right problem:** Scoping a generalized infra play instead of a vertical app is risky. (User confirmed OS scope).
 2. **Premises:** "Weekend MVP" with DBOS+Redis is a complex distributed system.
 3. **Regret:** Building custom orchestration when native MCP APIs might make it obsolete.
@@ -164,41 +177,48 @@
 5. **Competitive risk:** Competing on infrastructure vs LangChain, Vercel, Cloudflare.
 
 ### CEO DUAL VOICES — CONSENSUS TABLE:
+
 ═══════════════════════════════════════════════════════════════
-  Dimension                           Claude  Codex  Consensus
-  ──────────────────────────────────── ─────── ─────── ─────────
-  1. Premises valid?                   NO       —      FLAGGED
-  2. Right problem to solve?           NO       —      FLAGGED
-  3. Scope calibration correct?        NO       —      FLAGGED
-  4. Alternatives sufficiently explored?NO       —      FLAGGED
-  5. Competitive/market risks covered? NO       —      FLAGGED
-  6. 6-month trajectory sound?         NO       —      FLAGGED
-═══════════════════════════════════════════════════════════════
-*(Note: Codex unavailable. User explicitly confirmed the premise to keep the Agent Mesh OS scope).*
+Dimension Claude Codex Consensus
+──────────────────────────────────── ─────── ─────── ─────────
+
+1. Premises valid? NO — FLAGGED
+2. Right problem to solve? NO — FLAGGED
+3. Scope calibration correct? NO — FLAGGED
+4. Alternatives sufficiently explored?NO — FLAGGED
+5. Competitive/market risks covered? NO — FLAGGED
+6. 6-month trajectory sound? NO — FLAGGED
+   ═══════════════════════════════════════════════════════════════
+   _(Note: Codex unavailable. User explicitly confirmed the premise to keep the Agent Mesh OS scope)._
 
 ### What already exists
+
 - Weekend MVP Orchestration -> existing DBOS integration in `main.py`
 - Frontend Dashboard -> existing `dashboard.html` with SSE streaming
 - Tool execution sandbox -> existing E2B integration in `CommitGuardAgent`
 - Multi-model dispatch -> existing dispatcher in `api.py`
 
 ### NOT in scope
+
 - Self-hosting L4 GPUs for local models (Deferred to avoid ops distraction).
 - Native Temporal migration (Deferred; stick with DBOS for now).
 
 ### Error & Rescue Registry
-| Error | Rescue Mechanism |
-|-------|------------------|
-| Agent crash | systemd `Restart=always` |
+
+| Error                | Rescue Mechanism                              |
+| -------------------- | --------------------------------------------- |
+| Agent crash          | systemd `Restart=always`                      |
 | Orchestrator restart | DBOS durable execution resumes from last step |
 
 ### Failure Modes Registry
-| Component | Failure Mode | Auto-Decision Fix |
-|-----------|--------------|-------------------|
-| DBOS | Abstraction leak in future Temporal migration | Accepted (P6 - bias toward action, stick to DBOS). |
-| Custom Orchestrator | Native API obsolescence | Accepted (P5 - explicit over clever, build custom to own the stack). |
+
+| Component           | Failure Mode                                  | Auto-Decision Fix                                                    |
+| ------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| DBOS                | Abstraction leak in future Temporal migration | Accepted (P6 - bias toward action, stick to DBOS).                   |
+| Custom Orchestrator | Native API obsolescence                       | Accepted (P5 - explicit over clever, build custom to own the stack). |
 
 ### Dream State Delta
+
 ```
 CURRENT                    THIS PLAN                           12-MONTH IDEAL
 weekend scripts   --->     durable execution + Redis Streams ---> fully managed cluster
@@ -207,23 +227,26 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 ```
 
 ### CEO Completion Summary
+
 - **Plan Status:** REVIEWED (CEO Phase)
 - **Scope Calibration:** SELECTIVE EXPANSION
 - **Premises:** CONFIRMED BY USER
 - **Risks Flagged:** Custom orchestration vs off-the-shelf, DBOS lock-in.
 
 <!-- AUTONOMOUS DECISION LOG -->
+
 ## Decision Audit Trail
 
-| # | Phase | Decision | Classification | Principle | Rationale | Rejected |
-|---|-------|----------|-----------|-----------|----------|----------|
-| 1 | CEO | Drop 3 agents and pivot to vertical app | User Challenge | Human | User confirmed Agent Mesh OS scope over vertical app. | N/A |
-| 2 | CEO | Include Langfuse & E2B from Day 1 | Mechanical | P2 (Boil Lakes) | In blast radius, <1d effort, high leverage. | Defer to Month 2 |
-| 3 | CEO | Drop self-hosted L4 GPUs | Mechanical | P3 (Pragmatic) | High ops overhead for MVP. | Keep in roadmap |
+| #   | Phase | Decision                                | Classification | Principle       | Rationale                                             | Rejected         |
+| --- | ----- | --------------------------------------- | -------------- | --------------- | ----------------------------------------------------- | ---------------- |
+| 1   | CEO   | Drop 3 agents and pivot to vertical app | User Challenge | Human           | User confirmed Agent Mesh OS scope over vertical app. | N/A              |
+| 2   | CEO   | Include Langfuse & E2B from Day 1       | Mechanical     | P2 (Boil Lakes) | In blast radius, <1d effort, high leverage.           | Defer to Month 2 |
+| 3   | CEO   | Drop self-hosted L4 GPUs                | Mechanical     | P3 (Pragmatic)  | High ops overhead for MVP.                            | Keep in roadmap  |
 
 ## Phase 2: Design Review
 
 ### CLAUDE SUBAGENT (Design — independent review)
+
 1. **Information Hierarchy:** Missing hierarchy. Need Primary (Actionable/Health), Secondary (Live streams), Tertiary (Config).
 2. **Missing States:** No UI states mapped to execution states (Idle, Planning, Executing, Blocked, Failed, Success).
 3. **User Journey:** Approval gates break the emotional arc of autonomous execution. Need async notifications (Slack/webhook).
@@ -231,18 +254,21 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 5. **Ambiguous Design:** Killswitch must be a persistent global red toggle, not buried.
 
 ### DESIGN LITMUS SCORECARD (Consensus Table)
+
 ═══════════════════════════════════════════════════════════════
-  Dimension                           Claude  Codex  Consensus
-  ──────────────────────────────────── ─────── ─────── ─────────
-  1. Information hierarchy clear?      NO       —      FLAGGED
-  2. Interaction states defined?       NO       —      FLAGGED
-  3. Emotional journey unbroken?       NO       —      FLAGGED
-  4. Specificity in UI components?     NO       —      FLAGGED
-  5. Critical/danger paths clear?      NO       —      FLAGGED
-═══════════════════════════════════════════════════════════════
-*(Note: Codex unavailable. All Claude design findings accepted via P1 - Choose completeness and P5 - Explicit over clever).*
+Dimension Claude Codex Consensus
+──────────────────────────────────── ─────── ─────── ─────────
+
+1. Information hierarchy clear? NO — FLAGGED
+2. Interaction states defined? NO — FLAGGED
+3. Emotional journey unbroken? NO — FLAGGED
+4. Specificity in UI components? NO — FLAGGED
+5. Critical/danger paths clear? NO — FLAGGED
+   ═══════════════════════════════════════════════════════════════
+   _(Note: Codex unavailable. All Claude design findings accepted via P1 - Choose completeness and P5 - Explicit over clever)._
 
 ### Design Decisions Auto-Decided
+
 - **Hierarchy Fix:** Approved. Global health & approvals on top, live streams in middle, config at bottom.
 - **State mapping:** Approved. Add UI badges for `Idle`, `Planning`, `Executing`, `Blocked`, `Failed`, `Success`.
 - **Async Notifications:** Approved. Add webhook skeleton for approval gating.
@@ -250,11 +276,13 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 - **Global Killswitch UI:** Approved. Must be a persistent header toggle.
 
 ### Design Completion Summary
+
 - **Plan Status:** REVIEWED (Design Phase)
 - **Completeness:** 4/10 initial -> 8/10 post-review
 - **Risks Flagged:** Async notifications are required for true autonomy, or users will babysit the dashboard.
 
 <!-- AUTONOMOUS DECISION LOG -->
+
 | 4 | Design | Add explicit information hierarchy | Mechanical | P5 (Explicit) | Hierarchy was undefined. | Keep undefined |
 | 5 | Design | Map backend states to UI states | Mechanical | P1 (Completeness) | Edge cases/states were missing. | Leave missing |
 | 6 | Design | Require webhook for approvals | Taste | P2 (Boil Lakes) | In blast radius, fixes the core emotional arc. | Defer to MVP2 |
@@ -264,6 +292,7 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 ## Phase 3: Eng Review
 
 ### CLAUDE SUBAGENT (Eng — independent review)
+
 1. **Architecture:** Leaky durable execution abstraction. Split-brain state between DBOS (Postgres) and Redis Streams.
 2. **Edge Cases:** Redis OOM risk without MAXLEN. Missing Dead Letter Queue (DLQ) for retries.
 3. **Tests:** Infinite LLM loop risk. Missing prompt evals, chaos tests, and hard cost caps.
@@ -271,19 +300,22 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 5. **Hidden Complexity:** Long-running suspended workflows (HITL) versioning pain. Tiered routing impedance mismatch.
 
 ### ENG LITMUS SCORECARD (Consensus Table)
+
 ═══════════════════════════════════════════════════════════════
-  Dimension                           Claude  Codex  Consensus
-  ──────────────────────────────────── ─────── ─────── ─────────
-  1. Architecture sound?               NO       —      FLAGGED
-  2. Test coverage sufficient?         NO       —      FLAGGED
-  3. Performance risks addressed?      NO       —      FLAGGED
-  4. Security threats covered?         NO       —      FLAGGED
-  5. Error paths handled?              NO       —      FLAGGED
-  6. Deployment risk manageable?       NO       —      FLAGGED
-═══════════════════════════════════════════════════════════════
-*(Note: Codex unavailable. All Claude eng findings accepted via P5 - Explicit over clever and P1 - Completeness).*
+Dimension Claude Codex Consensus
+──────────────────────────────────── ─────── ─────── ─────────
+
+1. Architecture sound? NO — FLAGGED
+2. Test coverage sufficient? NO — FLAGGED
+3. Performance risks addressed? NO — FLAGGED
+4. Security threats covered? NO — FLAGGED
+5. Error paths handled? NO — FLAGGED
+6. Deployment risk manageable? NO — FLAGGED
+   ═══════════════════════════════════════════════════════════════
+   _(Note: Codex unavailable. All Claude eng findings accepted via P5 - Explicit over clever and P1 - Completeness)._
 
 ### Architecture (ASCII Dependency Graph)
+
 ```text
 [User] --> [Dashboard UI (FastAPI/SSE)]
                  |
@@ -295,23 +327,27 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 ```
 
 ### What already exists
+
 - Orchestrator entrypoints (`main.py`, `api.py`) -> DBOS setup
 - Tool mockups -> E2B Python sandbox integration
 
 ### NOT in scope
+
 - Dual-writing to Redis Streams (Deferred to avoid split-brain, stick to DBOS Postgres).
 - Tiered routing between different model families (Stick to Flash/Pro within Gemini or Anthropic to avoid schema mismatch).
 
 ### Failure Modes Registry
-| Component | Failure Mode | Auto-Decision Fix |
-|-----------|--------------|-------------------|
-| DBOS | Split-brain with Redis | Drop Redis Streams. Use DBOS messaging. |
-| Redis | OOM without MAXLEN | N/A (Dropping Redis). |
-| Sandbox | Exfiltration via curl | Add strict egress proxies (whitelist github.com). |
-| Agent | Infinite loop | Add system-level token/cost caps + DLQ. |
-| HITL | Suspended workflow rot | 24h auto-reject timeout on HITL. |
+
+| Component | Failure Mode           | Auto-Decision Fix                                 |
+| --------- | ---------------------- | ------------------------------------------------- |
+| DBOS      | Split-brain with Redis | Drop Redis Streams. Use DBOS messaging.           |
+| Redis     | OOM without MAXLEN     | N/A (Dropping Redis).                             |
+| Sandbox   | Exfiltration via curl  | Add strict egress proxies (whitelist github.com). |
+| Agent     | Infinite loop          | Add system-level token/cost caps + DLQ.           |
+| HITL      | Suspended workflow rot | 24h auto-reject timeout on HITL.                  |
 
 ### Eng Decisions Auto-Decided
+
 - **Architecture:** Drop Redis Streams to prevent split-brain. DBOS exclusively.
 - **Edge cases:** Added Dead Letter Queue (DLQ) & backoffs.
 - **Tests:** Mandated system-level token caps and chaos DBOS testing.
@@ -319,11 +355,13 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 - **Complexity:** 24-hour timeout on all HITL workflows to prevent version rot.
 
 ### Eng Completion Summary
+
 - **Plan Status:** REVIEWED (Eng Phase)
 - **Completeness:** 5/10 initial -> 9/10 post-review
 - **Risks Flagged:** Egress proxy configuration is critical for CommitGuard security.
 
 <!-- AUTONOMOUS DECISION LOG -->
+
 | 9 | Eng | Drop Redis Streams for DBOS native | Mechanical | P5 (Explicit) | Prevents split-brain state. | Keep Redis |
 | 10 | Eng | Egress proxy on E2B | Mechanical | P1 (Completeness) | Critical security hole. | Full internet access |
 | 11 | Eng | 24h HITL timeout | Mechanical | P3 (Pragmatic) | Prevents workflow versioning hell. | Infinite sleep |
@@ -331,6 +369,7 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 ## Phase 3.5: DX Review
 
 ### CLAUDE SUBAGENT (DX — independent review)
+
 1. **Getting Started (TTHW):** No defined TTHW.
 2. **API/CLI ergonomics:** Base Agent interface violates progressive disclosure (too many required args).
 3. **Error handling:** No standard for developer-facing errors.
@@ -338,35 +377,40 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 5. **Escape hatches:** Framework is overly rigid (DBOS exclusivity, hard timeouts).
 
 ### DX DUAL VOICES — CONSENSUS TABLE
+
 ═══════════════════════════════════════════════════════════════
-  Dimension                           Claude  Codex  Consensus
-  ──────────────────────────────────── ─────── ─────── ─────────
-  1. Getting started < 5 min?          NO       —      FLAGGED
-  2. API/CLI naming guessable?         NO       —      FLAGGED
-  3. Error messages actionable?        NO       —      FLAGGED
-  4. Docs findable & complete?         NO       —      FLAGGED
-  5. Upgrade path safe?                NO       —      FLAGGED
-  6. Dev environment friction-free?    NO       —      FLAGGED
-═══════════════════════════════════════════════════════════════
-*(Note: Codex unavailable. Claude DX findings accepted via P5 - Explicit over clever and P1 - Completeness).*
+Dimension Claude Codex Consensus
+──────────────────────────────────── ─────── ─────── ─────────
+
+1. Getting started < 5 min? NO — FLAGGED
+2. API/CLI naming guessable? NO — FLAGGED
+3. Error messages actionable? NO — FLAGGED
+4. Docs findable & complete? NO — FLAGGED
+5. Upgrade path safe? NO — FLAGGED
+6. Dev environment friction-free? NO — FLAGGED
+   ═══════════════════════════════════════════════════════════════
+   _(Note: Codex unavailable. Claude DX findings accepted via P5 - Explicit over clever and P1 - Completeness)._
 
 ### Developer Journey Map
-| Stage | Experience | Goal |
-|-------|------------|------|
-| 1. Discover | Reads README.md | Understand Agent Mesh OS value prop |
-| 2. Install | `pip install agentmesh` | 0 friction |
-| 3. Hello World | `agentmesh init` | < 1 min to running agent |
-| 4. Core Concepts | Learn `plan -> execute -> review` | Clear mental model |
-| 5. Advanced Config | Add DBOS/tenant config | Progressive disclosure |
-| 6. Debugging | Hit first error | Actionable error msg (Prob+Cause+Fix) |
-| 7. Deployment | Run in production | Easy DBOS migration guide |
-| 8. Scaling | Multi-agent workflows | Predictable limits |
-| 9. Escape Hatch | Override core routing | Clean interface to bypass |
+
+| Stage              | Experience                        | Goal                                  |
+| ------------------ | --------------------------------- | ------------------------------------- |
+| 1. Discover        | Reads README.md                   | Understand Agent Mesh OS value prop   |
+| 2. Install         | `pip install agentmesh`           | 0 friction                            |
+| 3. Hello World     | `agentmesh init`                  | < 1 min to running agent              |
+| 4. Core Concepts   | Learn `plan -> execute -> review` | Clear mental model                    |
+| 5. Advanced Config | Add DBOS/tenant config            | Progressive disclosure                |
+| 6. Debugging       | Hit first error                   | Actionable error msg (Prob+Cause+Fix) |
+| 7. Deployment      | Run in production                 | Easy DBOS migration guide             |
+| 8. Scaling         | Multi-agent workflows             | Predictable limits                    |
+| 9. Escape Hatch    | Override core routing             | Clean interface to bypass             |
 
 ### Developer Empathy Narrative
-*As a developer, I just want my agent to run 24/7 without baby-sitting it. But when I open this repo, I am bombarded with DBOS, Redis Streams, Dramatiq, and Firecracker before I can even write a prompt. I need a single `agentmesh init` command that hides this complexity until I need it. When things break, tell me how to fix it, do not just dump a stack trace.*
+
+_As a developer, I just want my agent to run 24/7 without baby-sitting it. But when I open this repo, I am bombarded with DBOS, Redis Streams, Dramatiq, and Firecracker before I can even write a prompt. I need a single `agentmesh init` command that hides this complexity until I need it. When things break, tell me how to fix it, do not just dump a stack trace._
 
 ### DX Scorecard
+
 1. TTHW (0-10): 2
 2. API Ergonomics (0-10): 3
 3. Error Actionability (0-10): 2
@@ -375,14 +419,16 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 6. Debuggability (0-10): 5
 7. Upgrade Safety (0-10): N/A
 8. Friction (0-10): 3
-**Overall DX Score: 2.7/10** (Target: 8/10)
+   **Overall DX Score: 2.7/10** (Target: 8/10)
 
 ### TTHW Assessment
+
 - **Current TTHW:** Unknown (requires manual scaffolding of DBOS/Postgres).
 - **Target TTHW:** < 5 minutes.
 - **Fix:** Add `agentmesh init` CLI scaffold.
 
 ### DX Implementation Checklist
+
 - [ ] Implement `agentmesh init` CLI for local SQLite/Postgres.
 - [ ] Refactor `BaseAgent` constructor to require only `goal` and `model`.
 - [ ] Create standardized framework exception class (Problem + Cause + Fix).
@@ -390,16 +436,19 @@ print() debugging --->     Langfuse + SSE Dashboard          ---> cross-tenant m
 - [ ] Add `ModelClient` interface escape hatch for unsupported LLMs.
 
 ### DX Completion Summary
+
 - **Plan Status:** REVIEWED (DX Phase)
 - **Completeness:** 2.7/10 initial -> 8/10 post-review targeted
 - **Risks Flagged:** Heavy upfront infrastructure requirements kill adoption.
 
 <!-- AUTONOMOUS DECISION LOG -->
+
 | 12 | DX | Add CLI init scaffold | Mechanical | P5 (Explicit) | Simplifies TTHW to <5m. | Require manual setup |
 | 13 | DX | Progressive disclosure on Agent | Taste | P5 (Explicit) | Reduces cognitive load. | Explicit config |
 | 14 | DX | Standardized Error exceptions | Mechanical | P1 (Completeness) | Improves debuggability. | Raw stack traces |
 | 15 | DX | Add ModelClient escape hatch | Taste | P3 (Pragmatic) | Prevents lock-in frustration. | Rigid routing |
 
 ## Cross-Phase Themes
+
 1. **Infrastructure Gravity vs UX**: The plan was heavily skewed toward infrastructure and backend state engines. Both the Design and DX phases surfaced that without a seamless UI (webhooks, state badges, bespoke diff viewers) and an easy CLI (`agentmesh init`), the robust backend will be unusable.
 2. **State Management Friction**: The conflict between Redis Streams and DBOS was identified by the Eng subagent and resolved by dropping Redis Streams to rely entirely on Postgres/DBOS, centralizing state and reducing split-brain risk.

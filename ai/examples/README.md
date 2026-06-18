@@ -60,30 +60,30 @@ The server will be available at `http://localhost:3001/mcp`.
 
 ## Available Examples
 
-| File | Description | Requirements |
-|------|-------------|--------------|
-| `01-chat-completion.json` | Basic chat with GPT-4o-mini | OpenAI |
-| `02-generate-embeddings.json` | Generate text embeddings | OpenAI |
-| `03-image-generation.json` | Generate images with DALL-E 3 | OpenAI |
-| `04-audio-generation.json` | Text-to-speech with OpenAI TTS | OpenAI |
-| `05-semantic-search.json` | Index and search documents | OpenAI, PostgreSQL |
-| `06-rag-basic.json` | Basic RAG with search + answer | OpenAI/Anthropic, PostgreSQL |
-| `07-rag-complete.json` | Full RAG demo (index + search + answer) | OpenAI, PostgreSQL |
-| `08-mcp-list-tools.json` | List tools from MCP server | MCP Server |
-| `09-mcp-call-tool.json` | Call MCP tool (weather) | MCP Server |
-| `10-mcp-ai-agent.json` | AI agent with MCP tools | OpenAI/Anthropic, MCP Server |
-| `11-video-openai-sora.json` | Generate video with OpenAI Sora-2 (async) | OpenAI |
-| `12-video-gemini-veo.json` | Generate video with Google Veo-3 (async) | Google Vertex AI |
-| `13-image-to-video-pipeline.json` | Image + video generation pipeline | OpenAI |
-| `14-stabilityai-image.json` | Image generation with Stability AI (SD3.5) | Stability AI |
-| `15-pdf-generation.json` | Generate PDF from markdown content | None (built-in) |
-| `16-llm-to-pdf-pipeline.json` | LLM generates report → convert to PDF | OpenAI |
-| `17-web-search.json` | Chat with built-in web search for real-time info | OpenAI |
-| `18-code-execution.json` | Chat with built-in code execution sandbox | Google Gemini |
-| `19-coding-agent.json` | Coding agent: plan → write & run code → review | OpenAI |
-| `20-extended-thinking.json` | Extended thinking with token budget for reasoning | Anthropic |
-| `21-web-search-research-agent.json` | Research agent: web search → synthesize → PDF | OpenAI, Anthropic |
-| `22-multi-turn-chain.json` | Multi-turn conversation chaining with previousResponseId | OpenAI |
+| File                                | Description                                              | Requirements                 |
+| ----------------------------------- | -------------------------------------------------------- | ---------------------------- |
+| `01-chat-completion.json`           | Basic chat with GPT-4o-mini                              | OpenAI                       |
+| `02-generate-embeddings.json`       | Generate text embeddings                                 | OpenAI                       |
+| `03-image-generation.json`          | Generate images with DALL-E 3                            | OpenAI                       |
+| `04-audio-generation.json`          | Text-to-speech with OpenAI TTS                           | OpenAI                       |
+| `05-semantic-search.json`           | Index and search documents                               | OpenAI, PostgreSQL           |
+| `06-rag-basic.json`                 | Basic RAG with search + answer                           | OpenAI/Anthropic, PostgreSQL |
+| `07-rag-complete.json`              | Full RAG demo (index + search + answer)                  | OpenAI, PostgreSQL           |
+| `08-mcp-list-tools.json`            | List tools from MCP server                               | MCP Server                   |
+| `09-mcp-call-tool.json`             | Call MCP tool (weather)                                  | MCP Server                   |
+| `10-mcp-ai-agent.json`              | AI agent with MCP tools                                  | OpenAI/Anthropic, MCP Server |
+| `11-video-openai-sora.json`         | Generate video with OpenAI Sora-2 (async)                | OpenAI                       |
+| `12-video-gemini-veo.json`          | Generate video with Google Veo-3 (async)                 | Google Vertex AI             |
+| `13-image-to-video-pipeline.json`   | Image + video generation pipeline                        | OpenAI                       |
+| `14-stabilityai-image.json`         | Image generation with Stability AI (SD3.5)               | Stability AI                 |
+| `15-pdf-generation.json`            | Generate PDF from markdown content                       | None (built-in)              |
+| `16-llm-to-pdf-pipeline.json`       | LLM generates report → convert to PDF                    | OpenAI                       |
+| `17-web-search.json`                | Chat with built-in web search for real-time info         | OpenAI                       |
+| `18-code-execution.json`            | Chat with built-in code execution sandbox                | Google Gemini                |
+| `19-coding-agent.json`              | Coding agent: plan → write & run code → review           | OpenAI                       |
+| `20-extended-thinking.json`         | Extended thinking with token budget for reasoning        | Anthropic                    |
+| `21-web-search-research-agent.json` | Research agent: web search → synthesize → PDF            | OpenAI, Anthropic            |
+| `22-multi-turn-chain.json`          | Multi-turn conversation chaining with previousResponseId | OpenAI                       |
 
 ---
 
@@ -481,6 +481,7 @@ export OPENAI_API_KEY=sk-your-openai-api-key
 ### MCP Server Connection Refused
 
 1. Verify the MCP server is running:
+
    ```bash
    curl http://localhost:3001/mcp
    ```

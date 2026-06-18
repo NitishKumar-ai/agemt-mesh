@@ -1,7 +1,9 @@
 ---
-description: "Switch Task — conditional branching in AgentMesh workflows based on task output or workflow input values."
+description: 'Switch Task — conditional branching in AgentMesh workflows based on task output or workflow input values.'
 ---
+
 # Switch
+
 ```json
 "type" : "SWITCH"
 ```
@@ -12,27 +14,27 @@ At runtime, the Switch task evaluates an expression and matches the expression's
 
 The Switch task supports two types of evaluators:
 
-* `value-param`—A reference to the task input parameter key.
-* `javascript`—A complex JavaScript expression.
+- `value-param`—A reference to the task input parameter key.
+- `javascript`—A complex JavaScript expression.
 
 ## Task parameters
 
 Use these parameters in top level of the Switch task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| evaluatorType | String (enum)            | The type of the evaluator used. Supported types: <ul><li>`value-param`—Evaluates the input parameter referenced in `expression`.</li><li>`javascript`—Evaluates the JavaScript script in `expression`and computes the value.</li></ul>                                                                                 | Required. |
-| expression    | String                   | The expression evaluated by the Switch task. The expression format depends on the evaluator type: <ul><li>For `value-param`, the expression should be a parameter key provided in `inputParameters`.</li><li>`javascript`, the expression should be a JavaScript expression.</li></ul>                                                                                  | Required. |
-| decisionCases | Map[String, List[task]] | A map of the possible switch cases and their tasks. The keys are the possible values that can result from the evaluation of `expression`, while the values are the lists of task configurations that will be executed.                   | Required. |
-| defaultCase   | List[Task]              | The default switch case, containing the list of tasks to be executed if no matching switch case is found in `decisionCases`.                                                                     | Required. |
-| inputParameters   | Map[String, Any]            | The input parameters for the task. <br/> <br/> **Note:** If `evaluatorType` is `value-param`, `inputParameters` must be populated with the key specified in `expression`.                                                                      | Optional. |
-
+| Parameter       | Type                    | Description                                                                                                                                                                                                                                                                            | Required / Optional |
+| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| evaluatorType   | String (enum)           | The type of the evaluator used. Supported types: <ul><li>`value-param`—Evaluates the input parameter referenced in `expression`.</li><li>`javascript`—Evaluates the JavaScript script in `expression`and computes the value.</li></ul>                                                 | Required.           |
+| expression      | String                  | The expression evaluated by the Switch task. The expression format depends on the evaluator type: <ul><li>For `value-param`, the expression should be a parameter key provided in `inputParameters`.</li><li>`javascript`, the expression should be a JavaScript expression.</li></ul> | Required.           |
+| decisionCases   | Map[String, List[task]] | A map of the possible switch cases and their tasks. The keys are the possible values that can result from the evaluation of `expression`, while the values are the lists of task configurations that will be executed.                                                                 | Required.           |
+| defaultCase     | List[Task]              | The default switch case, containing the list of tasks to be executed if no matching switch case is found in `decisionCases`.                                                                                                                                                           | Required.           |
+| inputParameters | Map[String, Any]        | The input parameters for the task. <br/> <br/> **Note:** If `evaluatorType` is `value-param`, `inputParameters` must be populated with the key specified in `expression`.                                                                                                              | Optional.           |
 
 ## JSON configuration
 
 Here is the task configuration for a Switch task.
 
 ### Using `value-param`
+
 ```json
 {
   "name": "switch",
@@ -80,12 +82,12 @@ Here is the task configuration for a Switch task.
         // task configuration
       }
     ],
-    "tomatoes":  [
+    "tomatoes": [
       {
         // task configuration
       }
     ],
-    "oranges":  [
+    "oranges": [
       {
         // task configuration
       }
@@ -97,7 +99,6 @@ Here is the task configuration for a Switch task.
 }
 ```
 
-
 ## Output
 
 The Switch task will return the following parameters.
@@ -105,14 +106,13 @@ The Switch task will return the following parameters.
 | Name             | Type         | Description                                                   |
 | ---------------- | ------------ | ------------------------------------------------------------- |
 | evaluationResult | List[String] | A list of values representing the list of cases that matched. |
-| selectedCase | String | The evaluation result of the Switch task. |
-
+| selectedCase     | String       | The evaluation result of the Switch task.                     |
 
 ## Examples
 
 Here are some examples for using the Switch task.
 
-### Using `value-param` 
+### Using `value-param`
 
 In this example workflow, a package with be shipped by a specific shipping provider, based on the given workflow input. Here is the Switch task configuration, using the `value-param` evaluatorType:
 
@@ -146,7 +146,7 @@ In this example workflow, a package with be shipped by a specific shipping provi
 }
 ```
 
-In the Switch task above, the value of the task input `switchCaseValue` is used to determine the selected case. The evaluator type is `value-param` and the expression is a direct reference to the name of the input parameter. 
+In the Switch task above, the value of the task input `switchCaseValue` is used to determine the selected case. The evaluator type is `value-param` and the expression is a direct reference to the name of the input parameter.
 
 If the value of `switchCaseValue` is `fedex`, then the `fedex` branch containing the `ship_via_fedex` task will be executed. Likewise, if the input is `ups`, then the `ship_via_ups` task will be executed. If none of the cases match, then the default path will be executed.
 
@@ -161,7 +161,7 @@ graph LR
     E --> F
 ```
 
-### Using `javascript` 
+### Using `javascript`
 
 In this example, the switch cases are selected using the `javascript` evaluatorType:
 

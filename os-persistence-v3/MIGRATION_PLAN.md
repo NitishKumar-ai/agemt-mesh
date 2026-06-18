@@ -1,9 +1,11 @@
 # OpenSearch v3 Migration Implementation Plan
 
 ## Goal
+
 Migrate os-persistence-v3 from OpenSearch High-Level REST Client to opensearch-java 3.x client.
 
 ## Current Status
+
 - ✅ Module structure created
 - ✅ Dependencies configured
 - ✅ Config classes updated (OpenSearchProperties, OpenSearchConditions)
@@ -15,6 +17,7 @@ Migrate os-persistence-v3 from OpenSearch High-Level REST Client to opensearch-j
 **Strategy:** Incremental migration in small, testable commits.
 
 Each commit should:
+
 1. Compile successfully
 2. Pass existing tests
 3. Be reviewable independently
@@ -22,9 +25,11 @@ Each commit should:
 ## Phase 1: Foundation (Days 1-2)
 
 ### Commit 1: Client Infrastructure
+
 **File:** `OpenSearchRestDAO.java` (constructor + client init)
 
 **Tasks:**
+
 - [ ] Add new `OpenSearchClient` field
 - [ ] Keep old `RestHighLevelClient` temporarily (dual-client mode)
 - [ ] Add client initialization in constructor
@@ -34,9 +39,11 @@ Each commit should:
 **Test:** Verify server starts without errors
 
 ### Commit 2: Query Builder Abstraction
+
 **New file:** `QueryHelper.java`
 
 **Tasks:**
+
 - [ ] Create helper class for query building
 - [ ] Implement `buildBoolQuery(String structured, String freeText)` → returns `Query`
 - [ ] Implement `buildMatchQuery(String field, String value)` → returns `Query`
@@ -48,9 +55,11 @@ Each commit should:
 ## Phase 2: Search Operations (Days 3-4)
 
 ### Commit 3: Core Search Method
+
 **File:** `OpenSearchRestDAO.java` (new method)
 
 **Tasks:**
+
 - [ ] Create NEW method: `searchObjectsV3(...)` using new client
 - [ ] Implement query building with lambda builders
 - [ ] Implement sorting with new API
@@ -60,9 +69,11 @@ Each commit should:
 **Test:** Add integration test comparing v2 vs v3 search results
 
 ### Commit 4: Migrate Search Methods (One at a Time)
+
 **Files:** `OpenSearchRestDAO.java`
 
 **Order:**
+
 1. [ ] `searchObjectsViaExpression()` - use `searchObjectsV3()`
 2. [ ] `searchWorkflowSummary()` - use `searchObjectsV3()`
 3. [ ] `searchTaskSummary()` - use `searchObjectsV3()`
@@ -70,9 +81,11 @@ Each commit should:
 **Test:** Integration tests pass for each method
 
 ### Commit 5: Count Operation
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Create `countDocuments(String index, Query query)` helper
 - [ ] Update all count operations to use new method
 - [ ] Fix `CountResponse.count()` vs old `getCount()`
@@ -82,9 +95,11 @@ Each commit should:
 ## Phase 3: Index Operations (Days 5-6)
 
 ### Commit 6: Index/Update Operations
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Create `indexDocumentV3(String index, String id, Object doc)` helper
 - [ ] Migrate `indexObject()` to use new method
 - [ ] Migrate `updateObject()` to use new method
@@ -93,18 +108,22 @@ Each commit should:
 **Test:** Document indexing works correctly
 
 ### Commit 7: Delete Operations
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Create `deleteDocumentV3(String index, String id)` helper
 - [ ] Migrate `deleteObject()` to use new method
 
 **Test:** Document deletion works correctly
 
 ### Commit 8: Bulk Operations
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Create `BulkHelper.java` for bulk operation building
 - [ ] Migrate `bulkIndexObjects()` to use lambda builders
 - [ ] Migrate `asyncBulkIndexObjects()` to use lambda builders
@@ -115,18 +134,22 @@ Each commit should:
 ## Phase 4: Specialized Operations (Day 7)
 
 ### Commit 9: Task Logs
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Migrate `addTaskExecutionLogs()` to new API
 - [ ] Migrate `getTaskExecutionLogs()` to new API
 
 **Test:** Task logs index and retrieve correctly
 
 ### Commit 10: Event Messages
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Migrate `addMessage()` to new API
 - [ ] Migrate `getMessages()` to new API
 
@@ -135,9 +158,11 @@ Each commit should:
 ## Phase 5: Cleanup & Optimization (Day 8)
 
 ### Commit 11: Remove Old Client
+
 **File:** `OpenSearchRestDAO.java`
 
 **Tasks:**
+
 - [ ] Remove `RestHighLevelClient` field
 - [ ] Remove dual-client code paths
 - [ ] Clean up unused imports
@@ -146,9 +171,11 @@ Each commit should:
 **Test:** All tests still pass
 
 ### Commit 12: Query Parser Migration
+
 **Files:** `os3/dao/query/parser/**/*.java`
 
 **Tasks:**
+
 - [ ] Update `Expression.java` to use `Query` instead of `QueryBuilder`
 - [ ] Update `NameValue.java` query building
 - [ ] Update `GroupedExpression.java` query building
@@ -157,7 +184,9 @@ Each commit should:
 **Test:** Query parsing works correctly
 
 ### Commit 13: Spotless & Documentation
+
 **Tasks:**
+
 - [ ] Run Spotless formatting
 - [ ] Update JavaDocs to reference new API
 - [ ] Update README with migration notes
@@ -168,9 +197,11 @@ Each commit should:
 ## Phase 6: Testing & Validation (Days 9-10)
 
 ### Commit 14: Integration Test Suite
+
 **New file:** `OpenSearchRestDAOV3IntegrationTest.java`
 
 **Tasks:**
+
 - [ ] Test all CRUD operations
 - [ ] Test search with complex queries
 - [ ] Test bulk operations
@@ -182,9 +213,11 @@ Each commit should:
 **Test:** All integration tests pass
 
 ### Commit 15: Side-by-Side Comparison
+
 **New file:** `os-persistence-v3/src/test/resources/comparison-tests.json`
 
 **Tasks:**
+
 - [ ] Run test workflows on both v2 and v3
 - [ ] Compare indexed documents
 - [ ] Compare search results
@@ -221,12 +254,14 @@ Each commit should:
 ### Dependencies to Add/Remove
 
 **Keep:**
+
 ```gradle
 implementation 'org.opensearch.client:opensearch-java:3.0.0'
 implementation "org.opensearch.client:opensearch-rest-client:3.0.0"
 ```
 
 **Remove (after migration):**
+
 ```gradle
 implementation "org.opensearch.client:opensearch-rest-high-level-client:3.0.0"
 ```
@@ -234,15 +269,19 @@ implementation "org.opensearch.client:opensearch-rest-high-level-client:3.0.0"
 ## Risk Mitigation
 
 ### Risk 1: Breaking API Changes
+
 **Mitigation:** Side-by-side testing with v2
 
 ### Risk 2: Performance Regression
+
 **Mitigation:** Benchmark tests before/after
 
 ### Risk 3: Serialization Issues
+
 **Mitigation:** Test with real workflow data early
 
 ### Risk 4: Unknown API Differences
+
 **Mitigation:** Iterative approach, test each commit
 
 ## Timeline Estimate
@@ -252,6 +291,7 @@ implementation "org.opensearch.client:opensearch-rest-high-level-client:3.0.0"
 **Pessimistic:** 3 weeks (if major blockers found)
 
 **Breakdown:**
+
 - Foundation: 2 days
 - Search: 2 days
 - CRUD: 2 days

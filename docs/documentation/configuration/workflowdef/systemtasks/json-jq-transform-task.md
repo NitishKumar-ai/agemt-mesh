@@ -1,7 +1,9 @@
 ---
-description: "JSON JQ Transform Task — transform and filter JSON data inside AgentMesh workflows using JQ expressions."
+description: 'JSON JQ Transform Task — transform and filter JSON data inside AgentMesh workflows using JQ expressions.'
 ---
+
 # JSON JQ Transform Task
+
 ```json
 "type" : "JSON_JQ_TRANSFORM"
 ```
@@ -12,16 +14,14 @@ The JSON JQ Transform task (`JSON_JQ_TRANSFORM`) processes JSON data using jq. I
 
 Use these parameters inside `inputParameters` in the JSON JQ Transform task configuration.
 
-
 `queryExpression` is appended to the `inputParameters` of `JSON_JQ_TRANSFORM`, along side any other input values needed for the evaluation.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| queryExpression | String | The jq filter expression used to transform the JSON data. <br/><br/> Refer to the [jq documentation](https://jqlang.org/) and the [jq manual](https://jqlang.org/manual/) for information on constructing filters. You can test expressions interactively at [jqplay.org](https://jqplay.org/). | Required. |
-| inputParameters | Map[String, Any] | Contains the inputs for the jq transformation. | Required. |
+| Parameter       | Type             | Description                                                                                                                                                                                                                                                                                     | Required / Optional |
+| --------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| queryExpression | String           | The jq filter expression used to transform the JSON data. <br/><br/> Refer to the [jq documentation](https://jqlang.org/) and the [jq manual](https://jqlang.org/manual/) for information on constructing filters. You can test expressions interactively at [jqplay.org](https://jqplay.org/). | Required.           |
+| inputParameters | Map[String, Any] | Contains the inputs for the jq transformation.                                                                                                                                                                                                                                                  | Required.           |
 
 ## JSON configuration
-
 
 Here is the task configuration for a JSON JQ Transform task.
 
@@ -54,13 +54,11 @@ Here is the task configuration for a JSON JQ Transform task.
 
 The JSON JQ Transform task will return the following parameters.
 
-| Name             | Type         | Description                                                   |
-| ---------------- | ------------ | ------------------------------------------------------------- |
-| result     | List[Map[String, Any]] | The first element of the `resultList` returned by the jq filter.                           |
-| resultList | List[List[Map[String, Any]]] | A list of results returned by the jq filter.                           |
-| error      | String | An optional error message if the jq filter failed. |
-
-
+| Name       | Type                         | Description                                                      |
+| ---------- | ---------------------------- | ---------------------------------------------------------------- |
+| result     | List[Map[String, Any]]       | The first element of the `resultList` returned by the jq filter. |
+| resultList | List[List[Map[String, Any]]] | A list of results returned by the jq filter.                     |
+| error      | String                       | An optional error message if the jq filter failed.               |
 
 ## Examples
 
@@ -77,16 +75,10 @@ In this example, the jq filter expression `key3: (.key1.value1 + .key2.value2)` 
   "type": "JSON_JQ_TRANSFORM",
   "inputParameters": {
     "key1": {
-      "value1": [
-        "a",
-        "b"
-      ]
+      "value1": ["a", "b"]
     },
     "key2": {
-      "value2": [
-        "c",
-        "d"
-      ]
+      "value2": ["c", "d"]
     },
     "queryExpression": "{ key3: (.key1.value1 + .key2.value2) }"
   }
@@ -98,21 +90,11 @@ The above JSON JQ Transform task will provide the following output. In this case
 ```json
 {
   "result": {
-    "key3": [
-      "a",
-      "b",
-      "c",
-      "d"
-    ]
+    "key3": ["a", "b", "c", "d"]
   },
   "resultList": [
     {
-      "key3": [
-        "a",
-        "b",
-        "c",
-        "d"
-      ]
+      "key3": ["a", "b", "c", "d"]
     }
   ]
 }
@@ -122,8 +104,8 @@ The above JSON JQ Transform task will provide the following output. In this case
 
 In this example, the JSON JQ Transform task is used to simplify and extract data from an extremely dense API response. The HTTP task retrieves a list of stargazers (users who have starred a repository) from GitHub, and the response for just one user looks like this:
 
-``` json 
-  
+```json
+
 "body":[
   {
   "starred_at":"2016-12-14T19:55:46Z",
@@ -174,13 +156,13 @@ Since the only data required are the `starred_at` and `login` parameters for use
 }
 ```
 
-In the above task configuration, the API response JSON is stored in the `starlist` parameter.  The `queryExpression` reads the JSON, selects only entries where the `starred_at` value meets the date criteria, and generates output JSON in the following format:
+In the above task configuration, the API response JSON is stored in the `starlist` parameter. The `queryExpression` reads the JSON, selects only entries where the `starred_at` value meets the date criteria, and generates output JSON in the following format:
 
 ```json
 {
   "occurred_at": "date from JSON",
-  "member":{
-    "github" : "github Login from JSON"
+  "member": {
+    "github": "github Login from JSON"
   }
 }
 ```

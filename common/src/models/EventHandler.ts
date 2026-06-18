@@ -53,7 +53,9 @@ export const EventHandlerSchema = z.object({
   name: z.string().min(1, 'Missing event handler name'),
   event: z.string().min(1, 'Missing event location'),
   condition: z.string().optional(),
-  actions: z.array(EventHandlerActionSchema).min(1, 'No actions specified. Please specify at-least one action'),
+  actions: z
+    .array(EventHandlerActionSchema)
+    .min(1, 'No actions specified. Please specify at-least one action'),
   active: z.boolean().default(true),
   evaluatorType: z.string().optional(),
 });

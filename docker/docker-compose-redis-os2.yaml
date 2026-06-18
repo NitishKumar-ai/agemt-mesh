@@ -19,7 +19,7 @@ services:
       - 8000:8080
       - 8127:5000
     healthcheck:
-      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
+      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
       interval: 60s
       timeout: 30s
       retries: 12
@@ -32,10 +32,10 @@ services:
       agentmesh-redis:
         condition: service_healthy
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
   agentmesh-redis:
     image: redis:6.2.3-alpine
@@ -44,7 +44,7 @@ services:
     networks:
       - internal
     healthcheck:
-      test: [ "CMD", "redis-cli","ping" ]
+      test: ['CMD', 'redis-cli', 'ping']
 
   agentmesh-opensearch:
     image: opensearchproject/opensearch:2.18.0
@@ -67,10 +67,10 @@ services:
       timeout: 5s
       retries: 12
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
 volumes:
   osdata2-agentmesh:

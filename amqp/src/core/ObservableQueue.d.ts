@@ -1,5 +1,5 @@
-import { Message } from "./Message";
-import { Observable } from "rxjs";
+import { Message } from './Message';
+import { Observable } from 'rxjs';
 export interface ObservableQueue {
   observe(): Observable<Message>;
   getType(): string;

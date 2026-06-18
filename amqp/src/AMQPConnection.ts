@@ -1,8 +1,8 @@
-import * as amqplib from "amqplib";
+import * as amqplib from 'amqplib';
 
 export enum ConnectionType {
-  PUBLISHER = "PUBLISHER",
-  SUBSCRIBER = "SUBSCRIBER",
+  PUBLISHER = 'PUBLISHER',
+  SUBSCRIBER = 'SUBSCRIBER',
 }
 
 export interface AMQPRetryPattern {
@@ -18,10 +18,7 @@ export class AMQPConnection {
 
   private readonly connectionUrl: string;
 
-  private availableChannelPool = new Map<
-    ConnectionType,
-    Set<amqplib.Channel>
-  >();
+  private availableChannelPool = new Map<ConnectionType, Set<amqplib.Channel>>();
   private subscriberReservedChannelPool = new Map<string, amqplib.Channel>();
 
   private constructor(connectionUrl: string) {
@@ -43,9 +40,7 @@ export class AMQPConnection {
     AMQPConnection.instance = amqpConnection;
   }
 
-  private async createConnection(
-    connectionPrefix: string,
-  ): Promise<amqplib.ChannelModel> {
+  private async createConnection(connectionPrefix: string): Promise<amqplib.ChannelModel> {
     let retryIndex = 1;
     while (true) {
       try {
@@ -53,11 +48,11 @@ export class AMQPConnection {
           clientProperties: { connection_name: connectionPrefix },
         });
 
-        connection.on("error", (err) => {
+        connection.on('error', (err) => {
           console.error(`Connection error for ${connectionPrefix}:`, err);
         });
 
-        connection.on("close", () => {
+        connection.on('close', () => {
           console.error(`Connection closed for ${connectionPrefix}`);
         });
 
@@ -69,9 +64,7 @@ export class AMQPConnection {
         try {
           AMQPConnection.retrySettings.continueOrPropagate(e, retryIndex);
         } catch (ex) {
-          throw new Error(
-            `Retries completed. Failed to open connection: ${e.message}`,
-          );
+          throw new Error(`Retries completed. Failed to open connection: ${e.message}`);
         }
         retryIndex++;
       }
@@ -91,21 +84,14 @@ export class AMQPConnection {
         return locChn;
       }
       if (!this.subscriberConnection) {
-        this.subscriberConnection = await this.createConnection(
-          ConnectionType.SUBSCRIBER,
-        );
+        this.subscriberConnection = await this.createConnection(ConnectionType.SUBSCRIBER);
       }
-      const subChn = await this.borrowChannel(
-        connectionType,
-        this.subscriberConnection,
-      );
+      const subChn = await this.borrowChannel(connectionType, this.subscriberConnection);
       this.subscriberReservedChannelPool.set(subChnName, subChn);
       return subChn;
     } else {
       if (!this.publisherConnection) {
-        this.publisherConnection = await this.createConnection(
-          ConnectionType.PUBLISHER,
-        );
+        this.publisherConnection = await this.createConnection(ConnectionType.PUBLISHER);
       }
       return await this.borrowChannel(connectionType, this.publisherConnection);
     }
@@ -119,10 +105,10 @@ export class AMQPConnection {
     while (true) {
       try {
         const locChn = await rmqConnection.createChannel();
-        locChn.on("close", () => {
+        locChn.on('close', () => {
           console.error(`${connType} Channel has been closed`);
         });
-        locChn.on("error", (err) => {
+        locChn.on('error', (err) => {
           console.error(`${connType} Channel has error:`, err);
         });
         return locChn;
@@ -133,9 +119,7 @@ export class AMQPConnection {
         try {
           AMQPConnection.retrySettings.continueOrPropagate(e, retryIndex);
         } catch (ex) {
-          throw new Error(
-            `Retries completed. Cannot open ${connType} channel: ${e.message}`,
-          );
+          throw new Error(`Retries completed. Cannot open ${connType} channel: ${e.message}`);
         }
         retryIndex++;
       }
@@ -177,7 +161,7 @@ export class AMQPConnection {
   }
 
   public async close(): Promise<void> {
-    console.log("Closing all connections and channels");
+    console.log('Closing all connections and channels');
     this.availableChannelPool.clear();
     this.subscriberReservedChannelPool.clear();
 
@@ -185,14 +169,14 @@ export class AMQPConnection {
       try {
         await this.publisherConnection.close();
       } catch (e) {
-        console.warn("Failed to close publisher connection", e);
+        console.warn('Failed to close publisher connection', e);
       }
     }
     if (this.subscriberConnection) {
       try {
         await this.subscriberConnection.close();
       } catch (e) {
-        console.warn("Failed to close subscriber connection", e);
+        console.warn('Failed to close subscriber connection', e);
       }
     }
     this.publisherConnection = null;

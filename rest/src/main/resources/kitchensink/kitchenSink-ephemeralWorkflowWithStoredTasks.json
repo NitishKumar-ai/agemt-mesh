@@ -121,10 +121,7 @@
               "name": "join",
               "taskReferenceName": "join2",
               "type": "JOIN",
-              "joinOn": [
-                "wf3",
-                "wf4"
-              ]
+              "joinOn": ["wf3", "wf4"]
             }
           ]
         }

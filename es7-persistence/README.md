@@ -7,12 +7,12 @@ If you need Elasticsearch 8.x, use the `es8-persistence` module instead.
 ### ES Breaking changes
 
 From ES6 to ES7 there were significant breaking changes which affected ES7-persistence module implementation.
-* Mapping type deprecation
-* Templates API
-* TransportClient deprecation
+
+- Mapping type deprecation
+- Templates API
+- TransportClient deprecation
 
 More information can be found here: https://www.elastic.co/guide/en/elasticsearch/reference/current/breaking-changes-7.0.html
-
 
 ## Build
 
@@ -22,24 +22,22 @@ https://github.com/agentmesh-oss/agentmesh/blob/main/build.gradle
 https://github.com/agentmesh-oss/agentmesh/blob/main/server/src/main/resources/application.properties
 
 In file:
- 
+
 - /build.gradle
 
 change ext['elasticsearch.version'] from revElasticSearch6 to revElasticSearch7
 
-
 In file:
- 
+
 - /server/src/main/resources/application.properties
 
 change agentmesh.elasticsearch.version from 6 to 7
 
-Also you need to recreate dependencies.lock files with ES7 dependencies. To do that delete all dependencies.lock files and then run: 
+Also you need to recreate dependencies.lock files with ES7 dependencies. To do that delete all dependencies.lock files and then run:
 
 ```
 ./gradlew generateLock updateLock saveLock
 ```
-
 
 2. To use the ES7 for all modules include test-harness, you must change also the following files:
 
@@ -47,31 +45,31 @@ https://github.com/agentmesh-oss/agentmesh/blob/main/test-harness/build.gradle
 https://github.com/agentmesh-oss/agentmesh/blob/main/test-harness/src/test/java/com/agentmesh/agentmesh/test/integration/AbstractEndToEndTest.java
 
 In file:
- 
+
 - /test-harness/build.gradle
 
 * change module inclusion from 'es6-persistence' to 'es7-persistence'
 
 In file:
- 
+
 - /test-harness/src/test/java/com/agentmesh/agentmesh/test/integration/AbstractEndToEndTest.java
 
 * change agentmesh.elasticsearch.version from 6 to 7
 * change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.6.2")
 
-
-
 ### Configuration
+
 (Default values shown below)
 
 This module uses the following configuration options:
+
 ```properties
 # A comma separated list of schema/host/port of the ES nodes to communicate with.
 # Schema can be `http` or `https`. If schema is ignored then `http` transport will be used;
 # Since ES deprecated TransportClient, agentmesh will use only the  REST transport protocol.
 agentmesh.elasticsearch.url=
 
-#The name of the workflow and task index. 
+#The name of the workflow and task index.
 agentmesh.elasticsearch.indexPrefix=agentmesh
 
 #Worker Queue size used in executor service for async methods in IndexDao.
@@ -84,13 +82,15 @@ agentmesh.elasticsearch.asyncMaxPoolSize=12
 agentmesh.elasticsearch.asyncBufferFlushTimeout=10
 ```
 
-
 ### BASIC Authentication
+
 If you need to pass user/password to connect to ES, add the following properties to your config file
-* agentmesh.elasticsearch.username
-* agentmesh.elasticsearch.password
+
+- agentmesh.elasticsearch.username
+- agentmesh.elasticsearch.password
 
 Example
+
 ```
 agentmesh.elasticsearch.username=someusername
 agentmesh.elasticsearch.password=somepassword

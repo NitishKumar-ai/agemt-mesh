@@ -49,8 +49,12 @@ export class ProtoGenTask {
 function main(): void {
   const args = process.argv.slice(2);
   if (args.length < 8) {
-    console.error('Usage: protogen <protoPackage> <javaPackage> <goPackage> <protosDir> <mapperDir> <mapperPackage> <sourceModules...>');
-    console.error('  sourceModules: space-separated list of JS/TS module paths to scan for decorated classes');
+    console.error(
+      'Usage: protogen <protoPackage> <javaPackage> <goPackage> <protosDir> <mapperDir> <mapperPackage> <sourceModules...>',
+    );
+    console.error(
+      '  sourceModules: space-separated list of JS/TS module paths to scan for decorated classes',
+    );
     process.exit(1);
   }
 

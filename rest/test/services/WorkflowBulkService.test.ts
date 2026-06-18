@@ -3,7 +3,11 @@ import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
 import { InitialSchemaMigration } from '@agentmesh/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
+import {
+  SqliteExecutionDAO,
+  SqliteMetadataDAO,
+  SqliteQueueDAO,
+} from '@agentmesh/sqlite-persistence';
 import { WorkflowService } from '../../src/services/WorkflowService.js';
 import { WorkflowBulkService } from '../../src/services/WorkflowBulkService.js';
 

@@ -40,7 +40,7 @@ export const fontWeights = {
 
 export const fontFamily = {
   fontFamilySans:
-    '"Lexend", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+    '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   fontFamilyMono: "monospace",
 };
 

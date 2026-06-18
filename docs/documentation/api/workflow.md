@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh Workflow API — manage workflow executions including pause, resume, retry, restart, rerun, terminate, search, and test workflows via REST."
+description: 'AgentMesh Workflow API — manage workflow executions including pause, resume, retry, restart, rerun, terminate, search, and test workflows via REST.'
 ---
 
 # Workflow API
@@ -10,13 +10,13 @@ For starting workflows, see [Start Workflow API](startworkflow.md).
 
 ## Retrieve Workflows
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/{workflowId}` | `GET` | Get workflow execution by ID |
-| `/{workflowId}/tasks` | `GET` | Get tasks for a workflow execution (paginated) |
-| `/running/{name}` | `GET` | Get running workflow IDs by type |
-| `/{name}/correlated/{correlationId}` | `GET` | Get workflows by correlation ID |
-| `/{name}/correlated` | `POST` | Get workflows for multiple correlation IDs |
+| Endpoint                             | Method | Description                                    |
+| ------------------------------------ | ------ | ---------------------------------------------- |
+| `/{workflowId}`                      | `GET`  | Get workflow execution by ID                   |
+| `/{workflowId}/tasks`                | `GET`  | Get tasks for a workflow execution (paginated) |
+| `/running/{name}`                    | `GET`  | Get running workflow IDs by type               |
+| `/{name}/correlated/{correlationId}` | `GET`  | Get workflows by correlation ID                |
+| `/{name}/correlated`                 | `POST` | Get workflows for multiple correlation IDs     |
 
 ### Get Workflow by ID
 
@@ -24,10 +24,10 @@ For starting workflows, see [Start Workflow API](startworkflow.md).
 GET /api/workflow/{workflowId}?includeTasks=true
 ```
 
-| Parameter | Description | Default |
-|---|---|---|
-| `workflowId` | Workflow execution ID | — |
-| `includeTasks` | Include task details in response | `true` |
+| Parameter      | Description                      | Default |
+| -------------- | -------------------------------- | ------- |
+| `workflowId`   | Workflow execution ID            | —       |
+| `includeTasks` | Include task details in response | `true`  |
 
 ```shell
 curl 'http://localhost:8080/api/workflow/3a5b8c2d-1234-5678-9abc-def012345678'
@@ -43,15 +43,15 @@ curl 'http://localhost:8080/api/workflow/3a5b8c2d-1234-5678-9abc-def012345678'
   "status": "COMPLETED",
   "startTime": 1700000000000,
   "endTime": 1700000005000,
-  "input": {"orderId": "ORD-123"},
-  "output": {"paymentId": "PAY-456"},
+  "input": { "orderId": "ORD-123" },
+  "output": { "paymentId": "PAY-456" },
   "tasks": [
     {
       "taskId": "task-uuid",
       "taskType": "HTTP",
       "referenceTaskName": "validate",
       "status": "COMPLETED",
-      "outputData": {"response": {"statusCode": 200}}
+      "outputData": { "response": { "statusCode": 200 } }
     }
   ],
   "correlationId": "order-123"
@@ -66,11 +66,11 @@ GET /api/workflow/{workflowId}/tasks?start=0&count=15&status=
 
 Returns a paginated list of tasks for a workflow execution.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `start` | Page offset | `0` |
-| `count` | Number of results | `15` |
-| `status` | Filter by task status (can specify multiple) | All statuses |
+| Parameter | Description                                  | Default      |
+| --------- | -------------------------------------------- | ------------ |
+| `start`   | Page offset                                  | `0`          |
+| `count`   | Number of results                            | `15`         |
+| `status`  | Filter by task status (can specify multiple) | All statuses |
 
 ```shell
 # Get first 10 tasks
@@ -104,12 +104,12 @@ GET /api/workflow/running/{name}?version=1&startTime=&endTime=
 
 Returns a list of workflow IDs for running workflows of the given type.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `name` | Workflow name | — |
-| `version` | Workflow version | `1` |
-| `startTime` | Filter by start time (epoch ms) | — |
-| `endTime` | Filter by end time (epoch ms) | — |
+| Parameter   | Description                     | Default |
+| ----------- | ------------------------------- | ------- |
+| `name`      | Workflow name                   | —       |
+| `version`   | Workflow version                | `1`     |
+| `startTime` | Filter by start time (epoch ms) | —       |
+| `endTime`   | Filter by end time (epoch ms)   | —       |
 
 ```shell
 curl 'http://localhost:8080/api/workflow/running/order_processing?version=1'
@@ -127,10 +127,10 @@ curl 'http://localhost:8080/api/workflow/running/order_processing?version=1'
 GET /api/workflow/{name}/correlated/{correlationId}?includeClosed=false&includeTasks=false
 ```
 
-| Parameter | Description | Default |
-|---|---|---|
+| Parameter       | Description                            | Default |
+| --------------- | -------------------------------------- | ------- |
 | `includeClosed` | Include completed/terminated workflows | `false` |
-| `includeTasks` | Include task details | `false` |
+| `includeTasks`  | Include task details                   | `false` |
 
 ```shell
 curl 'http://localhost:8080/api/workflow/order_processing/correlated/order-123?includeClosed=true'
@@ -154,19 +154,19 @@ curl -X POST 'http://localhost:8080/api/workflow/order_processing/correlated?inc
 
 ## Manage Workflows
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/{workflowId}/pause` | `PUT` | Pause a workflow |
-| `/{workflowId}/resume` | `PUT` | Resume a paused workflow |
-| `/{workflowId}/restart` | `POST` | Restart a completed workflow from the beginning |
-| `/{workflowId}/retry` | `POST` | Retry the last failed task |
-| `/{workflowId}/rerun` | `POST` | Rerun from a specific task |
-| `/{workflowId}/skiptask/{taskReferenceName}` | `PUT` | Skip a task in a running workflow |
-| `/{workflowId}/resetcallbacks` | `POST` | Reset callback times for SIMPLE tasks |
-| `/decide/{workflowId}` | `PUT` | Trigger the decider for a workflow |
-| `/{workflowId}` | `DELETE` | Terminate a running workflow |
-| `/{workflowId}/remove` | `DELETE` | Remove a workflow from the system |
-| `/{workflowId}/terminate-remove` | `DELETE` | Terminate and remove in one call |
+| Endpoint                                     | Method   | Description                                     |
+| -------------------------------------------- | -------- | ----------------------------------------------- |
+| `/{workflowId}/pause`                        | `PUT`    | Pause a workflow                                |
+| `/{workflowId}/resume`                       | `PUT`    | Resume a paused workflow                        |
+| `/{workflowId}/restart`                      | `POST`   | Restart a completed workflow from the beginning |
+| `/{workflowId}/retry`                        | `POST`   | Retry the last failed task                      |
+| `/{workflowId}/rerun`                        | `POST`   | Rerun from a specific task                      |
+| `/{workflowId}/skiptask/{taskReferenceName}` | `PUT`    | Skip a task in a running workflow               |
+| `/{workflowId}/resetcallbacks`               | `POST`   | Reset callback times for SIMPLE tasks           |
+| `/decide/{workflowId}`                       | `PUT`    | Trigger the decider for a workflow              |
+| `/{workflowId}`                              | `DELETE` | Terminate a running workflow                    |
+| `/{workflowId}/remove`                       | `DELETE` | Remove a workflow from the system               |
+| `/{workflowId}/terminate-remove`             | `DELETE` | Terminate and remove in one call                |
 
 ### Pause
 
@@ -198,8 +198,8 @@ POST /api/workflow/{workflowId}/restart?useLatestDefinitions=false
 
 Restarts a completed workflow from the beginning. Current execution history is wiped out.
 
-| Parameter | Description | Default |
-|---|---|---|
+| Parameter              | Description                              | Default |
+| ---------------------- | ---------------------------------------- | ------- |
 | `useLatestDefinitions` | Use latest workflow and task definitions | `false` |
 
 ```shell
@@ -214,8 +214,8 @@ POST /api/workflow/{workflowId}/retry?resumeSubworkflowTasks=false
 
 Retries the last failed task in the workflow.
 
-| Parameter | Description | Default |
-|---|---|---|
+| Parameter                | Description                           | Default |
+| ------------------------ | ------------------------------------- | ------- |
 | `resumeSubworkflowTasks` | Also resume failed sub-workflow tasks | `false` |
 
 ```shell
@@ -280,9 +280,9 @@ Manually triggers the decider for a workflow. The decider evaluates workflow sta
 DELETE /api/workflow/{workflowId}?reason=
 ```
 
-| Parameter | Description | Required |
-|---|---|---|
-| `reason` | Reason for termination | No |
+| Parameter | Description            | Required |
+| --------- | ---------------------- | -------- |
+| `reason`  | Reason for termination | No       |
 
 ```shell
 curl -X DELETE 'http://localhost:8080/api/workflow/3a5b8c2d...?reason=cancelled+by+user'
@@ -294,12 +294,12 @@ curl -X DELETE 'http://localhost:8080/api/workflow/3a5b8c2d...?reason=cancelled+
 DELETE /api/workflow/{workflowId}/remove?archiveWorkflow=true
 ```
 
-| Parameter | Description | Default |
-|---|---|---|
-| `archiveWorkflow` | Archive before removing | `true` |
+| Parameter         | Description             | Default |
+| ----------------- | ----------------------- | ------- |
+| `archiveWorkflow` | Archive before removing | `true`  |
 
 !!! warning
-    This permanently removes the workflow execution data. Use with caution.
+This permanently removes the workflow execution data. Use with caution.
 
 ### Terminate and Remove
 
@@ -315,13 +315,13 @@ Terminates a running workflow and removes it from the system in one call.
 
 All search endpoints support the same query parameters:
 
-| Parameter | Description | Default |
-|---|---|---|
-| `start` | Page offset | `0` |
-| `size` | Number of results | `100` |
-| `sort` | Sort order: `<field>:ASC` or `<field>:DESC` | — |
-| `freeText` | Full-text search query | `*` |
-| `query` | SQL-like where clause | — |
+| Parameter  | Description                                 | Default |
+| ---------- | ------------------------------------------- | ------- |
+| `start`    | Page offset                                 | `0`     |
+| `size`     | Number of results                           | `100`   |
+| `sort`     | Sort order: `<field>:ASC` or `<field>:DESC` | —       |
+| `freeText` | Full-text search query                      | `*`     |
+| `query`    | SQL-like where clause                       | —       |
 
 ### Search (Summary)
 
@@ -388,19 +388,19 @@ Returns `SearchResult<Workflow>` with full workflow objects.
 
 The `query` parameter supports SQL-like expressions:
 
-| Example | Description |
-|---|---|
-| `workflowType = 'order_processing'` | Filter by workflow type |
-| `status = 'FAILED'` | Filter by status |
-| `startTime > 1700000000000` | Filter by start time (epoch ms) |
-| `workflowType = 'order_processing' AND status = 'COMPLETED'` | Combine conditions |
+| Example                                                      | Description                     |
+| ------------------------------------------------------------ | ------------------------------- |
+| `workflowType = 'order_processing'`                          | Filter by workflow type         |
+| `status = 'FAILED'`                                          | Filter by status                |
+| `startTime > 1700000000000`                                  | Filter by start time (epoch ms) |
+| `workflowType = 'order_processing' AND status = 'COMPLETED'` | Combine conditions              |
 
 The `freeText` parameter supports Elasticsearch query syntax:
 
-| Example | Description |
-|---|---|
+| Example                           | Description         |
+| --------------------------------- | ------------------- |
 | `workflowType:"order_processing"` | Match workflow type |
-| `order-123` | Match any field |
+| `order-123`                       | Match any field     |
 
 ---
 

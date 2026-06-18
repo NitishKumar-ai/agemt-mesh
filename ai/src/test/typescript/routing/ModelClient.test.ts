@@ -15,10 +15,10 @@ describe('ModelClient', () => {
     } as LLMWorkerInput & { routingHint: string };
 
     const model = client.route(input);
-    
+
     expect(mockProvider.getModel).toHaveBeenCalled();
     const calledWith = vi.mocked(mockProvider.getModel).mock.calls[0][0];
-    
+
     expect(calledWith.llmProvider).toBe('gemini');
     expect((calledWith as any).model).toBe('gemini-2.5-flash');
     expect(model.getModelProvider()).toBe('gemini');
@@ -35,10 +35,10 @@ describe('ModelClient', () => {
     } as LLMWorkerInput & { routingHint: string };
 
     const model = client.route(input);
-    
+
     expect(mockProvider.getModel).toHaveBeenCalled();
     const calledWith = vi.mocked(mockProvider.getModel).mock.calls[0][0];
-    
+
     expect(calledWith.llmProvider).toBe('anthropic');
     expect((calledWith as any).model).toBe('claude-3-7-sonnet-20250219');
     expect(model.getModelProvider()).toBe('anthropic');
@@ -55,10 +55,10 @@ describe('ModelClient', () => {
     } as LLMWorkerInput;
 
     const model = client.route(input);
-    
+
     expect(mockProvider.getModel).toHaveBeenCalled();
     const calledWith = vi.mocked(mockProvider.getModel).mock.calls[0][0];
-    
+
     expect(calledWith.llmProvider).toBe('custom');
     expect(model.getModelProvider()).toBe('custom');
   });

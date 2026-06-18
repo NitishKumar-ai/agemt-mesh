@@ -1,9 +1,9 @@
-
 # AgentMesh Docker Builds
 
 ## Pre-built docker images
 
 AgentMesh server with support for the following backend:
+
 1. Redis
 2. Postgres
 3. Mysql
@@ -14,22 +14,22 @@ AgentMesh server with support for the following backend:
 [Docker Image Source for Server with UI](server/Dockerfile)
 
 ### Configuration Guide for AgentMesh Server
+
 AgentMesh uses a persistent store for managing state.  
 The choice of backend is quite flexible and can be configured at runtime using `agentmesh.db.type` property.
 
 Refer to the table below for various supported backend and required configurations to enable each of them.
 
 > [!IMPORTANT]
-> 
+>
 > See [config.properties](docker/server/config/config.properties) for the required properties for each of the backends.
 >
-> | Backend    | Property                           |
-> |------------|------------------------------------|
-> | postgres   | agentmesh.db.type=postgres         |
-> | redis      | agentmesh.db.type=redis_standalone |
-> | mysql      | agentmesh.db.type=mysql            |
-> | cassandra  | agentmesh.db.type=cassandra        |    
->
+> | Backend   | Property                           |
+> | --------- | ---------------------------------- |
+> | postgres  | agentmesh.db.type=postgres         |
+> | redis     | agentmesh.db.type=redis_standalone |
+> | mysql     | agentmesh.db.type=mysql            |
+> | cassandra | agentmesh.db.type=cassandra        |
 
 AgentMesh is using Elasticsearch or OpenSearch for indexing the workflow data.
 Currently, Elasticsearch 7 and OpenSearch 2.x/3.x are supported.
@@ -39,19 +39,21 @@ We welcome community contributions for other indexing backends.
 **Note:** Docker images use Elasticsearch 7 by default. Elasticsearch 6 and OpenSearch 1.x are deprecated.
 
 ## Helm Charts
+
 TODO: Link to the helm charts
 
 ## Run Docker Compose Locally
+
 ### Use the docker-compose to bring up the local agentmesh server.
 
-| Docker Compose                                               | Description                |
-|--------------------------------------------------------------|----------------------------|
-| [docker-compose.yaml](docker-compose.yaml)                   | Redis + Elasticsearch 7    |
-| [docker-compose-postgres.yaml](docker-compose-postgres.yaml) | Postgres + Elasticsearch 7 |
-| [docker-compose-mysql.yaml](docker-compose-mysql.yaml)    | Mysql + Elasticsearch 7    |
-| [docker-compose-redis-os.yaml](docker-compose-redis-os.yaml) | Redis + OpenSearch 2.x (legacy - use os2) |
-| [docker-compose-redis-os2.yaml](docker-compose-redis-os2.yaml) | Redis + OpenSearch 2.x    |
-| [docker-compose-redis-os3.yaml](docker-compose-redis-os3.yaml) | Redis + OpenSearch 3.x    |
+| Docker Compose                                                 | Description                               |
+| -------------------------------------------------------------- | ----------------------------------------- |
+| [docker-compose.yaml](docker-compose.yaml)                     | Redis + Elasticsearch 7                   |
+| [docker-compose-postgres.yaml](docker-compose-postgres.yaml)   | Postgres + Elasticsearch 7                |
+| [docker-compose-mysql.yaml](docker-compose-mysql.yaml)         | Mysql + Elasticsearch 7                   |
+| [docker-compose-redis-os.yaml](docker-compose-redis-os.yaml)   | Redis + OpenSearch 2.x (legacy - use os2) |
+| [docker-compose-redis-os2.yaml](docker-compose-redis-os2.yaml) | Redis + OpenSearch 2.x                    |
+| [docker-compose-redis-os3.yaml](docker-compose-redis-os3.yaml) | Redis + OpenSearch 3.x                    |
 
 ### Network errors during UI build with yarn
 

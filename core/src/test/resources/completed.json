@@ -539,12 +539,8 @@
       "outputData": {
         "response": {
           "headers": {
-            "Content-Length": [
-              "121"
-            ],
-            "Content-Type": [
-              "application/json; charset=UTF-8"
-            ]
+            "Content-Length": ["121"],
+            "Content-Type": ["application/json; charset=UTF-8"]
           },
           "reasonPhrase": "OK",
           "body": {
@@ -609,9 +605,7 @@
       "taskId": "5c2d843a-8320-4b6c-9765-e91bff433dba",
       "callbackAfterSeconds": 0,
       "outputData": {
-        "caseOutput": [
-          "1"
-        ]
+        "caseOutput": ["1"]
       },
       "workflowTask": {
         "name": "oddEvenDecision",
@@ -1695,9 +1689,7 @@
       "taskId": "597b18b6-6d99-4356-b205-dbe532fc7983",
       "callbackAfterSeconds": 0,
       "outputData": {
-        "caseOutput": [
-          "5"
-        ]
+        "caseOutput": ["5"]
       },
       "workflowTask": {
         "name": "modDecision",

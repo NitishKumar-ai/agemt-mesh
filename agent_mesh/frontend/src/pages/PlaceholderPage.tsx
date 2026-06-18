@@ -1,10 +1,10 @@
-import type { ComponentType } from "react";
+import type { ComponentType } from 'react';
 
 export function PlaceholderPage({
   icon: Icon,
   eyebrow,
   title,
-  description
+  description,
 }: {
   icon: ComponentType<{ size?: number }>;
   eyebrow: string;
@@ -13,7 +13,9 @@ export function PlaceholderPage({
 }) {
   return (
     <div className="placeholder-page">
-      <div className="placeholder-icon"><Icon size={28} /></div>
+      <div className="placeholder-icon">
+        <Icon size={28} />
+      </div>
       <span>{eyebrow}</span>
       <h1>{title}</h1>
       <p>{description}</p>

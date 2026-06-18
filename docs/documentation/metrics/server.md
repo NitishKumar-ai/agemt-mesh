@@ -1,38 +1,37 @@
 ---
-description: "Server Metrics — monitor AgentMesh server health and performance using Micrometer-based metrics and alerting."
+description: 'Server Metrics — monitor AgentMesh server health and performance using Micrometer-based metrics and alerting.'
 ---
+
 # Server Metrics
 
 !!! Info "Feature Update"
-    Since [v3.21.16](https://github.com/agentmesh-oss/agentmesh/releases/tag/v3.21.16), AgentMesh has switched to [Micrometer](https://micrometer.io/) for metrics collection.
+Since [v3.21.16](https://github.com/agentmesh-oss/agentmesh/releases/tag/v3.21.16), AgentMesh has switched to [Micrometer](https://micrometer.io/) for metrics collection.
 
-
-AgentMesh uses [Micrometer](https://micrometer.io/) for metrics collection and export. 
+AgentMesh uses [Micrometer](https://micrometer.io/) for metrics collection and export.
 
 The following metrics are published by the AgentMesh server. You can export these metrics to set up alerts for your workflows and tasks.
 
-| Metric Name          | Description       | Tags  |
-| ------------- |:----------------- | ----- |
-| workflow_server_error | The rate at which server-side errors are occurring.  | methodName|
-| workflow_failure | The number of failed workflows.                           |workflowName, status|
-| workflow_start_error | The number of workflows that fail to start.           |workflowName|
-| workflow_running | The number of running workflows.                          | workflowName, version|
-| workflow_execution | The time taken for workflow completion.                 | workflowName, ownerApp |
-| task_queue_wait | The amount of time spent by a task in queue.               | taskType |
-| task_execution | The time taken to execute a task.                           | taskType, includeRetries, status |
-| task_poll | The time taken to poll for a task.                               | taskType|
-| task_poll_count | The number of times the task is being polled.              | taskType, domain |
-| task_queue_depth | The queue depth for pending tasks.                        | taskType, ownerApp |
-| task_rate_limited | The current number of tasks that are being rate limited. | taskType |
-| task_concurrent_execution_limited | The current number of tasks that are being limited by its concurrent execution limit. | taskType |
-| task_timeout | The number of timed-out tasks. | taskType |
-| task_response_timeout | The number of tasks that timed out due to `responseTimeout`. | taskType |
-| task_update_conflict | The number of task update conflicts. <br/><br/> For example, a worker updates the task status even though the workflow is already in a terminal state. | workflowName, taskType, taskStatus, workflowStatus |
-| event_queue_messages_processed | The number of messages fetched from an event queue. | queueType, queueName |
-| observable_queue_error | The number of errors encountered when fetching messages from an event queue. | queueType |
-| event_queue_messages_handled | The number of messages executed from an event queue. | queueType, queueName |
-| external_payload_storage_usage | The number of times an external payload storage was used. | name, operation, payloadType |
-
+| Metric Name                       | Description                                                                                                                                            | Tags                                               |
+| --------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| workflow_server_error             | The rate at which server-side errors are occurring.                                                                                                    | methodName                                         |
+| workflow_failure                  | The number of failed workflows.                                                                                                                        | workflowName, status                               |
+| workflow_start_error              | The number of workflows that fail to start.                                                                                                            | workflowName                                       |
+| workflow_running                  | The number of running workflows.                                                                                                                       | workflowName, version                              |
+| workflow_execution                | The time taken for workflow completion.                                                                                                                | workflowName, ownerApp                             |
+| task_queue_wait                   | The amount of time spent by a task in queue.                                                                                                           | taskType                                           |
+| task_execution                    | The time taken to execute a task.                                                                                                                      | taskType, includeRetries, status                   |
+| task_poll                         | The time taken to poll for a task.                                                                                                                     | taskType                                           |
+| task_poll_count                   | The number of times the task is being polled.                                                                                                          | taskType, domain                                   |
+| task_queue_depth                  | The queue depth for pending tasks.                                                                                                                     | taskType, ownerApp                                 |
+| task_rate_limited                 | The current number of tasks that are being rate limited.                                                                                               | taskType                                           |
+| task_concurrent_execution_limited | The current number of tasks that are being limited by its concurrent execution limit.                                                                  | taskType                                           |
+| task_timeout                      | The number of timed-out tasks.                                                                                                                         | taskType                                           |
+| task_response_timeout             | The number of tasks that timed out due to `responseTimeout`.                                                                                           | taskType                                           |
+| task_update_conflict              | The number of task update conflicts. <br/><br/> For example, a worker updates the task status even though the workflow is already in a terminal state. | workflowName, taskType, taskStatus, workflowStatus |
+| event_queue_messages_processed    | The number of messages fetched from an event queue.                                                                                                    | queueType, queueName                               |
+| observable_queue_error            | The number of errors encountered when fetching messages from an event queue.                                                                           | queueType                                          |
+| event_queue_messages_handled      | The number of messages executed from an event queue.                                                                                                   | queueType, queueName                               |
+| external_payload_storage_usage    | The number of times an external payload storage was used.                                                                                              | name, operation, payloadType                       |
 
 ## Supported monitoring systems
 

@@ -18,12 +18,12 @@ JDBC instances are configured using a list-based approach under `agentmesh.jdbc.
 agentmesh:
   jdbc:
     instances:
-      - name: "instance-name"        # Unique identifier for this instance
-        connection:                   # Connection configuration
-          datasourceURL: "jdbc:..."   # JDBC connection URL
-          jdbcDriver: "..."           # JDBC driver class (optional, auto-detected from URL)
-          user: "..."                 # Database username
-          password: "..."             # Database password
+      - name: 'instance-name' # Unique identifier for this instance
+        connection: # Connection configuration
+          datasourceURL: 'jdbc:...' # JDBC connection URL
+          jdbcDriver: '...' # JDBC driver class (optional, auto-detected from URL)
+          user: '...' # Database username
+          password: '...' # Database password
           # ... pool settings
 ```
 
@@ -35,12 +35,12 @@ agentmesh:
 agentmesh:
   jdbc:
     instances:
-      - name: "mysql-prod"
+      - name: 'mysql-prod'
         connection:
-          datasourceURL: "jdbc:mysql://prod-db:3306/myapp"
-          jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "agentmesh"
-          password: "secret"
+          datasourceURL: 'jdbc:mysql://prod-db:3306/myapp'
+          jdbcDriver: 'com.mysql.cj.jdbc.Driver'
+          user: 'agentmesh'
+          password: 'secret'
           maximumPoolSize: 20
           minimumIdle: 5
 ```
@@ -51,27 +51,27 @@ agentmesh:
 agentmesh:
   jdbc:
     instances:
-      - name: "mysql-prod"
+      - name: 'mysql-prod'
         connection:
-          datasourceURL: "jdbc:mysql://prod-db:3306/myapp"
-          jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "agentmesh"
-          password: "prod-secret"
+          datasourceURL: 'jdbc:mysql://prod-db:3306/myapp'
+          jdbcDriver: 'com.mysql.cj.jdbc.Driver'
+          user: 'agentmesh'
+          password: 'prod-secret'
           maximumPoolSize: 20
 
-      - name: "postgres-analytics"
+      - name: 'postgres-analytics'
         connection:
-          datasourceURL: "jdbc:postgresql://analytics-db:5432/warehouse"
-          user: "analyst"
-          password: "analytics-secret"
+          datasourceURL: 'jdbc:postgresql://analytics-db:5432/warehouse'
+          user: 'analyst'
+          password: 'analytics-secret'
           maximumPoolSize: 10
 
-      - name: "mysql-staging"
+      - name: 'mysql-staging'
         connection:
-          datasourceURL: "jdbc:mysql://staging-db:3306/myapp"
-          jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "agentmesh"
-          password: "staging-secret"
+          datasourceURL: 'jdbc:mysql://staging-db:3306/myapp'
+          jdbcDriver: 'com.mysql.cj.jdbc.Driver'
+          user: 'agentmesh'
+          password: 'staging-secret'
           maximumPoolSize: 5
           minimumIdle: 1
 ```
@@ -111,11 +111,12 @@ When using the JDBC task in your workflows, reference the instance by its config
 ```
 
 Output:
+
 ```json
 {
   "result": [
-    {"order_id": 101, "total": 49.99},
-    {"order_id": 205, "total": 129.50}
+    { "order_id": 101, "total": 49.99 },
+    { "order_id": 205, "total": 129.5 }
   ]
 }
 ```
@@ -138,6 +139,7 @@ Output:
 ```
 
 Output:
+
 ```json
 {
   "update_count": 1
@@ -148,18 +150,18 @@ If the actual update count does not match `expectedUpdateCount`, the transaction
 
 ## Connection Configuration Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `datasourceURL` | String | Required | JDBC connection URL |
-| `jdbcDriver` | String | Auto-detected | JDBC driver class name |
-| `user` | String | Optional | Database username |
-| `password` | String | Optional | Database password |
-| `maximumPoolSize` | Integer | 32 | Maximum connections in the pool |
-| `minimumIdle` | Integer | 2 | Minimum idle connections |
-| `idleTimeoutMs` | Long | 30000 | Idle connection timeout (ms) |
-| `connectionTimeout` | Long | 30000 | Connection acquisition timeout (ms) |
-| `leakDetectionThreshold` | Long | 60000 | Leak detection threshold (ms) |
-| `maxLifetime` | Long | 1800000 | Maximum connection lifetime (ms) |
+| Property                 | Type    | Default       | Description                         |
+| ------------------------ | ------- | ------------- | ----------------------------------- |
+| `datasourceURL`          | String  | Required      | JDBC connection URL                 |
+| `jdbcDriver`             | String  | Auto-detected | JDBC driver class name              |
+| `user`                   | String  | Optional      | Database username                   |
+| `password`               | String  | Optional      | Database password                   |
+| `maximumPoolSize`        | Integer | 32            | Maximum connections in the pool     |
+| `minimumIdle`            | Integer | 2             | Minimum idle connections            |
+| `idleTimeoutMs`          | Long    | 30000         | Idle connection timeout (ms)        |
+| `connectionTimeout`      | Long    | 30000         | Connection acquisition timeout (ms) |
+| `leakDetectionThreshold` | Long    | 60000         | Leak detection threshold (ms)       |
+| `maxLifetime`            | Long    | 1800000       | Maximum connection lifetime (ms)    |
 
 ## Migration from Old Configuration
 
@@ -185,35 +187,35 @@ agentmesh.worker.jdbc.postgres.password=pgpass
 agentmesh:
   jdbc:
     instances:
-      - name: "mysql"
+      - name: 'mysql'
         connection:
-          datasourceURL: "jdbc:mysql://localhost:3306/db"
-          jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "root"
-          password: "secret"
+          datasourceURL: 'jdbc:mysql://localhost:3306/db'
+          jdbcDriver: 'com.mysql.cj.jdbc.Driver'
+          user: 'root'
+          password: 'secret'
           maximumPoolSize: 10
 
-      - name: "postgres"
+      - name: 'postgres'
         connection:
-          datasourceURL: "jdbc:postgresql://localhost:5432/db"
-          jdbcDriver: "org.postgresql.Driver"
-          user: "pguser"
-          password: "pgpass"
+          datasourceURL: 'jdbc:postgresql://localhost:5432/db'
+          jdbcDriver: 'org.postgresql.Driver'
+          user: 'pguser'
+          password: 'pgpass'
 ```
 
 **Note:** The old `agentmesh.worker.jdbc.*` format is still supported for backwards compatibility. If no `agentmesh.jdbc.instances` are configured, the system automatically falls back to reading the legacy format. The old and new formats are mutually exclusive -- if new-format instances are found, the legacy format is ignored.
 
 ### Property Name Mapping
 
-| Old Property | New Property |
-|---|---|
-| `connectionURL` | `datasourceURL` |
-| `driverClassName` | `jdbcDriver` |
-| `username` | `user` |
-| `password` | `password` |
+| Old Property        | New Property      |
+| ------------------- | ----------------- |
+| `connectionURL`     | `datasourceURL`   |
+| `driverClassName`   | `jdbcDriver`      |
+| `username`          | `user`            |
+| `password`          | `password`        |
 | `maximum-pool-size` | `maximumPoolSize` |
-| `idle-timeout-ms` | `idleTimeoutMs` |
-| `minimum-idle` | `minimumIdle` |
+| `idle-timeout-ms`   | `idleTimeoutMs`   |
+| `minimum-idle`      | `minimumIdle`     |
 
 ## Best Practices
 

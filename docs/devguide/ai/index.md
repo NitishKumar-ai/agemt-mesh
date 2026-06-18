@@ -6,7 +6,6 @@ description: AI agent orchestration and LLM orchestration with AgentMesh — LLM
 
 AgentMesh is not an AI framework. It is a durable execution engine that provides AI agent orchestration and LLM orchestration by solving the hard infrastructure problems that AI agents create: long-running processes, unreliable external calls, function calling and tool use, human-in-the-loop approval, structured output, and the need to survive failures across any of these steps. AgentMesh makes every agent a durable agent — one that survives crashes, retries, and infrastructure failures without losing progress.
 
-
 ## The problem agents create
 
 An AI agent is a long-running process that:
@@ -18,7 +17,6 @@ An AI agent is a long-running process that:
 5. **Returns structured output** to the caller or another system.
 
 Each of these steps can fail, take minutes to hours, or require intervention. Running this in a single process means any crash loses all progress. Running it in a queue means building your own state machine, retry logic, and observability. AgentMesh provides all of this out of the box.
-
 
 ## How it works
 
@@ -39,27 +37,25 @@ graph LR
 
 Your agent code starts a workflow. AgentMesh schedules each step as a task, persists every input and output to durable storage, and manages retries, timeouts, and pauses. Workers (LLM calls, tool calls, MCP calls) poll for tasks, execute them, and return results. If any worker or the server itself crashes, execution resumes from the last completed step.
 
-
 ## How AgentMesh's primitives map to agent patterns
 
-| Agent pattern | AgentMesh primitive | What happens mechanically |
-|---|---|---|
-| **LLM call** | `LLM_CHAT_COMPLETE` / `LLM_TEXT_COMPLETE` system task | Native LLM task. Configure provider and model as parameters. Retried on failure. Prompt, response, and token usage persisted. Supports built-in tools: web search, code execution, file search, extended thinking. |
-| **Embeddings** | `LLM_GENERATE_EMBEDDINGS` system task | Generate vector embeddings using any configured provider. Output stored and passed to downstream tasks. |
-| **Tool call / function calling** | `CALL_MCP_TOOL` system task, or `SIMPLE` / `HTTP` task | Call tools on any MCP server, or implement custom tool workers. Each call is tracked, retried on failure, and fully auditable. |
-| **Tool discovery** | `LIST_MCP_TOOLS` system task | Discover available tools from an MCP server at runtime. Feed the tool list to an LLM for dynamic tool selection. |
-| **RAG / semantic search** | `LLM_INDEX_TEXT` + `LLM_SEARCH_INDEX` system tasks | Index documents and run semantic search against Pinecone, pgvector, or MongoDB Atlas. No external RAG framework needed. |
-| **Wait for human approval** | `HUMAN` task | Workflow pauses. Remains `IN_PROGRESS` in persistent storage. Resumes when the Task Update API is called with approval/rejection. Survives deploys. |
-| **Wait for external event** | `WAIT` task (time-based) or `HUMAN` task with event handler | Durable pause. Timer or signal resolution survives server restarts. |
-| **Wait for webhook** | `HUMAN` task + webhook endpoint | External system calls the Task Update API with payload. Workflow resumes with that payload as task output. |
-| **Plan/act/observe loop** | `DO_WHILE` operator | Loop until a condition is met. Each iteration is a persisted step. The loop counter and state survive failures. |
-| **Dynamic tool selection** | `DYNAMIC` task or `DYNAMIC_FORK` | The LLM output determines which task(s) to run next. AgentMesh resolves the task type at runtime. |
-| **Multi-agent / sub-agent** | `SUB_WORKFLOW` task | Spawn a child agent as a sub-workflow. Parent waits for completion. Failure in a child can trigger compensation in the parent. Full observability across the entire agent tree. |
-| **Rollback on failure** | `failureWorkflow` + compensation pattern | When an agent fails after taking real-world actions, a failure workflow runs compensating tasks (undo API calls, send notifications, release resources). |
-| **Structured output** | Workflow `outputParameters` | Map task outputs to a structured JSON response using AgentMesh's expression syntax. |
-| **Expose as API** | AgentMesh REST API: `POST /api/workflow/{name}` | Any workflow is callable via HTTP. Start synchronously or asynchronously. Get structured output back. |
-| **Expose as MCP tool** | MCP Gateway integration | Register any workflow as an MCP tool. LLMs and agents invoke it directly via `LIST_MCP_TOOLS` / `CALL_MCP_TOOL` and receive structured output. |
-
+| Agent pattern                    | AgentMesh primitive                                         | What happens mechanically                                                                                                                                                                                          |
+| -------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **LLM call**                     | `LLM_CHAT_COMPLETE` / `LLM_TEXT_COMPLETE` system task       | Native LLM task. Configure provider and model as parameters. Retried on failure. Prompt, response, and token usage persisted. Supports built-in tools: web search, code execution, file search, extended thinking. |
+| **Embeddings**                   | `LLM_GENERATE_EMBEDDINGS` system task                       | Generate vector embeddings using any configured provider. Output stored and passed to downstream tasks.                                                                                                            |
+| **Tool call / function calling** | `CALL_MCP_TOOL` system task, or `SIMPLE` / `HTTP` task      | Call tools on any MCP server, or implement custom tool workers. Each call is tracked, retried on failure, and fully auditable.                                                                                     |
+| **Tool discovery**               | `LIST_MCP_TOOLS` system task                                | Discover available tools from an MCP server at runtime. Feed the tool list to an LLM for dynamic tool selection.                                                                                                   |
+| **RAG / semantic search**        | `LLM_INDEX_TEXT` + `LLM_SEARCH_INDEX` system tasks          | Index documents and run semantic search against Pinecone, pgvector, or MongoDB Atlas. No external RAG framework needed.                                                                                            |
+| **Wait for human approval**      | `HUMAN` task                                                | Workflow pauses. Remains `IN_PROGRESS` in persistent storage. Resumes when the Task Update API is called with approval/rejection. Survives deploys.                                                                |
+| **Wait for external event**      | `WAIT` task (time-based) or `HUMAN` task with event handler | Durable pause. Timer or signal resolution survives server restarts.                                                                                                                                                |
+| **Wait for webhook**             | `HUMAN` task + webhook endpoint                             | External system calls the Task Update API with payload. Workflow resumes with that payload as task output.                                                                                                         |
+| **Plan/act/observe loop**        | `DO_WHILE` operator                                         | Loop until a condition is met. Each iteration is a persisted step. The loop counter and state survive failures.                                                                                                    |
+| **Dynamic tool selection**       | `DYNAMIC` task or `DYNAMIC_FORK`                            | The LLM output determines which task(s) to run next. AgentMesh resolves the task type at runtime.                                                                                                                  |
+| **Multi-agent / sub-agent**      | `SUB_WORKFLOW` task                                         | Spawn a child agent as a sub-workflow. Parent waits for completion. Failure in a child can trigger compensation in the parent. Full observability across the entire agent tree.                                    |
+| **Rollback on failure**          | `failureWorkflow` + compensation pattern                    | When an agent fails after taking real-world actions, a failure workflow runs compensating tasks (undo API calls, send notifications, release resources).                                                           |
+| **Structured output**            | Workflow `outputParameters`                                 | Map task outputs to a structured JSON response using AgentMesh's expression syntax.                                                                                                                                |
+| **Expose as API**                | AgentMesh REST API: `POST /api/workflow/{name}`             | Any workflow is callable via HTTP. Start synchronously or asynchronously. Get structured output back.                                                                                                              |
+| **Expose as MCP tool**           | MCP Gateway integration                                     | Register any workflow as an MCP tool. LLMs and agents invoke it directly via `LIST_MCP_TOOLS` / `CALL_MCP_TOOL` and receive structured output.                                                                     |
 
 ## What you'd have to build without AgentMesh
 
@@ -74,7 +70,6 @@ If you run agents on a framework like LangChain, CrewAI, or LangGraph without a 
 - **Scalability** &mdash; Distributing work across multiple worker processes and scaling them independently.
 
 AgentMesh provides all of this as infrastructure. Your agent code focuses on the logic — what to ask the LLM, which tools to call, what to do with the results.
-
 
 ## Next steps
 

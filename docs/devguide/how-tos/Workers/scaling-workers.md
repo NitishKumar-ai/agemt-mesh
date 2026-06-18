@@ -1,11 +1,10 @@
 ---
-description: "Monitor task queues and scale AgentMesh workers — queue depth, poll data, Prometheus metrics, autoscaling policies, and performance tuning."
+description: 'Monitor task queues and scale AgentMesh workers — queue depth, poll data, Prometheus metrics, autoscaling policies, and performance tuning.'
 ---
 
 # Scaling Task Workers
 
 Workers execute business logic outside the AgentMesh server. Keeping them healthy requires two things: **monitoring** queue and worker state, and **scaling** based on what the data tells you.
-
 
 ## Monitoring task queues
 
@@ -45,8 +44,7 @@ curl '{{ server_host }}{{ api_prefix }}/tasks/queue/polldata?taskType=<TASK_NAME
 ```
 
 !!! note
-    Replace `<TASK_NAME>` with your task name.
-
+Replace `<TASK_NAME>` with your task name.
 
 ## Prometheus metrics
 
@@ -83,19 +81,18 @@ How long tasks sit in the queue before a worker picks them up. If this is more t
 2. **Check polling interval** — reduce it if workers aren't polling frequently enough.
 
 !!! warning
-    Reducing the polling interval increases API requests to the server. Balance responsiveness against server load.
-
+Reducing the polling interval increases API requests to the server. Balance responsiveness against server load.
 
 ## Scaling strategies
 
 ### When to scale
 
-| Signal | Action |
-|---|---|
-| Queue depth growing steadily | Add worker instances |
-| Queue wait time > 5s at p99 | Add worker instances or reduce polling interval |
-| Throughput dropping while queue grows | Investigate worker health (CPU, memory, downstream dependencies) |
-| Queue consistently empty, workers idle | Scale down to save resources |
+| Signal                                 | Action                                                           |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| Queue depth growing steadily           | Add worker instances                                             |
+| Queue wait time > 5s at p99            | Add worker instances or reduce polling interval                  |
+| Throughput dropping while queue grows  | Investigate worker health (CPU, memory, downstream dependencies) |
+| Queue consistently empty, workers idle | Scale down to save resources                                     |
 
 ### Horizontal scaling
 
@@ -105,11 +102,11 @@ Add more worker instances. AgentMesh distributes tasks automatically — every w
 
 The polling interval controls how frequently workers check for new tasks. Shorter intervals mean lower latency but higher server load.
 
-| Scenario | Recommended interval |
-|---|---|
-| Latency-sensitive tasks | 100–500ms |
-| Standard processing | 1–5s |
-| Batch / background work | 5–30s |
+| Scenario                | Recommended interval |
+| ----------------------- | -------------------- |
+| Latency-sensitive tasks | 100–500ms            |
+| Standard processing     | 1–5s                 |
+| Batch / background work | 5–30s                |
 
 ### Thread pool sizing
 

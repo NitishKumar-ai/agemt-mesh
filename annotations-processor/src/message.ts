@@ -89,9 +89,7 @@ export class MessageField extends Field {
   }
 
   private toUnderscoreCase(input: string): string {
-    return input
-      .replace(/([a-z])([A-Z])/g, '$1_$2')
-      .toLowerCase();
+    return input.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
   }
 
   getDependencies(deps: Set<string>): void {

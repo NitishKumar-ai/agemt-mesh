@@ -19,9 +19,7 @@ export function appendIteration(refName: string, iteration: number): string {
 }
 
 export function hasInProgressHumanTask(workflow: WorkflowModel): boolean {
-  return workflow.tasks.some(
-    (t) => t.taskType === 'HUMAN' && t.status === 'IN_PROGRESS',
-  );
+  return workflow.tasks.some((t) => t.taskType === 'HUMAN' && t.status === 'IN_PROGRESS');
 }
 
 export function getQueueName(task: { taskType: string; taskDefName?: string }): string {

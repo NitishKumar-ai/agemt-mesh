@@ -1,5 +1,5 @@
 ---
-description: "Orchestrate event-driven workflows with AgentMesh using Kafka, NATS, AMQP (RabbitMQ), and SQS as event buses. Configure event handlers to trigger workflows, complete tasks, or fail tasks on incoming events."
+description: 'Orchestrate event-driven workflows with AgentMesh using Kafka, NATS, AMQP (RabbitMQ), and SQS as event buses. Configure event handlers to trigger workflows, complete tasks, or fail tasks on incoming events.'
 ---
 
 # Event Bus Orchestration
@@ -8,16 +8,15 @@ AgentMesh integrates with external messaging systems to enable event-driven work
 
 ## Supported event buses
 
-| System | Sink prefix | Module | Use case |
-| :--- | :--- | :--- | :--- |
-| **Kafka** | `kafka` | `kafka` | High-throughput, durable event streaming |
-| **NATS** | `nats` | `nats` | Lightweight, low-latency messaging |
-| **NATS Streaming** | `nats-stream` | `nats-streaming` | Durable NATS with replay (legacy) |
-| **NATS JetStream** | `nats` | `nats` | Modern durable NATS streaming |
-| **AMQP (RabbitMQ)** | `amqp`, `amqp_queue`, `amqp_exchange` | `amqp` | Traditional message queuing with routing |
-| **SQS** | `sqs` | `sqs` | AWS-native message queuing |
-| **AgentMesh** | `agentmesh` | built-in | Internal event routing between workflows |
-
+| System              | Sink prefix                           | Module           | Use case                                 |
+| :------------------ | :------------------------------------ | :--------------- | :--------------------------------------- |
+| **Kafka**           | `kafka`                               | `kafka`          | High-throughput, durable event streaming |
+| **NATS**            | `nats`                                | `nats`           | Lightweight, low-latency messaging       |
+| **NATS Streaming**  | `nats-stream`                         | `nats-streaming` | Durable NATS with replay (legacy)        |
+| **NATS JetStream**  | `nats`                                | `nats`           | Modern durable NATS streaming            |
+| **AMQP (RabbitMQ)** | `amqp`, `amqp_queue`, `amqp_exchange` | `amqp`           | Traditional message queuing with routing |
+| **SQS**             | `sqs`                                 | `sqs`            | AWS-native message queuing               |
+| **AgentMesh**       | `agentmesh`                           | built-in         | Internal event routing between workflows |
 
 ## How it works
 
@@ -33,7 +32,6 @@ Event bus orchestration has two sides:
 │              │                     │  AMQP/SQS)   │                     │              │
 └──────────────┘                     └──────────────┘                     └──────────────┘
 ```
-
 
 ## Publishing events
 
@@ -80,16 +78,15 @@ For Kafka-specific features (custom headers, key, serializers), use the dedicate
 
 The `sink` parameter follows the format `prefix:queue_name`:
 
-| Example | System |
-| :--- | :--- |
-| `kafka:order-events` | Kafka topic `order-events` |
-| `nats:notifications` | NATS subject `notifications` |
-| `amqp:task-queue` | AMQP queue `task-queue` |
-| `amqp_exchange:events` | AMQP exchange `events` |
-| `sqs:my-queue` | SQS queue `my-queue` |
-| `agentmesh` | AgentMesh internal queue |
+| Example                              | System                             |
+| :----------------------------------- | :--------------------------------- |
+| `kafka:order-events`                 | Kafka topic `order-events`         |
+| `nats:notifications`                 | NATS subject `notifications`       |
+| `amqp:task-queue`                    | AMQP queue `task-queue`            |
+| `amqp_exchange:events`               | AMQP exchange `events`             |
+| `sqs:my-queue`                       | SQS queue `my-queue`               |
+| `agentmesh`                          | AgentMesh internal queue           |
 | `agentmesh:workflow_name:queue_name` | AgentMesh internal, specific queue |
-
 
 ## Consuming events
 
@@ -118,24 +115,23 @@ Event handlers listen for messages on an event bus and execute actions when a ma
 
 ### Supported actions
 
-| Action | Description |
-| :--- | :--- |
-| `start_workflow` | Start a new workflow execution with the event payload as input. |
-| `complete_task` | Complete a waiting task (e.g., a `WAIT` or `HUMAN` task) in a running workflow. |
-| `fail_task` | Fail a task in a running workflow. |
+| Action           | Description                                                                     |
+| :--------------- | :------------------------------------------------------------------------------ |
+| `start_workflow` | Start a new workflow execution with the event payload as input.                 |
+| `complete_task`  | Complete a waiting task (e.g., a `WAIT` or `HUMAN` task) in a running workflow. |
+| `fail_task`      | Fail a task in a running workflow.                                              |
 
 ### Conditions
 
 The `condition` field supports JavaScript-like expressions evaluated against the event payload:
 
-| Expression | Result |
-| :--- | :--- |
-| `$.version > 1` | true if `version` field > 1 |
+| Expression                  | Result                       |
+| :-------------------------- | :--------------------------- |
+| `$.version > 1`             | true if `version` field > 1  |
 | `$.metadata.codec == 'aac'` | true if nested field matches |
-| `$.status == 'COMPLETED'` | true if status is COMPLETED |
+| `$.status == 'COMPLETED'`   | true if status is COMPLETED  |
 
 Actions execute only when the condition evaluates to `true`. If no condition is specified, actions execute for every event.
-
 
 ## Patterns
 
@@ -201,7 +197,6 @@ Register an event handler that completes the task when an approval event arrives
   ]
 }
 ```
-
 
 ## Configuration
 

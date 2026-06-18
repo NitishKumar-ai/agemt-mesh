@@ -3,7 +3,11 @@ import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
 import { InitialSchemaMigration } from '@agentmesh/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
+import {
+  SqliteExecutionDAO,
+  SqliteMetadataDAO,
+  SqliteQueueDAO,
+} from '@agentmesh/sqlite-persistence';
 import { WorkflowService } from '../../src/services/WorkflowService.js';
 import { AdminService } from '../../src/services/AdminService.js';
 
@@ -27,7 +31,9 @@ describe('AdminService', () => {
     const metadataDAO = new SqliteMetadataDAO(db);
     const queueDAO = new SqliteQueueDAO(db);
     workflowService = new WorkflowService(executionDAO, metadataDAO, queueDAO);
-    adminService = new AdminService(workflowService, executionDAO, { testKey: { nested: 'value' } });
+    adminService = new AdminService(workflowService, executionDAO, {
+      testKey: { nested: 'value' },
+    });
   });
 
   afterAll(async () => {

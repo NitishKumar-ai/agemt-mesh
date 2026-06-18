@@ -31,9 +31,13 @@ export class MapType extends GenericType {
   mapToProto(field: string, lines: string[]): void {
     const valueType = this.getValueType();
     if (valueType instanceof ScalarType) {
-      lines.push(`to.${this.protoMethodName('putAll', field)}( from.${this.javaMethodName('get', field)}() );`);
+      lines.push(
+        `to.${this.protoMethodName('putAll', field)}( from.${this.javaMethodName('get', field)}() );`,
+      );
     } else {
-      lines.push(`for (const [key, val] of Object.entries(from.${this.javaMethodName('get', field)}())) {`);
+      lines.push(
+        `for (const [key, val] of Object.entries(from.${this.javaMethodName('get', field)}())) {`,
+      );
       lines.push(`to.${this.protoMethodName('put', field)}( key, toProto(val) );`);
       lines.push(`}`);
     }
@@ -48,7 +52,9 @@ export class MapType extends GenericType {
     } else {
       const mapName = `${field}Map`;
       lines.push(`const ${mapName} = new Map();`);
-      lines.push(`for (const [key, val] of from.${this.protoMethodName('get', field)}Map().entries()) {`);
+      lines.push(
+        `for (const [key, val] of from.${this.protoMethodName('get', field)}Map().entries()) {`,
+      );
       lines.push(`${mapName}.set(key, this.fromProto(val));`);
       lines.push(`}`);
       lines.push(`to.${this.javaMethodName('set', field)}(${mapName});`);

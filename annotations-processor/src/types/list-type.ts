@@ -23,7 +23,9 @@ export class ListType extends GenericType {
   mapToProto(field: string, lines: string[]): void {
     const subtype = this.getValueType();
     if (subtype instanceof ScalarType) {
-      lines.push(`to.${this.protoMethodName('addAll', field)}( from.${this.javaMethodName('get', field)}() );`);
+      lines.push(
+        `to.${this.protoMethodName('addAll', field)}( from.${this.javaMethodName('get', field)}() );`,
+      );
     } else {
       const javaType = subtype.getJavaType();
       lines.push(`for (const elem of from.${this.javaMethodName('get', field)}()) {`);

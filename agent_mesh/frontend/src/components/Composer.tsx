@@ -1,14 +1,5 @@
-import {
-  ArrowUp,
-  Command,
-  Paperclip,
-  ScanSearch,
-  Shield,
-  Square,
-  Timer,
-  Zap,
-} from "lucide-react";
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, Command, Paperclip, ScanSearch, Shield, Square, Timer, Zap } from 'lucide-react';
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 type SlashCommand = {
   command: string;
@@ -18,10 +9,25 @@ type SlashCommand = {
 };
 
 const SLASH_COMMANDS: SlashCommand[] = [
-  { command: "/scan", label: "Scan codebase", description: "Scan for security issues and code quality", icon: ScanSearch },
-  { command: "/schedule", label: "Schedule task", description: "Create a recurring automated task", icon: Timer },
-  { command: "/audit", label: "Security audit", description: "Run a comprehensive security audit", icon: Shield },
-  { command: "/quick", label: "Quick fix", description: "Apply a quick automated fix", icon: Zap },
+  {
+    command: '/scan',
+    label: 'Scan codebase',
+    description: 'Scan for security issues and code quality',
+    icon: ScanSearch,
+  },
+  {
+    command: '/schedule',
+    label: 'Schedule task',
+    description: 'Create a recurring automated task',
+    icon: Timer,
+  },
+  {
+    command: '/audit',
+    label: 'Security audit',
+    description: 'Run a comprehensive security audit',
+    icon: Shield,
+  },
+  { command: '/quick', label: 'Quick fix', description: 'Apply a quick automated fix', icon: Zap },
 ];
 
 type Props = {
@@ -31,9 +37,9 @@ type Props = {
 };
 
 export function Composer({ disabled, running, onSubmit }: Props) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const [slashOpen, setSlashOpen] = useState(false);
-  const [slashFilter, setSlashFilter] = useState("");
+  const [slashFilter, setSlashFilter] = useState('');
   const [selectedSlash, setSelectedSlash] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,7 +47,7 @@ export function Composer({ disabled, running, onSubmit }: Props) {
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = "auto";
+    el.style.height = 'auto';
     const maxHeight = 6 * 24; // ~6 lines at 24px line-height
     el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
   }, []);
@@ -52,7 +58,7 @@ export function Composer({ disabled, running, onSubmit }: Props) {
 
   // Slash command detection
   useEffect(() => {
-    if (value.startsWith("/")) {
+    if (value.startsWith('/')) {
       const filter = value.slice(1).toLowerCase();
       setSlashFilter(filter);
       setSlashOpen(true);
@@ -64,13 +70,12 @@ export function Composer({ disabled, running, onSubmit }: Props) {
 
   const filteredCommands = SLASH_COMMANDS.filter(
     (cmd) =>
-      cmd.command.slice(1).includes(slashFilter) ||
-      cmd.label.toLowerCase().includes(slashFilter)
+      cmd.command.slice(1).includes(slashFilter) || cmd.label.toLowerCase().includes(slashFilter),
   );
 
   function selectSlashCommand(cmd: SlashCommand) {
     // Replace the slash prefix with the command's full prompt
-    setValue(cmd.label + ": ");
+    setValue(cmd.label + ': ');
     setSlashOpen(false);
     textareaRef.current?.focus();
   }
@@ -79,9 +84,9 @@ export function Composer({ disabled, running, onSubmit }: Props) {
     event?.preventDefault();
     const prompt = value.trim();
     if (!prompt || disabled || running) return;
-    setValue("");
+    setValue('');
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = 'auto';
     }
     await onSubmit(prompt);
   }
@@ -89,31 +94,29 @@ export function Composer({ disabled, running, onSubmit }: Props) {
   function handleKeyDown(e: KeyboardEvent) {
     // Slash menu navigation
     if (slashOpen && filteredCommands.length) {
-      if (e.key === "ArrowDown") {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedSlash((prev) => (prev + 1) % filteredCommands.length);
         return;
       }
-      if (e.key === "ArrowUp") {
+      if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedSlash((prev) =>
-          prev === 0 ? filteredCommands.length - 1 : prev - 1
-        );
+        setSelectedSlash((prev) => (prev === 0 ? filteredCommands.length - 1 : prev - 1));
         return;
       }
-      if (e.key === "Enter" || e.key === "Tab") {
+      if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault();
         selectSlashCommand(filteredCommands[selectedSlash]);
         return;
       }
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setSlashOpen(false);
         return;
       }
     }
 
     // Enter to submit, Shift+Enter for newline
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       void handleSubmit();
     }
@@ -133,7 +136,7 @@ export function Composer({ disabled, running, onSubmit }: Props) {
             return (
               <button
                 key={cmd.command}
-                className={`slash-menu-item ${i === selectedSlash ? "slash-menu-item--active" : ""}`}
+                className={`slash-menu-item ${i === selectedSlash ? 'slash-menu-item--active' : ''}`}
                 onClick={() => selectSlashCommand(cmd)}
                 onMouseEnter={() => setSelectedSlash(i)}
               >
@@ -163,11 +166,7 @@ export function Composer({ disabled, running, onSubmit }: Props) {
         />
         <div className="composer-controls">
           <span className="composer-hint">
-            {value.length > 0 ? (
-              <>⏎ Send · ⇧⏎ Newline</>
-            ) : (
-              <>CommitGuard</>
-            )}
+            {value.length > 0 ? <>⏎ Send · ⇧⏎ Newline</> : <>CommitGuard</>}
           </span>
           <button
             className="send-button"

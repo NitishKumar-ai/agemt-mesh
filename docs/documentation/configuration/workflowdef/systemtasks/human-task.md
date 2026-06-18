@@ -1,8 +1,9 @@
 ---
-description: "Configure Human tasks in AgentMesh to pause workflows for manual approval or external signals. Supports human-in-the-loop and agentic workflow patterns."
+description: 'Configure Human tasks in AgentMesh to pause workflows for manual approval or external signals. Supports human-in-the-loop and agentic workflow patterns.'
 ---
 
 # Human Task
+
 ```json
 "type" : "HUMAN"
 ```
@@ -21,10 +22,10 @@ Here is the task configuration for a Human task.
 
 ```json
 {
-	"name": "human",
+  "name": "human",
   "taskReferenceName": "human_ref",
-	"inputParameters": {},
-	"type": "HUMAN"
+  "inputParameters": {},
+  "type": "HUMAN"
 }
 ```
 
@@ -35,8 +36,8 @@ There are several ways to complete the Human task:
 - Using the Task Update API
 - Using an event handler
 
-
 ### Task Update API
+
 Use the Task Update API (`POST api/tasks`) to complete a Human task. Provide the `taskId`, the task status, and the desired task output.
 
 Using the CLI:
@@ -46,6 +47,7 @@ agentmesh task update-execution --workflow-id {workflowId} --task-ref-name waiti
 ```
 
 ### Event handler
+
 If SQS integration is enabled, the Human task can also be resolved using the Update Queue APIs:
 
 1. `POST api/queue/update/{workflowId}/{taskRefName}/{status}`
@@ -54,21 +56,20 @@ If SQS integration is enabled, the Human task can also be resolved using the Upd
 Any parameter that is sent in the body of the POST message will be repeated as the output of the task. For example, if we send a COMPLETED message as follows:
 
 ??? note "Using cURL"
-    ```bash
+`bash
     curl -X "POST" "{{ server_host }}{{ api_prefix }}/queue/update/{workflowId}/waiting_around_ref/COMPLETED" \
       -H 'Content-Type: application/json' \
       -d '{"data_key":"somedatatoWait1","data_key2":"somedatatoWAit2"}'
-    ```
+    `
 
 The output of the Human task will be:
 
 ```json
 {
-  "data_key":"somedatatoWait1",
-  "data_key2":"somedatatoWAit2"
+  "data_key": "somedatatoWait1",
+  "data_key2": "somedatatoWAit2"
 }
 ```
-
 
 Alternatively, an [event handler](../../eventhandlers.md) using the `complete_task` action can also be configured.
 
@@ -224,6 +225,7 @@ For real-time notifications, integrate with external systems:
 ```
 
 This workflow:
+
 1. Sends a Slack notification when approval is needed
 2. Waits for human approval
 3. Sends a follow-up notification with the approval result

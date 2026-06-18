@@ -1,12 +1,12 @@
-import { Loader } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Props = {
   label?: string;
   startTime?: Date;
 };
 
-export function ThinkingIndicator({ label = "Thinking", startTime }: Props) {
+export function ThinkingIndicator({ label = 'Thinking', startTime }: Props) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {

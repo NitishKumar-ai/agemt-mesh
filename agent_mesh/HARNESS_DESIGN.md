@@ -7,6 +7,7 @@ into a design for Agent Mesh. Companion to `ARCHITECTURE.md` (infra) and
 ## What we learned from the field
 
 ### OpenHands (V1 SDK) — event-sourced loop
+
 - Everything is a typed event: `MessageEvent`, `ActionEvent`, `ObservationEvent`,
   `AgentErrorEvent`. The event log is append-only and the single source of truth;
   replaying it reconstructs the conversation.
@@ -16,19 +17,21 @@ into a design for Agent Mesh. Companion to `ARCHITECTURE.md` (infra) and
   (3) query LLM, (4) parse response into action(s) or a message, (5) gate on
   confirmation if risky, (6) execute tools → observations.
 - A `Condenser` compresses history when the context window approaches limits;
-  a `SecurityAnalyzer` scores action risk *before* execution.
+  a `SecurityAnalyzer` scores action risk _before_ execution.
 
 ### SWE-agent / mini-swe-agent — radical minimalism
+
 - The entire control loop is ~100 lines: **Query → Execute → Observe**, repeat.
 - Three swappable protocols: `Agent` (loop + history), `Model` (LLM + cost
   tracking), `Environment` (executes actions, returns output + exit code).
 - All state lives in one linear message list. No graph, no nested state machines.
 - Termination via a small exception hierarchy (`LimitsExceeded`, exit messages);
   cost limits are checked **every step**, not per phase.
-- The ACI insight: agents need *compact, reliable* tools with concise output —
+- The ACI insight: agents need _compact, reliable_ tools with concise output —
   tool ergonomics matter more than tool count.
 
 ### smolagents — ReAct with periodic re-planning
+
 - One `MultiStepAgent` base: each step = reasoning + tool call(s), looping until a
   `final_answer` tool is called or `max_steps` is hit.
 - Memory is a list of typed steps (task, planning, action) serialized to messages
@@ -37,6 +40,7 @@ into a design for Agent Mesh. Companion to `ARCHITECTURE.md` (infra) and
   drift on long tasks without paying planning cost every step.
 
 ### Claude Agent SDK / Claude Code — gather → act → verify
+
 - The loop is framed as three phases repeated until done: **gather context**,
   **take action**, **verify work**. Verification (rules, tests, second-model
   review) is a first-class loop phase, not an afterthought.
@@ -44,26 +48,27 @@ into a design for Agent Mesh. Companion to `ARCHITECTURE.md` (infra) and
   supply tools and prompts only.
 
 ### Anthropic, "Effective harnesses for long-running agents"
+
 - Compaction alone is insufficient for long tasks: persist progress in the
-  *environment* (progress file, git commits, feature list with completion state)
+  _environment_ (progress file, git commits, feature list with completion state)
   so a fresh context can resume.
 - Verify like a user (end-to-end), checkpoint often, never let the model declare
   victory without the feature list agreeing.
 
 ## Synthesis — what Agent Mesh adopts
 
-| Pattern | Source | Where it lands here |
-|---|---|---|
-| Typed action/observation events, append-only | OpenHands | `loop.py` step records → `events.py` bus + `safety_record_trace` |
-| Stateless step executor, state owned by caller | OpenHands | `AgentLoop.step()` pure-ish; history owned by `LoopState` |
-| Linear message history, ~100-line loop | mini-swe-agent | `AgentLoop.run()` |
-| Model/Environment/Agent separation | mini-swe-agent | `generate_tracked` (model) / `Tool.run` (environment) / `AgentLoop` |
-| Per-step cost & limit checks | mini-swe-agent | killswitch + budget checked **every step**, not per phase |
-| `final_answer` tool + `max_steps` | smolagents | built-in `finish` tool; `LoopConfig.max_steps` |
-| Periodic re-planning | smolagents | outer plan→execute→review retry loop already does this; `planning_interval` reserved for Phase 2 |
-| Risk gate before execution | OpenHands `SecurityAnalyzer` | CriticGate evaluates each **action** before its tool runs |
-| Gather → act → verify | Claude Agent SDK | outer 3-pass loop (plan / execute / review) retained |
-| Durable checkpoints | Anthropic post | DBOS journal already replays workflows; each loop step is a DBOS step |
+| Pattern                                        | Source                       | Where it lands here                                                                              |
+| ---------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| Typed action/observation events, append-only   | OpenHands                    | `loop.py` step records → `events.py` bus + `safety_record_trace`                                 |
+| Stateless step executor, state owned by caller | OpenHands                    | `AgentLoop.step()` pure-ish; history owned by `LoopState`                                        |
+| Linear message history, ~100-line loop         | mini-swe-agent               | `AgentLoop.run()`                                                                                |
+| Model/Environment/Agent separation             | mini-swe-agent               | `generate_tracked` (model) / `Tool.run` (environment) / `AgentLoop`                              |
+| Per-step cost & limit checks                   | mini-swe-agent               | killswitch + budget checked **every step**, not per phase                                        |
+| `final_answer` tool + `max_steps`              | smolagents                   | built-in `finish` tool; `LoopConfig.max_steps`                                                   |
+| Periodic re-planning                           | smolagents                   | outer plan→execute→review retry loop already does this; `planning_interval` reserved for Phase 2 |
+| Risk gate before execution                     | OpenHands `SecurityAnalyzer` | CriticGate evaluates each **action** before its tool runs                                        |
+| Gather → act → verify                          | Claude Agent SDK             | outer 3-pass loop (plan / execute / review) retained                                             |
+| Durable checkpoints                            | Anthropic post               | DBOS journal already replays workflows; each loop step is a DBOS step                            |
 
 ## Resulting architecture
 
@@ -88,6 +93,7 @@ run_agent (DBOS workflow — durable, replayable)
 ```
 
 ### Components (`loop.py`)
+
 - **`Tool`** — name, description, JSON-schema-ish params, `run(args) -> str`,
   `risk_level`. Replaces the old `get_tools() -> list[str]` name stubs.
 - **`ToolRegistry`** — per-agent tool set; always injects `finish(result)`.
@@ -99,16 +105,19 @@ run_agent (DBOS workflow — durable, replayable)
   `critic` callable so tests run without network and CriticGate stays optional.
 
 ### Context management
+
 Phase 1: per-observation truncation (`obs_char_limit`) plus drop-oldest-step
 truncation when the rendered prompt exceeds `history_char_budget` — the
 mini-swe-agent approach. An LLM condenser (OpenHands-style) is Phase 2.
 
 ### Backward compatibility
+
 `BaseAgent.get_tools()` returning strings keeps working: the harness falls back
 to the legacy single-shot execute. Agents that override `get_tool_objects()`
 (returning `Tool` instances) get the real loop. Migration is per-agent.
 
 ## Sources
+
 - [OpenHands SDK agent architecture](https://docs.openhands.dev/sdk/arch/agent);
   [OpenHands paper](https://arxiv.org/pdf/2407.16741);
   [OpenHands Software Agent SDK paper](https://arxiv.org/pdf/2511.03690)

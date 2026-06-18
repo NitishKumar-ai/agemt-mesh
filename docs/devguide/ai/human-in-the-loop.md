@@ -8,7 +8,6 @@ Production agents need oversight. AgentMesh's `HUMAN` task is a durable pause �
 
 AgentMesh supports two distinct patterns for human oversight, plus LLM-as-judge for automated review.
 
-
 ## Pre-execution review
 
 The LLM plans an action and a human reviews it **before** it executes. The agent cannot proceed without approval.
@@ -51,7 +50,6 @@ The LLM plans an action and a human reviews it **before** it executes. The agent
 
 Use this when the action has real-world consequences (sending emails, modifying data, making purchases) and you want a human gate before anything happens.
 
-
 ## Conditional post-execution review
 
 The tool executes, but the result goes to a human for review **only when a condition is met** — for example, when the confidence is low, the amount exceeds a threshold, or the output affects sensitive data.
@@ -93,7 +91,6 @@ The tool executes, but the result goes to a human for review **only when a condi
 ```
 
 Use this when most actions are safe to auto-approve but certain conditions require human oversight. The `SWITCH` task evaluates the condition; the `HUMAN` task only triggers when needed.
-
 
 ## LLM-as-judge: automated review
 
@@ -165,7 +162,6 @@ Instead of (or in addition to) a human reviewer, you can add an LLM task to eval
 
 You can use different models for generation and review — for example, a fast model for drafting and a more capable model for judging. You can also chain multiple judges, or combine LLM-as-judge with human review as a final gate. Because each LLM call is a separate persisted task, the generation is never re-run if the judge or human review step fails.
 
-
 ## Combining patterns
 
 These patterns compose naturally. A single workflow can use all three:
@@ -175,7 +171,6 @@ These patterns compose naturally. A single workflow can use all three:
 3. **Pre-execution review** gates high-stakes actions regardless of judge outcome.
 
 Because each review step is a separate persisted task, no upstream work is repeated if a review step fails or takes time. The LLM generation that took 10 seconds and cost tokens is preserved — only the review decision needs to happen.
-
 
 ## Next steps
 

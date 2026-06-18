@@ -1,6 +1,12 @@
 import { Kysely, Transaction, sql } from 'kysely';
 import { MetadataDAO, Database, WorkflowDefSummary } from '@agentmesh/common-persistence';
-import { TaskDef, WorkflowDef, EventHandler, NotFoundException, ConflictException } from '@agentmesh/common';
+import {
+  TaskDef,
+  WorkflowDef,
+  EventHandler,
+  NotFoundException,
+  ConflictException,
+} from '@agentmesh/common';
 
 export class MySQLMetadataDAO implements MetadataDAO {
   constructor(private readonly db: Kysely<Database>) {}
@@ -83,7 +89,10 @@ export class MySQLMetadataDAO implements MetadataDAO {
     });
   }
 
-  private async insertOrUpdateWorkflowDef(tx: Transaction<Database>, def: WorkflowDef): Promise<void> {
+  private async insertOrUpdateWorkflowDef(
+    tx: Transaction<Database>,
+    def: WorkflowDef,
+  ): Promise<void> {
     const latestRow = await tx
       .selectFrom('meta_workflow_def')
       .select((db) => db.fn.max('version').as('version'))
@@ -278,10 +287,7 @@ export class MySQLMetadataDAO implements MetadataDAO {
   }
 
   async getAllEventHandlers(): Promise<EventHandler[]> {
-    const rows = await this.db
-      .selectFrom('meta_event_handler')
-      .select('json_data')
-      .execute();
+    const rows = await this.db.selectFrom('meta_event_handler').select('json_data').execute();
 
     return rows.map((r) => JSON.parse(r.json_data));
   }

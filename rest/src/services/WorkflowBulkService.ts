@@ -43,7 +43,10 @@ export class WorkflowBulkService {
     return response;
   }
 
-  async deleteWorkflow(workflowIds: string[], archiveWorkflow = true): Promise<BulkResponse<string>> {
+  async deleteWorkflow(
+    workflowIds: string[],
+    archiveWorkflow = true,
+  ): Promise<BulkResponse<string>> {
     const response = new BulkResponse<string>();
     for (const wfId of workflowIds) {
       try {
@@ -56,7 +59,10 @@ export class WorkflowBulkService {
     return response;
   }
 
-  async restart(workflowIds: string[], useLatestDefinitions = false): Promise<BulkResponse<string>> {
+  async restart(
+    workflowIds: string[],
+    useLatestDefinitions = false,
+  ): Promise<BulkResponse<string>> {
     const response = new BulkResponse<string>();
     for (const wfId of workflowIds) {
       try {
@@ -69,7 +75,10 @@ export class WorkflowBulkService {
     return response;
   }
 
-  async retry(workflowIds: string[], resumeSubworkflowTasks = false): Promise<BulkResponse<string>> {
+  async retry(
+    workflowIds: string[],
+    resumeSubworkflowTasks = false,
+  ): Promise<BulkResponse<string>> {
     const response = new BulkResponse<string>();
     for (const wfId of workflowIds) {
       try {

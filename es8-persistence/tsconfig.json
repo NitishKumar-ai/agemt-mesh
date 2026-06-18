@@ -4,13 +4,6 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/main/java",
-    "src/test/java"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/main/java", "src/test/java"]
 }

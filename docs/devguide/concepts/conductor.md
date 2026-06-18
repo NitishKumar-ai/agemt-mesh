@@ -1,5 +1,5 @@
 ---
-description: "Why use AgentMesh? An open source workflow engine for workflow orchestration, microservice orchestration, and AI agent orchestration. Durable execution, polyglot workers, LLM orchestration, workflow automation, and self-hosted deployment — a developer-first alternative to Temporal, Step Functions, and Airflow."
+description: 'Why use AgentMesh? An open source workflow engine for workflow orchestration, microservice orchestration, and AI agent orchestration. Durable execution, polyglot workers, LLM orchestration, workflow automation, and self-hosted deployment — a developer-first alternative to Temporal, Step Functions, and Airflow.'
 ---
 
 # Why AgentMesh
@@ -22,18 +22,23 @@ Distributed systems fail. Services crash, networks drop, deployments roll mid-fl
 ## What AgentMesh gives you
 
 ### Durable execution
+
 AgentMesh is a durable execution engine — every workflow execution is persisted. If a task fails, AgentMesh retries it with configurable backoff including exponential backoff. If a worker crashes, the task is rescheduled. If the server restarts, execution resumes exactly where it left off. Your code doesn't need to handle retry logic — AgentMesh provides it out of the box. This same durable execution guarantee powers durable agents that survive infrastructure failures.
 
 ### Language-agnostic workers
+
 Write workers in Python, Java, Go, JavaScript, C#, or Clojure. Each task in a workflow can use a different language — pick the best tool for each job. Workers communicate with AgentMesh via REST or gRPC and can run anywhere: containers, VMs, serverless, or your laptop.
 
 ### Built-in system tasks
+
 HTTP calls, inline JavaScript execution, JSON transforms, event publishing, wait timers, and human approval gates — all available without writing a single worker. See [System Tasks](../../documentation/configuration/workflowdef/systemtasks/index.md).
 
 ### Flow control operators
+
 Fork/join for parallelism, switch for conditional branching, do-while for loops, sub-workflows for composition, and dynamic tasks resolved at runtime. See [Operators](../../documentation/configuration/workflowdef/operators/index.md).
 
 ### AI agent orchestration and LLM orchestration
+
 AgentMesh provides LLM orchestration and AI agent orchestration as native system tasks — no external frameworks required. Supported providers include Anthropic (Claude), OpenAI (GPT), Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, Perplexity, Grok, and StabilityAI — 14+ providers available out of the box for chat completion, text completion, and embedding generation.
 
 MCP (Model Context Protocol) integration is built in: use `LIST_MCP_TOOLS` to discover available tools and `CALL_MCP_TOOL` to invoke them — enabling function calling and tool use within workflows with full retry and state tracking.
@@ -43,27 +48,30 @@ For RAG pipelines, AgentMesh supports three vector databases natively — Pineco
 Content generation tasks cover image, audio, video, and PDF creation using AI models. Every AI task runs with the same durability guarantees as any other AgentMesh task: automatic retries, timeout handling, and a complete audit trail.
 
 ### Event-driven workflows
+
 Publish to and consume from Kafka, NATS, AMQP (RabbitMQ), and SQS. Trigger workflows from external events or emit events from within workflows. See [Event Bus Orchestration](../how-tos/event-bus.md).
 
 ### Full operational control
+
 Pause, resume, restart, retry, and terminate any workflow execution. Search and filter executions by status, time, correlation ID, or custom tags. Every task has a complete audit trail — inputs, outputs, timestamps, retry history, and worker identity.
 
 ### Horizontal scaling
+
 AgentMesh scales horizontally to millions of concurrent workflow executions. Workers scale independently — add more instances and AgentMesh distributes tasks automatically. Rate limits and concurrency caps prevent overload. This workflow engine scalability makes AgentMesh suitable for production deployments at any scale.
 
 ## When to use AgentMesh
 
-| Use case | Example |
-| :--- | :--- |
-| **Microservice orchestration** | Order processing: payment → inventory → shipping → notification |
-| **Workflow automation** | Automate business processes with durable execution, retries, and full observability |
-| **Durable agents** | Multi-step LLM chains with function calling, tool use, RAG, and human-in-the-loop — durable agents that survive crashes |
-| **Long-running workflows** | Insurance claims, loan approvals, onboarding flows spanning days or weeks — async workflows that survive deploys |
-| **Event-driven automation** | React to Kafka events, trigger workflows, publish results back |
-| **Batch processing** | Fan-out work across thousands of parallel workers with dynamic fork |
-| **Saga pattern** | Distributed transactions with compensation on failure |
-| **RAG applications** | Build retrieval-augmented generation pipelines with vector search, embedding generation, and LLM completion as workflow tasks |
-| **Content generation pipelines** | Generate images, audio, video, and PDFs using AI models orchestrated as durable workflows |
+| Use case                         | Example                                                                                                                       |
+| :------------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| **Microservice orchestration**   | Order processing: payment → inventory → shipping → notification                                                               |
+| **Workflow automation**          | Automate business processes with durable execution, retries, and full observability                                           |
+| **Durable agents**               | Multi-step LLM chains with function calling, tool use, RAG, and human-in-the-loop — durable agents that survive crashes       |
+| **Long-running workflows**       | Insurance claims, loan approvals, onboarding flows spanning days or weeks — async workflows that survive deploys              |
+| **Event-driven automation**      | React to Kafka events, trigger workflows, publish results back                                                                |
+| **Batch processing**             | Fan-out work across thousands of parallel workers with dynamic fork                                                           |
+| **Saga pattern**                 | Distributed transactions with compensation on failure                                                                         |
+| **RAG applications**             | Build retrieval-augmented generation pipelines with vector search, embedding generation, and LLM completion as workflow tasks |
+| **Content generation pipelines** | Generate images, audio, video, and PDFs using AI models orchestrated as durable workflows                                     |
 
 ## What sets AgentMesh apart
 

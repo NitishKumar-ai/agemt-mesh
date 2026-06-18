@@ -47,7 +47,7 @@ export function ProtoMessage(options: ProtoMessageOptions = {}): ClassDecorator 
     toProto: true,
     fromProto: true,
     wrapper: false,
-    ...options
+    ...options,
   };
   return (target) => {
     Reflect.defineMetadata(PROTO_MESSAGE_KEY, defaultOptions, target);

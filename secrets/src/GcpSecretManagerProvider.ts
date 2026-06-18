@@ -12,17 +12,19 @@ export class GcpSecretManagerProvider implements SecretManager {
     try {
       const name = `projects/${this.projectId}/secrets/${key}/versions/latest`;
       const [version] = await this.client.accessSecretVersion({ name });
-      
+
       const payload = version.payload?.data?.toString();
-      
+
       // Audit log the secret access
-      console.log(JSON.stringify({
-         timestamp: new Date().toISOString(),
-         action: 'SECRET_ACCESS',
-         secretKey: key,
-         agentId: agentId || 'unknown',
-         tenantId: tenantId || 'unknown'
-      }));
+      console.log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          action: 'SECRET_ACCESS',
+          secretKey: key,
+          agentId: agentId || 'unknown',
+          tenantId: tenantId || 'unknown',
+        }),
+      );
 
       return payload;
     } catch (error) {

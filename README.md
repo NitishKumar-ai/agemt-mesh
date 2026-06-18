@@ -49,7 +49,7 @@ Swagger documentation is available at `http://localhost:8080/api/docs`.
 
 ## Transformation Status
 
-We are currently in the process of porting from the original Java Conductor implementation. 
+We are currently in the process of porting from the original Java Conductor implementation.
 
 **Current Status:** ✅ Phase 7 (Sandboxing) Completed.
 

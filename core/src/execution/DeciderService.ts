@@ -1,5 +1,16 @@
-import type { TaskDef, WorkflowTask, WorkflowDef, TaskType as TaskTypeEnum, TaskStatus } from '@agentmesh/common';
-import { isTaskTerminal, isTaskSuccessful, isTaskRetriable, isBuiltInTask } from '@agentmesh/common';
+import type {
+  TaskDef,
+  WorkflowTask,
+  WorkflowDef,
+  TaskType as TaskTypeEnum,
+  TaskStatus,
+} from '@agentmesh/common';
+import {
+  isTaskTerminal,
+  isTaskSuccessful,
+  isTaskRetriable,
+  isBuiltInTask,
+} from '@agentmesh/common';
 import type { TaskModel, WorkflowModel } from './types.js';
 import { copyTaskModel } from './types.js';
 import type { TaskMapper } from './mappers/TaskMapper.js';
@@ -33,9 +44,7 @@ export class DeciderService {
   decide(workflow: WorkflowModel): DeciderOutcome {
     const tasks = workflow.tasks;
 
-    const unprocessedTasks = tasks.filter(
-      (t) => t.status !== 'SKIPPED' && !t.executed,
-    );
+    const unprocessedTasks = tasks.filter((t) => t.status !== 'SKIPPED' && !t.executed);
 
     let tasksToBeScheduled: TaskModel[] = [];
     if (unprocessedTasks.length === 0) {
@@ -45,10 +54,7 @@ export class DeciderService {
     return this.decideInternal(workflow, tasksToBeScheduled);
   }
 
-  private decideInternal(
-    workflow: WorkflowModel,
-    preScheduledTasks: TaskModel[],
-  ): DeciderOutcome {
+  private decideInternal(workflow: WorkflowModel, preScheduledTasks: TaskModel[]): DeciderOutcome {
     const outcome = new DeciderOutcome();
 
     if (isWorkflowTerminal(workflow.status)) {
@@ -95,10 +101,7 @@ export class DeciderService {
         this.systemTaskRegistry.isSystemTask(pendingTask.taskType) &&
         !isTaskTerminal(pendingTask.status)
       ) {
-        tasksToBeScheduled.set(
-          pendingTask.referenceTaskName,
-          pendingTask,
-        );
+        tasksToBeScheduled.set(pendingTask.referenceTaskName, pendingTask);
         executedTaskRefNames.delete(pendingTask.referenceTaskName);
       }
 
@@ -117,15 +120,13 @@ export class DeciderService {
       if (isTaskTerminal(pendingTask.status) && !isTaskSuccessful(pendingTask.status)) {
         let workflowTask = pendingTask.workflowTask;
         if (!workflowTask && workflow.workflowDefinition) {
-          workflowTask = getTaskByRefName(workflow.workflowDefinition, pendingTask.referenceTaskName);
+          workflowTask = getTaskByRefName(
+            workflow.workflowDefinition,
+            pendingTask.referenceTaskName,
+          );
         }
 
-        const retryTask = this.retry(
-          taskDefinition,
-          workflowTask,
-          pendingTask,
-          workflow,
-        );
+        const retryTask = this.retry(taskDefinition, workflowTask, pendingTask, workflow);
         if (retryTask) {
           tasksToBeScheduled.set(retryTask.referenceTaskName, retryTask);
           executedTaskRefNames.delete(retryTask.referenceTaskName);
@@ -140,11 +141,7 @@ export class DeciderService {
         }
       }
 
-      if (
-        !pendingTask.executed &&
-        !pendingTask.retried &&
-        isTaskTerminal(pendingTask.status)
-      ) {
+      if (!pendingTask.executed && !pendingTask.retried && isTaskTerminal(pendingTask.status)) {
         pendingTask.executed = true;
         const nextTasks = this.getNextTask(workflow, pendingTask);
         if (
@@ -152,11 +149,7 @@ export class DeciderService {
           pendingTask.taskType !== 'DO_WHILE' &&
           nextTasks.length > 0
         ) {
-          const filtered = this.filterNextLoopOverTasks(
-            nextTasks,
-            pendingTask,
-            workflow,
-          );
+          const filtered = this.filterNextLoopOverTasks(nextTasks, pendingTask, workflow);
           for (const nextTask of filtered) {
             tasksToBeScheduled.set(nextTask.referenceTaskName, nextTask);
           }
@@ -179,8 +172,7 @@ export class DeciderService {
 
     if (
       hasSuccessfulTerminateTask ||
-      (outcome.tasksToBeScheduled.length === 0 &&
-        this.checkForWorkflowCompletion(workflow))
+      (outcome.tasksToBeScheduled.length === 0 && this.checkForWorkflowCompletion(workflow))
     ) {
       const permissiveTasks = workflow.tasks
         .filter((t) => t.workflowTask != null)
@@ -221,10 +213,7 @@ export class DeciderService {
 
     if (workflow.reRunFromWorkflowId == null || workflow.tasks.length === 0) {
       if (workflowDef.tasks.length === 0) {
-        throw new TerminateWorkflowError(
-          'No tasks found to be executed',
-          'COMPLETED',
-        );
+        throw new TerminateWorkflowError('No tasks found to be executed', 'COMPLETED');
       }
 
       let taskToSchedule: WorkflowTask | null = workflowDef.tasks[0] ?? null;
@@ -266,16 +255,11 @@ export class DeciderService {
 
     const tasksInWorkflow = new Set(
       workflow.tasks
-        .filter(
-          (t) =>
-            t.status === 'IN_PROGRESS' || isTaskTerminal(t.status),
-        )
+        .filter((t) => t.status === 'IN_PROGRESS' || isTaskTerminal(t.status))
         .map((t) => t.referenceTaskName),
     );
 
-    return tasks.filter(
-      (t) => !tasksInWorkflow.has(t.referenceTaskName),
-    );
+    return tasks.filter((t) => !tasksInWorkflow.has(t.referenceTaskName));
   }
 
   updateWorkflowOutput(workflow: WorkflowModel, task: TaskModel | null): void {
@@ -285,10 +269,7 @@ export class DeciderService {
     let output: Record<string, unknown> = {};
 
     const terminateTask = allTasks.find(
-      (t) =>
-        t.taskType === 'TERMINATE' &&
-        isTaskTerminal(t.status) &&
-        isTaskSuccessful(t.status),
+      (t) => t.taskType === 'TERMINATE' && isTaskTerminal(t.status) && isTaskSuccessful(t.status),
     );
 
     if (terminateTask) {
@@ -301,7 +282,7 @@ export class DeciderService {
       const last = task ?? allTasks[allTasks.length - 1] ?? null;
       const workflowDef = workflow.workflowDefinition;
       if (workflowDef?.outputParameters && Object.keys(workflowDef.outputParameters).length > 0) {
-        output = resolveTemplate(workflowDef.outputParameters, workflow);
+        output = resolveTaskInput(workflowDef.outputParameters, workflow, '');
       } else if (last) {
         output = { ...last.outputData };
       }
@@ -376,9 +357,7 @@ export class DeciderService {
 
     if (taskToSchedule && taskToSchedule.type === 'DO_WHILE') {
       const nextRef = taskToSchedule.taskReferenceName;
-      if (
-        workflow.tasks.some((t) => t.referenceTaskName === nextRef)
-      ) {
+      if (workflow.tasks.some((t) => t.referenceTaskName === nextRef)) {
         return [];
       }
     }
@@ -390,10 +369,7 @@ export class DeciderService {
     return [];
   }
 
-  private getNextTasksToBeScheduled(
-    workflow: WorkflowModel,
-    task: TaskModel,
-  ): string | null {
+  private getNextTasksToBeScheduled(workflow: WorkflowModel, task: TaskModel): string | null {
     const def = workflow.workflowDefinition;
     if (!def) return null;
 
@@ -417,8 +393,7 @@ export class DeciderService {
       taskDefinition = task.taskDefinition ?? null;
     }
 
-    const expectedRetryCount =
-      taskDefinition?.retryCount ?? workflowTask?.retryCount ?? 0;
+    const expectedRetryCount = taskDefinition?.retryCount ?? workflowTask?.retryCount ?? 0;
 
     if (
       !isTaskRetriable(task.status) ||
@@ -454,8 +429,7 @@ export class DeciderService {
       const totalElapsedSeconds = (Date.now() - task.firstScheduledTime) / 1000;
       if (totalElapsedSeconds >= taskDefinition.totalTimeoutSeconds) {
         const errMsg = `Task ${task.taskId}/${task.taskDefName} exceeded total timeout of ${taskDefinition.totalTimeoutSeconds} seconds (elapsed ${totalElapsedSeconds} seconds across all attempts). No further retries will be attempted.`;
-        const totalTimeoutStatus =
-          task.status === 'TIMED_OUT' ? 'TIMED_OUT' : 'FAILED';
+        const totalTimeoutStatus = task.status === 'TIMED_OUT' ? 'TIMED_OUT' : 'FAILED';
         this.updateWorkflowOutput(workflow, task);
         throw new TerminateWorkflowError(errMsg, totalTimeoutStatus);
       }
@@ -475,8 +449,7 @@ export class DeciderService {
         break;
       }
       case 'EXPONENTIAL_BACKOFF': {
-        const expDelay =
-          (taskDefinition?.retryDelaySeconds ?? 0) * Math.pow(2, task.retryCount);
+        const expDelay = (taskDefinition?.retryDelaySeconds ?? 0) * Math.pow(2, task.retryCount);
         startDelay = expDelay < 0 ? 2147483647 : expDelay;
         startDelay = applyMaxRetryDelayCap(startDelay, taskDefinition);
         break;
@@ -532,9 +505,7 @@ export class DeciderService {
     const timeout = 1000 * (workflowDef.timeoutSeconds ?? 0);
     const now = Date.now();
     const elapsedTime =
-      workflow.lastRetriedTime > 0
-        ? now - workflow.lastRetriedTime
-        : now - workflow.createTime;
+      workflow.lastRetriedTime > 0 ? now - workflow.lastRetriedTime : now - workflow.createTime;
 
     if (elapsedTime < timeout) return;
 
@@ -580,8 +551,7 @@ export class DeciderService {
 
     const timeout = 1000 * (taskDef.timeoutSeconds ?? 0);
     const now = Date.now();
-    const elapsedTime =
-      now - (task.startTime + task.startDelayInSeconds * 1000);
+    const elapsedTime = now - (task.startTime + task.startDelayInSeconds * 1000);
 
     if (elapsedTime < timeout) return;
 
@@ -593,19 +563,14 @@ export class DeciderService {
   }
 
   private checkTaskPollTimeout(taskDef: TaskDef, task: TaskModel): void {
-    if (
-      !taskDef ||
-      (taskDef.pollTimeoutSeconds ?? 0) <= 0 ||
-      task.status !== 'SCHEDULED'
-    ) {
+    if (!taskDef || (taskDef.pollTimeoutSeconds ?? 0) <= 0 || task.status !== 'SCHEDULED') {
       return;
     }
 
     const pollTimeout = 1000 * (taskDef.pollTimeoutSeconds ?? 0);
     const adjustedPollTimeout = pollTimeout + task.callbackAfterSeconds * 1000;
     const now = Date.now();
-    const pollElapsedTime =
-      now - (task.scheduledTime + task.startDelayInSeconds * 1000);
+    const pollElapsedTime = now - (task.scheduledTime + task.startDelayInSeconds * 1000);
 
     if (pollElapsedTime < adjustedPollTimeout) return;
 
@@ -616,11 +581,7 @@ export class DeciderService {
     this.timeoutTaskWithTimeoutPolicy(reason, taskDef, task);
   }
 
-  private timeoutTaskWithTimeoutPolicy(
-    reason: string,
-    taskDef: TaskDef,
-    task: TaskModel,
-  ): void {
+  private timeoutTaskWithTimeoutPolicy(reason: string, taskDef: TaskDef, task: TaskModel): void {
     switch (taskDef.timeoutPolicy) {
       case 'ALERT_ONLY':
         return;
@@ -646,10 +607,7 @@ export class DeciderService {
     const referenceTime = task.updateTime > 0 ? task.updateTime : task.scheduledTime;
     const pendingTime = now - (referenceTime + callbackTime);
 
-    if (
-      task.status !== 'IN_PROGRESS' ||
-      (taskDefinition.responseTimeoutSeconds ?? 0) === 0
-    ) {
+    if (task.status !== 'IN_PROGRESS' || (taskDefinition.responseTimeoutSeconds ?? 0) === 0) {
       return false;
     }
 
@@ -676,10 +634,7 @@ export class DeciderService {
 
     const tasksInWorkflow = new Set(
       workflow.tasks
-        .filter(
-          (t) =>
-            t.status === 'IN_PROGRESS' || isTaskTerminal(t.status),
-        )
+        .filter((t) => t.status === 'IN_PROGRESS' || isTaskTerminal(t.status))
         .map((t) => t.referenceTaskName),
     );
 
@@ -701,15 +656,12 @@ export class DeciderService {
       return [];
     }
 
-    return mapper.getMappedTasks(taskMapperContext).filter(
-      (task) => !tasksInWorkflow.has(task.referenceTaskName),
-    );
+    return mapper
+      .getMappedTasks(taskMapperContext)
+      .filter((task) => !tasksInWorkflow.has(task.referenceTaskName));
   }
 
-  private getTaskDefFromWorkflow(
-    task: TaskModel,
-    workflow: WorkflowModel,
-  ): TaskDef | null {
+  private getTaskDefFromWorkflow(task: TaskModel, workflow: WorkflowModel): TaskDef | null {
     const wft = task.workflowTask;
     if (wft?.taskDefinition) {
       return wft.taskDefinition;
@@ -720,14 +672,9 @@ export class DeciderService {
     return resolved?.taskDefinition ?? null;
   }
 
-  private isTaskSkipped(
-    taskToSchedule: WorkflowTask | null,
-    workflow: WorkflowModel,
-  ): boolean {
+  private isTaskSkipped(taskToSchedule: WorkflowTask | null, workflow: WorkflowModel): boolean {
     if (!taskToSchedule) return false;
-    const t = workflow.tasks.find(
-      (x) => x.referenceTaskName === taskToSchedule.taskReferenceName,
-    );
+    const t = workflow.tasks.find((x) => x.referenceTaskName === taskToSchedule.taskReferenceName);
     return t?.status === 'SKIPPED';
   }
 
@@ -751,10 +698,7 @@ export class TerminateWorkflowError extends Error {
   }
 }
 
-function applyMaxRetryDelayCap(
-  delaySeconds: number,
-  taskDef: TaskDef | null | undefined,
-): number {
+function applyMaxRetryDelayCap(delaySeconds: number, taskDef: TaskDef | null | undefined): number {
   const cap = taskDef?.maxRetryDelaySeconds ?? 0;
   return cap > 0 && delaySeconds > cap ? cap : delaySeconds;
 }
@@ -785,19 +729,4 @@ function removeIterationFromTaskRefName(refName: string): string {
     }
   }
   return refName;
-}
-
-function resolveTemplate(
-  params: Record<string, unknown>,
-  workflow: WorkflowModel,
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(params)) {
-    if (typeof val === 'string' && val.includes('${')) {
-      result[key] = val;
-    } else {
-      result[key] = val;
-    }
-  }
-  return result;
 }

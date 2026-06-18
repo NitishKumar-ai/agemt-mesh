@@ -1,7 +1,18 @@
-import type { TaskModel, WorkflowModel, TaskStatus as TaskStatusType, TaskExecLog, PollData } from '@agentmesh/common';
+import type {
+  TaskModel,
+  WorkflowModel,
+  TaskStatus as TaskStatusType,
+  TaskExecLog,
+  PollData,
+} from '@agentmesh/common';
 import { SearchResult } from '@agentmesh/common';
 import { TaskStatus, isTaskTerminal } from '@agentmesh/common';
-import type { ExecutionDAO, QueueDAO, MetadataDAO, PollDataDAO } from '@agentmesh/common-persistence';
+import type {
+  ExecutionDAO,
+  QueueDAO,
+  MetadataDAO,
+  PollDataDAO,
+} from '@agentmesh/common-persistence';
 
 export interface TaskResult {
   workflowInstanceId: string;
@@ -20,6 +31,7 @@ export class TaskService {
     private readonly queueDAO: QueueDAO,
     private readonly metadataDAO: MetadataDAO,
     private readonly pollDataDAO: PollDataDAO,
+    private readonly workflowExecutor?: any,
   ) {}
 
   async poll(taskType: string, workerId?: string, domain?: string): Promise<TaskModel | undefined> {
@@ -35,6 +47,13 @@ export class TaskService {
   }
 
   async updateTask(taskId: string, result: TaskResult): Promise<TaskModel> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.updateTask(result);
+      const task = await this.executionDAO.getTask(taskId);
+      if (!task) throw new Error(`Task ${taskId} not found`);
+      return task;
+    }
+
     const task = await this.executionDAO.getTask(taskId);
     if (!task) throw new Error(`Task ${taskId} not found`);
 
@@ -135,10 +154,11 @@ export class TaskService {
     const allTasks: TaskModel[] = [];
     try {
       const pending = await this.executionDAO.getPendingTasksForTaskType('');
-      const all = await this.executionDAO.getTasksByIds(pending.map(t => t.taskId!).filter(Boolean));
+      const all = await this.executionDAO.getTasksByIds(
+        pending.map((t) => t.taskId!).filter(Boolean),
+      );
       allTasks.push(...all);
-    } catch {
-    }
+    } catch {}
     const filtered = query
       ? allTasks.filter((t) => JSON.stringify(t).toLowerCase().includes(query.toLowerCase()))
       : allTasks;
@@ -166,10 +186,13 @@ export class TaskService {
 
   async getTasksByRefName(workflowId: string, taskRefName: string): Promise<TaskModel[]> {
     const tasks = await this.executionDAO.getTasksForWorkflow(workflowId);
-    return tasks.filter(t => t.referenceTaskName === taskRefName);
+    return tasks.filter((t) => t.referenceTaskName === taskRefName);
   }
 
-  async getPendingTaskForWorkflow(workflowId: string, taskRefName: string): Promise<TaskModel | undefined> {
+  async getPendingTaskForWorkflow(
+    workflowId: string,
+    taskRefName: string,
+  ): Promise<TaskModel | undefined> {
     const tasks = await this.getTasksByRefName(workflowId, taskRefName);
     return tasks.find((t) => t.status && !isTaskTerminal(t.status as TaskStatusType));
   }

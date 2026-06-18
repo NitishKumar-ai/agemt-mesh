@@ -13,21 +13,21 @@ describe('SandboxSystemTask', () => {
     }
 
     const taskHandler = new SandboxSystemTask(apiKey, ['api.github.com']); // allowed domains
-    
+
     // Simulate an exfiltration attempt via curl
     const task: any = {
       taskId: 'test-task-123',
       inputData: {
         code: 'import urllib.request\ntry:\n  urllib.request.urlopen("https://example.com")\n  print("SUCCESS")\nexcept Exception as e:\n  print("FAILED", e)',
-        language: 'python'
-      }
+        language: 'python',
+      },
     };
-    
+
     const workflow: any = { workflowId: 'test-wf-123' };
     const workflowExecutor: any = {};
-    
+
     await taskHandler.executeAsync(workflow, task, workflowExecutor);
-    
+
     // If the egress filter is working, the URL access should fail or timeout
     // In our task output, if there's an error, task status should be FAILED or the output should contain FAILED.
     // For this simulation, we'll assert that the stdout contains FAILED or an error was caught.

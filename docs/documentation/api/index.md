@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh REST API reference — complete endpoint documentation for workflow orchestration including metadata, execution management, task polling, bulk operations, and event handlers."
+description: 'AgentMesh REST API reference — complete endpoint documentation for workflow orchestration including metadata, execution management, task polling, bulk operations, and event handlers.'
 ---
 
 # API Reference
@@ -38,14 +38,14 @@ A few endpoints return plain text (e.g., workflow ID on start). These are noted 
 
 ## Common Response Codes
 
-| Status Code | Description |
-|---|---|
-| `200 OK` | Request succeeded. Response body contains the result. |
-| `204 No Content` | Request succeeded but there is no response body (e.g., poll with no tasks available). |
-| `400 Bad Request` | Invalid request — check your request body or parameters. |
-| `404 Not Found` | The requested resource (workflow, task, definition) does not exist. |
-| `409 Conflict` | Conflict with current state (e.g., trying to resume a workflow that is not paused). |
-| `500 Internal Server Error` | Server-side error. Check AgentMesh server logs. |
+| Status Code                 | Description                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `200 OK`                    | Request succeeded. Response body contains the result.                                 |
+| `204 No Content`            | Request succeeded but there is no response body (e.g., poll with no tasks available). |
+| `400 Bad Request`           | Invalid request — check your request body or parameters.                              |
+| `404 Not Found`             | The requested resource (workflow, task, definition) does not exist.                   |
+| `409 Conflict`              | Conflict with current state (e.g., trying to resume a workflow that is not paused).   |
+| `500 Internal Server Error` | Server-side error. Check AgentMesh server logs.                                       |
 
 ### Error Response Format
 
@@ -97,15 +97,15 @@ curl "http://localhost:8080/api/workflow/$WORKFLOW_ID"
 
 ## API Sections
 
-| Section | Base Path | Description |
-|---|---|---|
-| **[Metadata](metadata.md)** | `/api/metadata` | Register, update, validate, and delete workflow and task definitions |
-| **[Start Workflow](startworkflow.md)** | `/api/workflow` | Start workflows asynchronously, synchronously, or with dynamic definitions |
-| **[Workflow](workflow.md)** | `/api/workflow` | Manage executions: get status, pause, resume, retry, restart, terminate, search |
-| **[Task](task.md)** | `/api/tasks` | Poll for tasks, update results, manage queues, view logs, search |
-| **[Bulk Operations](bulk.md)** | `/api/workflow/bulk` | Pause, resume, restart, retry, terminate, or remove workflows in batch |
-| **[Event Handlers](eventhandlers.md)** | `/api/event` | Create and manage event-driven workflow triggers |
-| **[Task Domains](taskdomains.md)** | — | Route tasks to specific worker pools at runtime |
+| Section                                | Base Path            | Description                                                                     |
+| -------------------------------------- | -------------------- | ------------------------------------------------------------------------------- |
+| **[Metadata](metadata.md)**            | `/api/metadata`      | Register, update, validate, and delete workflow and task definitions            |
+| **[Start Workflow](startworkflow.md)** | `/api/workflow`      | Start workflows asynchronously, synchronously, or with dynamic definitions      |
+| **[Workflow](workflow.md)**            | `/api/workflow`      | Manage executions: get status, pause, resume, retry, restart, terminate, search |
+| **[Task](task.md)**                    | `/api/tasks`         | Poll for tasks, update results, manage queues, view logs, search                |
+| **[Bulk Operations](bulk.md)**         | `/api/workflow/bulk` | Pause, resume, restart, retry, terminate, or remove workflows in batch          |
+| **[Event Handlers](eventhandlers.md)** | `/api/event`         | Create and manage event-driven workflow triggers                                |
+| **[Task Domains](taskdomains.md)**     | —                    | Route tasks to specific worker pools at runtime                                 |
 
 ## Swagger UI
 

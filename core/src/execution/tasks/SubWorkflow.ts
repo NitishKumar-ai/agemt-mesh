@@ -1,7 +1,12 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, isTaskTerminal, isWorkflowTerminal, isWorkflowSuccessful } from '@agentmesh/common';
+import {
+  TaskType,
+  isTaskTerminal,
+  isWorkflowTerminal,
+  isWorkflowSuccessful,
+} from '@agentmesh/common';
 
 const SUB_WORKFLOW_ID = 'subWorkflowId';
 const SUB_WORKFLOW_LAUNCH_ERROR = 'subWorkflowLaunchError';
@@ -11,18 +16,24 @@ export class SubWorkflow extends WorkflowSystemTask {
     super(TaskType.SUB_WORKFLOW);
   }
 
-  override start(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override start(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     if (task.status !== 'SCHEDULED') {
       return;
     }
 
     const input = task.inputData;
     const versionObj = input['subWorkflowVersion'];
-    const resolvedVersion = typeof versionObj === 'number' ? (versionObj === 0 ? null : versionObj) : null;
+    const resolvedVersion =
+      typeof versionObj === 'number' ? (versionObj === 0 ? null : versionObj) : null;
 
     let name: string | null = null;
     if (input['subWorkflowDefinition'] != null) {
-      name = (input['subWorkflowDefinition'] as Record<string, unknown>)['name'] as string ?? null;
+      name =
+        ((input['subWorkflowDefinition'] as Record<string, unknown>)['name'] as string) ?? null;
     }
     if (name == null) {
       name = input['subWorkflowName'] != null ? String(input['subWorkflowName']) : null;
@@ -34,7 +45,10 @@ export class SubWorkflow extends WorkflowSystemTask {
     }
 
     let taskToDomain = workflow.taskToDomain ?? undefined;
-    if (input['subWorkflowTaskToDomain'] instanceof Map || typeof input['subWorkflowTaskToDomain'] === 'object') {
+    if (
+      input['subWorkflowTaskToDomain'] instanceof Map ||
+      typeof input['subWorkflowTaskToDomain'] === 'object'
+    ) {
       taskToDomain = input['subWorkflowTaskToDomain'] as Record<string, string> | undefined;
     }
 
@@ -43,7 +57,8 @@ export class SubWorkflow extends WorkflowSystemTask {
       wfInput = input;
     }
 
-    const priority = typeof input['priority'] === 'number' ? input['priority'] as number : undefined;
+    const priority =
+      typeof input['priority'] === 'number' ? (input['priority'] as number) : undefined;
 
     const parentWorkflowId = task.workflowInstanceId;
     const subWorkflowId = generateSubWorkflowId(parentWorkflowId, task.taskId, task.retryCount);
@@ -119,7 +134,11 @@ export class SubWorkflow extends WorkflowSystemTask {
     return true;
   }
 
-  override cancel(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override cancel(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     const workflowId = task.subWorkflowId;
     if (!workflowId) {
       return;
@@ -177,6 +196,10 @@ export class SubWorkflow extends WorkflowSystemTask {
   }
 }
 
-function generateSubWorkflowId(parentWorkflowId: string, taskId: string, retryCount: number): string {
+function generateSubWorkflowId(
+  parentWorkflowId: string,
+  taskId: string,
+  retryCount: number,
+): string {
   return `${parentWorkflowId}_${taskId}_${retryCount}`;
 }

@@ -26,7 +26,10 @@ export class MySQLConcurrentExecutionLimitDAO implements ConcurrentExecutionLimi
       return true;
     }
 
-    const tasksInProgress = await this.findAllTasksInProgressInOrderOfArrival(task.taskDefName!, limit);
+    const tasksInProgress = await this.findAllTasksInProgressInOrderOfArrival(
+      task.taskDefName!,
+      limit,
+    );
     return !tasksInProgress.includes(task.taskId!);
   }
 
@@ -40,7 +43,10 @@ export class MySQLConcurrentExecutionLimitDAO implements ConcurrentExecutionLimi
     return Number(row?.count || 0);
   }
 
-  private async findAllTasksInProgressInOrderOfArrival(taskDefName: string, limit: number): Promise<string[]> {
+  private async findAllTasksInProgressInOrderOfArrival(
+    taskDefName: string,
+    limit: number,
+  ): Promise<string[]> {
     const rows = await this.db
       .selectFrom('task_in_progress')
       .select('task_id')

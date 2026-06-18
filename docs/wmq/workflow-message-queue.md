@@ -15,9 +15,9 @@ Two pieces make this work:
 
 WMQ requires changes that are currently in review:
 
-| Component | PR |
-|---|---|
-| AgentMesh OSS | https://github.com/agentmesh-oss/agentmesh/pull/917 |
+| Component                       | PR                                                   |
+| ------------------------------- | ---------------------------------------------------- |
+| AgentMesh OSS                   | https://github.com/agentmesh-oss/agentmesh/pull/917  |
 | Python SDK (`agentmesh-python`) | https://github.com/agentmesh-oss/python-sdk/pull/389 |
 
 ## Using WMQ
@@ -62,6 +62,7 @@ The task completes with:
 Your workflow accesses the user data via `output.messages[0].payload`. The `id` and `receivedAt` fields are added by AgentMesh at ingestion time.
 
 **Push errors:**
+
 - `409 Conflict` — workflow is not in `RUNNING` state (completed, failed, terminated, etc.). The message is not stored.
 - `500` — queue is full (`maxQueueSize` reached). Caller must back off and retry.
 
@@ -167,9 +168,9 @@ agentmesh.workflow-message-queue.ttlSeconds=86400
 agentmesh.workflow-message-queue.maxBatchSize=100
 ```
 
-| Property | Default | Description |
-|---|---|---|
-| `enabled` | `false` | Enable the WMQ feature |
-| `maxQueueSize` | `1000` | Max messages queued per workflow |
-| `ttlSeconds` | `86400` | Message TTL (24 h) |
-| `maxBatchSize` | `100` | Max messages returned per `PULL_WORKFLOW_MESSAGES` poll |
+| Property       | Default | Description                                             |
+| -------------- | ------- | ------------------------------------------------------- |
+| `enabled`      | `false` | Enable the WMQ feature                                  |
+| `maxQueueSize` | `1000`  | Max messages queued per workflow                        |
+| `ttlSeconds`   | `86400` | Message TTL (24 h)                                      |
+| `maxBatchSize` | `100`   | Max messages returned per `PULL_WORKFLOW_MESSAGES` poll |

@@ -8,7 +8,11 @@ export class Switch extends WorkflowSystemTask {
     super(TaskType.SWITCH);
   }
 
-  override execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
+  override execute(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): boolean {
     task.status = 'COMPLETED';
     return true;
   }

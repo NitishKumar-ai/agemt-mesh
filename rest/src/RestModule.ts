@@ -38,14 +38,6 @@ export class RestModule {
         VersionResource,
       ],
       providers: [
-        { provide: EXECUTION_DAO, useValue: null },
-        { provide: METADATA_DAO, useValue: null },
-        { provide: QUEUE_DAO, useValue: null },
-        { provide: POLL_DATA_DAO, useValue: null },
-        { provide: VERSION, useValue: null },
-        { provide: START_TIME, useValue: null },
-        { provide: DB_PROBE, useValue: null },
-        { provide: WORKFLOW_EXECUTOR, useValue: null },
         {
           provide: MetadataService,
           useFactory: (metadataDAO) => new MetadataService(metadataDAO),
@@ -59,9 +51,9 @@ export class RestModule {
         },
         {
           provide: TaskService,
-          useFactory: (executionDAO, queueDAO, metadataDAO, pollDataDAO) =>
-            new TaskService(executionDAO, queueDAO, metadataDAO, pollDataDAO),
-          inject: [EXECUTION_DAO, QUEUE_DAO, METADATA_DAO, POLL_DATA_DAO],
+          useFactory: (executionDAO, queueDAO, metadataDAO, pollDataDAO, workflowExecutor) =>
+            new TaskService(executionDAO, queueDAO, metadataDAO, pollDataDAO, workflowExecutor),
+          inject: [EXECUTION_DAO, QUEUE_DAO, METADATA_DAO, POLL_DATA_DAO, WORKFLOW_EXECUTOR],
         },
         {
           provide: EventService,
@@ -75,7 +67,8 @@ export class RestModule {
         },
         {
           provide: AdminService,
-          useFactory: (workflowService, executionDAO) => new AdminService(workflowService, executionDAO),
+          useFactory: (workflowService, executionDAO) =>
+            new AdminService(workflowService, executionDAO),
           inject: [WorkflowService, EXECUTION_DAO],
         },
         {
@@ -92,14 +85,6 @@ export class RestModule {
         VersionService,
         AdminService,
         WorkflowBulkService,
-        EXECUTION_DAO,
-        METADATA_DAO,
-        QUEUE_DAO,
-        POLL_DATA_DAO,
-        VERSION,
-        START_TIME,
-        DB_PROBE,
-        WORKFLOW_EXECUTOR,
       ],
     };
   }

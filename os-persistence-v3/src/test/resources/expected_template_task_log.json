@@ -1,24 +1,24 @@
 {
-  "index_patterns" : [ "*agentmesh_task*log*" ],
-  "priority" : 1,
-  "template" : {
-    "settings" : {
-      "refresh_interval" : "1s"
+  "index_patterns": ["*agentmesh_task*log*"],
+  "priority": 1,
+  "template": {
+    "settings": {
+      "refresh_interval": "1s"
     },
-    "mappings" : {
-      "properties" : {
-        "createdTime" : {
-          "type" : "long"
+    "mappings": {
+      "properties": {
+        "createdTime": {
+          "type": "long"
         },
-        "log" : {
-          "type" : "text"
+        "log": {
+          "type": "text"
         },
-        "taskId" : {
-          "type" : "keyword",
-          "index" : true
+        "taskId": {
+          "type": "keyword",
+          "index": true
         }
       }
     },
-    "aliases" : { }
+    "aliases": {}
   }
 }

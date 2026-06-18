@@ -1,14 +1,11 @@
-"use strict";
+'use strict';
 var __createBinding =
   (this && this.__createBinding) ||
   (Object.create
     ? function (o, m, k, k2) {
         if (k2 === undefined) k2 = k;
         var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (
-          !desc ||
-          ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)
-        ) {
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
           desc = {
             enumerable: true,
             get: function () {
@@ -26,10 +23,10 @@ var __setModuleDefault =
   (this && this.__setModuleDefault) ||
   (Object.create
     ? function (o, v) {
-        Object.defineProperty(o, "default", { enumerable: true, value: v });
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
       }
     : function (o, v) {
-        o["default"] = v;
+        o['default'] = v;
       });
 var __importStar =
   (this && this.__importStar) ||
@@ -39,8 +36,7 @@ var __importStar =
         Object.getOwnPropertyNames ||
         function (o) {
           var ar = [];
-          for (var k in o)
-            if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+          for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
           return ar;
         };
       return ownKeys(o);
@@ -50,18 +46,18 @@ var __importStar =
       var result = {};
       if (mod != null)
         for (var k = ownKeys(mod), i = 0; i < k.length; i++)
-          if (k[i] !== "default") __createBinding(result, mod, k[i]);
+          if (k[i] !== 'default') __createBinding(result, mod, k[i]);
       __setModuleDefault(result, mod);
       return result;
     };
   })();
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.AMQPConnection = exports.ConnectionType = void 0;
-const amqplib = __importStar(require("amqplib"));
+const amqplib = __importStar(require('amqplib'));
 var ConnectionType;
 (function (ConnectionType) {
-  ConnectionType["PUBLISHER"] = "PUBLISHER";
-  ConnectionType["SUBSCRIBER"] = "SUBSCRIBER";
+  ConnectionType['PUBLISHER'] = 'PUBLISHER';
+  ConnectionType['SUBSCRIBER'] = 'SUBSCRIBER';
 })(ConnectionType || (exports.ConnectionType = ConnectionType = {}));
 class AMQPConnection {
   static instance = null;
@@ -91,10 +87,10 @@ class AMQPConnection {
         const connection = await amqplib.connect(this.connectionUrl, {
           clientProperties: { connection_name: connectionPrefix },
         });
-        connection.on("error", (err) => {
+        connection.on('error', (err) => {
           console.error(`Connection error for ${connectionPrefix}:`, err);
         });
-        connection.on("close", () => {
+        connection.on('close', () => {
           console.error(`Connection closed for ${connectionPrefix}`);
         });
         return connection;
@@ -105,9 +101,7 @@ class AMQPConnection {
         try {
           AMQPConnection.retrySettings.continueOrPropagate(e, retryIndex);
         } catch (ex) {
-          throw new Error(
-            `Retries completed. Failed to open connection: ${e.message}`,
-          );
+          throw new Error(`Retries completed. Failed to open connection: ${e.message}`);
         }
         retryIndex++;
       }
@@ -123,21 +117,14 @@ class AMQPConnection {
         return locChn;
       }
       if (!this.subscriberConnection) {
-        this.subscriberConnection = await this.createConnection(
-          ConnectionType.SUBSCRIBER,
-        );
+        this.subscriberConnection = await this.createConnection(ConnectionType.SUBSCRIBER);
       }
-      const subChn = await this.borrowChannel(
-        connectionType,
-        this.subscriberConnection,
-      );
+      const subChn = await this.borrowChannel(connectionType, this.subscriberConnection);
       this.subscriberReservedChannelPool.set(subChnName, subChn);
       return subChn;
     } else {
       if (!this.publisherConnection) {
-        this.publisherConnection = await this.createConnection(
-          ConnectionType.PUBLISHER,
-        );
+        this.publisherConnection = await this.createConnection(ConnectionType.PUBLISHER);
       }
       return await this.borrowChannel(connectionType, this.publisherConnection);
     }
@@ -147,10 +134,10 @@ class AMQPConnection {
     while (true) {
       try {
         const locChn = await rmqConnection.createChannel();
-        locChn.on("close", () => {
+        locChn.on('close', () => {
           console.error(`${connType} Channel has been closed`);
         });
-        locChn.on("error", (err) => {
+        locChn.on('error', (err) => {
           console.error(`${connType} Channel has error:`, err);
         });
         return locChn;
@@ -161,9 +148,7 @@ class AMQPConnection {
         try {
           AMQPConnection.retrySettings.continueOrPropagate(e, retryIndex);
         } catch (ex) {
-          throw new Error(
-            `Retries completed. Cannot open ${connType} channel: ${e.message}`,
-          );
+          throw new Error(`Retries completed. Cannot open ${connType} channel: ${e.message}`);
         }
         retryIndex++;
       }
@@ -194,21 +179,21 @@ class AMQPConnection {
     channels.add(channel);
   }
   async close() {
-    console.log("Closing all connections and channels");
+    console.log('Closing all connections and channels');
     this.availableChannelPool.clear();
     this.subscriberReservedChannelPool.clear();
     if (this.publisherConnection) {
       try {
         await this.publisherConnection.close();
       } catch (e) {
-        console.warn("Failed to close publisher connection", e);
+        console.warn('Failed to close publisher connection', e);
       }
     }
     if (this.subscriberConnection) {
       try {
         await this.subscriberConnection.close();
       } catch (e) {
-        console.warn("Failed to close subscriber connection", e);
+        console.warn('Failed to close subscriber connection', e);
       }
     }
     this.publisherConnection = null;

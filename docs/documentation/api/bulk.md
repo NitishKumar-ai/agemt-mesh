@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh Bulk Operations API — pause, resume, restart, retry, terminate, remove, and search workflows in batch."
+description: 'AgentMesh Bulk Operations API — pause, resume, restart, retry, terminate, remove, and search workflows in batch.'
 ---
 
 # Bulk Operations API
@@ -21,16 +21,16 @@ Operations are **best-effort** — each workflow is processed independently. If 
 
 ## Endpoints
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/bulk/pause` | `PUT` | Pause multiple workflows |
-| `/bulk/resume` | `PUT` | Resume multiple paused workflows |
-| `/bulk/restart` | `POST` | Restart multiple completed workflows |
-| `/bulk/retry` | `POST` | Retry the last failed task in multiple workflows |
-| `/bulk/terminate` | `POST` | Terminate multiple running workflows |
-| `/bulk/remove` | `DELETE` | Remove multiple workflows from the system |
-| `/bulk/terminate-remove` | `DELETE` | Terminate and remove multiple workflows |
-| `/bulk/search` | `POST` | Search/fetch multiple workflows by ID |
+| Endpoint                 | Method   | Description                                      |
+| ------------------------ | -------- | ------------------------------------------------ |
+| `/bulk/pause`            | `PUT`    | Pause multiple workflows                         |
+| `/bulk/resume`           | `PUT`    | Resume multiple paused workflows                 |
+| `/bulk/restart`          | `POST`   | Restart multiple completed workflows             |
+| `/bulk/retry`            | `POST`   | Retry the last failed task in multiple workflows |
+| `/bulk/terminate`        | `POST`   | Terminate multiple running workflows             |
+| `/bulk/remove`           | `DELETE` | Remove multiple workflows from the system        |
+| `/bulk/terminate-remove` | `DELETE` | Terminate and remove multiple workflows          |
+| `/bulk/search`           | `POST`   | Search/fetch multiple workflows by ID            |
 
 ### Bulk Pause
 
@@ -75,8 +75,8 @@ curl -X PUT 'http://localhost:8080/api/workflow/bulk/resume' \
 POST /api/workflow/bulk/restart?useLatestDefinitions=false
 ```
 
-| Parameter | Description | Default |
-|---|---|---|
+| Parameter              | Description                              | Default |
+| ---------------------- | ---------------------------------------- | ------- |
 | `useLatestDefinitions` | Use latest workflow and task definitions | `false` |
 
 ```shell
@@ -109,9 +109,9 @@ curl -X POST 'http://localhost:8080/api/workflow/bulk/retry' \
 POST /api/workflow/bulk/terminate?reason=
 ```
 
-| Parameter | Description | Required |
-|---|---|---|
-| `reason` | Reason for termination | No |
+| Parameter | Description            | Required |
+| --------- | ---------------------- | -------- |
+| `reason`  | Reason for termination | No       |
 
 ```shell
 curl -X POST 'http://localhost:8080/api/workflow/bulk/terminate?reason=batch+cleanup' \
@@ -127,9 +127,9 @@ curl -X POST 'http://localhost:8080/api/workflow/bulk/terminate?reason=batch+cle
 DELETE /api/workflow/bulk/remove?archiveWorkflow=true
 ```
 
-| Parameter | Description | Default |
-|---|---|---|
-| `archiveWorkflow` | Archive before removing | `true` |
+| Parameter         | Description             | Default |
+| ----------------- | ----------------------- | ------- |
+| `archiveWorkflow` | Archive before removing | `true`  |
 
 ```shell
 curl -X DELETE 'http://localhost:8080/api/workflow/bulk/remove' \
@@ -138,7 +138,7 @@ curl -X DELETE 'http://localhost:8080/api/workflow/bulk/remove' \
 ```
 
 !!! warning
-    This permanently removes workflow execution data.
+This permanently removes workflow execution data.
 
 **Response** `200 OK` — returns a `BulkResponse`.
 
@@ -150,10 +150,10 @@ DELETE /api/workflow/bulk/terminate-remove?reason=&archiveWorkflow=true
 
 Terminates running workflows and removes them in one call.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `reason` | Reason for termination | — |
-| `archiveWorkflow` | Archive before removing | `true` |
+| Parameter         | Description             | Default |
+| ----------------- | ----------------------- | ------- |
+| `reason`          | Reason for termination  | —       |
+| `archiveWorkflow` | Archive before removing | `true`  |
 
 ```shell
 curl -X DELETE 'http://localhost:8080/api/workflow/bulk/terminate-remove?reason=decommissioned' \
@@ -171,9 +171,9 @@ POST /api/workflow/bulk/search?includeTasks=true
 
 Fetches multiple workflows by their IDs in a single call. Unlike the other bulk endpoints, this returns workflow objects rather than a `BulkResponse`.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `includeTasks` | Include task details | `true` |
+| Parameter      | Description          | Default |
+| -------------- | -------------------- | ------- |
+| `includeTasks` | Include task details | `true`  |
 
 ```shell
 curl -X POST 'http://localhost:8080/api/workflow/bulk/search?includeTasks=false' \

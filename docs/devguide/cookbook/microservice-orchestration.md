@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — microservice orchestration recipes with HTTP service chains, conditional branching, and parallel HTTP calls using Fork/Join."
+description: 'AgentMesh cookbook — microservice orchestration recipes with HTTP service chains, conditional branching, and parallel HTTP calls using Fork/Join.'
 ---
 
 # Microservice orchestration
@@ -154,7 +154,7 @@ Use a SWITCH operator to route workflow execution based on a previous task's out
               "http_request": {
                 "uri": "https://api.example.com/account-managers/assign",
                 "method": "POST",
-                "body": {"userId": "${workflow.input.userId}"}
+                "body": { "userId": "${workflow.input.userId}" }
               }
             }
           }
@@ -168,7 +168,7 @@ Use a SWITCH operator to route workflow execution based on a previous task's out
               "http_request": {
                 "uri": "https://api.example.com/emails/welcome",
                 "method": "POST",
-                "body": {"userId": "${workflow.input.userId}"}
+                "body": { "userId": "${workflow.input.userId}" }
               }
             }
           }

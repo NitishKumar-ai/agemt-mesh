@@ -4,20 +4,21 @@
 
 Group: `com.agentmesh.agentmesh`
 
-| Published Artifact | Description |
-| ----------- | ----------- | 
-| agentmesh-task | Community contributed tasks  |
+| Published Artifact | Description                 |
+| ------------------ | --------------------------- |
+| agentmesh-task     | Community contributed tasks |
 
 **Note**: If you are using `condutor-contribs` as a dependency, the task module is already included, you do not need to include it separately.
 
 ## JsonJQTransform
+
 JSON_JQ_TRANSFORM_TASK is a System task that allows processing of JSON data that is supplied to the task, by using the
 popular JQ processing tool’s query expression language.
-
 
 ```json
 "type" : "JSON_JQ_TRANSFORM_TASK"
 ```
+
 Check the [JQ Manual](https://stedolan.github.io/jq/manual/v1.5/), and the
 [JQ Playground](https://jqplay.org/) for more information on JQ, and also
 [AI JQ Playground](https://jq.getport.io/) for building JQ with AI.
@@ -51,16 +52,10 @@ that has the following
   "type": "JSON_JQ_TRANSFORM",
   "inputParameters": {
     "key1": {
-      "value1": [
-        "a",
-        "b"
-      ]
+      "value1": ["a", "b"]
     },
     "key2": {
-      "value2": [
-        "c",
-        "d"
-      ]
+      "value2": ["c", "d"]
     },
     "queryExpression": "{ key3: (.key1.value1 + .key2.value2) }"
   }
@@ -75,21 +70,11 @@ attribute along with a string message will be returned if there was an error pro
 ```json
 {
   "result": {
-    "key3": [
-      "a",
-      "b",
-      "c",
-      "d"
-    ]
+    "key3": ["a", "b", "c", "d"]
   },
   "resultList": [
     {
-      "key3": [
-        "a",
-        "b",
-        "c",
-        "d"
-      ]
+      "key3": ["a", "b", "c", "d"]
     }
   ]
 }
@@ -97,25 +82,25 @@ attribute along with a string message will be returned if there was an error pro
 
 #### Input Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| name      | Task Name. A unique name that is descriptive of the task function      |
-| taskReferenceName   | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition        |
-| type   | Task Type. In this case, JSON_JQ_TRANSFORM        |
-| inputParameters   | The input parameters that will be supplied to this task. The parameters will be a JSON object of atleast 2 attributes, one of which will be called queryExpression. The others are user named attributes. These attributes will be accessible by the JQ query processor        |
-| inputParameters/user-defined-key(s)   | User defined key(s) along with values.          |
-| inputParameters/queryExpression   | A JQ query expression        |
+| Attribute                           | Description                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name                                | Task Name. A unique name that is descriptive of the task function                                                                                                                                                                                                       |
+| taskReferenceName                   | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition                                                                                                                                    |
+| type                                | Task Type. In this case, JSON_JQ_TRANSFORM                                                                                                                                                                                                                              |
+| inputParameters                     | The input parameters that will be supplied to this task. The parameters will be a JSON object of atleast 2 attributes, one of which will be called queryExpression. The others are user named attributes. These attributes will be accessible by the JQ query processor |
+| inputParameters/user-defined-key(s) | User defined key(s) along with values.                                                                                                                                                                                                                                  |
+| inputParameters/queryExpression     | A JQ query expression                                                                                                                                                                                                                                                   |
 
 #### Output Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| result   | The first results returned by the JQ expression     |
-| resultList   | A List of results returned by the JQ expression        |
-| error | An optional error message, indicating that the JQ query failed processing |
-
+| Attribute  | Description                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| result     | The first results returned by the JQ expression                           |
+| resultList | A List of results returned by the JQ expression                           |
+| error      | An optional error message, indicating that the JQ query failed processing |
 
 ## Kafka Publish Task
+
 A Kafka Publish task is used to push messages to another microservice via Kafka.
 
 ```json
@@ -136,7 +121,7 @@ Sample Task
       "value": "Message to publish",
       "bootStrapServers": "localhost:9092",
       "headers": {
-    "x-Auth":"Auth-key"    
+        "x-Auth": "Auth-key"
       },
       "key": "123",
       "keySerializer": "org.apache.kafka.common.serialization.IntegerSerializer"

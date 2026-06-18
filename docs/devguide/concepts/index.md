@@ -1,5 +1,5 @@
 ---
-description: "Core concepts of AgentMesh — an open source workflow orchestration engine for distributed workflows, microservice orchestration, AI agent orchestration, and workflow automation with code-first and JSON-native definitions and polyglot workers."
+description: 'Core concepts of AgentMesh — an open source workflow orchestration engine for distributed workflows, microservice orchestration, AI agent orchestration, and workflow automation with code-first and JSON-native definitions and polyglot workers.'
 ---
 
 # Basic Concepts

@@ -1,12 +1,14 @@
 ---
-description: "Terminate Task — end a AgentMesh workflow execution with a specified status and output from any point in the flow."
+description: 'Terminate Task — end a AgentMesh workflow execution with a specified status and output from any point in the flow.'
 ---
+
 # Terminate
+
 ```json
 "type" : "TERMINATE"
 ```
 
-The Terminate task (`TERMINATE`) terminates the current workflow with a termination status and reason, and sets the workflow output with any supplied values. 
+The Terminate task (`TERMINATE`) terminates the current workflow with a termination status and reason, and sets the workflow output with any supplied values.
 
 Often used in [Switch](switch-task.md) tasks, the Terminate task can act as a return statement for cases where you want the workflow to be terminated without continuing to the subsequent tasks.
 
@@ -14,14 +16,14 @@ Often used in [Switch](switch-task.md) tasks, the Terminate task can act as a re
 
 Use these parameters inside `inputParameters` in the Terminate task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| terminationStatus | String (enum) | The termination status. Supported types: <ul><li>COMPLETED</li><li>FAILED</li><li>TERMINATED</li></ul>                                   | Required. |
-| terminationReason | String | The reason for terminating the current workflow, which will provide the context of the termination. <br/><br/> For FAILED workflows, this reason is passed to any configured `failureWorkflow`. | Optional.         |
-| workflowOutput    | Any     | The expected workflow output upon termination.                                                              | Optional.         |
-
+| Parameter         | Type          | Description                                                                                                                                                                                     | Required / Optional |
+| ----------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| terminationStatus | String (enum) | The termination status. Supported types: <ul><li>COMPLETED</li><li>FAILED</li><li>TERMINATED</li></ul>                                                                                          | Required.           |
+| terminationReason | String        | The reason for terminating the current workflow, which will provide the context of the termination. <br/><br/> For FAILED workflows, this reason is passed to any configured `failureWorkflow`. | Optional.           |
+| workflowOutput    | Any           | The expected workflow output upon termination.                                                                                                                                                  | Optional.           |
 
 ## Configuration JSON
+
 Here is the task configuration for a Terminate task.
 
 ```json
@@ -37,14 +39,13 @@ Here is the task configuration for a Terminate task.
 }
 ```
 
-
 ## Output
 
 The Terminate task will return the following parameters.
 
-| Name   | Type | Description                                                                                               |
-| ------ | ---- | --------------------------------------------------------------------------------------------------------- |
-| output | Map[String, Any]  | A map of the workflow output on termination, as defined in `workflowOutput`. If `workflowOutput` is not set in the Terminate task configuration, the output will be an empty object. |
+| Name   | Type             | Description                                                                                                                                                                          |
+| ------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| output | Map[String, Any] | A map of the workflow output on termination, as defined in `workflowOutput`. If `workflowOutput` is not set in the Terminate task configuration, the output will be an empty object. |
 
 ## Examples
 
@@ -54,23 +55,22 @@ Here are some examples for using the Terminate task.
 
 In this example workflow, a decision is made to ship with a specific shipping provider based on the provided workflow input. If the provided input does not match the available shipping providers, then the workflow will terminate with a FAILED status. Here is a snippet that shows the default switch case terminating the workflow:
 
-
 ```json
 {
   "name": "switch_task",
   "taskReferenceName": "switch_task",
   "type": "SWITCH",
   "defaultCase": [
-      {
+    {
       "name": "terminate",
       "taskReferenceName": "terminate_ref",
       "type": "TERMINATE",
       "inputParameters": {
-          "terminationStatus": "FAILED",
-          "terminationReason":"Shipping provider not found."
-      }      
+        "terminationStatus": "FAILED",
+        "terminationReason": "Shipping provider not found."
+      }
     }
-   ]
+  ]
 }
 ```
 
@@ -86,10 +86,10 @@ graph LR
     D --> F
 ```
 
-
 ## Best practices
 
 Here are some best practices for handling workflow termination:
 
-* Include a termination reason when terminating the workflow with FAILED status, so that it is easy to understand the cause.
+- Include a termination reason when terminating the workflow with FAILED status, so that it is easy to understand the cause.
+
 2. Include any additional details in the workflow output (e.g., output of the tasks, the selected switch case), to add context to the path taken to termination.

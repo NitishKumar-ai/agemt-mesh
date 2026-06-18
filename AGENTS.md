@@ -10,13 +10,13 @@ The project is built with Java 21 and uses Gradle as the build system.
 
 ## Setup Commands
 
-| Command | Description |
-|---------|-------------|
-| `./gradlew build` | Build the entire project |
-| `./gradlew test` | Run all tests |
+| Command                       | Description                     |
+| ----------------------------- | ------------------------------- |
+| `./gradlew build`             | Build the entire project        |
+| `./gradlew test`              | Run all tests                   |
 | `./gradlew :module-name:test` | Run tests for a specific module |
-| `./gradlew spotlessApply` | Apply code formatting |
-| `./gradlew clean build` | Clean and rebuild |
+| `./gradlew spotlessApply`     | Apply code formatting           |
+| `./gradlew clean build`       | Clean and rebuild               |
 
 > **Important**: Always run `./gradlew spotlessApply` after making code changes to ensure consistent formatting.
 
@@ -31,8 +31,8 @@ The project is built with Java 21 and uses Gradle as the build system.
 - DAO interfaces **MUST** be defined in the `core` module
 - Implementation classes go in their respective persistence modules (e.g., `postgres-persistence`, `redis-persistence`)
 - Follow existing patterns in the codebase for consistency
-- Do not use emojis such as ✅ in the code, logs, or comments.  Keep comments professionals
-- When adding new logic, comment the algorithm, design etc.   
+- Do not use emojis such as ✅ in the code, logs, or comments. Keep comments professionals
+- When adding new logic, comment the algorithm, design etc.
 
 ## Architecture Guidelines
 
@@ -89,15 +89,15 @@ The issue number links back to https://github.com/agentmesh-oss/agentmesh/issues
 
 ### Current hard pins
 
-| Dependency | Pinned at | Why |
-|---|---|---|
-| `com.google.protobuf:protobuf-java` | `3.x` | 4.x + GraalVM polyglot 25.x causes Gradle to require `polyglot4`, which does not exist on Maven Central |
-| `com.google.protobuf:protoc` | `3.25.5` | Must match `grpc-protobuf:1.73.0`, which depends on protobuf-java 3.x |
-| `org.graalvm.*` (all 5 artifacts) | same version | All must share one version — mixing causes a `"polyglot version X not compatible with Truffle Y"` runtime error |
-| `redis.clients:jedis` in `redis-concurrency-limit` | `3.6.0` | `revJedis` (6.0.0) does not work with Spring Data Redis in that module |
-| `org.codehaus.jettison:jettison` | `strictly 1.5.4` | Gradle `strictly` constraint — no higher version has been validated |
-| `org.agentmeshoss:agentmesh-client` in `test-harness` | `5.0.1` | Fat JAR classpath conflict with agentmesh-common; resolved via a stripped JAR task |
-| `org.awaitility:awaitility` in functional tests | `4.x` | e2e tests call `pollInterval(Duration)` added in Awaitility 4.0 |
+| Dependency                                            | Pinned at        | Why                                                                                                             |
+| ----------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `com.google.protobuf:protobuf-java`                   | `3.x`            | 4.x + GraalVM polyglot 25.x causes Gradle to require `polyglot4`, which does not exist on Maven Central         |
+| `com.google.protobuf:protoc`                          | `3.25.5`         | Must match `grpc-protobuf:1.73.0`, which depends on protobuf-java 3.x                                           |
+| `org.graalvm.*` (all 5 artifacts)                     | same version     | All must share one version — mixing causes a `"polyglot version X not compatible with Truffle Y"` runtime error |
+| `redis.clients:jedis` in `redis-concurrency-limit`    | `3.6.0`          | `revJedis` (6.0.0) does not work with Spring Data Redis in that module                                          |
+| `org.codehaus.jettison:jettison`                      | `strictly 1.5.4` | Gradle `strictly` constraint — no higher version has been validated                                             |
+| `org.agentmeshoss:agentmesh-client` in `test-harness` | `5.0.1`          | Fat JAR classpath conflict with agentmesh-common; resolved via a stripped JAR task                              |
+| `org.awaitility:awaitility` in functional tests       | `4.x`            | e2e tests call `pollInterval(Duration)` added in Awaitility 4.0                                                 |
 
 ### Before bumping a PINNED dependency
 
@@ -137,29 +137,34 @@ This matters because plausible-looking docs can be silently wrong. Concretely: a
 ### Workflow for each content type
 
 **REST API endpoint or curl example**
+
 1. Open the relevant controller: `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/`
 2. Find the method using its `@PostMapping`/`@GetMapping`/etc. annotation — copy the path literally.
 3. Read the method signature for query params, path variables, and request body type.
 4. Write the curl command from what you just read.
 
 **CLI command or flag**
+
 1. Open `cmd/*.go` in `agentmesh-cli` (separate repo).
 2. Find the `cobra.Command` definition for the subcommand.
 3. Read the `Flags()` declarations for exact flag names, types, and defaults.
 4. Write the example from what you just read.
 
 **SDK code example (Python, JS, Java, Go)**
+
 1. Open the relevant SDK source file.
 2. Find the method signature and required parameters.
 3. Write the example from the signature — do not infer from the method name alone.
 4. If a working test exists for that method, use it as the starting point.
 
 **Expected output block**
+
 1. Get real output: run the command locally, or find it in test fixtures, CI logs, or existing tests.
 2. Paste verbatim. Do not paraphrase or construct output that "looks right."
 3. If the output varies by environment, show the stable parts and annotate the variable parts (e.g., `<workflow-id>`).
 
 **Editing an existing doc section**
+
 1. Before touching prose, read every code block and command in the section.
 2. Verify each one using the steps above — not just the block you plan to change.
 3. Fix anything you find while you're there.
@@ -167,6 +172,7 @@ This matters because plausible-looking docs can be silently wrong. Concretely: a
 ### When you can't verify
 
 If a running server or CLI binary is unavailable:
+
 - Add a `<!-- TODO: verify against live server -->` comment in the file.
 - Note it explicitly in the PR description.
 - Do not write a best-guess example and leave it unmarked.

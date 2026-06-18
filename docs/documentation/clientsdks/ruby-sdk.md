@@ -1,11 +1,11 @@
 ---
-description: "Build AgentMesh workers in Ruby with idiomatic task definitions and workflow management."
+description: 'Build AgentMesh workers in Ruby with idiomatic task definitions and workflow management.'
 ---
 
 # Ruby SDK
 
 !!! info "Source"
-    GitHub: [agentmesh-oss/ruby-sdk](https://github.com/agentmesh-oss/ruby-sdk) | Report issues and contribute on GitHub.
+GitHub: [agentmesh-oss/ruby-sdk](https://github.com/agentmesh-oss/ruby-sdk) | Report issues and contribute on GitHub.
 
 ## Features
 
@@ -84,19 +84,19 @@ The SDK provides a clean, Ruby-idiomatic DSL for building workflows:
 workflow = AgentMesh.workflow :order_processing, version: 1, executor: executor do
   # Access workflow inputs with wf[:param]
   user = simple :get_user, user_id: wf[:user_id]
-  
+
   # Reference task outputs with task[:field]
   order = simple :validate_order, email: user[:email]
-  
+
   # HTTP calls
   http :call_api, url: 'https://api.example.com', method: :post, body: { id: order[:id] }
-  
+
   # Parallel execution
   parallel do
     simple :ship_order, order_id: order[:id]
     simple :send_confirmation, email: user[:email]
   end
-  
+
   # Conditional branching
   decide order[:region] do
     on 'US' do
@@ -109,7 +109,7 @@ workflow = AgentMesh.workflow :order_processing, version: 1, executor: executor 
       terminate :failed, 'Unsupported region'
     end
   end
-  
+
   # Set workflow output
   output tracking: order[:tracking_number], status: 'completed'
 end
@@ -316,7 +316,7 @@ workflow = AgentMesh.workflow :ai_assistant, executor: executor do
 
   # MCP (Model Context Protocol) integration
   tools = list_mcp_tools :get_tools, server_name: 'my_mcp_server'
-  
+
   call_mcp_tool :use_tool,
     server_name: 'my_mcp_server',
     tool_name: 'search_documents',
@@ -348,15 +348,15 @@ iteration[:user][:name]   # If `as: :user` specified
 
 The `examples/` directory contains comprehensive examples:
 
-| Example | Description |
-|---------|-------------|
-| [`helloworld/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/helloworld/) | Simplest complete example - worker + workflow + execution |
-| [`workflow_dsl.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | Comprehensive new DSL showcase |
-| [`simple_worker.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | Worker patterns: class-based, block-based, error handling |
-| [`kitchensink.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | All major task types using new DSL |
-| [`dynamic_workflow.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | Create and execute workflows at runtime |
-| [`workflow_ops.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | Lifecycle operations: pause, resume, restart, retry |
-| [`agentic_workflows/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/agentic_workflows/) | LLM chat and AI workflow examples |
+| Example                                                                                                   | Description                                               |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [`helloworld/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/helloworld/)                 | Simplest complete example - worker + workflow + execution |
+| [`workflow_dsl.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb)         | Comprehensive new DSL showcase                            |
+| [`simple_worker.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb)       | Worker patterns: class-based, block-based, error handling |
+| [`kitchensink.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb)           | All major task types using new DSL                        |
+| [`dynamic_workflow.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | Create and execute workflows at runtime                   |
+| [`workflow_ops.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb)         | Lifecycle operations: pause, resume, restart, retry       |
+| [`agentic_workflows/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/agentic_workflows/)   | LLM chat and AI workflow examples                         |
 
 Run examples:
 
@@ -390,7 +390,7 @@ class ImageProcessor
   def execute(task)
     url = get_input(task, 'image_url')
     # Process image...
-    
+
     result = AgentMesh::Http::Models::TaskResult.complete
     result.add_output_data('processed_url', processed_url)
     result.log('Image processed successfully')
@@ -447,18 +447,18 @@ config = AgentMesh::Configuration.new(
 
 ### Resource APIs (17 classes)
 
-| API | Description |
-|-----|-------------|
-| WorkflowResourceApi | Workflow execution and management |
-| TaskResourceApi | Task polling and updates |
-| MetadataResourceApi | Workflow/task definitions |
-| SchedulerResourceApi | Scheduled workflows |
-| EventResourceApi | Event handlers |
-| WorkflowBulkResourceApi | Bulk operations |
-| PromptResourceApi | AI prompt templates |
-| SecretResourceApi | Secret management |
-| IntegrationResourceApi | External integrations |
-| + 8 more | Authorization, Users, Groups, Roles, etc. |
+| API                     | Description                               |
+| ----------------------- | ----------------------------------------- |
+| WorkflowResourceApi     | Workflow execution and management         |
+| TaskResourceApi         | Task polling and updates                  |
+| MetadataResourceApi     | Workflow/task definitions                 |
+| SchedulerResourceApi    | Scheduled workflows                       |
+| EventResourceApi        | Event handlers                            |
+| WorkflowBulkResourceApi | Bulk operations                           |
+| PromptResourceApi       | AI prompt templates                       |
+| SecretResourceApi       | Secret management                         |
+| IntegrationResourceApi  | External integrations                     |
+| + 8 more                | Authorization, Users, Groups, Roles, etc. |
 
 ### High-Level Clients (9 classes)
 
@@ -518,30 +518,29 @@ Apache 2.0 - see [LICENSE](https://github.com/agentmesh-oss/ruby-sdk/blob/main/L
 - [Python SDK](https://github.com/agentmesh-sdk/agentmesh-python)
 - [Community Slack](https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA)
 
-
 ## Examples
 
 Browse all examples on GitHub: [agentmesh-oss/ruby-sdk/examples](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples)
 
-| Example | Type |
-|---|---|
-| [Agentic Workflows](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/agentic_workflows) | directory |
-| [Dynamic Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | file |
-| [Event Handler](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_handler.rb) | file |
-| [Event Listener Examples](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_listener_examples.rb) | file |
-| [Helloworld](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/helloworld) | directory |
-| [Kitchensink](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | file |
-| [Metadata Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metadata_journey.rb) | file |
-| [Metrics Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metrics_example.rb) | file |
-| [New Dsl Demo](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/new_dsl_demo.rb) | file |
-| [Orkes](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/orkes) | directory |
-| [Prompt Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/prompt_journey.rb) | file |
-| [Rag Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/rag_workflow.rb) | file |
-| [Schedule Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/schedule_journey.rb) | file |
-| [Simple Worker](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | file |
-| [Simple Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_workflow.rb) | file |
-| [Task Context Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_context_example.rb) | file |
-| [Task Listener Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_listener_example.rb) | file |
-| [Worker Configuration Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/worker_configuration_example.rb) | file |
-| [Workflow Dsl](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | file |
-| [Workflow Ops](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | file |
+| Example                                                                                                                      | Type      |
+| ---------------------------------------------------------------------------------------------------------------------------- | --------- |
+| [Agentic Workflows](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/agentic_workflows)                          | directory |
+| [Dynamic Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb)                         | file      |
+| [Event Handler](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_handler.rb)                               | file      |
+| [Event Listener Examples](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_listener_examples.rb)           | file      |
+| [Helloworld](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/helloworld)                                        | directory |
+| [Kitchensink](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb)                                   | file      |
+| [Metadata Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metadata_journey.rb)                         | file      |
+| [Metrics Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metrics_example.rb)                           | file      |
+| [New Dsl Demo](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/new_dsl_demo.rb)                                 | file      |
+| [Orkes](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/orkes)                                                  | directory |
+| [Prompt Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/prompt_journey.rb)                             | file      |
+| [Rag Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/rag_workflow.rb)                                 | file      |
+| [Schedule Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/schedule_journey.rb)                         | file      |
+| [Simple Worker](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb)                               | file      |
+| [Simple Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_workflow.rb)                           | file      |
+| [Task Context Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_context_example.rb)                 | file      |
+| [Task Listener Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_listener_example.rb)               | file      |
+| [Worker Configuration Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/worker_configuration_example.rb) | file      |
+| [Workflow Dsl](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb)                                 | file      |
+| [Workflow Ops](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb)                                 | file      |

@@ -140,7 +140,12 @@ describe('WorkflowSweeper', () => {
 
     await sweeper.sweep(WORKFLOW_ID);
 
-    expect(queueDAO.push).not.toHaveBeenCalledWith('SIMPLE', 'completed-task', expect.any(Number), expect.any(Number));
+    expect(queueDAO.push).not.toHaveBeenCalledWith(
+      'SIMPLE',
+      'completed-task',
+      expect.any(Number),
+      expect.any(Number),
+    );
     expect(executionLockService.releaseLock).toHaveBeenCalledWith(WORKFLOW_ID);
   });
 
@@ -162,7 +167,12 @@ describe('WorkflowSweeper', () => {
 
     await sweeper.sweep(WORKFLOW_ID);
 
-    expect(queueDAO.push).not.toHaveBeenCalledWith('SIMPLE', 'simple-task', expect.any(Number), expect.any(Number));
+    expect(queueDAO.push).not.toHaveBeenCalledWith(
+      'SIMPLE',
+      'simple-task',
+      expect.any(Number),
+      expect.any(Number),
+    );
     expect(executionLockService.releaseLock).toHaveBeenCalledWith(WORKFLOW_ID);
   });
 
@@ -205,9 +215,15 @@ describe('WorkflowSweeper', () => {
     });
 
     class SubWorkflowMockTask extends WorkflowSystemTask {
-      constructor() { super('SUB_WORKFLOW'); }
-      override isAsync() { return true; }
-      override isAsyncComplete(task: TaskModel) { return true; }
+      constructor() {
+        super('SUB_WORKFLOW');
+      }
+      override isAsync() {
+        return true;
+      }
+      override isAsyncComplete(task: TaskModel) {
+        return true;
+      }
     }
 
     const mockRegistry = new SystemTaskRegistry([new SubWorkflowMockTask()]);
@@ -239,11 +255,13 @@ describe('WorkflowSweeper', () => {
 
     await sweeper.sweep(WORKFLOW_ID);
 
-    expect(executionDAO.updateTask).toHaveBeenCalledWith(expect.objectContaining({
-      taskId: 'sub-workflow-task',
-      status: 'COMPLETED',
-      outputData: { result: 'ok' },
-    }));
+    expect(executionDAO.updateTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskId: 'sub-workflow-task',
+        status: 'COMPLETED',
+        outputData: { result: 'ok' },
+      }),
+    );
     expect(workflowExecutor.decide).toHaveBeenCalledTimes(2);
     expect(executionLockService.releaseLock).toHaveBeenCalledWith(WORKFLOW_ID);
   });

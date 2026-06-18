@@ -8,11 +8,11 @@ This module is a dependency of `redis-persistence` (DAOs) and `queues`. If you o
 
 Set `agentmesh.db.type` to activate a Redis mode:
 
-| Value | Mode | Configuration Class | Jedis Client |
-|---|---|---|---|
-| `redis_standalone` | Single node | `RedisStandaloneConfiguration` | `JedisPooled` |
-| `redis_cluster` | Cluster (sharded) | `RedisClusterConfiguration` | `JedisCluster` |
-| `redis_sentinel` | Sentinel (HA failover) | `RedisSentinelConfiguration` | `JedisSentineled` |
+| Value              | Mode                   | Configuration Class            | Jedis Client      |
+| ------------------ | ---------------------- | ------------------------------ | ----------------- |
+| `redis_standalone` | Single node            | `RedisStandaloneConfiguration` | `JedisPooled`     |
+| `redis_cluster`    | Cluster (sharded)      | `RedisClusterConfiguration`    | `JedisCluster`    |
+| `redis_sentinel`   | Sentinel (HA failover) | `RedisSentinelConfiguration`   | `JedisSentineled` |
 
 ## Quick Start
 
@@ -63,32 +63,32 @@ All properties are prefixed with `agentmesh.redis.`.
 
 ### Connection
 
-| Property | Description | Default |
-|---|---|---|
-| `hosts` | Host definitions (see format above) | *required* |
-| `user` | Redis ACL username | none |
-| `ssl` | Enable TLS | `false` |
-| `ignore-ssl` | Trust all certificates (cluster mode only, for dev/test) | `false` |
-| `database` | Redis database number (0-15, standalone/sentinel only) | `0` |
-| `sentinel-master-name` | Sentinel master name (sentinel mode only) | `mymaster` |
+| Property               | Description                                              | Default    |
+| ---------------------- | -------------------------------------------------------- | ---------- |
+| `hosts`                | Host definitions (see format above)                      | _required_ |
+| `user`                 | Redis ACL username                                       | none       |
+| `ssl`                  | Enable TLS                                               | `false`    |
+| `ignore-ssl`           | Trust all certificates (cluster mode only, for dev/test) | `false`    |
+| `database`             | Redis database number (0-15, standalone/sentinel only)   | `0`        |
+| `sentinel-master-name` | Sentinel master name (sentinel mode only)                | `mymaster` |
 
 ### Connection Pool
 
-| Property | Description | Default |
-|---|---|---|
-| `max-connections-per-host` | Maximum total connections in the pool | `10` |
-| `max-idle-connections` | Maximum idle connections | `8` |
-| `min-idle-connections` | Minimum idle connections maintained | `5` |
-| `min-evictable-idle-time-millis` | Time before an idle connection can be evicted | `180000` |
-| `time-between-eviction-runs-millis` | Interval between eviction runs | `60000` |
-| `test-while-idle` | Validate idle connections | `true` |
-| `fairness` | Use fair ordering for connection acquisition | `true` |
-| `max-timeout-when-exhausted` | Max wait for a connection when pool is exhausted | `800ms` |
+| Property                            | Description                                      | Default  |
+| ----------------------------------- | ------------------------------------------------ | -------- |
+| `max-connections-per-host`          | Maximum total connections in the pool            | `10`     |
+| `max-idle-connections`              | Maximum idle connections                         | `8`      |
+| `min-idle-connections`              | Minimum idle connections maintained              | `5`      |
+| `min-evictable-idle-time-millis`    | Time before an idle connection can be evicted    | `180000` |
+| `time-between-eviction-runs-millis` | Interval between eviction runs                   | `60000`  |
+| `test-while-idle`                   | Validate idle connections                        | `true`   |
+| `fairness`                          | Use fair ordering for connection acquisition     | `true`   |
+| `max-timeout-when-exhausted`        | Max wait for a connection when pool is exhausted | `800ms`  |
 
 ### Cluster-Specific
 
-| Property | Description | Default |
-|---|---|---|
+| Property                     | Description                                         | Default   |
+| ---------------------------- | --------------------------------------------------- | --------- |
 | `max-total-retries-duration` | Maximum total retry duration for cluster operations | `10000ms` |
 
 ## Architecture

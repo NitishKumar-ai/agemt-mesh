@@ -21,10 +21,7 @@ agentmesh server start
 
 Wait for the server to start, then open the UI at [http://localhost:8080](http://localhost:8080).
 
-!!! note "Troubleshooting"
-    - **"Java not found" or server won't start?** Install Java 21+ and make sure `java -version` shows 21 or higher.
-    - **Port 8080 already in use?** Start on a different port: `agentmesh server start --port 9090`
-    - **Prefer Docker?** Skip the CLI server and run: `docker run -p 8080:8080 agentmeshoss/agentmesh:latest`
+!!! note "Troubleshooting" - **"Java not found" or server won't start?** Install Java 21+ and make sure `java -version` shows 21 or higher. - **Port 8080 already in use?** Start on a different port: `agentmesh server start --port 9090` - **Prefer Docker?** Skip the CLI server and run: `docker run -p 8080:8080 agentmeshoss/agentmesh:latest`
 
 ### Define the workflow
 
@@ -112,8 +109,7 @@ agentmesh workflow start -w hello_workflow --sync 2>/dev/null | jq '.output'
 Open [http://localhost:8080](http://localhost:8080) to see the execution visually — the task timeline, inputs/outputs, and status of each step.
 
 !!! success "What just happened"
-    AgentMesh called an external API, passed the response to server-side JavaScript for parsing, tracked every step, and would have retried on failure — all without writing or deploying any worker code.
-
+AgentMesh called an external API, passed the response to server-side JavaScript for parsing, tracked every step, and would have retried on failure — all without writing or deploying any worker code.
 
 ## Phase 2: Add a worker
 
@@ -267,8 +263,7 @@ Expected output:
 Open [http://localhost:8080](http://localhost:8080) to see the retry visually in the execution diagram.
 
 !!! success "What just happened"
-    Your worker failed, AgentMesh retried it after 1 second, and the retry succeeded. This is durable execution — AgentMesh manages retries so your code doesn't have to.
-
+Your worker failed, AgentMesh retried it after 1 second, and the retry succeeded. This is durable execution — AgentMesh manages retries so your code doesn't have to.
 
 ## Phase 3: Replay a workflow
 
@@ -300,8 +295,7 @@ curl -X POST "http://localhost:8080/api/workflow/$WORKFLOW_ID/retry"
 AgentMesh picks up from the failed task, reusing the outputs of all previously completed tasks.
 
 !!! success "What just happened"
-    You replayed a workflow execution using two different strategies — full restart and retry from failure. AgentMesh preserved the full execution history, so you could replay at any time. This works on completed, failed, or timed-out workflows, indefinitely.
-
+You replayed a workflow execution using two different strategies — full restart and retry from failure. AgentMesh preserved the full execution history, so you could replay at any time. This works on completed, failed, or timed-out workflows, indefinitely.
 
 ??? note "Workers in other languages"
 
@@ -378,13 +372,11 @@ AgentMesh picks up from the failed task, reusing the outputs of all previously c
 
         See the [C# SDK](https://github.com/agentmesh-oss/csharp-sdk) for full setup.
 
-
 ## Cleanup
 
 ```bash
 agentmesh server stop
 ```
-
 
 ## Using Docker instead
 
@@ -396,14 +388,13 @@ docker run --name agentmesh -p 8080:8080 agentmeshoss/agentmesh:latest
 
 All the workflow commands above work the same — just replace the CLI commands with their cURL equivalents:
 
-| CLI | cURL |
-|-----|------|
-| `agentmesh workflow create workflow.json` | `curl -X POST http://localhost:8080/api/metadata/workflow -H 'Content-Type: application/json' -d @workflow.json` |
+| CLI                                                 | cURL                                                                                                                                          |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agentmesh workflow create workflow.json`           | `curl -X POST http://localhost:8080/api/metadata/workflow -H 'Content-Type: application/json' -d @workflow.json`                              |
 | `agentmesh workflow start -w hello_workflow --sync` | `curl -s -X POST "http://localhost:8080/api/workflow/execute/hello_workflow/1?waitForSeconds=10" -H 'Content-Type: application/json' -d '{}'` |
-| `agentmesh server stop` | `docker rm -f agentmesh` |
+| `agentmesh server stop`                             | `docker rm -f agentmesh`                                                                                                                      |
 
 For production deployment options, see [Running with Docker](../devguide/running/deploy.md).
-
 
 ## Next steps
 

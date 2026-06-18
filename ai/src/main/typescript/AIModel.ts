@@ -54,7 +54,11 @@ export interface ModelConfiguration<T extends AIModel> {
 /** Build a URL from a string; returns undefined for blank or invalid input. */
 export function getURI(input: string | undefined | null): URL | undefined {
   if (!input?.trim()) return undefined;
-  try { return new URL(input); } catch { return undefined; }
+  try {
+    return new URL(input);
+  } catch {
+    return undefined;
+  }
 }
 
 export function buildToolCallbacks(input: ChatCompletion): ToolCallback[] {

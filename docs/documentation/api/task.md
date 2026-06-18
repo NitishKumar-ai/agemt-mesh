@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh Task API — poll, update, search, and manage tasks. Includes batch polling, task logs, queue management, and poll data."
+description: 'AgentMesh Task API — poll, update, search, and manage tasks. Includes batch polling, task logs, queue management, and poll data.'
 ---
 
 # Task API
@@ -33,8 +33,8 @@ curl 'http://localhost:8080/api/tasks/a1b2c3d4-5678-90ab-cdef-111111111111'
   "pollCount": 1,
   "taskId": "a1b2c3d4-5678-90ab-cdef-111111111111",
   "workflowInstanceId": "3a5b8c2d-1234-5678-9abc-def012345678",
-  "inputData": {"key": "value"},
-  "outputData": {"result": "success"},
+  "inputData": { "key": "value" },
+  "outputData": { "result": "success" },
   "workerId": "worker-host-1"
 }
 ```
@@ -53,11 +53,11 @@ GET /api/tasks/poll/{taskType}?workerid=&domain=
 
 Polls for a single task of the given type. Returns `204 No Content` if no task is available.
 
-| Parameter | Description | Required |
-|---|---|---|
-| `taskType` | Task type to poll for | Yes |
-| `workerid` | Identifier for the worker polling | No |
-| `domain` | Task domain. See [Task Domains](taskdomains.md). | No |
+| Parameter  | Description                                      | Required |
+| ---------- | ------------------------------------------------ | -------- |
+| `taskType` | Task type to poll for                            | Yes      |
+| `workerid` | Identifier for the worker polling                | No       |
+| `domain`   | Task domain. See [Task Domains](taskdomains.md). | No       |
 
 ```shell
 curl 'http://localhost:8080/api/tasks/poll/my_task?workerid=worker-1'
@@ -73,13 +73,13 @@ GET /api/tasks/poll/batch/{taskType}?count=1&timeout=100&workerid=&domain=
 
 Polls for multiple tasks in a single request. This is a **long poll** — the connection waits until `timeout` or at least 1 task is available.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `taskType` | Task type to poll for | — |
-| `count` | Maximum number of tasks to return | `1` |
-| `timeout` | Long poll timeout in milliseconds | `100` |
-| `workerid` | Worker identifier | — |
-| `domain` | Task domain | — |
+| Parameter  | Description                       | Default |
+| ---------- | --------------------------------- | ------- |
+| `taskType` | Task type to poll for             | —       |
+| `count`    | Maximum number of tasks to return | `1`     |
+| `timeout`  | Long poll timeout in milliseconds | `100`   |
+| `workerid` | Worker identifier                 | —       |
+| `domain`   | Task domain                       | —       |
 
 ```shell
 # Poll for up to 5 tasks, wait up to 1 second
@@ -95,14 +95,14 @@ curl 'http://localhost:8080/api/tasks/poll/batch/my_task?count=5&timeout=1000&wo
     "status": "IN_PROGRESS",
     "taskId": "task-uuid-1",
     "workflowInstanceId": "workflow-uuid-1",
-    "inputData": {"key": "value1"}
+    "inputData": { "key": "value1" }
   },
   {
     "taskType": "my_task",
     "status": "IN_PROGRESS",
     "taskId": "task-uuid-2",
     "workflowInstanceId": "workflow-uuid-2",
-    "inputData": {"key": "value2"}
+    "inputData": { "key": "value2" }
   }
 ]
 ```
@@ -131,15 +131,15 @@ curl -X POST 'http://localhost:8080/api/tasks' \
 
 **Request body fields:**
 
-| Field | Description | Required |
-|---|---|---|
-| `workflowInstanceId` | Workflow execution ID | Yes |
-| `taskId` | Task ID | Yes |
-| `status` | `IN_PROGRESS`, `COMPLETED`, `FAILED`, or `FAILED_WITH_TERMINAL_ERROR` | Yes |
-| `outputData` | JSON map of output data | No |
-| `reasonForIncompletion` | Reason for failure (when status is `FAILED`) | No |
-| `callbackAfterSeconds` | Callback delay — task will be put back in queue after this time | No |
-| `logs` | List of log entries to append | No |
+| Field                   | Description                                                           | Required |
+| ----------------------- | --------------------------------------------------------------------- | -------- |
+| `workflowInstanceId`    | Workflow execution ID                                                 | Yes      |
+| `taskId`                | Task ID                                                               | Yes      |
+| `status`                | `IN_PROGRESS`, `COMPLETED`, `FAILED`, or `FAILED_WITH_TERMINAL_ERROR` | Yes      |
+| `outputData`            | JSON map of output data                                               | No       |
+| `reasonForIncompletion` | Reason for failure (when status is `FAILED`)                          | No       |
+| `callbackAfterSeconds`  | Callback delay — task will be put back in queue after this time       | No       |
+| `logs`                  | List of log entries to append                                         | No       |
 
 **Response** `200 OK` — returns the task ID as plain text.
 
@@ -172,12 +172,12 @@ POST /api/tasks/{workflowId}/{taskRefName}/{status}?workerid=
 
 Updates a task using the workflow ID and task reference name instead of the task ID. This is useful for completing WAIT or HUMAN tasks from external systems.
 
-| Parameter | Description | Required |
-|---|---|---|
-| `workflowId` | Workflow execution ID | Yes |
-| `taskRefName` | Task reference name in the workflow | Yes |
-| `status` | `IN_PROGRESS`, `COMPLETED`, `FAILED`, or `FAILED_WITH_TERMINAL_ERROR` | Yes |
-| `workerid` | Worker identifier | No |
+| Parameter     | Description                                                           | Required |
+| ------------- | --------------------------------------------------------------------- | -------- |
+| `workflowId`  | Workflow execution ID                                                 | Yes      |
+| `taskRefName` | Task reference name in the workflow                                   | Yes      |
+| `status`      | `IN_PROGRESS`, `COMPLETED`, `FAILED`, or `FAILED_WITH_TERMINAL_ERROR` | Yes      |
+| `workerid`    | Worker identifier                                                     | No       |
 
 Request body: JSON map of output data.
 
@@ -259,13 +259,13 @@ curl 'http://localhost:8080/api/tasks/a1b2c3d4.../log'
 
 ## Queue Management
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/queue/all` | `GET` | Get pending task counts for all queues |
-| `/queue/all/verbose` | `GET` | Get detailed queue info including per-shard counts |
-| `/queue/size` | `GET` | Get queue size for a specific task type |
-| `/queue/sizes` | `GET` | *(Deprecated)* Get queue sizes for task types. Use `/queue/size` instead. |
-| `/queue/requeue/{taskType}` | `POST` | Requeue pending tasks of a given type |
+| Endpoint                    | Method | Description                                                               |
+| --------------------------- | ------ | ------------------------------------------------------------------------- |
+| `/queue/all`                | `GET`  | Get pending task counts for all queues                                    |
+| `/queue/all/verbose`        | `GET`  | Get detailed queue info including per-shard counts                        |
+| `/queue/size`               | `GET`  | Get queue size for a specific task type                                   |
+| `/queue/sizes`              | `GET`  | _(Deprecated)_ Get queue sizes for task types. Use `/queue/size` instead. |
+| `/queue/requeue/{taskType}` | `POST` | Requeue pending tasks of a given type                                     |
 
 ### Get Queue Size
 
@@ -325,7 +325,7 @@ curl 'http://localhost:8080/api/tasks/queue/all/verbose'
 {
   "my_task": {
     "size": 5,
-    "shards": {"0": 3, "1": 2}
+    "shards": { "0": 3, "1": 2 }
   }
 }
 ```
@@ -393,13 +393,13 @@ curl 'http://localhost:8080/api/tasks/queue/polldata/all'
 
 All search endpoints support the same query parameters:
 
-| Parameter | Description | Default |
-|---|---|---|
-| `start` | Page offset | `0` |
-| `size` | Number of results | `100` |
-| `sort` | Sort order: `<field>:ASC` or `<field>:DESC` | — |
-| `freeText` | Full-text search query | `*` |
-| `query` | SQL-like where clause | — |
+| Parameter  | Description                                 | Default |
+| ---------- | ------------------------------------------- | ------- |
+| `start`    | Page offset                                 | `0`     |
+| `size`     | Number of results                           | `100`   |
+| `sort`     | Sort order: `<field>:ASC` or `<field>:DESC` | —       |
+| `freeText` | Full-text search query                      | `*`     |
+| `query`    | SQL-like where clause                       | —       |
 
 ### Search (Summary)
 

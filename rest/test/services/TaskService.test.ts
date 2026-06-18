@@ -3,7 +3,12 @@ import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect, sql } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
 import { InitialSchemaMigration } from '@agentmesh/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO, SqlitePollDataDAO } from '@agentmesh/sqlite-persistence';
+import {
+  SqliteExecutionDAO,
+  SqliteMetadataDAO,
+  SqliteQueueDAO,
+  SqlitePollDataDAO,
+} from '@agentmesh/sqlite-persistence';
 import { TaskService } from '../../src/services/TaskService.js';
 import { TaskStatus, WorkflowStatus } from '@agentmesh/common';
 import type { TaskModel } from '@agentmesh/common';

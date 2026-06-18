@@ -10,10 +10,10 @@ AgentMesh includes a built-in scheduler that triggers workflow executions on a c
 
 A **schedule** binds a cron expression to a `StartWorkflowRequest`. On every cron tick the scheduler starts a new workflow execution with the configured input. Two timestamps are automatically injected into every triggered workflow's input:
 
-| Input key | Description |
-|---|---|
+| Input key        | Description                         |
+| ---------------- | ----------------------------------- |
 | `_scheduledTime` | The exact cron slot time (epoch ms) |
-| `_executedTime` | The actual dispatch time (epoch ms) |
+| `_executedTime`  | The actual dispatch time (epoch ms) |
 
 ## Cron expression format
 
@@ -30,12 +30,12 @@ AgentMesh uses Spring's 6-field cron format with **second-level precision**:
 * * * * * *
 ```
 
-| Expression | Meaning |
-|---|---|
-| `0 * * * * *` | Every minute |
-| `0 0 9 * * MON-FRI` | Weekdays at 9 AM |
-| `0 0 0 1 * *` | First day of every month at midnight |
-| `*/10 * * * * *` | Every 10 seconds |
+| Expression          | Meaning                              |
+| ------------------- | ------------------------------------ |
+| `0 * * * * *`       | Every minute                         |
+| `0 0 9 * * MON-FRI` | Weekdays at 9 AM                     |
+| `0 0 0 1 * *`       | First day of every month at midnight |
+| `*/10 * * * * *`    | Every 10 seconds                     |
 
 ## Creating a schedule
 
@@ -87,17 +87,17 @@ The response returns the saved schedule object including its computed `nextRunTi
 
 ## Schedule definition fields
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `name` | string | Yes | Unique schedule identifier |
-| `cronExpression` | string | Yes | 6-field Spring cron expression |
-| `zoneId` | string | No | Timezone (default: `UTC`) |
-| `startWorkflowRequest` | object | Yes | Workflow to trigger — includes `name`, `version`, `input`, `correlationId` |
-| `runCatchupScheduleInstances` | boolean | No | Fire missed slots if the scheduler was offline (default: `false`) |
-| `paused` | boolean | No | Create in paused state (default: `false`) |
-| `scheduleStartTime` | long | No | Earliest time the schedule fires (epoch ms) |
-| `scheduleEndTime` | long | No | Latest time the schedule fires (epoch ms) |
-| `description` | string | No | Free-text description |
+| Field                         | Type    | Required | Description                                                                |
+| ----------------------------- | ------- | -------- | -------------------------------------------------------------------------- |
+| `name`                        | string  | Yes      | Unique schedule identifier                                                 |
+| `cronExpression`              | string  | Yes      | 6-field Spring cron expression                                             |
+| `zoneId`                      | string  | No       | Timezone (default: `UTC`)                                                  |
+| `startWorkflowRequest`        | object  | Yes      | Workflow to trigger — includes `name`, `version`, `input`, `correlationId` |
+| `runCatchupScheduleInstances` | boolean | No       | Fire missed slots if the scheduler was offline (default: `false`)          |
+| `paused`                      | boolean | No       | Create in paused state (default: `false`)                                  |
+| `scheduleStartTime`           | long    | No       | Earliest time the schedule fires (epoch ms)                                |
+| `scheduleEndTime`             | long    | No       | Latest time the schedule fires (epoch ms)                                  |
+| `description`                 | string  | No       | Free-text description                                                      |
 
 ## Previewing execution times
 
@@ -179,18 +179,18 @@ Inside the workflow, access all values via `${workflow.input.*}`:
 
 The scheduler is configured under the `agentmesh.scheduler` prefix in your application properties:
 
-| Property | Default | Description |
-|---|---|---|
-| `agentmesh.scheduler.enabled` | `true` | Enable/disable the scheduler |
-| `agentmesh.scheduler.pollingInterval` | `100` | Poll interval in milliseconds |
-| `agentmesh.scheduler.pollBatchSize` | `5` | Schedules processed per poll cycle |
-| `agentmesh.scheduler.pollingThreadCount` | `1` | Number of polling threads |
-| `agentmesh.scheduler.schedulerTimeZone` | `UTC` | Default timezone |
-| `agentmesh.scheduler.initialDelayMs` | `15000` | Startup delay before first poll |
-| `agentmesh.scheduler.maxScheduleJitterMs` | `1000` | Random jitter added to dispatch times to smooth load |
+| Property                                  | Default | Description                                          |
+| ----------------------------------------- | ------- | ---------------------------------------------------- |
+| `agentmesh.scheduler.enabled`             | `true`  | Enable/disable the scheduler                         |
+| `agentmesh.scheduler.pollingInterval`     | `100`   | Poll interval in milliseconds                        |
+| `agentmesh.scheduler.pollBatchSize`       | `5`     | Schedules processed per poll cycle                   |
+| `agentmesh.scheduler.pollingThreadCount`  | `1`     | Number of polling threads                            |
+| `agentmesh.scheduler.schedulerTimeZone`   | `UTC`   | Default timezone                                     |
+| `agentmesh.scheduler.initialDelayMs`      | `15000` | Startup delay before first poll                      |
+| `agentmesh.scheduler.maxScheduleJitterMs` | `1000`  | Random jitter added to dispatch times to smooth load |
 
 !!! note "Catchup mode"
-    When `runCatchupScheduleInstances` is `true`, the scheduler fires all cron slots that were missed while it was offline. Use this for workflows where every execution matters (e.g., billing, compliance). Leave it `false` (default) for dashboards or monitoring where only the latest run matters.
+When `runCatchupScheduleInstances` is `true`, the scheduler fires all cron slots that were missed while it was offline. Use this for workflows where every execution matters (e.g., billing, compliance). Leave it `false` (default) for dashboards or monitoring where only the latest run matters.
 
 !!! warning "Concurrent executions"
-    The scheduler fires on every cron tick regardless of whether the previous execution has completed. If your workflow takes longer than the cron interval, multiple instances will run concurrently. Design your workflows to handle this, or use a longer interval.
+The scheduler fires on every cron tick regardless of whether the previous execution has completed. If your workflow takes longer than the cron interval, multiple instances will run concurrently. Design your workflows to handle this, or use a longer interval.

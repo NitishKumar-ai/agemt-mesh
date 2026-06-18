@@ -1,16 +1,16 @@
 ---
-description: "Handle workflow errors in AgentMesh using the saga pattern with compensation flows, retry strategies, task-level error handling, timeout policies, and workflow status listener notifications."
+description: 'Handle workflow errors in AgentMesh using the saga pattern with compensation flows, retry strategies, task-level error handling, timeout policies, and workflow status listener notifications.'
 ---
 
 # Handling Workflow Errors
 
 In production microservice architectures, failures are inevitable. AgentMesh provides multiple layers of error handling so you can build resilient, self-healing workflows:
 
-* **Saga pattern** — run a compensation flow to undo completed steps when a workflow fails.
-* **Retry strategies** — automatically retry failed tasks with configurable backoff.
-* **Task-level error handling** — mark tasks as optional, fail immediately on terminal errors, or set per-task timeouts.
-* **Timeout policies** — control what happens when a task or workflow exceeds its time limit.
-* **Workflow status listener** — send notifications to external systems on workflow completion or failure.
+- **Saga pattern** — run a compensation flow to undo completed steps when a workflow fails.
+- **Retry strategies** — automatically retry failed tasks with configurable backoff.
+- **Task-level error handling** — mark tasks as optional, fail immediately on terminal errors, or set per-task timeouts.
+- **Timeout policies** — control what happens when a task or workflow exceeds its time limit.
+- **Workflow status listener** — send notifications to external systems on workflow completion or failure.
 
 ## Saga pattern: compensation on failure
 
@@ -28,11 +28,11 @@ You can configure a workflow to automatically run a compensation flow upon failu
 
 If your main workflow fails, AgentMesh will trigger this failure workflow. By default, the following parameters are passed to the failure workflow as input:
 
-* **`reason`** — The reason for the workflow's failure.
-* **`workflowId`** — The failed workflow's execution ID.
-* **`failureStatus`** — The failed workflow's status.
-* **`failureTaskId`** — The execution ID for the task that failed in the workflow.
-* **`failedWorkflow`** — The full workflow execution JSON for the failed workflow.
+- **`reason`** — The reason for the workflow's failure.
+- **`workflowId`** — The failed workflow's execution ID.
+- **`failureStatus`** — The failed workflow's status.
+- **`failureTaskId`** — The execution ID for the task that failed in the workflow.
+- **`failedWorkflow`** — The full workflow execution JSON for the failed workflow.
 
 You can use these parameters to implement compensation actions in the failure workflow, such as notification alerts, resource clean-up, or reversing completed transactions.
 
@@ -198,9 +198,9 @@ Notice that compensation tasks are marked `optional: true` for steps that may no
 
 When a task fails, AgentMesh can automatically retry it according to the retry logic configured on the task definition. You control the retry behavior with three parameters:
 
-* **`retryCount`** — Maximum number of retry attempts.
-* **`retryLogic`** — The backoff strategy between retries.
-* **`retryDelaySeconds`** — The base delay between retries, in seconds.
+- **`retryCount`** — Maximum number of retry attempts.
+- **`retryLogic`** — The backoff strategy between retries.
+- **`retryDelaySeconds`** — The base delay between retries, in seconds.
 
 ### FIXED
 
@@ -246,11 +246,11 @@ This retries up to 4 times with delays of approximately 5, 10, 15, and 20 second
 
 ### Choosing a retry strategy
 
-| Strategy | Delay pattern | Best for |
-|---|---|---|
-| `FIXED` | Constant (e.g., 5s, 5s, 5s) | Predictable transient failures like brief network blips or short-lived lock contention. |
-| `EXPONENTIAL_BACKOFF` | Doubling (e.g., 2s, 4s, 8s, 16s) | Rate-limited APIs, overloaded services, or any case where you want to reduce pressure on a struggling dependency. |
-| `LINEAR_BACKOFF` | Incremental (e.g., 5s, 10s, 15s, 20s) | Moderate recovery scenarios where you need longer waits over time but exponential growth would be too aggressive. |
+| Strategy              | Delay pattern                         | Best for                                                                                                          |
+| --------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FIXED`               | Constant (e.g., 5s, 5s, 5s)           | Predictable transient failures like brief network blips or short-lived lock contention.                           |
+| `EXPONENTIAL_BACKOFF` | Doubling (e.g., 2s, 4s, 8s, 16s)      | Rate-limited APIs, overloaded services, or any case where you want to reduce pressure on a struggling dependency. |
+| `LINEAR_BACKOFF`      | Incremental (e.g., 5s, 10s, 15s, 20s) | Moderate recovery scenarios where you need longer waits over time but exponential growth would be too aggressive. |
 
 ## Task-level error handling
 
@@ -295,8 +295,8 @@ You can set timeouts on individual tasks to prevent them from blocking the workf
 }
 ```
 
-* **`timeoutSeconds`** — Maximum total time for the task, including all retries.
-* **`responseTimeoutSeconds`** — Maximum time to wait for a worker to pick up and respond to the task. If a worker does not update the task within this window, AgentMesh marks it as timed out.
+- **`timeoutSeconds`** — Maximum total time for the task, including all retries.
+- **`responseTimeoutSeconds`** — Maximum time to wait for a worker to pick up and respond to the task. If a worker does not update the task within this window, AgentMesh marks it as timed out.
 
 ## Timeout policies
 
@@ -338,18 +338,18 @@ Log an alert but allow the task to continue running. The task is not terminated 
 
 ### Choosing a timeout policy
 
-| Policy | Behavior on timeout | Best for |
-|---|---|---|
-| `RETRY` | Retries the task (counts against `retryCount`) | Tasks that may hang due to transient issues like network timeouts or unresponsive workers. |
-| `TIME_OUT_WF` | Fails the entire workflow | Critical tasks where a timeout means the workflow cannot produce a valid result. |
-| `ALERT_ONLY` | Logs an alert, task keeps running | Long-running or best-effort tasks where you want monitoring without enforcement. |
+| Policy        | Behavior on timeout                            | Best for                                                                                   |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `RETRY`       | Retries the task (counts against `retryCount`) | Tasks that may hang due to transient issues like network timeouts or unresponsive workers. |
+| `TIME_OUT_WF` | Fails the entire workflow                      | Critical tasks where a timeout means the workflow cannot produce a valid result.           |
+| `ALERT_ONLY`  | Logs an alert, task keeps running              | Long-running or best-effort tasks where you want monitoring without enforcement.           |
 
 ## Implement a Workflow Status Listener
 
 Using a Workflow Status Listener, you can send a notification to an external system or an event to AgentMesh's internal queue upon failure. Here is the high-level overview for using a Workflow Status Listener:
 
 1. Set the `workflowStatusListenerEnabled` parameter to true in your main workflow definition:
-    ```json
-    "workflowStatusListenerEnabled": true,
-    ```
+   ```json
+   "workflowStatusListenerEnabled": true,
+   ```
 2. Implement the [WorkflowStatusListener interface](https://github.com/agentmesh-oss/agentmesh/blob/1be02a711dc20682718c6111c09d2b02ce7edde2/core/src/main/java/com/agentmesh/agentmesh/core/listener/WorkflowStatusListener.java#L20) to plug into a custom notification or eventing system upon workflow failure.

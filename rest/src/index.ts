@@ -1,4 +1,11 @@
-export { RestModule, EXECUTION_DAO, METADATA_DAO, QUEUE_DAO, POLL_DATA_DAO, WORKFLOW_EXECUTOR } from './RestModule.js';
+export {
+  RestModule,
+  EXECUTION_DAO,
+  METADATA_DAO,
+  QUEUE_DAO,
+  POLL_DATA_DAO,
+  WORKFLOW_EXECUTOR,
+} from './RestModule.js';
 export { MetadataService } from './services/MetadataService.js';
 export { WorkflowService } from './services/WorkflowService.js';
 export { TaskService } from './services/TaskService.js';

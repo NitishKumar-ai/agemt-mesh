@@ -6,11 +6,9 @@ export class AIModelProvider {
   private readonly providerToLLM = new Map<string, AIModel>();
   readonly payloadStoreLocation: string;
 
-  constructor(
-    modelConfigurations: ModelConfiguration<AIModel>[],
-    payloadStoreDir?: string,
-  ) {
-    this.payloadStoreLocation = payloadStoreDir ?? `${process.env['HOME'] ?? '/tmp'}/worker-payload/`;
+  constructor(modelConfigurations: ModelConfiguration<AIModel>[], payloadStoreDir?: string) {
+    this.payloadStoreLocation =
+      payloadStoreDir ?? `${process.env['HOME'] ?? '/tmp'}/worker-payload/`;
 
     for (const config of modelConfigurations) {
       try {

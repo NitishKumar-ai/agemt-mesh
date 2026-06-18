@@ -1,5 +1,5 @@
 {
-  "index_patterns": [ "*message*" ],
+  "index_patterns": ["*message*"],
   "template": {
     "settings": {
       "refresh_interval": "1s"
@@ -23,6 +23,6 @@
         }
       }
     },
-    "aliases": { }
+    "aliases": {}
   }
 }

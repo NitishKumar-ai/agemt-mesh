@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh Metadata API — register, update, validate, and delete workflow and task definitions. Manage your orchestration blueprints via REST."
+description: 'AgentMesh Metadata API — register, update, validate, and delete workflow and task definitions. Manage your orchestration blueprints via REST.'
 ---
 
 # Metadata API
@@ -8,16 +8,16 @@ The Metadata API manages workflow and task definitions — the blueprints that A
 
 ## Workflow Definitions
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/metadata/workflow` | `GET` | Get all workflow definitions |
-| `/metadata/workflow` | `POST` | Create a new workflow definition |
-| `/metadata/workflow` | `PUT` | Create or update workflow definitions (batch) |
-| `/metadata/workflow/{name}` | `GET` | Get a workflow definition by name |
-| `/metadata/workflow/{name}/{version}` | `DELETE` | Delete a workflow definition by name and version |
-| `/metadata/workflow/validate` | `POST` | Validate a workflow definition without saving |
-| `/metadata/workflow/names-and-versions` | `GET` | Get all workflow names and versions (no definition bodies) |
-| `/metadata/workflow/latest-versions` | `GET` | Get only the latest version of each workflow definition |
+| Endpoint                                | Method   | Description                                                |
+| --------------------------------------- | -------- | ---------------------------------------------------------- |
+| `/metadata/workflow`                    | `GET`    | Get all workflow definitions                               |
+| `/metadata/workflow`                    | `POST`   | Create a new workflow definition                           |
+| `/metadata/workflow`                    | `PUT`    | Create or update workflow definitions (batch)              |
+| `/metadata/workflow/{name}`             | `GET`    | Get a workflow definition by name                          |
+| `/metadata/workflow/{name}/{version}`   | `DELETE` | Delete a workflow definition by name and version           |
+| `/metadata/workflow/validate`           | `POST`   | Validate a workflow definition without saving              |
+| `/metadata/workflow/names-and-versions` | `GET`    | Get all workflow names and versions (no definition bodies) |
+| `/metadata/workflow/latest-versions`    | `GET`    | Get only the latest version of each workflow definition    |
 
 ### Get All Workflow Definitions
 
@@ -106,9 +106,9 @@ curl -X PUT 'http://localhost:8080/api/metadata/workflow' \
 GET /api/metadata/workflow/{name}?version={version}
 ```
 
-| Parameter | Description | Required |
-|---|---|---|
-| `name` | Workflow name | Yes (path) |
+| Parameter | Description      | Required                |
+| --------- | ---------------- | ----------------------- |
+| `name`    | Workflow name    | Yes (path)              |
 | `version` | Workflow version | No (defaults to latest) |
 
 ```shell
@@ -125,9 +125,9 @@ DELETE /api/metadata/workflow/{name}/{version}
 
 Removes a workflow definition by name and version. Does **not** remove workflow executions associated with the definition.
 
-| Parameter | Description | Required |
-|---|---|---|
-| `name` | Workflow name | Yes (path) |
+| Parameter | Description      | Required   |
+| --------- | ---------------- | ---------- |
+| `name`    | Workflow name    | Yes (path) |
 | `version` | Workflow version | Yes (path) |
 
 ```shell
@@ -180,12 +180,10 @@ curl http://localhost:8080/api/metadata/workflow/names-and-versions
 ```json
 {
   "order_processing": [
-    {"name": "order_processing", "version": 1},
-    {"name": "order_processing", "version": 2}
+    { "name": "order_processing", "version": 1 },
+    { "name": "order_processing", "version": 2 }
   ],
-  "user_onboarding": [
-    {"name": "user_onboarding", "version": 1}
-  ]
+  "user_onboarding": [{ "name": "user_onboarding", "version": 1 }]
 }
 ```
 
@@ -207,13 +205,13 @@ curl http://localhost:8080/api/metadata/workflow/latest-versions
 
 ## Task Definitions
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/metadata/taskdefs` | `GET` | Get all task definitions |
-| `/metadata/taskdefs` | `POST` | Create new task definitions |
-| `/metadata/taskdefs` | `PUT` | Update a task definition |
-| `/metadata/taskdefs/{taskType}` | `GET` | Get a task definition by name |
-| `/metadata/taskdefs/{taskType}` | `DELETE` | Delete a task definition |
+| Endpoint                        | Method   | Description                   |
+| ------------------------------- | -------- | ----------------------------- |
+| `/metadata/taskdefs`            | `GET`    | Get all task definitions      |
+| `/metadata/taskdefs`            | `POST`   | Create new task definitions   |
+| `/metadata/taskdefs`            | `PUT`    | Update a task definition      |
+| `/metadata/taskdefs/{taskType}` | `GET`    | Get a task definition by name |
+| `/metadata/taskdefs/{taskType}` | `DELETE` | Delete a task definition      |
 
 ### Get All Task Definitions
 

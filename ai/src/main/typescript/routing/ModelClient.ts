@@ -21,7 +21,7 @@ export class ModelClient {
     }
 
     const hint = input.routingHint || 'execute';
-    
+
     // Simple Tiered Routing Strategy
     // We default to Anthropic if no specific provider is requested, but this could be configurable.
     let providerName = 'anthropic';

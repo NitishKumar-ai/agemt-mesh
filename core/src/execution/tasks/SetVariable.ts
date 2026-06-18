@@ -11,11 +11,7 @@ export class SetVariable extends WorkflowSystemTask {
     this.maxPayloadSizeKb = maxPayloadSizeKb;
   }
 
-  override execute(
-    workflow: WorkflowModel,
-    task: TaskModel,
-    provider: WorkflowExecutor,
-  ): boolean {
+  override execute(workflow: WorkflowModel, task: TaskModel, provider: WorkflowExecutor): boolean {
     const variables = workflow.variables;
     const input = task.inputData;
     if (input != null && Object.keys(input).length > 0) {

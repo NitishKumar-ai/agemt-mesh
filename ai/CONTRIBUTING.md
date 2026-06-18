@@ -32,6 +32,7 @@ org.agentmeshoss.agentmesh.ai/
 ```
 
 Key interfaces:
+
 - **`AIModel`**: Base interface for LLM providers
 - **`VideoModel`**: Functional interface for synchronous video generation (mirrors Spring AI's `ImageModel`)
 - **`AsyncVideoModel`**: Extends `VideoModel` with async polling via `checkStatus(String jobId)`
@@ -64,25 +65,25 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 
 public class YourProvider implements AIModel {
-    
+
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
-    
+
     public YourProvider(ChatModel chatModel, EmbeddingModel embeddingModel) {
         this.chatModel = chatModel;
         this.embeddingModel = embeddingModel;
     }
-    
+
     @Override
     public String getModelProvider() {
         return "your_provider_name";  // Used in workflow definitions
     }
-    
+
     @Override
     public ChatModel getChatModel() {
         return chatModel;
     }
-    
+
     @Override
     public EmbeddingModel getEmbeddingModel() {
         return embeddingModel;
@@ -107,7 +108,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(YourProviderProperties.class)
 @ConditionalOnProperty(prefix = "agentmesh.ai.your-provider", name = "api-key")
 public class YourProviderConfiguration {
-    
+
     @Bean
     public ModelConfiguration<YourProvider> yourProviderConfiguration(
             YourProviderProperties properties) {
@@ -115,7 +116,7 @@ public class YourProviderConfiguration {
             // Initialize chat and embedding models
             ChatModel chatModel = // ... create from properties
             EmbeddingModel embeddingModel = // ... create from properties
-            
+
             return new YourProvider(chatModel, embeddingModel);
         };
     }
@@ -147,7 +148,7 @@ Create `YourProviderConfigurationTest.java`:
 ```java
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class YourProviderConfigurationTest {
-    
+
     @Test
     void testProviderLoadsWhenConfigured() {
         ApplicationContextRunner contextRunner =
@@ -156,20 +157,20 @@ class YourProviderConfigurationTest {
                                 AutoConfigurations.of(YourProviderConfiguration.class))
                         .withPropertyValues(
                                 "agentmesh.ai.your-provider.api-key=test-key");
-        
+
         contextRunner.run(
                 context -> {
                     assertThat(context).hasSingleBean(ModelConfiguration.class);
                 });
     }
-    
+
     @Test
     void testProviderDoesNotLoadWithoutApiKey() {
         ApplicationContextRunner contextRunner =
                 new ApplicationContextRunner()
                         .withConfiguration(
                                 AutoConfigurations.of(YourProviderConfiguration.class));
-        
+
         contextRunner.run(
                 context -> {
                     assertThat(context).doesNotHaveBean(ModelConfiguration.class);
@@ -254,6 +255,7 @@ public LLMResponse checkVideoStatus(VideoGenRequest request) {
 ```
 
 The `video/` package mirrors Spring AI's `Image*` abstraction pattern:
+
 - `VideoPrompt` -> `ImagePrompt` (request wrapper)
 - `VideoResponse` -> `ImageResponse` (response wrapper)
 - `VideoGeneration` -> `ImageGeneration` (individual result)
@@ -277,10 +279,10 @@ Create a new configuration class in the database package (e.g., `org.agentmeshos
 @NoArgsConstructor
 @AllArgsConstructor
 public class YourDBConfig implements VectorDBConfig<YourVectorDB> {
-    
+
     private String connectionString;
     // other properties
-    
+
     @Override
     public YourVectorDB get() {
         throw new UnsupportedOperationException("Use get(String name) instead");
@@ -298,20 +300,20 @@ Extend the `VectorDB` abstract class:
 
 ```java
 public class YourVectorDB extends VectorDB {
-    
+
     public static final String TYPE = "yourdb";
     private final YourDBConfig config;
-    
+
     public YourVectorDB(String name, YourDBConfig config) {
         super(name, TYPE);
         this.config = config;
     }
-    
+
     @Override
     public int updateEmbeddings(String indexName, String namespace, String doc, String parentDocId, String id, List<Float> embeddings, Map<String, Object> metadata) {
         // Implement logic to store embeddings
     }
-    
+
     @Override
     public List<IndexedDoc> search(String indexName, String namespace, List<Float> embeddings, int maxResults) {
         // Implement logic to search embeddings
@@ -330,12 +332,12 @@ Use Testcontainers for integration testing:
 ```java
 @Testcontainers
 class YourVectorDBTest {
-    
+
     @Container
     static GenericContainer<?> yourdb =
             new GenericContainer<>("yourdb:latest")
                     .withExposedPorts(1234);
-    
+
     @Test
     void testStoreAndSearch() {
         // Test vector storage and similarity search
@@ -374,13 +376,13 @@ import org.agentmeshoss.agentmesh.ai.models.YourTaskRequest;
 
 @Component
 public class YourWorker {
-    
+
     private final YourService yourService;
-    
+
     public YourWorker(YourService yourService) {
         this.yourService = yourService;
     }
-    
+
     @WorkerTask("YOUR_TASK_NAME")
     public @OutputParam("result") YourTaskResult executeTask(YourTaskRequest request) {
         // Implement task logic
@@ -393,15 +395,15 @@ public class YourWorker {
 
 ```java
 class YourWorkerTest {
-    
+
     @Test
     void testTaskExecution() {
         YourWorker worker = new YourWorker(mockService);
         YourTaskRequest request = new YourTaskRequest();
         request.setParameter1("test");
-        
+
         YourTaskResult result = worker.executeTask(request);
-        
+
         assertNotNull(result);
         // Add assertions
     }
@@ -417,6 +419,7 @@ Model Context Protocol (MCP) allows external tools to be called from workflows.
 ### Adding MCP Server Support
 
 The `MCPService` already supports:
+
 - HTTP/SSE transports
 - stdio (local process) transports
 - Direct JSON-RPC fallback
@@ -443,6 +446,7 @@ To add a new MCP server:
 ### Extending MCP Capabilities
 
 To add new MCP-related features, modify:
+
 - `MCPService.java` - Core MCP communication logic
 - `MCPWorkers.java` - Worker task definitions
 - `models/MCP*.java` - Request/response models
@@ -495,6 +499,7 @@ void testGetModel_WithInvalidProvider_ThrowsException()
 ### Lombok Usage
 
 Use Lombok annotations consistently:
+
 - `@Data` for simple POJOs
 - `@Builder` for complex object construction
 - `@Slf4j` for logging

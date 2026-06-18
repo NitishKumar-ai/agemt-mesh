@@ -21,7 +21,7 @@ services:
       - 8000:8080
       - 8127:5000
     healthcheck:
-      test: [ "CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health" ]
+      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
       interval: 60s
       timeout: 30s
       retries: 12
@@ -31,10 +31,10 @@ services:
       agentmesh-postgres:
         condition: service_healthy
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
   agentmesh-postgres:
     image: postgres:16
@@ -51,10 +51,10 @@ services:
       timeout: 5s
       retries: 12
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
 volumes:
   pgdata-agentmesh:

@@ -1,30 +1,32 @@
 ---
-description: "External Payload Storage — offload large AgentMesh workflow and task payloads to external storage like S3."
+description: 'External Payload Storage — offload large AgentMesh workflow and task payloads to external storage like S3.'
 ---
+
 # External Payload Storage
 
 !!!warning
-    The external payload storage is currently only implemented to be used to by the Java client. Client libraries in other languages need to be modified to enable this.  
-    Contributions are welcomed.
+The external payload storage is currently only implemented to be used to by the Java client. Client libraries in other languages need to be modified to enable this.  
+ Contributions are welcomed.
 
 ## Context
+
 AgentMesh can be configured to enforce barriers on the size of workflow and task payloads for both input and output.  
 These barriers can be used as safeguards to prevent the usage of agentmesh as a data persistence system and to reduce the pressure on its datastore.
 
 ## Barriers
+
 AgentMesh typically applies two kinds of barriers:
 
-* Soft Barrier
-* Hard Barrier
-
+- Soft Barrier
+- Hard Barrier
 
 #### Soft Barrier
 
 The soft barrier is used to alleviate pressure on the agentmesh datastore. In some special workflow use-cases, the size of the payload is warranted enough to be stored as part of the workflow execution.  
-In such cases, agentmesh externalizes the storage of such payloads to S3 and uploads/downloads to/from S3 as needed during the execution. This process is completely transparent to the user/worker process.  
-
+In such cases, agentmesh externalizes the storage of such payloads to S3 and uploads/downloads to/from S3 as needed during the execution. This process is completely transparent to the user/worker process.
 
 #### Hard Barrier
+
 The hard barriers are enforced to safeguard the agentmesh backend from the pressure of having to persist and deal with voluminous data which is not essential for workflow execution.
 In such cases, agentmesh will reject such payloads and will terminate/fail the workflow execution with the reasonForIncompletion set to an appropriate error message detailing the payload size.
 
@@ -34,56 +36,57 @@ In such cases, agentmesh will reject such payloads and will terminate/fail the w
 
 Set the following properties to the desired values in the JVM system properties:
 
-| Property | Description | default value |
-| -- | -- | -- |
-| agentmesh.app.workflowInputPayloadSizeThreshold | Soft barrier for workflow input payload in KB | 5120 |
-| agentmesh.app.maxWorkflowInputPayloadSizeThreshold | Hard barrier for workflow input payload in KB | 10240 |
-| agentmesh.app.workflowOutputPayloadSizeThreshold | Soft barrier for workflow output payload in KB | 5120 |
-| agentmesh.app.maxWorkflowOutputPayloadSizeThreshold | Hard barrier for workflow output payload in KB | 10240 |
-| agentmesh.app.taskInputPayloadSizeThreshold | Soft barrier for task input payload in KB | 3072 |
-| agentmesh.app.maxTaskInputPayloadSizeThreshold | Hard barrier for task input payload in KB | 10240 |
-| agentmesh.app.taskOutputPayloadSizeThreshold | Soft barrier for task output payload in KB | 3072 |
-| agentmesh.app.maxTaskOutputPayloadSizeThreshold | Hard barrier for task output payload in KB | 10240 |
+| Property                                            | Description                                    | default value |
+| --------------------------------------------------- | ---------------------------------------------- | ------------- |
+| agentmesh.app.workflowInputPayloadSizeThreshold     | Soft barrier for workflow input payload in KB  | 5120          |
+| agentmesh.app.maxWorkflowInputPayloadSizeThreshold  | Hard barrier for workflow input payload in KB  | 10240         |
+| agentmesh.app.workflowOutputPayloadSizeThreshold    | Soft barrier for workflow output payload in KB | 5120          |
+| agentmesh.app.maxWorkflowOutputPayloadSizeThreshold | Hard barrier for workflow output payload in KB | 10240         |
+| agentmesh.app.taskInputPayloadSizeThreshold         | Soft barrier for task input payload in KB      | 3072          |
+| agentmesh.app.maxTaskInputPayloadSizeThreshold      | Hard barrier for task input payload in KB      | 10240         |
+| agentmesh.app.taskOutputPayloadSizeThreshold        | Soft barrier for task output payload in KB     | 3072          |
+| agentmesh.app.maxTaskOutputPayloadSizeThreshold     | Hard barrier for task output payload in KB     | 10240         |
 
 ### Amazon S3
 
 AgentMesh provides an implementation of [Amazon S3](https://aws.amazon.com/s3/) used to externalize large payload storage.  
 Set the following property in the JVM system properties:
+
 ```
 agentmesh.external-payload-storage.type=S3
 ```
 
 !!! note
-    This [implementation](https://github.com/agentmesh-oss/agentmesh/blob/main/awss3-storage/src/main/java/com/agentmesh/agentmesh/s3/storage/S3PayloadStorage.java#L44-L45) assumes that S3 access is configured on the instance.
+This [implementation](https://github.com/agentmesh-oss/agentmesh/blob/main/awss3-storage/src/main/java/com/agentmesh/agentmesh/s3/storage/S3PayloadStorage.java#L44-L45) assumes that S3 access is configured on the instance.
 
 Set the following properties to the desired values in the JVM system properties:
 
-| Property | Description | default value |
-| --- | --- | --- |
-| agentmesh.external-payload-storage.s3.bucketName | S3 bucket where the payloads will be stored | |
-| agentmesh.external-payload-storage.s3.signedUrlExpirationDuration | The expiration time in seconds of the signed url for the payload | 5 |
+| Property                                                          | Description                                                      | default value |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------- | ------------- |
+| agentmesh.external-payload-storage.s3.bucketName                  | S3 bucket where the payloads will be stored                      |               |
+| agentmesh.external-payload-storage.s3.signedUrlExpirationDuration | The expiration time in seconds of the signed url for the payload | 5             |
 
 The payloads will be stored in the bucket configured above in a `UUID.json` file at locations determined by the type of the payload. See the [S3PayloadStorage source](https://github.com/agentmesh-oss/agentmesh/blob/main/awss3-storage/src/main/java/com/agentmesh/agentmesh/s3/storage/S3PayloadStorage.java#L149-L167) for information about how the object key is determined.
 
 ### Azure Blob Storage
 
 !!!note
-    This implementation assumes that you have an [Azure Blob Storage account's connection string or SAS Token](https://github.com/Azure/azure-sdk-for-java/blob/master/sdk/storage/azure-storage-blob/README.md).
-    If you want signed url to expired you must specify a Connection String. 
+This implementation assumes that you have an [Azure Blob Storage account's connection string or SAS Token](https://github.com/Azure/azure-sdk-for-java/blob/master/sdk/storage/azure-storage-blob/README.md).
+If you want signed url to expired you must specify a Connection String.
 
 Set the following properties to the desired values in the JVM system properties:
 
-| Property | Description | default value |
-| --- | --- | --- |
-| workflow.external.payload.storage.azure_blob.connection_string | Azure Blob Storage connection string. Required to sign Url. | |
-| workflow.external.payload.storage.azure_blob.endpoint | Azure Blob Storage endpoint. Optional if connection_string is set. | |
-| workflow.external.payload.storage.azure_blob.sas_token | Azure Blob Storage SAS Token. Must have permissions `Read` and `Write` on Resource `Object` on Service `Blob`. Optional if connection_string is set. | |
-| workflow.external.payload.storage.azure_blob.container_name | Azure Blob Storage container where the payloads will be stored | `agentmesh-payloads` |
-| workflow.external.payload.storage.azure_blob.signedurlexpirationseconds | The expiration time in seconds of the signed url for the payload | 5 |
-| workflow.external.payload.storage.azure_blob.workflow_input_path | Path prefix where workflows input will be stored with an random UUID filename | workflow/input/ |
-| workflow.external.payload.storage.azure_blob.workflow_output_path | Path prefix where workflows output will be stored with an random UUID filename | workflow/output/ |
-| workflow.external.payload.storage.azure_blob.task_input_path | Path prefix where tasks input will be stored with an random UUID filename | task/input/ |
-| workflow.external.payload.storage.azure_blob.task_output_path | Path prefix where tasks output will be stored with an random UUID filename | task/output/ |
+| Property                                                                | Description                                                                                                                                          | default value        |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| workflow.external.payload.storage.azure_blob.connection_string          | Azure Blob Storage connection string. Required to sign Url.                                                                                          |                      |
+| workflow.external.payload.storage.azure_blob.endpoint                   | Azure Blob Storage endpoint. Optional if connection_string is set.                                                                                   |                      |
+| workflow.external.payload.storage.azure_blob.sas_token                  | Azure Blob Storage SAS Token. Must have permissions `Read` and `Write` on Resource `Object` on Service `Blob`. Optional if connection_string is set. |                      |
+| workflow.external.payload.storage.azure_blob.container_name             | Azure Blob Storage container where the payloads will be stored                                                                                       | `agentmesh-payloads` |
+| workflow.external.payload.storage.azure_blob.signedurlexpirationseconds | The expiration time in seconds of the signed url for the payload                                                                                     | 5                    |
+| workflow.external.payload.storage.azure_blob.workflow_input_path        | Path prefix where workflows input will be stored with an random UUID filename                                                                        | workflow/input/      |
+| workflow.external.payload.storage.azure_blob.workflow_output_path       | Path prefix where workflows output will be stored with an random UUID filename                                                                       | workflow/output/     |
+| workflow.external.payload.storage.azure_blob.task_input_path            | Path prefix where tasks input will be stored with an random UUID filename                                                                            | task/input/          |
+| workflow.external.payload.storage.azure_blob.task_output_path           | Path prefix where tasks output will be stored with an random UUID filename                                                                           | task/output/         |
 
 The payloads will be stored in the same path structure as [Amazon S3](https://github.com/agentmesh-oss/agentmesh/blob/main/awss3-storage/src/main/java/com/agentmesh/agentmesh/s3/storage/S3PayloadStorage.java#L149-L167).
 
@@ -110,23 +113,23 @@ com.azure:azure-core-http-okhttp:${compatible version}
 Frinx provides an implementation of [PostgreSQL Storage](https://www.postgresql.org/) used to externalize large payload storage.
 
 !!!note
-    This implementation assumes that you have an [PostgreSQL database server with all required credentials](https://jdbc.postgresql.org/documentation/use/).
+This implementation assumes that you have an [PostgreSQL database server with all required credentials](https://jdbc.postgresql.org/documentation/use/).
 
 Set the following properties to your application.properties:
 
-| Property                                                    | Description                                                                                                                                                                              | default value                         |
-|-------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------|
+| Property                                                    | Description                                                                                                                                                                          | default value                         |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
 | agentmesh.external-payload-storage.postgres.agentmesh-url   | URL, that can be used to pull the json configurations, that will be downloaded from PostgreSQL to the agentmesh server. For example: for local development it is `{{ server_host }}` | `""`                                  |
-| agentmesh.external-payload-storage.postgres.url             | PostgreSQL database connection URL. Required to connect to database.                                                                                                                     |                                       |
-| agentmesh.external-payload-storage.postgres.username        | Username for connecting to PostgreSQL database. Required to connect to database.                                                                                                         |                                       |
-| agentmesh.external-payload-storage.postgres.password        | Password for connecting to PostgreSQL database. Required to connect to database.                                                                                                         |                                       |
-| agentmesh.external-payload-storage.postgres.table-name      | The PostgreSQL schema and table name where the payloads will be stored                                                                                                                   | `external.external_payload`           |
-| agentmesh.external-payload-storage.postgres.max-data-rows   | Maximum count of data rows in PostgreSQL database. After overcoming this limit, the oldest data will be deleted.                                                                         | Long.MAX_VALUE (9223372036854775807L) |
-| agentmesh.external-payload-storage.postgres.max-data-days   | Maximum count of days of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                       | 0                                     |
-| agentmesh.external-payload-storage.postgres.max-data-months | Maximum count of months of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                     | 0                                     |
-| agentmesh.external-payload-storage.postgres.max-data-years  | Maximum count of years of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                      | 1                                     |
+| agentmesh.external-payload-storage.postgres.url             | PostgreSQL database connection URL. Required to connect to database.                                                                                                                 |                                       |
+| agentmesh.external-payload-storage.postgres.username        | Username for connecting to PostgreSQL database. Required to connect to database.                                                                                                     |                                       |
+| agentmesh.external-payload-storage.postgres.password        | Password for connecting to PostgreSQL database. Required to connect to database.                                                                                                     |                                       |
+| agentmesh.external-payload-storage.postgres.table-name      | The PostgreSQL schema and table name where the payloads will be stored                                                                                                               | `external.external_payload`           |
+| agentmesh.external-payload-storage.postgres.max-data-rows   | Maximum count of data rows in PostgreSQL database. After overcoming this limit, the oldest data will be deleted.                                                                     | Long.MAX_VALUE (9223372036854775807L) |
+| agentmesh.external-payload-storage.postgres.max-data-days   | Maximum count of days of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                   | 0                                     |
+| agentmesh.external-payload-storage.postgres.max-data-months | Maximum count of months of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                 | 0                                     |
+| agentmesh.external-payload-storage.postgres.max-data-years  | Maximum count of years of data age in PostgreSQL database. After overcoming limit, the oldest data will be deleted.                                                                  | 1                                     |
 
 The maximum date age for fields in the database will be: `years + months + days`  
 The payloads will be stored in PostgreSQL database with key (externalPayloadPath) `UUID.json` and you can generate
-URI for this data using `external-postgres-payload-resource` rest controller.   
+URI for this data using `external-postgres-payload-resource` rest controller.  
 To make this URI work correctly, you must correctly set the agentmesh-url property.

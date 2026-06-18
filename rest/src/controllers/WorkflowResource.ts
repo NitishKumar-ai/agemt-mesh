@@ -39,7 +39,12 @@ export class WorkflowResource {
     @Body() body?: Record<string, unknown>,
   ): Promise<any> {
     try {
-      const workflowId = await this.workflowService.startWorkflow({ name, version, input: body ?? {}, correlationId: requestId });
+      const workflowId = await this.workflowService.startWorkflow({
+        name,
+        version,
+        input: body ?? {},
+        correlationId: requestId,
+      });
       return await this.workflowService.getWorkflow(workflowId);
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
@@ -138,10 +143,7 @@ export class WorkflowResource {
   }
 
   @Post(':workflowId/rerun')
-  async rerunWorkflow(
-    @Param('workflowId') workflowId: string,
-    @Body() body: any,
-  ): Promise<string> {
+  async rerunWorkflow(@Param('workflowId') workflowId: string, @Body() body: any): Promise<string> {
     try {
       return await this.workflowService.rerunWorkflow(workflowId, body);
     } catch (err) {

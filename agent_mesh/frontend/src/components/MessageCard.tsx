@@ -11,11 +11,11 @@ import {
   UserRound,
   Wrench,
   X,
-} from "lucide-react";
-import { useState } from "react";
-import { shortTime } from "../lib/format";
-import { StatusBadge } from "./StatusBadge";
-import type { SessionMessage } from "../lib/types";
+} from 'lucide-react';
+import { useState } from 'react';
+import { shortTime } from '../lib/format';
+import { StatusBadge } from './StatusBadge';
+import type { SessionMessage } from '../lib/types';
 
 type Props = {
   message: SessionMessage;
@@ -35,11 +35,11 @@ export function MessageCard({ message, onApprove }: Props) {
   }[message.role];
 
   const roleLabel = {
-    user: "You",
-    agent: "Agent Mesh",
-    system: "System",
-    tool: message.metadata?.toolName || "Tool",
-    approval: "Approval Required",
+    user: 'You',
+    agent: 'Agent Mesh',
+    system: 'System',
+    tool: message.metadata?.toolName || 'Tool',
+    approval: 'Approval Required',
   }[message.role];
 
   // Render code blocks if present
@@ -64,7 +64,7 @@ export function MessageCard({ message, onApprove }: Props) {
         {message.metadata.files.map((f, i) => (
           <span key={i} className="msg-file-tag">
             <FileCode2 size={11} />
-            {f.split("/").pop()}
+            {f.split('/').pop()}
           </span>
         ))}
       </div>
@@ -72,18 +72,15 @@ export function MessageCard({ message, onApprove }: Props) {
   }
 
   // Tool call card
-  if (message.role === "tool") {
+  if (message.role === 'tool') {
     return (
       <article className="message message--tool">
         <div className="message-avatar message-avatar--tool">{avatarIcon}</div>
         <div className="message-card message-card--tool">
-          <button
-            className="tool-call-toggle"
-            onClick={() => setCollapsed(!collapsed)}
-          >
+          <button className="tool-call-toggle" onClick={() => setCollapsed(!collapsed)}>
             {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
             <Wrench size={13} />
-            <strong>{message.title || message.metadata?.toolName || "Tool call"}</strong>
+            <strong>{message.title || message.metadata?.toolName || 'Tool call'}</strong>
             {message.status && <StatusBadge status={message.status} />}
           </button>
           {!collapsed && (
@@ -97,7 +94,7 @@ export function MessageCard({ message, onApprove }: Props) {
   }
 
   // Approval card
-  if (message.role === "approval") {
+  if (message.role === 'approval') {
     return (
       <article className="message message--approval">
         <div className="message-avatar message-avatar--approval">{avatarIcon}</div>
@@ -112,18 +109,10 @@ export function MessageCard({ message, onApprove }: Props) {
           {renderFiles()}
           {onApprove && (
             <div className="approval-actions">
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => onApprove(false)}
-              >
+              <button className="secondary-button" type="button" onClick={() => onApprove(false)}>
                 <X size={14} /> Reject
               </button>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => onApprove(true)}
-              >
+              <button className="primary-button" type="button" onClick={() => onApprove(true)}>
                 <Check size={14} /> Approve
               </button>
             </div>
@@ -134,7 +123,7 @@ export function MessageCard({ message, onApprove }: Props) {
   }
 
   // System message
-  if (message.role === "system") {
+  if (message.role === 'system') {
     return (
       <article className="message message--system">
         <div className="system-message-content">
@@ -157,10 +146,10 @@ export function MessageCard({ message, onApprove }: Props) {
           {message.status && <StatusBadge status={message.status} />}
         </div>
         <div className="message-body">
-          {message.body.split("\n").map((line, i) => {
+          {message.body.split('\n').map((line, i) => {
             // Basic inline code rendering
-            if (line.startsWith("```")) return null;
-            return <p key={i}>{line || "\u00A0"}</p>;
+            if (line.startsWith('```')) return null;
+            return <p key={i}>{line || '\u00A0'}</p>;
           })}
         </div>
         {renderCodeBlocks()}

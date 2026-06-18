@@ -129,7 +129,10 @@ export interface ImageResponse {
 }
 
 export interface ImageModel {
-  call(prompt: { messages: { text: string; weight?: number }[]; options?: ImageOptions }): Promise<ImageResponse>;
+  call(prompt: {
+    messages: { text: string; weight?: number }[];
+    options?: ImageOptions;
+  }): Promise<ImageResponse>;
 }
 
 export interface VideoOptions {
@@ -157,5 +160,8 @@ export interface VideoOptions {
 }
 
 export interface VideoModel {
-  generate(prompt: string, options: VideoOptions): Promise<import('../models/index.js').LLMResponse>;
+  generate(
+    prompt: string,
+    options: VideoOptions,
+  ): Promise<import('../models/index.js').LLMResponse>;
 }

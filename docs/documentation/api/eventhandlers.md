@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh Event Handlers API — create, update, delete, and list event handlers for event-driven workflow orchestration."
+description: 'AgentMesh Event Handlers API — create, update, delete, and list event handlers for event-driven workflow orchestration.'
 ---
 
 # Event Handlers API
@@ -10,13 +10,13 @@ For details on configuring event handlers, see [Event Handler Configuration](../
 
 ## Endpoints
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/event` | `POST` | Create a new event handler |
-| `/event` | `PUT` | Update an existing event handler |
-| `/event` | `GET` | Get all event handlers |
-| `/event/{name}` | `DELETE` | Delete an event handler |
-| `/event/{event}` | `GET` | Get event handlers for a specific event |
+| Endpoint         | Method   | Description                             |
+| ---------------- | -------- | --------------------------------------- |
+| `/event`         | `POST`   | Create a new event handler              |
+| `/event`         | `PUT`    | Update an existing event handler        |
+| `/event`         | `GET`    | Get all event handlers                  |
+| `/event/{name}`  | `DELETE` | Delete an event handler                 |
+| `/event/{event}` | `GET`    | Get event handlers for a specific event |
 
 ### Create an Event Handler
 
@@ -52,22 +52,22 @@ curl -X POST 'http://localhost:8080/api/event' \
 
 #### Event Handler Fields
 
-| Field | Description | Required |
-|---|---|---|
-| `name` | Unique name for the event handler | Yes |
-| `event` | Event identifier in format `type:queue:subject` (e.g., `kafka:my_topic:my_event`) | Yes |
-| `active` | Whether the handler is active | Yes |
-| `actions` | List of actions to execute when the event is received | Yes |
-| `condition` | Optional JavaScript expression to filter events | No |
-| `evaluatorType` | Expression evaluator type (`javascript` or `graaljs`) | No |
+| Field           | Description                                                                       | Required |
+| --------------- | --------------------------------------------------------------------------------- | -------- |
+| `name`          | Unique name for the event handler                                                 | Yes      |
+| `event`         | Event identifier in format `type:queue:subject` (e.g., `kafka:my_topic:my_event`) | Yes      |
+| `active`        | Whether the handler is active                                                     | Yes      |
+| `actions`       | List of actions to execute when the event is received                             | Yes      |
+| `condition`     | Optional JavaScript expression to filter events                                   | No       |
+| `evaluatorType` | Expression evaluator type (`javascript` or `graaljs`)                             | No       |
 
 #### Action Types
 
-| Action | Description |
-|---|---|
-| `start_workflow` | Start a new workflow execution |
-| `complete_task` | Complete a pending task (e.g., a WAIT task) |
-| `fail_task` | Fail a pending task |
+| Action           | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `start_workflow` | Start a new workflow execution              |
+| `complete_task`  | Complete a pending task (e.g., a WAIT task) |
+| `fail_task`      | Fail a pending task                         |
 
 #### Complete Task Action Example
 
@@ -182,10 +182,10 @@ GET /api/event/{event}?activeOnly=true
 
 Returns event handlers configured for a specific event.
 
-| Parameter | Description | Default |
-|---|---|---|
-| `event` | Event identifier (e.g., `kafka:orders_topic:new_order`) | — |
-| `activeOnly` | Only return active handlers | `true` |
+| Parameter    | Description                                             | Default |
+| ------------ | ------------------------------------------------------- | ------- |
+| `event`      | Event identifier (e.g., `kafka:orders_topic:new_order`) | —       |
+| `activeOnly` | Only return active handlers                             | `true`  |
 
 ```shell
 curl 'http://localhost:8080/api/event/kafka:orders_topic:new_order?activeOnly=true'
@@ -203,10 +203,10 @@ Event identifiers follow the pattern:
 {type}:{queue/topic}:{subject}
 ```
 
-| Type | Example | Description |
-|---|---|---|
-| `kafka` | `kafka:my_topic:my_event` | Apache Kafka topic |
-| `nats` | `nats:my_subject:my_event` | NATS subject |
-| `sqs` | `sqs:my_queue:my_event` | Amazon SQS queue |
-| `amqp_exchange` | `amqp_exchange:my_exchange:my_event` | RabbitMQ exchange |
-| `agentmesh` | `agentmesh:my_event:my_event` | AgentMesh internal event queue |
+| Type            | Example                              | Description                    |
+| --------------- | ------------------------------------ | ------------------------------ |
+| `kafka`         | `kafka:my_topic:my_event`            | Apache Kafka topic             |
+| `nats`          | `nats:my_subject:my_event`           | NATS subject                   |
+| `sqs`           | `sqs:my_queue:my_event`              | Amazon SQS queue               |
+| `amqp_exchange` | `amqp_exchange:my_exchange:my_event` | RabbitMQ exchange              |
+| `agentmesh`     | `agentmesh:my_event:my_event`        | AgentMesh internal event queue |

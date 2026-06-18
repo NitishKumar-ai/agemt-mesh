@@ -4,7 +4,12 @@ import type { TaskModel } from '@agentmesh/common';
 
 export function runConcurrentExecutionLimitDAOContractTests(
   daoProvider: () => Promise<ConcurrentExecutionLimitDAO>,
-  seedTaskInProgress: (taskDefName: string, taskId: string, workflowId: string, inProgress: boolean) => Promise<void>,
+  seedTaskInProgress: (
+    taskDefName: string,
+    taskId: string,
+    workflowId: string,
+    inProgress: boolean,
+  ) => Promise<void>,
   cleanup: () => Promise<void>,
 ): void {
   describe('ConcurrentExecutionLimitDAO contract', () => {

@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — wait and timer pattern recipes for fixed delays, scheduled execution, external signals, and human-in-the-loop approvals."
+description: 'AgentMesh cookbook — wait and timer pattern recipes for fixed delays, scheduled execution, external signals, and human-in-the-loop approvals.'
 ---
 
 # Wait and timer patterns
@@ -34,7 +34,7 @@ Introduce a delay between workflow steps — useful for rate limiting, cool-down
       "inputParameters": {
         "uri": "https://api.example.com/notify",
         "method": "POST",
-        "body": {"eventId": "${process.output.eventId}"}
+        "body": { "eventId": "${process.output.eventId}" }
       }
     }
   ]
@@ -76,7 +76,7 @@ Schedule workflow continuation for a specific date/time — useful for scheduled
       "inputParameters": {
         "uri": "https://api.example.com/reports/publish",
         "method": "POST",
-        "body": {"reportId": "${prepare.output.reportId}"}
+        "body": { "reportId": "${prepare.output.reportId}" }
       }
     }
   ]

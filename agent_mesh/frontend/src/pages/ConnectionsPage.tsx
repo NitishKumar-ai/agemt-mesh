@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   ExternalLink,
@@ -27,13 +27,13 @@ import {
   Database,
   Users,
   CloudLightning,
-} from "lucide-react";
-import { PageHeader } from "../components/PageHeader";
-import { api } from "../lib/api";
-import type { ConnectionInfo, ConnectorConfig, SocialPlatform } from "../lib/types";
+} from 'lucide-react';
+import { PageHeader } from '../components/PageHeader';
+import { api } from '../lib/api';
+import type { ConnectionInfo, ConnectorConfig, SocialPlatform } from '../lib/types';
 
 const ICONS: Record<string, typeof PenTool> = {
-  "pen-tool": PenTool,
+  'pen-tool': PenTool,
   twitter: Twitter,
   linkedin: Linkedin,
   layers: Layers,
@@ -41,24 +41,24 @@ const ICONS: Record<string, typeof PenTool> = {
   tool: Wrench,
   github: Github,
   globe: Globe,
-  "message-square": MessageSquare,
-  "credit-card": CreditCard,
+  'message-square': MessageSquare,
+  'credit-card': CreditCard,
   target: Target,
   search: Search,
-  "bar-chart": BarChart,
-  "pie-chart": PieChart,
+  'bar-chart': BarChart,
+  'pie-chart': PieChart,
   activity: Activity,
   server: Server,
   database: Database,
   users: Users,
-  "cloud-lightning": CloudLightning,
+  'cloud-lightning': CloudLightning,
 };
 
 const BRAND_ACCENTS = [
-  { bg: "rgba(255,77,139,.08)", fg: "var(--brand-pink)" },
-  { bg: "rgba(184,164,237,.1)", fg: "var(--brand-lavender)" },
-  { bg: "rgba(26,58,58,.06)", fg: "var(--brand-teal)" },
-  { bg: "rgba(232,185,74,.1)", fg: "var(--brand-ochre)" },
+  { bg: 'rgba(255,77,139,.08)', fg: 'var(--brand-pink)' },
+  { bg: 'rgba(184,164,237,.1)', fg: 'var(--brand-lavender)' },
+  { bg: 'rgba(26,58,58,.06)', fg: 'var(--brand-teal)' },
+  { bg: 'rgba(232,185,74,.1)', fg: 'var(--brand-ochre)' },
 ];
 
 export function ConnectionsPage() {
@@ -83,7 +83,7 @@ export function ConnectionsPage() {
       setAvailable(availRes.connectors);
       setActive(activeRes.connections);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load connections");
+      setError(e instanceof Error ? e.message : 'Failed to load connections');
     } finally {
       setLoading(false);
     }
@@ -97,12 +97,12 @@ export function ConnectionsPage() {
     if (!connectTarget) return;
 
     const provider = available.find((x) => x.provider_id === connectTarget);
-    if (provider?.auth_type === "oauth") {
-      if (provider.provider_id === "github") {
-        window.location.assign("/api/github/connect");
+    if (provider?.auth_type === 'oauth') {
+      if (provider.provider_id === 'github') {
+        window.location.assign('/api/github/connect');
         return;
       }
-      setError("OAuth flow not implemented for this provider yet.");
+      setError('OAuth flow not implemented for this provider yet.');
       return;
     }
 
@@ -115,7 +115,7 @@ export function ConnectionsPage() {
       setMetadata({});
       void load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Connection failed");
+      setError(e instanceof Error ? e.message : 'Connection failed');
     } finally {
       setSaving(false);
     }
@@ -199,11 +199,14 @@ export function ConnectionsPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             {(() => {
               const c = available.find((x) => x.provider_id === connectTarget);
-              const Icon = ICONS[c?.icon ?? ""] ?? PenTool;
+              const Icon = ICONS[c?.icon ?? ''] ?? PenTool;
               return (
                 <>
                   <div className="modal-header">
-                    <div className="modal-icon" style={{ background: "rgba(26,58,58,.06)", color: "var(--brand-teal)" }}>
+                    <div
+                      className="modal-icon"
+                      style={{ background: 'rgba(26,58,58,.06)', color: 'var(--brand-teal)' }}
+                    >
                       <Icon size={22} />
                     </div>
                     <div>
@@ -212,10 +215,11 @@ export function ConnectionsPage() {
                     </div>
                   </div>
 
-                  {c?.auth_type === "oauth" ? (
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                      <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 15 }}>
-                        This connection uses OAuth. You will be redirected to the provider to authorize access.
+                  {c?.auth_type === 'oauth' ? (
+                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 15 }}>
+                        This connection uses OAuth. You will be redirected to the provider to
+                        authorize access.
                       </p>
                     </div>
                   ) : (
@@ -223,39 +227,43 @@ export function ConnectionsPage() {
                       {c?.config_schema?.map((field) => (
                         <div className="form-group" key={field.name}>
                           <label className="form-label">{field.label}</label>
-                          {field.type === "textarea" ? (
+                          {field.type === 'textarea' ? (
                             <textarea
                               className="form-input"
                               placeholder={field.placeholder}
                               required={field.required}
                               rows={4}
-                              value={config[field.name] || ""}
-                              onChange={(e) => setConfig({ ...config, [field.name]: e.target.value })}
+                              value={config[field.name] || ''}
+                              onChange={(e) =>
+                                setConfig({ ...config, [field.name]: e.target.value })
+                              }
                             />
                           ) : (
-                            <div style={{ position: "relative" }}>
+                            <div style={{ position: 'relative' }}>
                               <input
                                 className="form-input"
-                                type={field.type === "password" && showKey ? "text" : field.type}
+                                type={field.type === 'password' && showKey ? 'text' : field.type}
                                 placeholder={field.placeholder}
                                 required={field.required}
-                                value={config[field.name] || ""}
-                                onChange={(e) => setConfig({ ...config, [field.name]: e.target.value })}
-                                style={field.type === "password" ? { paddingRight: 38 } : {}}
+                                value={config[field.name] || ''}
+                                onChange={(e) =>
+                                  setConfig({ ...config, [field.name]: e.target.value })
+                                }
+                                style={field.type === 'password' ? { paddingRight: 38 } : {}}
                               />
-                              {field.type === "password" && (
+                              {field.type === 'password' && (
                                 <button
                                   type="button"
                                   onClick={() => setShowKey(!showKey)}
                                   style={{
-                                    position: "absolute",
+                                    position: 'absolute',
                                     right: 10,
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    background: "none",
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
                                     border: 0,
-                                    cursor: "pointer",
-                                    color: "var(--muted)",
+                                    cursor: 'pointer',
+                                    color: 'var(--muted)',
                                     padding: 2,
                                   }}
                                 >
@@ -274,7 +282,7 @@ export function ConnectionsPage() {
                     <input
                       className="form-input"
                       placeholder="e.g. Production Cluster"
-                      value={metadata.name || ""}
+                      value={metadata.name || ''}
                       onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
                     />
                   </div>
@@ -282,9 +290,11 @@ export function ConnectionsPage() {
                   {error && <div className="error-box">{error}</div>}
 
                   <div className="modal-actions">
-                    <button className="secondary-button" onClick={() => setConnectTarget(null)}>Cancel</button>
+                    <button className="secondary-button" onClick={() => setConnectTarget(null)}>
+                      Cancel
+                    </button>
                     <button className="primary-button" disabled={saving} onClick={connect}>
-                      {saving ? "Connecting…" : "Connect"}
+                      {saving ? 'Connecting…' : 'Connect'}
                     </button>
                   </div>
                 </>
@@ -406,7 +416,7 @@ function ConnectionCard({
   onDisconnect: () => void;
   deleting: boolean;
 }) {
-  const Icon = ICONS[provider?.icon || ""] || PenTool;
+  const Icon = ICONS[provider?.icon || ''] || PenTool;
   const name = connection.metadata.name || provider?.name || connection.provider_id;
 
   return (
@@ -418,10 +428,12 @@ function ConnectionCard({
           </div>
           <div>
             <div className="card-title">{name}</div>
-            <div className="card-subtitle">{provider?.name} • {connection.connector_type}</div>
+            <div className="card-subtitle">
+              {provider?.name} • {connection.connector_type}
+            </div>
           </div>
         </div>
-        {connection.status === "connected" ? (
+        {connection.status === 'connected' ? (
           <CheckCircle2 size={18} color="var(--success)" />
         ) : (
           <XCircle size={18} color="var(--error)" />
@@ -433,7 +445,7 @@ function ConnectionCard({
           Connected {new Date(connection.created_at).toLocaleDateString()}
         </span>
         <button className="disconnect-button" onClick={onDisconnect} disabled={deleting}>
-          <Unplug size={12} /> {deleting ? "Removing…" : "Disconnect"}
+          <Unplug size={12} /> {deleting ? 'Removing…' : 'Disconnect'}
         </button>
       </div>
 
@@ -519,7 +531,7 @@ function AvailableCard({
   accent: { bg: string; fg: string };
   onConnect: () => void;
 }) {
-  const Icon = ICONS[connector.icon || ""] || PenTool;
+  const Icon = ICONS[connector.icon || ''] || PenTool;
 
   return (
     <article className="card available">

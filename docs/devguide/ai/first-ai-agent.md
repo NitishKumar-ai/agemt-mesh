@@ -1,5 +1,5 @@
 ---
-description: "Build your first AI agent with AgentMesh in 5 minutes. Step-by-step tutorial: discover MCP tools, call an LLM, execute tools, add human approval, and make it autonomous — all with durable execution guarantees."
+description: 'Build your first AI agent with AgentMesh in 5 minutes. Step-by-step tutorial: discover MCP tools, call an LLM, execute tools, add human approval, and make it autonomous — all with durable execution guarantees.'
 ---
 
 # Build your first AI agent
@@ -24,8 +24,7 @@ mcp-testkit --transport http
 This starts an MCP server at `http://localhost:3001/mcp` with deterministic tools for testing. You'll use this URL in the workflow definition.
 
 !!! tip "Any MCP server works"
-    AgentMesh connects to any MCP-compatible server. Use community MCP servers for GitHub, Slack, databases, or any API — or build your own. See the [MCP integration guide](mcp-guide.md) for details.
-
+AgentMesh connects to any MCP-compatible server. Use community MCP servers for GitHub, Slack, databases, or any API — or build your own. See the [MCP integration guide](mcp-guide.md) for details.
 
 ## Step 2: Configure your LLM provider
 
@@ -38,7 +37,6 @@ export ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
 ```
 
 Then start (or restart) the server. AgentMesh auto-enables providers when their API key is set.
-
 
 ## Step 3: Create the agent workflow
 
@@ -118,15 +116,14 @@ Save this as `my_first_agent.json`. This is a complete AI agent in four tasks �
 
 **What each task does:**
 
-| Task | Type | Purpose |
-|------|------|---------|
-| `discover` | `LIST_MCP_TOOLS` | Queries the MCP server to discover available tools |
-| `plan` | `LLM_CHAT_COMPLETE` | Sends the tool list + user task to the LLM, which picks a tool and arguments |
-| `execute` | `CALL_MCP_TOOL` | Calls the selected tool on the MCP server |
-| `summarize` | `LLM_CHAT_COMPLETE` | Summarizes the raw tool output for the user |
+| Task        | Type                | Purpose                                                                      |
+| ----------- | ------------------- | ---------------------------------------------------------------------------- |
+| `discover`  | `LIST_MCP_TOOLS`    | Queries the MCP server to discover available tools                           |
+| `plan`      | `LLM_CHAT_COMPLETE` | Sends the tool list + user task to the LLM, which picks a tool and arguments |
+| `execute`   | `CALL_MCP_TOOL`     | Calls the selected tool on the MCP server                                    |
+| `summarize` | `LLM_CHAT_COMPLETE` | Summarizes the raw tool output for the user                                  |
 
 Every task is a native AgentMesh system task. No workers to write, no code to deploy.
-
 
 ## Step 4: Register and run
 
@@ -151,8 +148,7 @@ agentmesh workflow start -w my_first_agent --sync --input '{"task": "What is the
 Open [http://localhost:8080](http://localhost:8080) to see the execution. Click into the workflow to see each task's input, output, and timing.
 
 !!! success "What just happened"
-    Your agent discovered tools from an MCP server, asked an LLM to pick the right one, executed it, and summarized the result. Every step was persisted — if the server had crashed at any point, execution would have resumed from the last completed task. No tokens wasted, no progress lost.
-
+Your agent discovered tools from an MCP server, asked an LLM to pick the right one, executed it, and summarized the result. Every step was persisted — if the server had crashed at any point, execution would have resumed from the last completed task. No tokens wasted, no progress lost.
 
 ## Step 5: Add human approval
 
@@ -187,7 +183,6 @@ curl -X POST 'http://localhost:8080/api/tasks' \
 ```
 
 The approval is durable — the workflow stays paused indefinitely, even across server restarts and deploys, until someone approves it.
-
 
 ## Step 6: Make it autonomous
 
@@ -269,7 +264,6 @@ Turn your agent into an autonomous loop that keeps working until the task is don
 
 Each iteration of the loop is a durable checkpoint. If the agent crashes at iteration 12, it resumes from iteration 12 — not from the beginning. Every LLM call and tool call is persisted and observable.
 
-
 ## What you built
 
 In 5 minutes, you built an AI agent that:
@@ -283,7 +277,6 @@ In 5 minutes, you built an AI agent that:
 - **Is fully observable** — every prompt, response, tool call, and decision is recorded
 
 All of this with zero custom code. The entire agent is a JSON workflow definition that AgentMesh executes with durable execution guarantees.
-
 
 ## Next steps
 

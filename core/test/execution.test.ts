@@ -1,6 +1,39 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TaskType, TaskStatus, isTaskTerminal, isTaskSuccessful, type WorkflowTask } from '@agentmesh/common';
-import { SystemTaskRegistry, WorkflowSystemTask, Noop, Fork, Join, ExclusiveJoin, Terminate, TERMINATION_STATUS_PARAMETER, TERMINATION_REASON_PARAMETER, createTaskModel, createWorkflowModel, copyTaskModel, type TaskModel, type WorkflowModel, type WorkflowExecutor, type TaskMapper, TaskMapperContext, SimpleTaskMapper, ForkJoinTaskMapper, SwitchTaskMapper, TerminateTaskMapper, DeciderService, DeciderOutcome, getTaskByRefName, getNextTask, workflowTaskHas } from '../src/index.js';
+import {
+  TaskType,
+  TaskStatus,
+  isTaskTerminal,
+  isTaskSuccessful,
+  type WorkflowTask,
+} from '@agentmesh/common';
+import {
+  SystemTaskRegistry,
+  WorkflowSystemTask,
+  Noop,
+  Fork,
+  Join,
+  ExclusiveJoin,
+  Terminate,
+  TERMINATION_STATUS_PARAMETER,
+  TERMINATION_REASON_PARAMETER,
+  createTaskModel,
+  createWorkflowModel,
+  copyTaskModel,
+  type TaskModel,
+  type WorkflowModel,
+  type WorkflowExecutor,
+  type TaskMapper,
+  TaskMapperContext,
+  SimpleTaskMapper,
+  ForkJoinTaskMapper,
+  SwitchTaskMapper,
+  TerminateTaskMapper,
+  DeciderService,
+  DeciderOutcome,
+  getTaskByRefName,
+  getNextTask,
+  workflowTaskHas,
+} from '../src/index.js';
 
 function mockExecutor(): WorkflowExecutor {
   return {
@@ -71,7 +104,9 @@ describe('SystemTaskRegistry', () => {
 
 describe('WorkflowSystemTask', () => {
   class TestTask extends WorkflowSystemTask {
-    constructor() { super('TEST'); }
+    constructor() {
+      super('TEST');
+    }
   }
 
   it('has defaults', () => {
@@ -118,7 +153,10 @@ describe('Terminate task', () => {
     const wf = createWorkflowModel();
     const task = createTaskModel({
       status: 'IN_PROGRESS',
-      inputData: { [TERMINATION_STATUS_PARAMETER]: 'COMPLETED', [TERMINATION_REASON_PARAMETER]: 'done' },
+      inputData: {
+        [TERMINATION_STATUS_PARAMETER]: 'COMPLETED',
+        [TERMINATION_REASON_PARAMETER]: 'done',
+      },
     });
     const result = terminate.execute(wf, task, mockExecutor());
     expect(result).toBe(true);
@@ -141,8 +179,16 @@ describe('Terminate task', () => {
 describe('Join task', () => {
   it('completes when all joinOn tasks are terminal and successful', () => {
     const join = new Join();
-    const forkedTask1 = createTaskModel({ referenceTaskName: 't1', status: 'COMPLETED', outputData: { x: 1 } });
-    const forkedTask2 = createTaskModel({ referenceTaskName: 't2', status: 'COMPLETED', outputData: { y: 2 } });
+    const forkedTask1 = createTaskModel({
+      referenceTaskName: 't1',
+      status: 'COMPLETED',
+      outputData: { x: 1 },
+    });
+    const forkedTask2 = createTaskModel({
+      referenceTaskName: 't2',
+      status: 'COMPLETED',
+      outputData: { y: 2 },
+    });
     const wf = createWorkflowModel({ tasks: [forkedTask1, forkedTask2] });
     const task = createTaskModel({ status: 'IN_PROGRESS', inputData: { joinOn: ['t1', 't2'] } });
     const result = join.execute(wf, task, mockExecutor());
@@ -167,7 +213,11 @@ describe('Join task', () => {
 describe('ExclusiveJoin task', () => {
   it('completes when any joinOn task is terminal', () => {
     const ej = new ExclusiveJoin();
-    const forkedTask = createTaskModel({ referenceTaskName: 't1', status: 'COMPLETED', outputData: { z: 3 } });
+    const forkedTask = createTaskModel({
+      referenceTaskName: 't1',
+      status: 'COMPLETED',
+      outputData: { z: 3 },
+    });
     const wf = createWorkflowModel({ tasks: [forkedTask] });
     const task = createTaskModel({ status: 'IN_PROGRESS', inputData: { joinOn: ['t1', 't2'] } });
     const result = ej.execute(wf, task, mockExecutor());
@@ -225,8 +275,44 @@ describe('ForkJoinTaskMapper', () => {
       type: 'FORK_JOIN',
       inputParameters: {},
       forkTasks: [
-        [{ name: 'branch1', taskReferenceName: 'b1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
-        [{ name: 'branch2', taskReferenceName: 'b2', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+        [
+          {
+            name: 'branch1',
+            taskReferenceName: 'b1',
+            type: 'SIMPLE',
+            inputParameters: {},
+            startDelay: 0,
+            optional: false,
+            asyncComplete: false,
+            permissive: false,
+            joinOn: [],
+            defaultCase: [],
+            decisionCases: {},
+            forkTasks: [],
+            loopOver: [],
+            defaultExclusiveJoinTask: [],
+            onStateChange: {},
+          },
+        ],
+        [
+          {
+            name: 'branch2',
+            taskReferenceName: 'b2',
+            type: 'SIMPLE',
+            inputParameters: {},
+            startDelay: 0,
+            optional: false,
+            asyncComplete: false,
+            permissive: false,
+            joinOn: [],
+            defaultCase: [],
+            decisionCases: {},
+            forkTasks: [],
+            loopOver: [],
+            defaultExclusiveJoinTask: [],
+            onStateChange: {},
+          },
+        ],
       ] as WorkflowTask[][],
       startDelay: 0,
       optional: false,
@@ -242,8 +328,25 @@ describe('ForkJoinTaskMapper', () => {
     const wfDef = {
       name: 'test_wf',
       version: 1,
-      tasks: [wfTask,
-        { name: 'join', taskReferenceName: 'join_ref', type: 'JOIN', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+      tasks: [
+        wfTask,
+        {
+          name: 'join',
+          taskReferenceName: 'join_ref',
+          type: 'JOIN',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       inputParameters: [],
       outputParameters: {},
@@ -258,19 +361,29 @@ describe('ForkJoinTaskMapper', () => {
       metadata: {},
       maskedFields: [],
     };
-    const wf = createWorkflowModel({ workflowId: 'wf1', workflowName: 'test', workflowDefinition: wfDef as any });
+    const wf = createWorkflowModel({
+      workflowId: 'wf1',
+      workflowName: 'test',
+      workflowDefinition: wfDef as any,
+    });
 
     const decider = new DeciderService({
-      taskMappers: { FORK_JOIN: mapper, JOIN: new (class implements TaskMapper {
-        getTaskType() { return 'JOIN'; }
-        getMappedTasks(ctx: TaskMapperContext) {
-          const t = ctx.createTaskModel();
-          t.taskType = 'JOIN';
-          t.taskDefName = 'JOIN';
-          t.status = 'IN_PROGRESS';
-          return [t];
-        }
-      })(), USER_DEFINED: new SimpleTaskMapper() },
+      taskMappers: {
+        FORK_JOIN: mapper,
+        JOIN: new (class implements TaskMapper {
+          getTaskType() {
+            return 'JOIN';
+          }
+          getMappedTasks(ctx: TaskMapperContext) {
+            const t = ctx.createTaskModel();
+            t.taskType = 'JOIN';
+            t.taskDefName = 'JOIN';
+            t.status = 'IN_PROGRESS';
+            return [t];
+          }
+        })(),
+        USER_DEFINED: new SimpleTaskMapper(),
+      },
       systemTaskRegistry: new SystemTaskRegistry([]),
     });
 
@@ -302,7 +415,25 @@ describe('SwitchTaskMapper', () => {
       inputParameters: { inputCase: 'case1' },
       expression: 'inputCase',
       decisionCases: {
-        case1: [{ name: 'case1_task', taskReferenceName: 'c1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+        case1: [
+          {
+            name: 'case1_task',
+            taskReferenceName: 'c1',
+            type: 'SIMPLE',
+            inputParameters: {},
+            startDelay: 0,
+            optional: false,
+            asyncComplete: false,
+            permissive: false,
+            joinOn: [],
+            defaultCase: [],
+            decisionCases: {},
+            forkTasks: [],
+            loopOver: [],
+            defaultExclusiveJoinTask: [],
+            onStateChange: {},
+          },
+        ],
       },
       defaultCase: [],
       startDelay: 0,
@@ -378,9 +509,57 @@ describe('TerminateTaskMapper', () => {
 });
 
 describe('getTaskByRefName / getNextTask helpers', () => {
-  const taskA: WorkflowTask = { name: 'a', taskReferenceName: 'a', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} };
-  const taskB: WorkflowTask = { name: 'b', taskReferenceName: 'b', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} };
-  const def = { name: 'test', version: 1, tasks: [taskA, taskB], inputParameters: [], outputParameters: {}, schemaVersion: 2, restartable: true, workflowStatusListenerEnabled: false, timeoutPolicy: 'ALERT_ONLY' as const, timeoutSeconds: 0, variables: {}, inputTemplate: {}, enforceSchema: true, metadata: {}, maskedFields: [] };
+  const taskA: WorkflowTask = {
+    name: 'a',
+    taskReferenceName: 'a',
+    type: 'SIMPLE',
+    inputParameters: {},
+    startDelay: 0,
+    optional: false,
+    asyncComplete: false,
+    permissive: false,
+    joinOn: [],
+    defaultCase: [],
+    decisionCases: {},
+    forkTasks: [],
+    loopOver: [],
+    defaultExclusiveJoinTask: [],
+    onStateChange: {},
+  };
+  const taskB: WorkflowTask = {
+    name: 'b',
+    taskReferenceName: 'b',
+    type: 'SIMPLE',
+    inputParameters: {},
+    startDelay: 0,
+    optional: false,
+    asyncComplete: false,
+    permissive: false,
+    joinOn: [],
+    defaultCase: [],
+    decisionCases: {},
+    forkTasks: [],
+    loopOver: [],
+    defaultExclusiveJoinTask: [],
+    onStateChange: {},
+  };
+  const def = {
+    name: 'test',
+    version: 1,
+    tasks: [taskA, taskB],
+    inputParameters: [],
+    outputParameters: {},
+    schemaVersion: 2,
+    restartable: true,
+    workflowStatusListenerEnabled: false,
+    timeoutPolicy: 'ALERT_ONLY' as const,
+    timeoutSeconds: 0,
+    variables: {},
+    inputTemplate: {},
+    enforceSchema: true,
+    metadata: {},
+    maskedFields: [],
+  };
 
   it('getTaskByRefName finds task', () => {
     expect(getTaskByRefName(def as any, 'a')?.taskReferenceName).toBe('a');
@@ -395,8 +574,40 @@ describe('getTaskByRefName / getNextTask helpers', () => {
 
 describe('workflowTaskHas', () => {
   it('checks loopOver containment', () => {
-    const inner: WorkflowTask = { name: 'inner', taskReferenceName: 'inner', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} };
-    const wft: WorkflowTask = { name: 'loop', taskReferenceName: 'loop', type: 'DO_WHILE', inputParameters: {}, loopOver: [inner], startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], defaultExclusiveJoinTask: [], onStateChange: {} };
+    const inner: WorkflowTask = {
+      name: 'inner',
+      taskReferenceName: 'inner',
+      type: 'SIMPLE',
+      inputParameters: {},
+      startDelay: 0,
+      optional: false,
+      asyncComplete: false,
+      permissive: false,
+      joinOn: [],
+      defaultCase: [],
+      decisionCases: {},
+      forkTasks: [],
+      loopOver: [],
+      defaultExclusiveJoinTask: [],
+      onStateChange: {},
+    };
+    const wft: WorkflowTask = {
+      name: 'loop',
+      taskReferenceName: 'loop',
+      type: 'DO_WHILE',
+      inputParameters: {},
+      loopOver: [inner],
+      startDelay: 0,
+      optional: false,
+      asyncComplete: false,
+      permissive: false,
+      joinOn: [],
+      defaultCase: [],
+      decisionCases: {},
+      forkTasks: [],
+      defaultExclusiveJoinTask: [],
+      onStateChange: {},
+    };
     expect(workflowTaskHas(wft, 'inner')).toBe(true);
     expect(workflowTaskHas(wft, 'nonexistent')).toBe(false);
   });

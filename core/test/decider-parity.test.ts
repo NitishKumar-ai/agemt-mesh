@@ -105,7 +105,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'single_task',
       version: 1,
-      tasks: [{ name: 't1', taskReferenceName: 't1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,
@@ -135,7 +153,26 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'retry_wf',
       version: 1,
-      tasks: [{ name: 'retry_task', taskReferenceName: 't1', type: 'SIMPLE', taskDefinition: taskDef as any, inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 'retry_task',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          taskDefinition: taskDef as any,
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,
@@ -175,7 +212,26 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'retry_wf_exp',
       version: 1,
-      tasks: [{ name: 'retry_task_exp', taskReferenceName: 't1', type: 'SIMPLE', taskDefinition: taskDef as any, inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 'retry_task_exp',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          taskDefinition: taskDef as any,
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,
@@ -210,8 +266,40 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'optional_wf',
       version: 1,
       tasks: [
-        { name: 't1', taskReferenceName: 't1', type: 'SIMPLE', optional: true, inputParameters: {}, startDelay: 0, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
-        { name: 't2', taskReferenceName: 't2', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          optional: true,
+          inputParameters: {},
+          startDelay: 0,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+        {
+          name: 't2',
+          taskReferenceName: 't2',
+          type: 'SIMPLE',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -257,7 +345,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
           evaluatorType: 'value-param',
           expression: 'val',
           decisionCases: {
-            A: [{ name: 'tA', taskReferenceName: 'tA', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+            A: [
+              {
+                name: 'tA',
+                taskReferenceName: 'tA',
+                type: 'SIMPLE',
+                inputParameters: {},
+                startDelay: 0,
+                optional: false,
+                asyncComplete: false,
+                permissive: false,
+                joinOn: [],
+                defaultCase: [],
+                decisionCases: {},
+                forkTasks: [],
+                loopOver: [],
+                defaultExclusiveJoinTask: [],
+                onStateChange: {},
+              },
+            ],
           },
           defaultCase: [],
           startDelay: 0,
@@ -285,7 +391,7 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const workflow = createWorkflowModel({ workflowDefinition: def, input: { val: 'A' } });
     const outcome = decider.decide(workflow);
     expect(outcome.tasksToBeScheduled).toHaveLength(2); // SWITCH + branch tA
-    expect(outcome.tasksToBeScheduled.map(t => t.referenceTaskName)).toContain('tA');
+    expect(outcome.tasksToBeScheduled.map((t) => t.referenceTaskName)).toContain('tA');
   });
 
   // Definition 8: Switch default case
@@ -302,9 +408,45 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
           evaluatorType: 'value-param',
           expression: 'val',
           decisionCases: {
-            A: [{ name: 'tA', taskReferenceName: 'tA', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+            A: [
+              {
+                name: 'tA',
+                taskReferenceName: 'tA',
+                type: 'SIMPLE',
+                inputParameters: {},
+                startDelay: 0,
+                optional: false,
+                asyncComplete: false,
+                permissive: false,
+                joinOn: [],
+                defaultCase: [],
+                decisionCases: {},
+                forkTasks: [],
+                loopOver: [],
+                defaultExclusiveJoinTask: [],
+                onStateChange: {},
+              },
+            ],
           },
-          defaultCase: [{ name: 'tD', taskReferenceName: 'tD', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+          defaultCase: [
+            {
+              name: 'tD',
+              taskReferenceName: 'tD',
+              type: 'SIMPLE',
+              inputParameters: {},
+              startDelay: 0,
+              optional: false,
+              asyncComplete: false,
+              permissive: false,
+              joinOn: [],
+              defaultCase: [],
+              decisionCases: {},
+              forkTasks: [],
+              loopOver: [],
+              defaultExclusiveJoinTask: [],
+              onStateChange: {},
+            },
+          ],
           startDelay: 0,
           optional: false,
           asyncComplete: false,
@@ -330,7 +472,7 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const workflow = createWorkflowModel({ workflowDefinition: def, input: { val: 'Z' } });
     const outcome = decider.decide(workflow);
     expect(outcome.tasksToBeScheduled).toHaveLength(2); // SWITCH + branch tD
-    expect(outcome.tasksToBeScheduled.map(t => t.referenceTaskName)).toContain('tD');
+    expect(outcome.tasksToBeScheduled.map((t) => t.referenceTaskName)).toContain('tD');
   });
 
   // Definition 9: Wait task scheduling
@@ -339,8 +481,40 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'wait_wf',
       version: 1,
       tasks: [
-        { name: 'wait', taskReferenceName: 'wait', type: 'WAIT', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
-        { name: 't1', taskReferenceName: 't1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+        {
+          name: 'wait',
+          taskReferenceName: 'wait',
+          type: 'WAIT',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -365,7 +539,23 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'terminate_wf',
       version: 1,
       tasks: [
-        { name: 'term', taskReferenceName: 'term', type: 'TERMINATE', inputParameters: { terminationStatus: 'COMPLETED' }, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+        {
+          name: 'term',
+          taskReferenceName: 'term',
+          type: 'TERMINATE',
+          inputParameters: { terminationStatus: 'COMPLETED' },
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -389,7 +579,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'start_delay_wf',
       version: 1,
-      tasks: [{ name: 't1', taskReferenceName: 't1', type: 'SIMPLE', startDelay: 10, inputParameters: {}, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          startDelay: 10,
+          inputParameters: {},
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,
@@ -413,8 +621,40 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'permissive_wf',
       version: 1,
       tasks: [
-        { name: 't1', taskReferenceName: 't1', type: 'SIMPLE', permissive: true, inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
-        { name: 't2', taskReferenceName: 't2', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          permissive: true,
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+        {
+          name: 't2',
+          taskReferenceName: 't2',
+          type: 'SIMPLE',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -492,8 +732,44 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       taskReferenceName: 'fork',
       type: 'FORK_JOIN',
       forkTasks: [
-        [{ name: 't1', taskReferenceName: 't1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
-        [{ name: 't2', taskReferenceName: 't2', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+        [
+          {
+            name: 't1',
+            taskReferenceName: 't1',
+            type: 'SIMPLE',
+            inputParameters: {},
+            startDelay: 0,
+            optional: false,
+            asyncComplete: false,
+            permissive: false,
+            joinOn: [],
+            defaultCase: [],
+            decisionCases: {},
+            forkTasks: [],
+            loopOver: [],
+            defaultExclusiveJoinTask: [],
+            onStateChange: {},
+          },
+        ],
+        [
+          {
+            name: 't2',
+            taskReferenceName: 't2',
+            type: 'SIMPLE',
+            inputParameters: {},
+            startDelay: 0,
+            optional: false,
+            asyncComplete: false,
+            permissive: false,
+            joinOn: [],
+            defaultCase: [],
+            decisionCases: {},
+            forkTasks: [],
+            loopOver: [],
+            defaultExclusiveJoinTask: [],
+            onStateChange: {},
+          },
+        ],
       ],
       startDelay: 0,
       optional: false,
@@ -541,7 +817,7 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const workflow = createWorkflowModel({ workflowDefinition: def });
     const outcome = decider.decide(workflow);
     expect(outcome.tasksToBeScheduled.length).toBeGreaterThanOrEqual(3);
-    const scheduledRefs = outcome.tasksToBeScheduled.map(t => t.referenceTaskName);
+    const scheduledRefs = outcome.tasksToBeScheduled.map((t) => t.referenceTaskName);
     expect(scheduledRefs).toContain('t1');
     expect(scheduledRefs).toContain('t2');
   });
@@ -607,7 +883,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'human_wf',
       version: 1,
-      tasks: [{ name: 'human', taskReferenceName: 'human', type: 'HUMAN', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 'human',
+          taskReferenceName: 'human',
+          type: 'HUMAN',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,
@@ -627,7 +921,23 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
 
   // Definition 17: Do-while iteration 1
   it('17. Do-while schedules loopOver tasks on iteration 1', () => {
-    const innerTask: any = { name: 'inner', taskReferenceName: 'inner', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} };
+    const innerTask: any = {
+      name: 'inner',
+      taskReferenceName: 'inner',
+      type: 'SIMPLE',
+      inputParameters: {},
+      startDelay: 0,
+      optional: false,
+      asyncComplete: false,
+      permissive: false,
+      joinOn: [],
+      defaultCase: [],
+      decisionCases: {},
+      forkTasks: [],
+      loopOver: [],
+      defaultExclusiveJoinTask: [],
+      onStateChange: {},
+    };
     const doWhileTask: any = {
       name: 'loop',
       taskReferenceName: 'loop',
@@ -696,7 +1006,23 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'join_wf',
       version: 1,
       tasks: [
-        { name: 'join', taskReferenceName: 'join', type: 'JOIN', joinOn: ['t1', 't2'], inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} },
+        {
+          name: 'join',
+          taskReferenceName: 'join',
+          type: 'JOIN',
+          joinOn: ['t1', 't2'],
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -709,15 +1035,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       metadata: {},
       maskedFields: [],
     };
-    const t1 = createTaskModel({ taskId: 't1', referenceTaskName: 't1', status: 'COMPLETED', executed: true });
-    const t2 = createTaskModel({ taskId: 't2', referenceTaskName: 't2', status: 'IN_PROGRESS', executed: false });
+    const t1 = createTaskModel({
+      taskId: 't1',
+      referenceTaskName: 't1',
+      status: 'COMPLETED',
+      executed: true,
+    });
+    const t2 = createTaskModel({
+      taskId: 't2',
+      referenceTaskName: 't2',
+      status: 'IN_PROGRESS',
+      executed: false,
+    });
     const workflow = createWorkflowModel({
       workflowDefinition: def,
       tasks: [t1, t2],
     });
     const outcome = decider.decide(workflow);
     // join is not scheduled yet since t2 is not completed
-    expect(outcome.tasksToBeScheduled.map(t => t.referenceTaskName)).not.toContain('join');
+    expect(outcome.tasksToBeScheduled.map((t) => t.referenceTaskName)).not.toContain('join');
   });
 
   // Definition 19: Exclusive Join task
@@ -726,7 +1062,23 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       name: 'exclusive_join_wf',
       version: 1,
       tasks: [
-        { name: 'join', taskReferenceName: 'join', type: 'EXCLUSIVE_JOIN', joinOn: ['t1', 't2'], defaultExclusiveJoinTask: [], inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], onStateChange: {} },
+        {
+          name: 'join',
+          taskReferenceName: 'join',
+          type: 'EXCLUSIVE_JOIN',
+          joinOn: ['t1', 't2'],
+          defaultExclusiveJoinTask: [],
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          onStateChange: {},
+        },
       ],
       schemaVersion: 2,
       restartable: true,
@@ -739,8 +1091,18 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
       metadata: {},
       maskedFields: [],
     };
-    const t1 = createTaskModel({ taskId: 't1', referenceTaskName: 't1', status: 'COMPLETED', executed: true });
-    const t2 = createTaskModel({ taskId: 't2', referenceTaskName: 't2', status: 'IN_PROGRESS', executed: true });
+    const t1 = createTaskModel({
+      taskId: 't1',
+      referenceTaskName: 't1',
+      status: 'COMPLETED',
+      executed: true,
+    });
+    const t2 = createTaskModel({
+      taskId: 't2',
+      referenceTaskName: 't2',
+      status: 'IN_PROGRESS',
+      executed: true,
+    });
     const workflow = createWorkflowModel({
       workflowDefinition: def,
       tasks: [t1, t2],
@@ -756,7 +1118,25 @@ describe('Decider Parity Golden Suite (20+ Workflow Defs)', () => {
     const def: any = {
       name: 'timeout_wf',
       version: 1,
-      tasks: [{ name: 't1', taskReferenceName: 't1', type: 'SIMPLE', inputParameters: {}, startDelay: 0, optional: false, asyncComplete: false, permissive: false, joinOn: [], defaultCase: [], decisionCases: {}, forkTasks: [], loopOver: [], defaultExclusiveJoinTask: [], onStateChange: {} }],
+      tasks: [
+        {
+          name: 't1',
+          taskReferenceName: 't1',
+          type: 'SIMPLE',
+          inputParameters: {},
+          startDelay: 0,
+          optional: false,
+          asyncComplete: false,
+          permissive: false,
+          joinOn: [],
+          defaultCase: [],
+          decisionCases: {},
+          forkTasks: [],
+          loopOver: [],
+          defaultExclusiveJoinTask: [],
+          onStateChange: {},
+        },
+      ],
       schemaVersion: 2,
       restartable: true,
       workflowStatusListenerEnabled: false,

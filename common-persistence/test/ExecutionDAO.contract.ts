@@ -112,12 +112,15 @@ export function runExecutionDAOContractTests(
       expect(fetchedUpdated!.status).toBe('COMPLETED');
 
       // Get pending tasks by workflow
-      const pendingTasks = await dao.getPendingTasksByWorkflow('agent_mesh_task_def_1', 'agent_mesh_wf_id_task');
+      const pendingTasks = await dao.getPendingTasksByWorkflow(
+        'agent_mesh_task_def_1',
+        'agent_mesh_wf_id_task',
+      );
       expect(pendingTasks).toBeDefined();
 
       // Get tasks for workflow
       const wfTasks = await dao.getTasksForWorkflow('agent_mesh_wf_id_task');
-      expect(wfTasks.some(t => t.taskId === 'agent_mesh_task_id_1')).toBe(true);
+      expect(wfTasks.some((t) => t.taskId === 'agent_mesh_task_id_1')).toBe(true);
 
       // Remove task
       const removed = await dao.removeTask('agent_mesh_task_id_1');
@@ -185,7 +188,7 @@ export function runExecutionDAOContractTests(
       expect(ok).toBe(true);
 
       // Wait 1.5s for expiry to fire
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const fetched = await dao.getWorkflow('agent_mesh_wf_expiry');
       expect(fetched).toBeUndefined();

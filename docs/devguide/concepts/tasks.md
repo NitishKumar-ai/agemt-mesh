@@ -1,5 +1,5 @@
 ---
-description: "Learn about tasks in AgentMesh — the reusable building blocks of workflows, including system tasks, worker tasks, operators, LLM tasks with 14+ AI providers, and MCP tool calling."
+description: 'Learn about tasks in AgentMesh — the reusable building blocks of workflows, including system tasks, worker tasks, operators, LLM tasks with 14+ AI providers, and MCP tool calling.'
 ---
 
 # Tasks
@@ -7,7 +7,6 @@ description: "Learn about tasks in AgentMesh — the reusable building blocks of
 A task is the basic building block of a AgentMesh workflow. They are reusable and modular, representing steps in your application like processing data files, calling an AI model, or executing some logic.
 
 In AgentMesh, tasks can be defined, configured, and then executed. Learn more about the distinct but related concepts, **task definition**, **task configuration**, and **task execution** below.
-
 
 ## Types of tasks
 
@@ -19,11 +18,11 @@ AgentMesh ships with 20+ [system tasks](../../documentation/configuration/workfl
 
 System tasks are managed by AgentMesh and executed within its server's JVM, allowing you to get started without having to write custom workers.
 
-| Category | Tasks |
-|---|---|
-| **Core** | HTTP, Inline (script), Event, Wait, Human, Kafka Publish, JSON JQ Transform, No Op |
+| Category         | Tasks                                                                                                           |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Core**         | HTTP, Inline (script), Event, Wait, Human, Kafka Publish, JSON JQ Transform, No Op                              |
 | **Flow Control** | Fork/Join, Dynamic Fork, Join, Switch, Do While, Sub Workflow, Start Workflow, Set Variable, Terminate, Dynamic |
-| **AI / LLM** | Chat Completion, Text Completion, Embeddings, Vector Search, Content Generation, MCP Tool Calling |
+| **AI / LLM**     | Chat Completion, Text Completion, Embeddings, Vector Search, Content Generation, MCP Tool Calling               |
 
 ### Worker tasks
 
@@ -51,8 +50,8 @@ def process_payment(orderId: str, amount: float) -> dict:
 ```
 
 ### Operators
-[Operators](../../documentation/configuration/workflowdef/operators/index.md) are built-in control flow primitives similar to programming language constructs like loops, switch cases, or fork/joins. Like system tasks, operators are also managed by AgentMesh.
 
+[Operators](../../documentation/configuration/workflowdef/operators/index.md) are built-in control flow primitives similar to programming language constructs like loops, switch cases, or fork/joins. Like system tasks, operators are also managed by AgentMesh.
 
 ## Task definition
 
@@ -82,7 +81,6 @@ def process_payment(orderId: str, amount: float) -> dict:
 - **pollTimeoutSeconds** — Maximum time a worker can hold a long-poll connection before the server releases it.
 
 When using Worker tasks (`SIMPLE`), its task definition must be registered to the AgentMesh server before it can execute in a workflow. Because system tasks are managed by AgentMesh, it is not necessary to add a task definition for system tasks unless you wish to customize its default parameters.
-
 
 ## Task configuration
 
@@ -116,7 +114,6 @@ There must be at least one task configured in each workflow definition.
 ## Task execution
 
 A task execution object is created during runtime when an input is passed into a configured task. This object has a unique ID and represents the result of the task operation, including the task status, start time, and inputs/outputs.
-
 
 ## AI and LLM tasks
 

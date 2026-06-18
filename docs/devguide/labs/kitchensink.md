@@ -1,8 +1,9 @@
 ---
-description: "Run the AgentMesh kitchen sink example workflow that demonstrates forks, sub-workflows, decisions, dynamic tasks, and HTTP tasks in one definition."
+description: 'Run the AgentMesh kitchen sink example workflow that demonstrates forks, sub-workflows, decisions, dynamic tasks, and HTTP tasks in one definition.'
 ---
 
 # Kitchen Sink
+
 An example kitchensink workflow that demonstrates the usage of all the schema constructs.
 
 ### Definition
@@ -129,10 +130,7 @@ An example kitchensink workflow that demonstrates the usage of all the schema co
             "name": "join",
             "taskReferenceName": "join2",
             "type": "JOIN",
-            "joinOn": [
-              "wf3",
-              "wf4"
-            ]
+            "joinOn": ["wf3", "wf4"]
           }
         ]
       }
@@ -166,16 +164,20 @@ An example kitchensink workflow that demonstrates the usage of all the schema co
   "schemaVersion": 2
 }
 ```
+
 ### Visual Flow
+
 ![img](kitchensink.png)
 
 ### Running Kitchensink Workflow
-1. If you are running AgentMesh locally, use the `-DloadSample=true` Java system property when launching the server.  This will create a kitchensink workflow, 
-related task definitions and kick off an instance of kitchensink workflow. Otherwise, you can create a new Workflow Definition in the UI by copying the sample above.
-2. Once the workflow has started, the first task remains in the `SCHEDULED` state.  This is because no workers are currently polling for the task.
+
+1. If you are running AgentMesh locally, use the `-DloadSample=true` Java system property when launching the server. This will create a kitchensink workflow,
+   related task definitions and kick off an instance of kitchensink workflow. Otherwise, you can create a new Workflow Definition in the UI by copying the sample above.
+2. Once the workflow has started, the first task remains in the `SCHEDULED` state. This is because no workers are currently polling for the task.
 3. We will use the REST endpoints directly to poll for tasks and updating the status.
 
 #### Start workflow execution
+
 Start the execution of the kitchensink workflow:
 
 ```bash
@@ -185,13 +187,13 @@ agentmesh workflow start -w kitchensink -i '{"task2Name": "task_5"}'
 The response is a text string identifying the workflow instance id.
 
 ??? note "Using cURL"
-    ```shell
+`shell
     curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/plain' '{{ server_host }}{{ api_prefix }}/workflow/kitchensink' -d '
     {
     	"task2Name": "task_5"
     }
     '
-    ```
+    `
 
 #### Poll for the first task:
 
@@ -200,50 +202,52 @@ agentmesh task poll task_1
 ```
 
 ??? note "Using cURL"
-    ```shell
+`shell
     curl {{ server_host }}{{ api_prefix }}/tasks/poll/task_1
-    ```
-   
+    `
+
 The response should look something like:
-   
+
 ```json
 {
-    "taskType": "task_1",
-    "status": "IN_PROGRESS",
-    "inputData": {
-        "mod": null,
-        "oddEven": null
-    },
-    "referenceTaskName": "task_1",
-    "retryCount": 0,
-    "seq": 1,
-    "pollCount": 1,
-    "taskDefName": "task_1",
-    "scheduledTime": 1486580932471,
-    "startTime": 1486580933869,
-    "endTime": 0,
-    "updateTime": 1486580933902,
-    "startDelayInSeconds": 0,
-    "retried": false,
-    "callbackFromWorker": true,
-    "responseTimeoutSeconds": 3600,
-    "workflowInstanceId": "b0d1a935-3d74-46fd-92b2-0ca1e388659f",
-    "taskId": "b9eea7dd-3fbd-46b9-a9ff-b00279459476",
-    "callbackAfterSeconds": 0,
-    "polledTime": 1486580933902,
-    "queueWaitTime": 1398
+  "taskType": "task_1",
+  "status": "IN_PROGRESS",
+  "inputData": {
+    "mod": null,
+    "oddEven": null
+  },
+  "referenceTaskName": "task_1",
+  "retryCount": 0,
+  "seq": 1,
+  "pollCount": 1,
+  "taskDefName": "task_1",
+  "scheduledTime": 1486580932471,
+  "startTime": 1486580933869,
+  "endTime": 0,
+  "updateTime": 1486580933902,
+  "startDelayInSeconds": 0,
+  "retried": false,
+  "callbackFromWorker": true,
+  "responseTimeoutSeconds": 3600,
+  "workflowInstanceId": "b0d1a935-3d74-46fd-92b2-0ca1e388659f",
+  "taskId": "b9eea7dd-3fbd-46b9-a9ff-b00279459476",
+  "callbackAfterSeconds": 0,
+  "polledTime": 1486580933902,
+  "queueWaitTime": 1398
 }
 ```
+
 #### Update the task status
-* Note the values for ```taskId``` and ```workflowInstanceId``` fields from the poll response
-* Update the status of the task as ```COMPLETED``` as below:
+
+- Note the values for `taskId` and `workflowInstanceId` fields from the poll response
+- Update the status of the task as `COMPLETED` as below:
 
 ```bash
 agentmesh task update-execution --workflow-id b0d1a935-3d74-46fd-92b2-0ca1e388659f --task-ref-name task_1 --status COMPLETED --output '{"mod":5,"taskToExecute":"task_1","oddEven":0,"dynamicTasks":[{"name":"task_1","taskReferenceName":"task_1_1","type":"SIMPLE"},{"name":"sub_workflow_4","taskReferenceName":"wf_dyn","type":"SUB_WORKFLOW","subWorkflowParam":{"name":"sub_flow_1"}}],"inputs":{"task_1_1":{},"wf_dyn":{}}}'
 ```
 
 ??? note "Using cURL"
-    ```json
+`json
     curl -H 'Content-Type:application/json' -H 'Accept:application/json' -X POST {{ server_host }}{{ api_prefix }}/tasks/ -d '
     {
     	"taskId": "b9eea7dd-3fbd-46b9-a9ff-b00279459476",
@@ -274,7 +278,7 @@ agentmesh task update-execution --workflow-id b0d1a935-3d74-46fd-92b2-0ca1e38865
     	    }
     	}
     }'
-    ```
+    `
 
-This will mark the task_1 as completed and schedule ```task_5``` as the next task.
+This will mark the task_1 as completed and schedule `task_5` as the next task.
 Repeat the same process for the subsequently scheduled tasks until the completion.

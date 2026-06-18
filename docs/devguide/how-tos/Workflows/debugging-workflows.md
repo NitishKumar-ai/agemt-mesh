@@ -1,9 +1,10 @@
 ---
-description: "Debugging Workflows — identify and resolve failed AgentMesh workflow executions using the UI diagram and task details."
+description: 'Debugging Workflows — identify and resolve failed AgentMesh workflow executions using the UI diagram and task details.'
 ---
+
 # Debugging Workflows
 
-The [workflow execution views](viewing-workflow-executions.md) in the AgentMesh UI are useful for debugging workflow issues. Learn how to debug failed executions and rerun them. 
+The [workflow execution views](viewing-workflow-executions.md) in the AgentMesh UI are useful for debugging workflow issues. Learn how to debug failed executions and rerun them.
 
 ## Debug procedure
 
@@ -11,15 +12,14 @@ When you view the workflow execution details, the cause of the workflow failure 
 
 The following tab views or fields in the task details are useful for debugging:
 
-| Field or Tab Name                                      | Description                                                                                                                   |
-|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| _Reason for Incompletion_ in **Task Detail** > **Summary**  | Contains the exception message thrown by the task worker.                    |
-| _Worker_ in **Task Detail** > **Summary**                   | Contains the worker instance ID where the failure occurred. Useful for digging up detailed logs, if it has not already captured by AgentMesh.                    |
-| **Task Detail** > **Input**                           | Useful for verifying if the task inputs were correctly computed and provided to the task.                       |
-| **Task Detail** > **Output**                        | Useful for verifying what the task produced as output.                         |
-| **Task Detail** > **Logs**                         | Contains the task logs, if supplied by the task worker.                                                        |
-| **Task Detail** > **Retried Task - Select an instance** | (If the task has been retried multiple times) Contains all retry attempts in a dropdown list. Each list item contains the task details for a particular attempt.                                 |
-
+| Field or Tab Name                                          | Description                                                                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _Reason for Incompletion_ in **Task Detail** > **Summary** | Contains the exception message thrown by the task worker.                                                                                                        |
+| _Worker_ in **Task Detail** > **Summary**                  | Contains the worker instance ID where the failure occurred. Useful for digging up detailed logs, if it has not already captured by AgentMesh.                    |
+| **Task Detail** > **Input**                                | Useful for verifying if the task inputs were correctly computed and provided to the task.                                                                        |
+| **Task Detail** > **Output**                               | Useful for verifying what the task produced as output.                                                                                                           |
+| **Task Detail** > **Logs**                                 | Contains the task logs, if supplied by the task worker.                                                                                                          |
+| **Task Detail** > **Retried Task - Select an instance**    | (If the task has been retried multiple times) Contains all retry attempts in a dropdown list. Each list item contains the task details for a particular attempt. |
 
 ![Debugging Workflow Execution](workflow_debugging.png)
 
@@ -29,15 +29,15 @@ Once you have resolved the underlying issue for the execution failure, you can m
 
 Here are the recovery options:
 
-| Recovery Action     | Description                |
-|---------------------|----------------------------|
-| Restart with Current Definitions | Restart the workflow from the beginning using the same workflow definition that was used in the original execution. This option is useful if the workflow definition has changed and you want to run the execution instance using the original definition.            |
-| Restart with Latest Definitions | Restart the workflow from the beginning using the latest workflow definition. This option is useful if changes were made to the workflow definition and you want to run the execution instance with the latest definition. |
-| Rerun from a specific task | Re-execute the workflow from a specific task, reusing the outputs of all prior tasks. This option is useful when a task in the middle of the workflow failed and you want to fix and re-run it without re-executing everything before it. |
-| Retry - From failed task | Retry the workflow from the last failed task.           |
+| Recovery Action                  | Description                                                                                                                                                                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Restart with Current Definitions | Restart the workflow from the beginning using the same workflow definition that was used in the original execution. This option is useful if the workflow definition has changed and you want to run the execution instance using the original definition. |
+| Restart with Latest Definitions  | Restart the workflow from the beginning using the latest workflow definition. This option is useful if changes were made to the workflow definition and you want to run the execution instance with the latest definition.                                 |
+| Rerun from a specific task       | Re-execute the workflow from a specific task, reusing the outputs of all prior tasks. This option is useful when a task in the middle of the workflow failed and you want to fix and re-run it without re-executing everything before it.                  |
+| Retry - From failed task         | Retry the workflow from the last failed task.                                                                                                                                                                                                              |
 
 !!! Note
-    You can set tasks to be retried automatically in case of transient failures. Refer to [Task Definition](../../../documentation/configuration/taskdef.md) for more information.
+You can set tasks to be retried automatically in case of transient failures. Refer to [Task Definition](../../../documentation/configuration/taskdef.md) for more information.
 
 ### Using AgentMesh UI
 
@@ -45,10 +45,10 @@ Here are the recovery options:
 
 1. In the workflow execution details page, select **Actions** in the top right corner.
 2. Select one of the following options:
-    - Restart with Current Definitions
-    - Restart with Latest Definitions
-    - Rerun from a specific task
-    - Retry - From failed task
+   - Restart with Current Definitions
+   - Restart with Latest Definitions
+   - Rerun from a specific task
+   - Retry - From failed task
 
 ### Using APIs
 

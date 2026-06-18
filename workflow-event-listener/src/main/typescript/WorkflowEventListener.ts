@@ -1,14 +1,7 @@
 import { type QueueDAO } from '@agentmesh/common-persistence';
-import {
-  type EventExecution,
-  EventExecutionStatus,
-  EventActionType,
-} from '@agentmesh/common';
+import { type EventExecution, EventExecutionStatus, EventActionType } from '@agentmesh/common';
 import { type WorkflowEventPublisher } from './WorkflowEventPublisher.js';
-import {
-  WorkflowLifecycleEventName,
-  type WorkflowLifecycleEvent,
-} from './WorkflowEventTypes.js';
+import { WorkflowLifecycleEventName, type WorkflowLifecycleEvent } from './WorkflowEventTypes.js';
 
 /**
  * Configuration options for WorkflowEventListener.

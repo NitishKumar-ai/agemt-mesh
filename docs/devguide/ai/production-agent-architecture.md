@@ -1,11 +1,10 @@
 ---
-description: "The canonical reference architecture for building production AI agents on AgentMesh — end-to-end pattern with planner, tool selection, execution, retry, memory, human approval, long waits, reflection loops, budget caps, and full observability."
+description: 'The canonical reference architecture for building production AI agents on AgentMesh — end-to-end pattern with planner, tool selection, execution, retry, memory, human approval, long waits, reflection loops, budget caps, and full observability.'
 ---
 
 # Production agent architecture
 
 This is the reference architecture for a durable AI agent on AgentMesh. Not a toy. Not a feature list. This is the exact pattern for an agent that plans, acts, waits, recovers, and runs in production.
-
 
 ## Architecture diagram
 
@@ -129,29 +128,27 @@ This is the reference architecture for a durable AI agent on AgentMesh. Not a to
 </svg>
 </div>
 
-
 ## The canonical agent pattern
 
 A production agent has these concerns. Each one maps to a specific AgentMesh primitive:
 
-| Agent concern | AgentMesh primitive | How it works |
-|---|---|---|
-| **Plan next action** | `LLM_CHAT_COMPLETE` | LLM receives goal + context + tool list, returns structured plan |
-| **Select tool at runtime** | `DYNAMIC` task | LLM output determines which task type executes next |
-| **Execute tool** | `CALL_MCP_TOOL`, `HTTP`, or `SIMPLE` worker | Tool runs with retry policy, timeout, and full I/O recording |
-| **Retry with backoff** | Task definition `retryLogic` | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF` — no code needed |
-| **Parallel tool calls** | `FORK/JOIN` or `DYNAMIC_FORK` | Fan out to N tools in parallel, join when all complete |
-| **Memory / context handoff** | `SET_VARIABLE` + workflow variables | Accumulate results across loop iterations; pass to next LLM call |
-| **Human approval gate** | `HUMAN` task | Durable pause. Survives restarts and deploys. Resumes on API signal. |
-| **Long wait (hours/days)** | `WAIT` task | Timer-based durable pause. Survives server restarts. |
-| **Resume from external event** | `HUMAN` task + webhook/API | External system calls Task Update API. Workflow resumes with payload. |
-| **Reflection / evaluation loop** | `DO_WHILE` with LLM-as-judge | Second LLM evaluates output quality; loop continues if below threshold |
-| **Budget / iteration cap** | `DO_WHILE` `loopCondition` | `iteration < maxIterations` or token/cost check in loop condition |
-| **Termination criteria** | `DO_WHILE` exit + `SWITCH` | LLM sets `done: true`, or evaluator decides goal is met |
-| **Delegate to specialist** | `SUB_WORKFLOW` or `START_WORKFLOW` | Spawn child agent. Parent waits. Failure propagates. Full observability across the tree. |
-| **Compensation on failure** | `failureWorkflow` | Undo side effects: revoke API calls, send notifications, release resources |
-| **Audit trail** | Automatic | Every task's input, output, timing, retry count, and worker ID is persisted |
-
+| Agent concern                    | AgentMesh primitive                         | How it works                                                                             |
+| -------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Plan next action**             | `LLM_CHAT_COMPLETE`                         | LLM receives goal + context + tool list, returns structured plan                         |
+| **Select tool at runtime**       | `DYNAMIC` task                              | LLM output determines which task type executes next                                      |
+| **Execute tool**                 | `CALL_MCP_TOOL`, `HTTP`, or `SIMPLE` worker | Tool runs with retry policy, timeout, and full I/O recording                             |
+| **Retry with backoff**           | Task definition `retryLogic`                | `FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF` — no code needed                     |
+| **Parallel tool calls**          | `FORK/JOIN` or `DYNAMIC_FORK`               | Fan out to N tools in parallel, join when all complete                                   |
+| **Memory / context handoff**     | `SET_VARIABLE` + workflow variables         | Accumulate results across loop iterations; pass to next LLM call                         |
+| **Human approval gate**          | `HUMAN` task                                | Durable pause. Survives restarts and deploys. Resumes on API signal.                     |
+| **Long wait (hours/days)**       | `WAIT` task                                 | Timer-based durable pause. Survives server restarts.                                     |
+| **Resume from external event**   | `HUMAN` task + webhook/API                  | External system calls Task Update API. Workflow resumes with payload.                    |
+| **Reflection / evaluation loop** | `DO_WHILE` with LLM-as-judge                | Second LLM evaluates output quality; loop continues if below threshold                   |
+| **Budget / iteration cap**       | `DO_WHILE` `loopCondition`                  | `iteration < maxIterations` or token/cost check in loop condition                        |
+| **Termination criteria**         | `DO_WHILE` exit + `SWITCH`                  | LLM sets `done: true`, or evaluator decides goal is met                                  |
+| **Delegate to specialist**       | `SUB_WORKFLOW` or `START_WORKFLOW`          | Spawn child agent. Parent waits. Failure propagates. Full observability across the tree. |
+| **Compensation on failure**      | `failureWorkflow`                           | Undo side effects: revoke API calls, send notifications, release resources               |
+| **Audit trail**                  | Automatic                                   | Every task's input, output, timing, retry count, and worker ID is persisted              |
 
 ## End-to-end workflow
 
@@ -281,7 +278,6 @@ Here is the complete agent as a single AgentMesh workflow. Every step is a nativ
 }
 ```
 
-
 ## What makes this production-ready
 
 ### Every step is a durable checkpoint
@@ -331,7 +327,6 @@ Open the AgentMesh UI to see:
 - The iteration count and loop state
 - Retry history for any failed task
 - The full workflow input, output, and variables
-
 
 ## Extending the pattern
 
@@ -422,25 +417,23 @@ Use `SUB_WORKFLOW` to spawn a child agent for a specialized task:
 
 The parent agent waits for the child to complete. If the child fails, the parent's failure handling kicks in. The entire agent tree is observable in the UI — drill from parent to child to sub-child.
 
-
 ## The primitives, mapped
 
-| "I need my agent to..." | Use this | Why |
-|---|---|---|
-| Wait for a tool callback | `HUMAN` task or async completion | Durable pause. Resumes on API signal with payload. |
-| Sleep until a retry window | `WAIT` task | Timer-based durable pause. Zero resource consumption. |
-| Pick the next tool at runtime | `DYNAMIC` task | LLM output determines task type. Resolved at execution time. |
-| Call multiple tools in parallel | `FORK/JOIN` or `DYNAMIC_FORK` | Static or runtime-determined parallelism. Join waits for all. |
-| Loop until goal is met | `DO_WHILE` | Checkpointed loop. Each iteration persisted. |
-| Delegate to a specialist agent | `SUB_WORKFLOW` or `START_WORKFLOW` | Child workflow with full lifecycle management. |
-| Accumulate context across steps | `SET_VARIABLE` | Workflow variables persisted to durable storage. |
-| Evaluate output quality | `LLM_CHAT_COMPLETE` as evaluator | LLM-as-judge pattern inside the loop. |
-| Cap iterations or cost | `DO_WHILE` `loopCondition` | Check iteration count, token usage, or cost. |
-| Undo side effects on failure | `failureWorkflow` | Compensation tasks run automatically on workflow failure. |
-| Pause for human review | `HUMAN` task | Indefinite durable pause. Survives restarts and deploys. |
-| Resume on external event | `HUMAN` task + API/webhook | External system calls Task Update API with payload. |
-| Post-process structured output | `INLINE` (JavaScript) or `JSON_JQ_TRANSFORM` | Server-side transforms without a worker. |
-
+| "I need my agent to..."         | Use this                                     | Why                                                           |
+| ------------------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Wait for a tool callback        | `HUMAN` task or async completion             | Durable pause. Resumes on API signal with payload.            |
+| Sleep until a retry window      | `WAIT` task                                  | Timer-based durable pause. Zero resource consumption.         |
+| Pick the next tool at runtime   | `DYNAMIC` task                               | LLM output determines task type. Resolved at execution time.  |
+| Call multiple tools in parallel | `FORK/JOIN` or `DYNAMIC_FORK`                | Static or runtime-determined parallelism. Join waits for all. |
+| Loop until goal is met          | `DO_WHILE`                                   | Checkpointed loop. Each iteration persisted.                  |
+| Delegate to a specialist agent  | `SUB_WORKFLOW` or `START_WORKFLOW`           | Child workflow with full lifecycle management.                |
+| Accumulate context across steps | `SET_VARIABLE`                               | Workflow variables persisted to durable storage.              |
+| Evaluate output quality         | `LLM_CHAT_COMPLETE` as evaluator             | LLM-as-judge pattern inside the loop.                         |
+| Cap iterations or cost          | `DO_WHILE` `loopCondition`                   | Check iteration count, token usage, or cost.                  |
+| Undo side effects on failure    | `failureWorkflow`                            | Compensation tasks run automatically on workflow failure.     |
+| Pause for human review          | `HUMAN` task                                 | Indefinite durable pause. Survives restarts and deploys.      |
+| Resume on external event        | `HUMAN` task + API/webhook                   | External system calls Task Update API with payload.           |
+| Post-process structured output  | `INLINE` (JavaScript) or `JSON_JQ_TRANSFORM` | Server-side transforms without a worker.                      |
 
 ## Next steps
 

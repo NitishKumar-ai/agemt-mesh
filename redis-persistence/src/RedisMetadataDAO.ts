@@ -34,7 +34,7 @@ export class RedisMetadataDAO implements MetadataDAO {
   async getLatestWorkflowDef(name: string): Promise<WorkflowDef | undefined> {
     const vals = await this.redis.hvals('WORKFLOW_DEFS');
     const defs: WorkflowDef[] = vals.map((v: string) => JSON.parse(v));
-    const matchingDefs = defs.filter(d => d.name === name);
+    const matchingDefs = defs.filter((d) => d.name === name);
     if (matchingDefs.length === 0) return undefined;
     matchingDefs.sort((a, b) => (b.version || 0) - (a.version || 0));
     return matchingDefs[0];
@@ -63,15 +63,17 @@ export class RedisMetadataDAO implements MetadataDAO {
   }
   async getWorkflowNames(): Promise<string[]> {
     const defs = await this.getAllWorkflowDefs();
-    return Array.from(new Set(defs.map(d => d.name)));
+    return Array.from(new Set(defs.map((d) => d.name)));
   }
   async getWorkflowVersions(name: string): Promise<WorkflowDefSummary[]> {
     const defs = await this.getAllWorkflowDefs();
-    return defs.filter(d => d.name === name).map(d => ({
-      name: d.name,
-      version: d.version,
-      createTime: d.createTime
-    }));
+    return defs
+      .filter((d) => d.name === name)
+      .map((d) => ({
+        name: d.name,
+        version: d.version,
+        createTime: d.createTime,
+      }));
   }
 
   async addEventHandler(handler: EventHandler): Promise<void> {
@@ -89,6 +91,6 @@ export class RedisMetadataDAO implements MetadataDAO {
   }
   async getEventHandlersForEvent(event: string, activeOnly: boolean): Promise<EventHandler[]> {
     const handlers = await this.getAllEventHandlers();
-    return handlers.filter(h => h.event === event && (!activeOnly || h.active));
+    return handlers.filter((h) => h.event === event && (!activeOnly || h.active));
   }
 }

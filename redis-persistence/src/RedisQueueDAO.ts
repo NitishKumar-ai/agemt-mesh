@@ -5,7 +5,12 @@ import { Redis } from 'ioredis';
 export class RedisQueueDAO implements QueueDAO {
   constructor(private readonly redis: Redis) {}
 
-  async push(queueName: string, id: string, offsetTimeInSecond: number, priority?: number): Promise<void> {
+  async push(
+    queueName: string,
+    id: string,
+    offsetTimeInSecond: number,
+    priority?: number,
+  ): Promise<void> {
     await this.redis.rpush(`QUEUE:${queueName}`, id);
   }
   async pushMessages(queueName: string, messages: Message[]): Promise<void> {
@@ -15,7 +20,12 @@ export class RedisQueueDAO implements QueueDAO {
       }
     }
   }
-  async pushIfNotExists(queueName: string, id: string, offsetTimeInSecond: number, priority?: number): Promise<boolean> {
+  async pushIfNotExists(
+    queueName: string,
+    id: string,
+    offsetTimeInSecond: number,
+    priority?: number,
+  ): Promise<boolean> {
     await this.redis.rpush(`QUEUE:${queueName}`, id);
     return true;
   }
@@ -26,7 +36,7 @@ export class RedisQueueDAO implements QueueDAO {
   }
   async pollMessages(queueName: string, count: number, timeout: number): Promise<Message[]> {
     const ids = await this.pop(queueName, count, timeout);
-    return ids.map(id => ({ id, payload: '', priority: 0, timeout: 0 }));
+    return ids.map((id) => ({ id, payload: '', priority: 0, timeout: 0 }));
   }
   async remove(queueName: string, messageId: string): Promise<void> {
     await this.redis.lrem(`QUEUE:${queueName}`, 0, messageId);
@@ -37,10 +47,18 @@ export class RedisQueueDAO implements QueueDAO {
   async ack(queueName: string, messageId: string): Promise<boolean> {
     return true;
   }
-  async setUnackTimeout(queueName: string, messageId: string, unackTimeout: number): Promise<boolean> {
+  async setUnackTimeout(
+    queueName: string,
+    messageId: string,
+    unackTimeout: number,
+  ): Promise<boolean> {
     return true;
   }
-  async setUnackTimeoutIfShorter(queueName: string, messageId: string, unackTimeout: number): Promise<boolean> {
+  async setUnackTimeoutIfShorter(
+    queueName: string,
+    messageId: string,
+    unackTimeout: number,
+  ): Promise<boolean> {
     return true;
   }
   async flush(queueName: string): Promise<void> {
@@ -56,7 +74,12 @@ export class RedisQueueDAO implements QueueDAO {
   async resetOffsetTime(queueName: string, id: string): Promise<boolean> {
     return true;
   }
-  async postpone(queueName: string, messageId: string, priority: number, postponeDurationInSeconds: number): Promise<boolean> {
+  async postpone(
+    queueName: string,
+    messageId: string,
+    priority: number,
+    postponeDurationInSeconds: number,
+  ): Promise<boolean> {
     return true;
   }
   async containsMessage(queueName: string, messageId: string): Promise<boolean> {

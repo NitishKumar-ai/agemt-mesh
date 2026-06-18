@@ -25,22 +25,22 @@ agentmesh.opensearch.indexPrefix=agentmesh
 
 ### All Configuration Properties
 
-| Property | Default | Description |
-|---|---|---|
-| `agentmesh.opensearch.url` | `localhost:9201` | Comma-separated list of OpenSearch node URLs. Supports `http://` and `https://` schemes. |
-| `agentmesh.opensearch.indexPrefix` | `agentmesh` | Prefix used when creating indices. |
-| `agentmesh.opensearch.clusterHealthColor` | `green` | Cluster health color to wait for before starting (`green`, `yellow`). |
-| `agentmesh.opensearch.indexBatchSize` | `1` | Number of documents per batch when async indexing is enabled. |
-| `agentmesh.opensearch.asyncWorkerQueueSize` | `100` | Size of the async indexing task queue. |
-| `agentmesh.opensearch.asyncMaxPoolSize` | `12` | Maximum threads in the async indexing pool. |
-| `agentmesh.opensearch.asyncBufferFlushTimeout` | `10s` | How long async buffers are held before being flushed. |
-| `agentmesh.opensearch.indexShardCount` | `5` | Number of shards per index. |
-| `agentmesh.opensearch.indexReplicasCount` | `0` | Number of replicas per index. |
-| `agentmesh.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per query. |
-| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1` | Connection request timeout in ms (`-1` = unlimited). |
-| `agentmesh.opensearch.autoIndexManagementEnabled` | `true` | Whether AgentMesh creates and manages indices automatically. |
-| `agentmesh.opensearch.username` | _(none)_ | Username for basic authentication. |
-| `agentmesh.opensearch.password` | _(none)_ | Password for basic authentication. |
+| Property                                                  | Default          | Description                                                                              |
+| --------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------- |
+| `agentmesh.opensearch.url`                                | `localhost:9201` | Comma-separated list of OpenSearch node URLs. Supports `http://` and `https://` schemes. |
+| `agentmesh.opensearch.indexPrefix`                        | `agentmesh`      | Prefix used when creating indices.                                                       |
+| `agentmesh.opensearch.clusterHealthColor`                 | `green`          | Cluster health color to wait for before starting (`green`, `yellow`).                    |
+| `agentmesh.opensearch.indexBatchSize`                     | `1`              | Number of documents per batch when async indexing is enabled.                            |
+| `agentmesh.opensearch.asyncWorkerQueueSize`               | `100`            | Size of the async indexing task queue.                                                   |
+| `agentmesh.opensearch.asyncMaxPoolSize`                   | `12`             | Maximum threads in the async indexing pool.                                              |
+| `agentmesh.opensearch.asyncBufferFlushTimeout`            | `10s`            | How long async buffers are held before being flushed.                                    |
+| `agentmesh.opensearch.indexShardCount`                    | `5`              | Number of shards per index.                                                              |
+| `agentmesh.opensearch.indexReplicasCount`                 | `0`              | Number of replicas per index.                                                            |
+| `agentmesh.opensearch.taskLogResultLimit`                 | `10`             | Maximum task log entries returned per query.                                             |
+| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1`             | Connection request timeout in ms (`-1` = unlimited).                                     |
+| `agentmesh.opensearch.autoIndexManagementEnabled`         | `true`           | Whether AgentMesh creates and manages indices automatically.                             |
+| `agentmesh.opensearch.username`                           | _(none)_         | Username for basic authentication.                                                       |
+| `agentmesh.opensearch.password`                           | _(none)_         | Password for basic authentication.                                                       |
 
 Properties are identical to `os-persistence-v2` — both modules share the `agentmesh.opensearch.*`
 namespace. Only `agentmesh.indexing.type` differs (`opensearch2` vs `opensearch3`).

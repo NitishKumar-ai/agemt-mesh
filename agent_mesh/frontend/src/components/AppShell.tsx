@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, ReactNode } from 'react';
 import {
   ChevronDown,
   Github,
@@ -8,11 +8,11 @@ import {
   Power,
   Settings,
   ShieldAlert,
-} from "lucide-react";
-import { useState } from "react";
-import { api } from "../lib/api";
-import type { GitHubStatus, KillswitchState, PageKey } from "../lib/types";
-import { SessionHistory } from "./SessionHistory";
+} from 'lucide-react';
+import { useState } from 'react';
+import { api } from '../lib/api';
+import type { GitHubStatus, KillswitchState, PageKey } from '../lib/types';
+import { SessionHistory } from './SessionHistory';
 
 type NavItem = {
   key: PageKey;
@@ -26,7 +26,7 @@ type Props = {
   page: PageKey;
   onPageChange: (page: PageKey) => void;
   navItems: NavItem[];
-  streamState: "connected" | "reconnecting" | "closed";
+  streamState: 'connected' | 'reconnecting' | 'closed';
   githubStatus?: GitHubStatus;
   killswitch?: KillswitchState;
   onKillswitchChange?: (state: KillswitchState) => void;
@@ -35,9 +35,9 @@ type Props = {
 };
 
 // Group nav items by section
-const PRIMARY_KEYS: PageKey[] = ["sessions", "workflows", "approvals"];
-const TOOLS_KEYS: PageKey[] = ["agents", "tasks", "schedules", "commitguard", "marketing"];
-const SYSTEM_KEYS: PageKey[] = ["connections", "safety", "activity"];
+const PRIMARY_KEYS: PageKey[] = ['sessions', 'workflows', 'approvals'];
+const TOOLS_KEYS: PageKey[] = ['agents', 'tasks', 'schedules', 'commitguard', 'marketing'];
+const SYSTEM_KEYS: PageKey[] = ['connections', 'safety', 'activity'];
 
 export function AppShell({
   children,
@@ -58,8 +58,8 @@ export function AppShell({
     if (!killswitch) return;
 
     const msg = killswitch.engaged
-      ? "Are you sure you want to DISENGAGE the global killswitch? Agents will resume work."
-      : "Are you sure you want to ENGAGE the global killswitch? All running workflows will be halted.";
+      ? 'Are you sure you want to DISENGAGE the global killswitch? Agents will resume work.'
+      : 'Are you sure you want to ENGAGE the global killswitch? All running workflows will be halted.';
 
     if (!window.confirm(msg)) return;
 
@@ -67,16 +67,16 @@ export function AppShell({
     try {
       const res = killswitch.engaged
         ? await api.disengageKillswitch()
-        : await api.engageKillswitch("Manual emergency stop");
+        : await api.engageKillswitch('Manual emergency stop');
       onKillswitchChange?.(res.state);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to toggle killswitch");
+      alert(e instanceof Error ? e.message : 'Failed to toggle killswitch');
     } finally {
       setLoading(false);
     }
   };
 
-  const isSessionView = page === "session" || page === "chat";
+  const isSessionView = page === 'session' || page === 'chat';
 
   // Filter nav items into sections
   const primaryNav = navItems.filter((item) => PRIMARY_KEYS.includes(item.key));
@@ -88,9 +88,7 @@ export function AppShell({
     return (
       <button
         key={item.key}
-        className={
-          page === item.key ? "sidebar-link sidebar-link--active" : "sidebar-link"
-        }
+        className={page === item.key ? 'sidebar-link sidebar-link--active' : 'sidebar-link'}
         type="button"
         onClick={() => onPageChange(item.key)}
       >
@@ -102,13 +100,11 @@ export function AppShell({
   }
 
   return (
-    <div className={`app ${open ? "" : "app--sidebar-closed"}`}>
+    <div className={`app ${open ? '' : 'app--sidebar-closed'}`}>
       {killswitch?.engaged && (
         <div className="global-killswitch-banner">
           <ShieldAlert size={16} />
-          <span>
-            Global Killswitch Engaged: All agent activity is currently halted.
-          </span>
+          <span>Global Killswitch Engaged: All agent activity is currently halted.</span>
         </div>
       )}
 
@@ -125,21 +121,14 @@ export function AppShell({
           </button>
         </div>
 
-        <button
-          className="new-task-button"
-          type="button"
-          onClick={() => onPageChange("session")}
-        >
+        <button className="new-task-button" type="button" onClick={() => onPageChange('session')}>
           <Plus size={17} />
           New task
         </button>
 
         {/* Session history — shown when on session/chat page */}
         {isSessionView && (
-          <SessionHistory
-            activeSessionId={activeSessionId}
-            onSelect={onSessionSelect}
-          />
+          <SessionHistory activeSessionId={activeSessionId} onSelect={onSessionSelect} />
         )}
 
         {/* Navigation sections */}
@@ -175,31 +164,27 @@ export function AppShell({
               <strong>
                 {githubStatus?.connected
                   ? githubStatus.account?.name || githubStatus.account?.login
-                  : "Connect GitHub"}
+                  : 'Connect GitHub'}
               </strong>
               <span>
                 {githubStatus?.connected
                   ? `@${githubStatus.account?.login}`
-                  : "Give agents repository context."}
+                  : 'Give agents repository context.'}
               </span>
             </div>
             <button
               type="button"
               onClick={() =>
-                githubStatus?.connected
-                  ? onPageChange("session")
-                  : api.connectGitHub()
+                githubStatus?.connected ? onPageChange('session') : api.connectGitHub()
               }
             >
-              {githubStatus?.connected
-                ? `${githubStatus.imported_count} repos`
-                : "Connect"}
+              {githubStatus?.connected ? `${githubStatus.imported_count} repos` : 'Connect'}
             </button>
           </div>
           <button
             className="sidebar-settings"
             type="button"
-            onClick={() => onPageChange("settings")}
+            onClick={() => onPageChange('settings')}
           >
             <Settings size={16} />
             Settings
@@ -222,15 +207,13 @@ export function AppShell({
           )}
           <div className="header-spacer" />
           <button
-            className={`header-killswitch ${killswitch?.engaged ? "header-killswitch--engaged" : ""}`}
+            className={`header-killswitch ${killswitch?.engaged ? 'header-killswitch--engaged' : ''}`}
             type="button"
             onClick={toggleKillswitch}
             disabled={loading}
           >
             <Power size={14} />
-            <span>
-              {killswitch?.engaged ? "Killswitch Active" : "Killswitch"}
-            </span>
+            <span>{killswitch?.engaged ? 'Killswitch Active' : 'Killswitch'}</span>
           </button>
         </header>
 

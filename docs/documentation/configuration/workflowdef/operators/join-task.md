@@ -1,8 +1,9 @@
 ---
-description: "Join Task — synchronize parallel branches in a AgentMesh workflow, waiting for all forked tasks to complete."
+description: 'Join Task — synchronize parallel branches in a AgentMesh workflow, waiting for all forked tasks to complete.'
 ---
 
 # Join
+
 ```json
 "type" : "JOIN"
 ```
@@ -11,17 +12,16 @@ A Join task is used in conjunction with a [Fork](fork-task.md) or [Dynamic Fork]
 
 The Join task's behavior varies based on the preceding fork type:
 
-* When used with a Static Fork task, the Join task waits for a provided list of the forked tasks to be completed before proceeding with the next task. 
-* When used with a Dynamic Fork task, it implicitly waits for all the forked tasks to complete.
-
+- When used with a Static Fork task, the Join task waits for a provided list of the forked tasks to be completed before proceeding with the next task.
+- When used with a Dynamic Fork task, it implicitly waits for all the forked tasks to complete.
 
 ## Task parameters
 
 When used with a Static Fork, use these parameters in top level of the Join task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| joinOn    | List[String] | (For Static Forks only) A list of task reference names that the Join task will wait for completion before proceeding with the next task. If not specified, the Join will move on to the next task without waiting for any forked tasks to complete. | Optional. |
+| Parameter | Type         | Description                                                                                                                                                                                                                                         | Required / Optional |
+| --------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| joinOn    | List[String] | (For Static Forks only) A list of task reference names that the Join task will wait for completion before proceeding with the next task. If not specified, the Join will move on to the next task without waiting for any forked tasks to complete. | Optional.           |
 
 ## JSON configuration
 
@@ -72,7 +72,6 @@ The Join task will return a map of all completed forked task outputs (in other w
 }
 ```
 
-
 ## Examples
 
 Here are some examples for using the Join task.
@@ -108,22 +107,18 @@ In this example task configuration, the Join task will wait for the completion o
     "name": "join_task",
     "taskReferenceName": "my_join_task_ref",
     "type": "JOIN",
-    "joinOn": [
-      "my_task_ref_1",
-      "my_task_ref_2"
-    ]
+    "joinOn": ["my_task_ref_1", "my_task_ref_2"]
   }
 ]
 ```
 
-
 ### Ignoring one fork
 
-In this example task configuration, the [Fork](fork-task.md) task spawns three tasks: an `email_notification` task, a `sms_notification` task, and a `http_notification` task. 
+In this example task configuration, the [Fork](fork-task.md) task spawns three tasks: an `email_notification` task, a `sms_notification` task, and a `http_notification` task.
 
 Email and SMS are usually best-effort delivery systems, while a HTTP-based notification can be retried until it succeeds or eventually gives up. Therefore, when you set up a notification workflow, you may decide to continue the workflow after you have kicked off an email and SMS notification, but let the `http_notification` task continue to execute without blocking the rest of the workflow.
 
-In that case, you can specify the `joinOn` tasks as follows: 
+In that case, you can specify the `joinOn` tasks as follows:
 
 ```json
 [
@@ -159,10 +154,7 @@ In that case, you can specify the `joinOn` tasks as follows:
     "name": "notification_join",
     "taskReferenceName": "notification_join_ref",
     "type": "JOIN",
-    "joinOn": [
-      "email_notification_ref",
-      "sms_notification_ref"
-    ]
+    "joinOn": ["email_notification_ref", "sms_notification_ref"]
   }
 ]
 ```

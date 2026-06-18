@@ -8,11 +8,19 @@ export class Human extends WorkflowSystemTask {
     super(TaskType.HUMAN);
   }
 
-  override start(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override start(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     task.status = 'IN_PROGRESS';
   }
 
-  override cancel(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override cancel(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     task.status = 'CANCELED';
   }
 }

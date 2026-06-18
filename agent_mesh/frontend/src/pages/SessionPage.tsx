@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Braces,
@@ -10,33 +10,33 @@ import {
   ShieldCheck,
   Sparkles,
   TerminalSquare,
-} from "lucide-react";
-import { api } from "../lib/api";
+} from 'lucide-react';
+import { api } from '../lib/api';
 import type {
   AgentStep,
   GitHubRepository,
   GitHubStatus,
   MeshEvent,
   SessionMessage,
-} from "../lib/types";
-import { Composer } from "../components/Composer";
-import { ContextPane } from "../components/ContextPane";
-import { Transcript } from "../components/Transcript";
+} from '../lib/types';
+import { Composer } from '../components/Composer';
+import { ContextPane } from '../components/ContextPane';
+import { Transcript } from '../components/Transcript';
 
 const quickStarts = [
   {
-    label: "Scan codebase",
-    prompt: "Scan this codebase for high-risk security issues",
+    label: 'Scan codebase',
+    prompt: 'Scan this codebase for high-risk security issues',
     icon: ScanSearch,
   },
   {
-    label: "Run nightly audit",
-    prompt: "Create a nightly dependency and security audit",
+    label: 'Run nightly audit',
+    prompt: 'Create a nightly dependency and security audit',
     icon: ShieldCheck,
   },
   {
-    label: "Test a webhook",
-    prompt: "Test the Render self-healing webhook flow",
+    label: 'Test a webhook',
+    prompt: 'Test the Render self-healing webhook flow',
     icon: Network,
   },
 ];
@@ -49,23 +49,23 @@ export function SessionPage({
   activeSessionId,
 }: {
   events: MeshEvent[];
-  streamState: "connected" | "reconnecting" | "closed";
+  streamState: 'connected' | 'reconnecting' | 'closed';
   githubStatus?: GitHubStatus;
   onGitHubStatusChange: (status: GitHubStatus) => void;
   activeSessionId?: string | null;
 }) {
   const [workflowId, setWorkflowId] = useState<string>();
   const [running, setRunning] = useState(false);
-  const [homePrompt, setHomePrompt] = useState("");
+  const [homePrompt, setHomePrompt] = useState('');
   const [messages, setMessages] = useState<SessionMessage[]>([]);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [importedIds, setImportedIds] = useState<Set<number>>(new Set());
-  const [repoError, setRepoError] = useState("");
+  const [repoError, setRepoError] = useState('');
   const [repoPickerOpen, setRepoPickerOpen] = useState(false);
   const [loadedSteps, setLoadedSteps] = useState<AgentStep[]>([]);
   const sessionEvents = useMemo(() => events.slice(0, 60), [events]);
   const taskStarted = Boolean(
-    workflowId || messages.length || sessionEvents.length || activeSessionId
+    workflowId || messages.length || sessionEvents.length || activeSessionId,
   );
 
   // Load steps when an active session is selected from sidebar
@@ -83,18 +83,18 @@ export function SessionPage({
           // Convert steps to messages for display
           const stepMessages: SessionMessage[] = res.steps.map((step, i) => ({
             id: `step-${step.id}`,
-            role: "agent" as const,
+            role: 'agent' as const,
             title: step.step,
             body: `Step ${i + 1}: ${step.step}`,
             time: new Date(step.created_at),
             status:
-              step.status === "success" || step.status === "completed"
-                ? ("success" as const)
-                : step.status === "failed" || step.status === "error"
-                ? ("failed" as const)
-                : step.status === "running" || step.status === "executing"
-                ? ("executing" as const)
-                : ("idle" as const),
+              step.status === 'success' || step.status === 'completed'
+                ? ('success' as const)
+                : step.status === 'failed' || step.status === 'error'
+                  ? ('failed' as const)
+                  : step.status === 'running' || step.status === 'executing'
+                    ? ('executing' as const)
+                    : ('idle' as const),
           }));
           setMessages(stepMessages);
         }
@@ -109,20 +109,16 @@ export function SessionPage({
 
   async function loadRepositories() {
     setRepoPickerOpen(true);
-    setRepoError("");
+    setRepoError('');
     try {
       const [available, imported] = await Promise.all([
         api.listGitHubRepositories(),
         api.listImportedRepositories(),
       ]);
       setRepositories(available.repositories);
-      setImportedIds(
-        new Set(imported.repositories.map((repo) => repo.id))
-      );
+      setImportedIds(new Set(imported.repositories.map((repo) => repo.id)));
     } catch (error) {
-      setRepoError(
-        error instanceof Error ? error.message : "Could not load repositories"
-      );
+      setRepoError(error instanceof Error ? error.message : 'Could not load repositories');
     }
   }
 
@@ -137,7 +133,7 @@ export function SessionPage({
       ...current,
       {
         id: `user-${Date.now()}`,
-        role: "user",
+        role: 'user',
         body: prompt,
         time: new Date(),
       },
@@ -146,8 +142,7 @@ export function SessionPage({
 
     // Store the session title as the first user prompt
     if (messages.length === 0) {
-      const title =
-        prompt.length > 60 ? prompt.slice(0, 60) + "…" : prompt;
+      const title = prompt.length > 60 ? prompt.slice(0, 60) + '…' : prompt;
       // Will be stored when we get a workflow_id
       api.setSessionTitle(`pending-${Date.now()}`, title);
     }
@@ -157,19 +152,18 @@ export function SessionPage({
       setWorkflowId(response.workflow_id);
 
       // Store session title
-      const title =
-        prompt.length > 60 ? prompt.slice(0, 60) + "…" : prompt;
+      const title = prompt.length > 60 ? prompt.slice(0, 60) + '…' : prompt;
       api.setSessionTitle(response.workflow_id, title);
 
       setMessages((current) => [
         ...current,
         {
           id: `agent-${Date.now()}`,
-          role: "agent",
-          title: "Task started",
-          body: "I created a durable workflow and started planning. Live execution steps will appear below.",
+          role: 'agent',
+          title: 'Task started',
+          body: 'I created a durable workflow and started planning. Live execution steps will appear below.',
           time: new Date(),
-          status: "executing",
+          status: 'executing',
         },
       ]);
     } catch {
@@ -177,11 +171,11 @@ export function SessionPage({
         ...current,
         {
           id: `error-${Date.now()}`,
-          role: "system",
-          title: "Could not start task",
-          body: "The backend is not reachable. Make sure the API server is running.",
+          role: 'system',
+          title: 'Could not start task',
+          body: 'The backend is not reachable. Make sure the API server is running.',
           time: new Date(),
-          status: "failed",
+          status: 'failed',
         },
       ]);
     } finally {
@@ -197,35 +191,35 @@ export function SessionPage({
   if (!taskStarted) {
     return (
       <div className="task-home">
-        <div className="home-content" style={{ position: "relative" }}>
+        <div className="home-content" style={{ position: 'relative' }}>
           <img
             src="/hero_mesh_robot.png"
             alt="3D Robot"
             style={{
-              position: "absolute",
+              position: 'absolute',
               right: -240,
               top: -80,
               width: 420,
               height: 420,
-              objectFit: "contain",
-              pointerEvents: "none",
+              objectFit: 'contain',
+              pointerEvents: 'none',
               zIndex: -1,
-              filter: "drop-shadow(0 20px 40px rgba(255,77,139,0.15))",
+              filter: 'drop-shadow(0 20px 40px rgba(255,77,139,0.15))',
             }}
           />
           <img
             src="/hero_data_nodes.png"
             alt="3D Nodes"
             style={{
-              position: "absolute",
+              position: 'absolute',
               left: -280,
               top: 180,
               width: 320,
               height: 320,
-              objectFit: "contain",
-              pointerEvents: "none",
+              objectFit: 'contain',
+              pointerEvents: 'none',
               zIndex: -1,
-              filter: "drop-shadow(0 20px 40px rgba(184,164,237,0.15))",
+              filter: 'drop-shadow(0 20px 40px rgba(184,164,237,0.15))',
             }}
           />
 
@@ -233,12 +227,10 @@ export function SessionPage({
             <Sparkles size={16} />
             Autonomous engineering, with you in control
           </div>
-          <h1 style={{ position: "relative", zIndex: 1 }}>
-            What should we work on?
-          </h1>
-          <p style={{ position: "relative", zIndex: 1 }}>
-            Describe a task, connect a repository, and watch Agent Mesh plan,
-            execute, and review the work.
+          <h1 style={{ position: 'relative', zIndex: 1 }}>What should we work on?</h1>
+          <p style={{ position: 'relative', zIndex: 1 }}>
+            Describe a task, connect a repository, and watch Agent Mesh plan, execute, and review
+            the work.
           </p>
 
           <form
@@ -259,9 +251,7 @@ export function SessionPage({
                 type="button"
                 className="prompt-tool"
                 onClick={() =>
-                  githubStatus?.connected
-                    ? void loadRepositories()
-                    : api.connectGitHub()
+                  githubStatus?.connected ? void loadRepositories() : api.connectGitHub()
                 }
               >
                 <Github size={16} />
@@ -285,27 +275,23 @@ export function SessionPage({
                 <strong>
                   {githubStatus?.connected
                     ? `Connected as @${githubStatus.account?.login}`
-                    : "Import your repos"}
+                    : 'Import your repos'}
                 </strong>
                 <small>
                   {githubStatus?.connected
                     ? `${githubStatus.imported_count} repositories imported`
-                    : "Give agents the context they need to work."}
+                    : 'Give agents the context they need to work.'}
                 </small>
               </span>
             </div>
             <button
               type="button"
               onClick={() =>
-                githubStatus?.connected
-                  ? void loadRepositories()
-                  : api.connectGitHub()
+                githubStatus?.connected ? void loadRepositories() : api.connectGitHub()
               }
             >
               <Github size={16} />
-              {githubStatus?.connected
-                ? "Browse repositories"
-                : "Connect to GitHub"}
+              {githubStatus?.connected ? 'Browse repositories' : 'Connect to GitHub'}
             </button>
           </div>
 
@@ -314,24 +300,15 @@ export function SessionPage({
               <div className="repo-picker-head">
                 <div>
                   <h2>Your repositories</h2>
-                  <p>
-                    Select repositories Agent Mesh can use as task context.
-                  </p>
+                  <p>Select repositories Agent Mesh can use as task context.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setRepoPickerOpen(false)}
-                >
+                <button type="button" onClick={() => setRepoPickerOpen(false)}>
                   Close
                 </button>
               </div>
-              {repoError && (
-                <div className="repo-error">{repoError}</div>
-              )}
+              {repoError && <div className="repo-error">{repoError}</div>}
               {!repoError && repositories.length === 0 && (
-                <div className="repo-empty">
-                  No repositories were returned for this account.
-                </div>
+                <div className="repo-empty">No repositories were returned for this account.</div>
               )}
               <div className="repo-list">
                 {repositories.slice(0, 12).map((repo) => (
@@ -340,8 +317,7 @@ export function SessionPage({
                     <div>
                       <strong>{repo.full_name}</strong>
                       <span>
-                        {repo.description ||
-                          `${repo.private ? "Private" : "Public"} repository`}
+                        {repo.description || `${repo.private ? 'Private' : 'Public'} repository`}
                       </span>
                     </div>
                     <button
@@ -349,7 +325,7 @@ export function SessionPage({
                       disabled={importedIds.has(repo.id)}
                       onClick={() => void importRepository(repo.id)}
                     >
-                      {importedIds.has(repo.id) ? "Imported" : "Import"}
+                      {importedIds.has(repo.id) ? 'Imported' : 'Import'}
                     </button>
                   </article>
                 ))}
@@ -361,11 +337,7 @@ export function SessionPage({
             <h2>Try Agent Mesh out</h2>
             <div className="quick-starts">
               {quickStarts.map(({ label, prompt, icon: Icon }) => (
-                <button
-                  type="button"
-                  key={label}
-                  onClick={() => void submitPrompt(prompt)}
-                >
+                <button type="button" key={label} onClick={() => void submitPrompt(prompt)}>
                   <Icon size={18} />
                   <span>{label}</span>
                   <ArrowRight size={15} />
@@ -414,14 +386,9 @@ export function SessionPage({
               <Github size={14} />
               agent-mesh
             </span>
-            <h1>
-              {messages.find((message) => message.role === "user")?.body ??
-                "Agent task"}
-            </h1>
+            <h1>{messages.find((message) => message.role === 'user')?.body ?? 'Agent task'}</h1>
           </div>
-          <div className={`connection-dot connection-dot--${streamState}`}>
-            {streamState}
-          </div>
+          <div className={`connection-dot connection-dot--${streamState}`}>{streamState}</div>
         </div>
         <div className="progress-strip">
           <span className="progress-strip--done">

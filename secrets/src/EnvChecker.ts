@@ -10,13 +10,13 @@ export function enforceNoProdSecretsInEnv() {
       'LANGFUSE_SECRET_KEY',
     ];
 
-    const violations = prohibitedKeys.filter(key => process.env[key] !== undefined);
-    
+    const violations = prohibitedKeys.filter((key) => process.env[key] !== undefined);
+
     if (violations.length > 0) {
       throw new Error(
-        "[Security] Static .env files containing production secrets are forbidden. " +
-        `The following keys were found in process.env: ${violations.join(', ')}. ` +
-        "Please use SecretManager in production."
+        '[Security] Static .env files containing production secrets are forbidden. ' +
+          `The following keys were found in process.env: ${violations.join(', ')}. ` +
+          'Please use SecretManager in production.',
       );
     }
   }

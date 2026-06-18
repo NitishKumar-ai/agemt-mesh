@@ -17,7 +17,7 @@ services:
       - 8000:8080
       - 8127:5000
     healthcheck:
-      test: ["CMD", "curl", "-I", "-XGET", "http://localhost:8080/health"]
+      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
       interval: 60s
       timeout: 30s
       retries: 12
@@ -33,10 +33,10 @@ services:
       agentmesh-elasticsearch:
         condition: service_healthy
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
   agentmesh-cassandra:
     image: cassandra:4
@@ -48,15 +48,15 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      test: ['CMD', 'cqlsh', '-e', 'describe keyspaces']
       interval: 10s
       timeout: 10s
       retries: 20
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
   agentmesh-redis:
     image: redis:6.2.3-alpine
@@ -65,12 +65,12 @@ services:
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
 
   agentmesh-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx1024m'
       - xpack.security.enabled=false
       - discovery.type=single-node
     networks:
@@ -81,10 +81,10 @@ services:
       timeout: 5s
       retries: 12
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
 networks:
   internal:

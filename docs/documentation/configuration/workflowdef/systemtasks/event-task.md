@@ -1,6 +1,7 @@
 ---
-description: "Event Task — publish events to message brokers (Kafka, SQS, NATS) from AgentMesh workflows for event-driven orchestration."
+description: 'Event Task — publish events to message brokers (Kafka, SQS, NATS) from AgentMesh workflows for event-driven orchestration.'
 ---
+
 # Event Task
 
 ```json
@@ -20,23 +21,22 @@ The following queuing systems are supported:
 
 For details on configuring connections to these event buses (Kafka bootstrap servers, NATS URLs, AMQP credentials, etc.), see the [Event Bus Orchestration](../../../../devguide/how-tos/event-bus.md#configuration) guide.
 
-
 ## Task parameters
 
 Use these parameters in top level of the Event task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| sink               | String              | The target event queue in the format `prefix:location`, where the prefix denotes the queuing system, and the location represents the specific queue name (e.g., `send_email_queue`). Supported prefixes: <ul><li>`agentmesh`</li> <li>`ampq`, `amqp_queue`, or `amqp_exchange`</li> <li>`kafka`</li> <li>`nats`</li> <li>`nats-stream`</li> <li>`sqs`</li></ul> <br/> **Note:** For all queuing systems except the AgentMesh queue, you should use the queue's name, not the URI in `location`. The URI will be looked up based on the queue name. Refer to [AgentMesh sink configuration](#agentmesh-sink-configuration) for more details on how to use the AgentMesh queue.         | Required. |
-| inputParameters   | Map[String, Any].    | Any other input parameters for the Event task, which will be published to the queuing system.  | Optional. |
-| asyncComplete     | Boolean              | Whether the task is completed asynchronously. The default value is false. <ul><li>**false**—Task status is set to COMPLETED upon successful execution.</li> <li>**true**—Task status is kept as IN_PROGRESS until an external event marks it as complete.</li></ul> | Optional. |
-
+| Parameter       | Type              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Required / Optional |
+| --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| sink            | String            | The target event queue in the format `prefix:location`, where the prefix denotes the queuing system, and the location represents the specific queue name (e.g., `send_email_queue`). Supported prefixes: <ul><li>`agentmesh`</li> <li>`ampq`, `amqp_queue`, or `amqp_exchange`</li> <li>`kafka`</li> <li>`nats`</li> <li>`nats-stream`</li> <li>`sqs`</li></ul> <br/> **Note:** For all queuing systems except the AgentMesh queue, you should use the queue's name, not the URI in `location`. The URI will be looked up based on the queue name. Refer to [AgentMesh sink configuration](#agentmesh-sink-configuration) for more details on how to use the AgentMesh queue. | Required.           |
+| inputParameters | Map[String, Any]. | Any other input parameters for the Event task, which will be published to the queuing system.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Optional.           |
+| asyncComplete   | Boolean           | Whether the task is completed asynchronously. The default value is false. <ul><li>**false**—Task status is set to COMPLETED upon successful execution.</li> <li>**true**—Task status is kept as IN_PROGRESS until an external event marks it as complete.</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                           | Optional.           |
 
 ### AgentMesh sink configuration
 
-When using AgentMesh as sink, you have two options to set the sink: 
-* `agentmesh` 
-* `agentmesh:<workflow_name>:<queue_name>` (same as the `event` value of the event handler)
+When using AgentMesh as sink, you have two options to set the sink:
+
+- `agentmesh`
+- `agentmesh:<workflow_name>:<queue_name>` (same as the `event` value of the event handler)
 
 If the workflow name and queue name is omitted, it will default to the Event task's workflow name and its own `taskReferenceName` for the queue name.
 
@@ -59,18 +59,17 @@ Here is the task configuration for an Event task.
 
 The Event task will return the following parameters.
 
-| Name             | Type         | Description                                                   |
-| ---------------- | ------------ | ------------------------------------------------------------- |
-| event_produced     | String  | The name of the event produced. When producing an event with AgentMesh as a sink, the event name will be formatted as
-`agentmesh:<workflow_name>:<task_reference_name>`.           |
-| workflowInstanceId | String  | The workflow execution ID.                 |
-| workflowType       | String  | The workflow name.                         |
-| workflowVersion    | Integer | The workflow version.                      |
-| correlationId      | String  | The workflow correlation ID.               |
-| sink               | String  | The `sink` value.                          |
-| asyncComplete      | Boolean | The `asyncComplete` value.                 |
-| taskToDomain       | Map[String, String] | The Event task's domain mapping, if any. |
-
+| Name                                               | Type                | Description                                                                                                           |
+| -------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| event_produced                                     | String              | The name of the event produced. When producing an event with AgentMesh as a sink, the event name will be formatted as |
+| `agentmesh:<workflow_name>:<task_reference_name>`. |
+| workflowInstanceId                                 | String              | The workflow execution ID.                                                                                            |
+| workflowType                                       | String              | The workflow name.                                                                                                    |
+| workflowVersion                                    | Integer             | The workflow version.                                                                                                 |
+| correlationId                                      | String              | The workflow correlation ID.                                                                                          |
+| sink                                               | String              | The `sink` value.                                                                                                     |
+| asyncComplete                                      | Boolean             | The `asyncComplete` value.                                                                                            |
+| taskToDomain                                       | Map[String, String] | The Event task's domain mapping, if any.                                                                              |
 
 The published event's payload is identical to the task output, minus `event_produced`.
 
@@ -78,7 +77,7 @@ The published event's payload is identical to the task output, minus `event_prod
 
 In this example, the Event task sends a message to the AgentMesh queue.
 
-``` json
+```json
 {
   "name": "event_task",
   "taskReferenceName": "event_0",
@@ -106,7 +105,7 @@ In this example, the Event task sends a message to the AgentMesh queue.
 
 Here is the Event task output upon execution:
 
-``` json
+```json
 {
   "event_produced": "agentmesh:test workflow:event_0",
   "mod": "2",

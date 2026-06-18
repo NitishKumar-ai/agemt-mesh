@@ -24,9 +24,9 @@ Vector databases are configured using a list-based approach under `agentmesh.vec
 agentmesh:
   vectordb:
     instances:
-      - name: "instance-name"        # Unique identifier for this instance
-        type: "database-type"        # Type: postgres, mongodb, or pinecone
-        <type-specific-config>:      # Configuration block for the database type
+      - name: 'instance-name' # Unique identifier for this instance
+        type: 'database-type' # Type: postgres, mongodb, or pinecone
+        <type-specific-config>: # Configuration block for the database type
           # ... type-specific properties
 ```
 
@@ -38,17 +38,17 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "postgres-main"
-        type: "postgres"
+      - name: 'postgres-main'
+        type: 'postgres'
         postgres:
-          datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-          user: "agentmesh"
-          password: "secret"
+          datasourceURL: 'jdbc:postgresql://localhost:5432/vectors'
+          user: 'agentmesh'
+          password: 'secret'
           dimensions: 1536
           connectionPoolSize: 10
-          indexingMethod: "hnsw"        # Options: hnsw, ivfflat
-          distanceMetric: "cosine"      # Options: l2, cosine, inner_product
-          tablePrefix: "agentmesh"
+          indexingMethod: 'hnsw' # Options: hnsw, ivfflat
+          distanceMetric: 'cosine' # Options: l2, cosine, inner_product
+          tablePrefix: 'agentmesh'
 ```
 
 ### Multiple PostgreSQL Instances
@@ -57,20 +57,20 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "postgres-prod"
-        type: "postgres"
+      - name: 'postgres-prod'
+        type: 'postgres'
         postgres:
-          datasourceURL: "jdbc:postgresql://prod-db:5432/vectors"
-          user: "agentmesh"
-          password: "prod-secret"
+          datasourceURL: 'jdbc:postgresql://prod-db:5432/vectors'
+          user: 'agentmesh'
+          password: 'prod-secret'
           dimensions: 1536
-          
-      - name: "postgres-dev"
-        type: "postgres"
+
+      - name: 'postgres-dev'
+        type: 'postgres'
         postgres:
-          datasourceURL: "jdbc:postgresql://dev-db:5432/vectors"
-          user: "agentmesh"
-          password: "dev-secret"
+          datasourceURL: 'jdbc:postgresql://dev-db:5432/vectors'
+          user: 'agentmesh'
+          password: 'dev-secret'
           dimensions: 768
 ```
 
@@ -80,12 +80,12 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "mongodb-embeddings"
-        type: "mongodb"
+      - name: 'mongodb-embeddings'
+        type: 'mongodb'
         mongodb:
-          connectionString: "mongodb+srv://user:pass@cluster.mongodb.net/"
-          database: "agentmesh"
-          collection: "embeddings"
+          connectionString: 'mongodb+srv://user:pass@cluster.mongodb.net/'
+          database: 'agentmesh'
+          collection: 'embeddings'
           numCandidates: 100
 ```
 
@@ -95,10 +95,10 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "pinecone-search"
-        type: "pinecone"
+      - name: 'pinecone-search'
+        type: 'pinecone'
         pinecone:
-          apiKey: "your-pinecone-api-key"
+          apiKey: 'your-pinecone-api-key'
 ```
 
 ### Mixed Configuration (Multiple Types)
@@ -107,24 +107,24 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "postgres-prod"
-        type: "postgres"
+      - name: 'postgres-prod'
+        type: 'postgres'
         postgres:
-          datasourceURL: "jdbc:postgresql://prod:5432/vectors"
-          user: "agentmesh"
-          password: "secret"
+          datasourceURL: 'jdbc:postgresql://prod:5432/vectors'
+          user: 'agentmesh'
+          password: 'secret'
           dimensions: 1536
-          
-      - name: "pinecone-embeddings"
-        type: "pinecone"
+
+      - name: 'pinecone-embeddings'
+        type: 'pinecone'
         pinecone:
-          apiKey: "pk-xxx"
-          
-      - name: "mongodb-cache"
-        type: "mongodb"
+          apiKey: 'pk-xxx'
+
+      - name: 'mongodb-cache'
+        type: 'mongodb'
         mongodb:
-          connectionString: "mongodb://localhost:27017"
-          database: "agentmesh"
+          connectionString: 'mongodb://localhost:27017'
+          database: 'agentmesh'
 ```
 
 ## Usage in Workflows
@@ -150,31 +150,31 @@ When using vector database tasks in your workflows, reference the instance by it
 
 ## PostgreSQL Configuration Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `datasourceURL` | String | Required | JDBC connection URL |
-| `user` | String | Required | Database username |
-| `password` | String | Required | Database password |
-| `dimensions` | Integer | 256 | Vector dimensions |
-| `connectionPoolSize` | Integer | 5 | Connection pool size |
-| `indexingMethod` | String | "hnsw" | Index method (hnsw or ivfflat) |
-| `distanceMetric` | String | "l2" | Distance metric (l2, cosine, inner_product) |
-| `invertedListCount` | Integer | 100 | IVFFlat index parameter |
-| `tablePrefix` | String | null | Prefix for table names |
+| Property             | Type    | Default  | Description                                 |
+| -------------------- | ------- | -------- | ------------------------------------------- |
+| `datasourceURL`      | String  | Required | JDBC connection URL                         |
+| `user`               | String  | Required | Database username                           |
+| `password`           | String  | Required | Database password                           |
+| `dimensions`         | Integer | 256      | Vector dimensions                           |
+| `connectionPoolSize` | Integer | 5        | Connection pool size                        |
+| `indexingMethod`     | String  | "hnsw"   | Index method (hnsw or ivfflat)              |
+| `distanceMetric`     | String  | "l2"     | Distance metric (l2, cosine, inner_product) |
+| `invertedListCount`  | Integer | 100      | IVFFlat index parameter                     |
+| `tablePrefix`        | String  | null     | Prefix for table names                      |
 
 ## MongoDB Configuration Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `connectionString` | String | Required | MongoDB connection string |
-| `database` | String | Required | Database name |
-| `collection` | String | Optional | Collection name |
-| `numCandidates` | Integer | Optional | Vector search parameter |
+| Property           | Type    | Default  | Description               |
+| ------------------ | ------- | -------- | ------------------------- |
+| `connectionString` | String  | Required | MongoDB connection string |
+| `database`         | String  | Required | Database name             |
+| `collection`       | String  | Optional | Collection name           |
+| `numCandidates`    | Integer | Optional | Vector search parameter   |
 
 ## Pinecone Configuration Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
+| Property | Type   | Default  | Description      |
+| -------- | ------ | -------- | ---------------- |
 | `apiKey` | String | Required | Pinecone API key |
 
 ## Migration from Old Configuration
@@ -185,9 +185,9 @@ When using vector database tasks in your workflows, reference the instance by it
 agentmesh:
   vectordb:
     postgres:
-      datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-      user: "agentmesh"
-      password: "secret"
+      datasourceURL: 'jdbc:postgresql://localhost:5432/vectors'
+      user: 'agentmesh'
+      password: 'secret'
 ```
 
 ### New Format (Named Instances)
@@ -196,17 +196,18 @@ agentmesh:
 agentmesh:
   vectordb:
     instances:
-      - name: "pgvectordb"           # Use old type name for backward compatibility
-        type: "postgres"
+      - name: 'pgvectordb' # Use old type name for backward compatibility
+        type: 'postgres'
         postgres:
-          datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-          user: "agentmesh"
-          password: "secret"
+          datasourceURL: 'jdbc:postgresql://localhost:5432/vectors'
+          user: 'agentmesh'
+          password: 'secret'
 ```
 
 **Note:** The type identifiers have been simplified:
+
 - `pgvectordb` → `postgres`
-- `mongovectordb` → `mongodb`  
+- `mongovectordb` → `mongodb`
 - `pineconedb` → `pinecone`
 
 However, for backward compatibility, you can still reference instances using the old type names if you name your instance accordingly.
@@ -221,7 +222,7 @@ However, for backward compatibility, you can still reference instances using the
 
 4. **Connection pooling**: Adjust `connectionPoolSize` based on your workload and database capacity
 
-5. **Index selection**: 
+5. **Index selection**:
    - Use `hnsw` for better query performance (default)
    - Use `ivfflat` for faster indexing with slightly lower query performance
 

@@ -74,7 +74,14 @@ export interface WorkflowExecutor {
 export interface TaskResult {
   taskId: string;
   workflowInstanceId: string;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'FAILED_WITH_TERMINAL_ERROR' | 'CANCELED' | 'TIMED_OUT' | 'SCHEDULED';
+  status:
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'FAILED'
+    | 'FAILED_WITH_TERMINAL_ERROR'
+    | 'CANCELED'
+    | 'TIMED_OUT'
+    | 'SCHEDULED';
   outputData: Record<string, unknown>;
   outputMessage?: string;
   reasonForIncompletion?: string;

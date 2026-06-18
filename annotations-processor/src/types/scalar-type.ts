@@ -1,7 +1,10 @@
 import { AbstractType } from './abstract-type';
 
 export class ScalarType extends AbstractType {
-  constructor(javaType: unknown, private protoType: string) {
+  constructor(
+    javaType: unknown,
+    private protoType: string,
+  ) {
     super(javaType, null);
   }
 

@@ -27,19 +27,19 @@ import { randomItem, uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
 // ---------------------------------------------------------------------------
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
-const SOAK     = __ENV.SOAK === '1';
+const SOAK = __ENV.SOAK === '1';
 
 // ---------------------------------------------------------------------------
 // Custom metrics
 // ---------------------------------------------------------------------------
 
 const workflowStartLatency = new Trend('workflow_start_latency', true);
-const taskPollLatency       = new Trend('task_poll_latency', true);
-const taskUpdateLatency     = new Trend('task_update_latency', true);
-const healthLatency         = new Trend('health_latency', true);
-const errorRate             = new Rate('error_rate');
-const workflowsStarted      = new Counter('workflows_started');
-const tasksPolled           = new Counter('tasks_polled');
+const taskPollLatency = new Trend('task_poll_latency', true);
+const taskUpdateLatency = new Trend('task_update_latency', true);
+const healthLatency = new Trend('health_latency', true);
+const errorRate = new Rate('error_rate');
+const workflowsStarted = new Counter('workflows_started');
+const tasksPolled = new Counter('tasks_polled');
 
 // ---------------------------------------------------------------------------
 // Scenarios
@@ -75,12 +75,12 @@ export const options = {
   thresholds: {
     // Latency gates
     workflow_start_latency: ['p(95)<200'],
-    task_poll_latency:       ['p(95)<100'],
-    health_latency:          ['p(95)<50'],
+    task_poll_latency: ['p(95)<100'],
+    health_latency: ['p(95)<50'],
     // Error rate
-    error_rate:              ['rate<0.001'],
+    error_rate: ['rate<0.001'],
     // Overall HTTP failures
-    http_req_failed:         ['rate<0.001'],
+    http_req_failed: ['rate<0.001'],
   },
 };
 
@@ -91,9 +91,9 @@ export const options = {
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 // Minimal workflow definition registered before the test starts.
-const WORKFLOW_NAME    = 'load_test_wf';
+const WORKFLOW_NAME = 'load_test_wf';
 const WORKFLOW_VERSION = 1;
-const TASK_NAME        = 'load_test_task';
+const TASK_NAME = 'load_test_task';
 
 /**
  * Register the test workflow definition once in setup() so all VUs share it.
@@ -165,9 +165,7 @@ export default function () {
   sleep(0.1);
 
   // 2. Poll for a task
-  const pollRes = http.get(
-    `${BASE_URL}/api/tasks/poll/${TASK_NAME}?workerid=k6-worker-${__VU}`,
-  );
+  const pollRes = http.get(`${BASE_URL}/api/tasks/poll/${TASK_NAME}?workerid=k6-worker-${__VU}`);
   taskPollLatency.add(pollRes.timings.duration);
 
   const pollOk = check(pollRes, {
@@ -192,11 +190,7 @@ export default function () {
       outputData: { result: 'ok' },
       workerId: `k6-worker-${__VU}`,
     });
-    const updateRes = http.post(
-      `${BASE_URL}/api/tasks`,
-      updatePayload,
-      { headers: JSON_HEADERS },
-    );
+    const updateRes = http.post(`${BASE_URL}/api/tasks`, updatePayload, { headers: JSON_HEADERS });
     taskUpdateLatency.add(updateRes.timings.duration);
 
     const updateOk = check(updateRes, {
@@ -217,7 +211,7 @@ export function healthScenario() {
   healthLatency.add(res.timings.duration);
 
   check(res, {
-    'health 200':   (r) => r.status === 200,
+    'health 200': (r) => r.status === 200,
     'status is UP': (r) => {
       try {
         return JSON.parse(r.body).status === 'UP';

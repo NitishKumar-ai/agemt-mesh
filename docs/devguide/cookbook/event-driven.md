@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — event-driven workflow recipes for publishing to Kafka, NATS, RabbitMQ, SQS, triggering workflows from events, and completing tasks from external events."
+description: 'AgentMesh cookbook — event-driven workflow recipes for publishing to Kafka, NATS, RabbitMQ, SQS, triggering workflows from events, and completing tasks from external events.'
 ---
 
 # Event-driven recipes
@@ -55,14 +55,14 @@ Use the `EVENT` task type to publish messages. The `sink` field determines the d
 
 **Sink format reference:**
 
-| Sink | Format |
-|---|---|
-| Kafka | `kafka:topic-name` |
-| NATS | `nats:subject-name` |
-| RabbitMQ queue | `amqp:queue-name` |
-| RabbitMQ exchange | `amqp_exchange:exchange-name` |
-| SQS | `sqs:queue-name` |
-| AgentMesh internal | `agentmesh` |
+| Sink               | Format                        |
+| ------------------ | ----------------------------- |
+| Kafka              | `kafka:topic-name`            |
+| NATS               | `nats:subject-name`           |
+| RabbitMQ queue     | `amqp:queue-name`             |
+| RabbitMQ exchange  | `amqp_exchange:exchange-name` |
+| SQS                | `sqs:queue-name`              |
+| AgentMesh internal | `agentmesh`                   |
 
 ---
 

@@ -1,8 +1,9 @@
 ---
-description: "Configure Fork (FORK_JOIN) tasks in AgentMesh to run task sequences in parallel. Learn parameters, JSON configuration, and Join task pairing."
+description: 'Configure Fork (FORK_JOIN) tasks in AgentMesh to run task sequences in parallel. Learn parameters, JSON configuration, and Join task pairing.'
 ---
 
 # Fork
+
 ```json
 "type" : "FORK_JOIN"
 ```
@@ -12,12 +13,12 @@ Also known as a static fork, a Fork task (`FORK_JOIN`) is used to run task seque
 The Fork task must be followed by a [Join](join-task.md) that waits on the forked tasks to finish before moving to the next task. This Join task collects the outputs from each forked tasks.
 
 ## Task parameters
-  
+
 Use these parameters in top level of the Fork task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| forkTasks         | List[List[Task]] | A list of tasks lists to be invoked in parallel (`[[...], [...]]`). <br/><br/> Each item in the outer list represents a fork that will be invoked in parallel, while each inner list contains the task configurations for a particular fork. The tasks defined within each sublist can be sequential or even more nested forks. | Required. |
+| Parameter | Type             | Description                                                                                                                                                                                                                                                                                                                     | Required / Optional |
+| --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| forkTasks | List[List[Task]] | A list of tasks lists to be invoked in parallel (`[[...], [...]]`). <br/><br/> Each item in the outer list represents a fork that will be invoked in parallel, while each inner list contains the task configurations for a particular fork. The tasks defined within each sublist can be sequential or even more nested forks. | Required.           |
 
 The [Join](join-task.md) task must run after the forked tasks. Configure the Join task as well to complete the fork-join operations.
 
@@ -32,7 +33,8 @@ This is the task configuration for a Fork task.
   "inputParameters": {},
   "type": "FORK_JOIN",
   "forkTasks": [
-    [ // fork branch
+    [
+      // fork branch
       {
         // task configuration
       },
@@ -40,7 +42,8 @@ This is the task configuration for a Fork task.
         // task configuration
       }
     ],
-    [ // another fork branch 
+    [
+      // another fork branch
       {
         // task configuration
       },
@@ -126,10 +129,7 @@ Here's the JSON configuration for the Fork task, along with its corresponding Jo
     "name": "notification_join",
     "taskReferenceName": "notification_join_ref",
     "type": "JOIN",
-    "joinOn": [
-      "email_notification_ref",
-      "sms_notification_ref"
-    ]
+    "joinOn": ["email_notification_ref", "sms_notification_ref"]
   }
 ]
 ```

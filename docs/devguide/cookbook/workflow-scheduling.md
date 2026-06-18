@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — scheduled workflow recipes for cron-triggered execution, catchup after downtime, bounded time windows, parallel scheduled tasks, input parameterization, and concurrent execution handling."
+description: 'AgentMesh cookbook — scheduled workflow recipes for cron-triggered execution, catchup after downtime, bounded time windows, parallel scheduled tasks, input parameterization, and concurrent execution handling.'
 ---
 
 # Scheduled workflow recipes
@@ -118,7 +118,7 @@ When the scheduler restarts after being offline, `runCatchupScheduleInstances: t
 If the scheduler was down for 5 minutes, it will fire 5 workflow executions on restart — one per missed minute.
 
 !!! warning
-    Catchup executions fire in rapid succession. Make sure your workflow and downstream systems can handle the burst.
+Catchup executions fire in rapid succession. Make sure your workflow and downstream systems can handle the burst.
 
 ---
 
@@ -330,7 +330,7 @@ The scheduler fires on every cron tick regardless of whether the previous execut
 ```
 
 !!! note "Design for overlap"
-    If concurrent runs are a problem, either increase the cron interval so it exceeds the workflow duration, or make your workflow idempotent so overlapping runs don't produce duplicate side effects.
+If concurrent runs are a problem, either increase the cron interval so it exceeds the workflow duration, or make your workflow idempotent so overlapping runs don't produce duplicate side effects.
 
 ---
 

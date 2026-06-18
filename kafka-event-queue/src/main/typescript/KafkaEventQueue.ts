@@ -10,7 +10,11 @@ import {
 import type { EventExecution, EventHandler } from '@agentmesh/common';
 import type { QueueDAO } from '@agentmesh/common-persistence';
 import type { Message } from '@agentmesh/common';
-import { KafkaEventQueueConfig, resolveConfig, ResolvedKafkaEventQueueConfig } from './KafkaEventQueueConfig.js';
+import {
+  KafkaEventQueueConfig,
+  resolveConfig,
+  ResolvedKafkaEventQueueConfig,
+} from './KafkaEventQueueConfig.js';
 
 /**
  * Internal bookkeeping entry for a buffered, unconsumed Kafka message.
@@ -229,10 +233,7 @@ export class KafkaEventQueue implements QueueDAO {
       } catch (err) {
         // Log the error and continue processing remaining messages to avoid
         // a single malformed record blocking the entire batch.
-        console.error(
-          `[KafkaEventQueue] Failed to process event from queue "${queueName}":`,
-          err,
-        );
+        console.error(`[KafkaEventQueue] Failed to process event from queue "${queueName}":`, err);
       }
     }
   }
@@ -536,9 +537,10 @@ export class KafkaEventQueue implements QueueDAO {
     const admin = await this.getOrCreateAdmin();
     const allTopics = await admin.listTopics();
     const prefixedTopics = allTopics.filter((t) => t.startsWith(this.cfg.topicPrefix));
-    const metadata = prefixedTopics.length > 0
-      ? await admin.fetchTopicMetadata({ topics: prefixedTopics })
-      : { topics: [] };
+    const metadata =
+      prefixedTopics.length > 0
+        ? await admin.fetchTopicMetadata({ topics: prefixedTopics })
+        : { topics: [] };
     const result: Record<string, number> = {};
 
     for (const topic of metadata.topics) {
@@ -559,9 +561,10 @@ export class KafkaEventQueue implements QueueDAO {
     const admin = await this.getOrCreateAdmin();
     const allTopics = await admin.listTopics();
     const prefixedTopics = allTopics.filter((t) => t.startsWith(this.cfg.topicPrefix));
-    const metadata = prefixedTopics.length > 0
-      ? await admin.fetchTopicMetadata({ topics: prefixedTopics })
-      : { topics: [] };
+    const metadata =
+      prefixedTopics.length > 0
+        ? await admin.fetchTopicMetadata({ topics: prefixedTopics })
+        : { topics: [] };
     const result: Record<string, Record<string, Record<string, number>>> = {};
 
     for (const topicMeta of metadata.topics) {
@@ -843,11 +846,7 @@ export class KafkaEventQueue implements QueueDAO {
    * @param partition Partition number.
    * @param offset    Kafka offset string.
    */
-  private extractMessageId(
-    message: KafkaMessage,
-    partition: number,
-    offset: string,
-  ): string {
+  private extractMessageId(message: KafkaMessage, partition: number, offset: string): string {
     if (message.key && message.key.length > 0) {
       return message.key.toString();
     }
@@ -862,11 +861,7 @@ export class KafkaEventQueue implements QueueDAO {
    * @param headerName   Header key to read.
    * @param defaultValue Fallback value.
    */
-  private parseHeader(
-    message: KafkaMessage,
-    headerName: string,
-    defaultValue: number,
-  ): number {
+  private parseHeader(message: KafkaMessage, headerName: string, defaultValue: number): number {
     const raw = message.headers?.[headerName];
     if (!raw) return defaultValue;
     const str = Buffer.isBuffer(raw) ? raw.toString() : String(raw);

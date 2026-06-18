@@ -8,7 +8,6 @@ An agent that runs in a single process is fragile. A crashed pod replays every L
 
 AgentMesh eliminates all of this. Every step of a durable agent workflow is persisted to storage as it completes. If the process dies, the agent resumes from the last completed step — not from the beginning.
 
-
 ## What gets persisted
 
 - The **workflow definition snapshot** (immutable for this execution).
@@ -19,7 +18,6 @@ AgentMesh eliminates all of this. Every step of a durable agent workflow is pers
 - The **loop state**: iteration count, intermediate results, exit condition evaluation.
 
 No LLM calls are repeated unless a task explicitly failed and needs retry. A human approval that completed on Tuesday is still there on Wednesday, even if the cluster was replaced overnight. This is what makes AgentMesh-based agents production-ready.
-
 
 ## JSON is AI-native
 
@@ -38,7 +36,6 @@ This is not a workaround. It is the intended design, and it makes AgentMesh uniq
 **Versioning.** Workflow definitions are versioned. Run multiple agent versions concurrently, A/B test different tool configurations, and roll back without affecting running executions.
 
 **SDK/UI/API parity.** The same workflow can be defined via JSON file, SDK code, API call, or the AgentMesh UI. All paths produce the same stored JSON definition. An agent that generates workflows programmatically and a human who designs them in the UI are using the same runtime.
-
 
 ## Error handling and compensation
 
@@ -69,7 +66,6 @@ This is not error handling you bolt on later. It is built into the execution mod
 
 Most AI frameworks have no concept of compensation. If your LangChain agent sends an email in step 3 and crashes in step 5, the email is already sent and there is no built-in mechanism to undo it. AgentMesh's failure workflows solve this.
 
-
 ## Multi-agent composition
 
 Real-world AI systems rarely run as a single agent. A research agent delegates to specialist sub-agents. A customer service agent escalates to a billing agent. A planning agent spawns parallel analysis agents and synthesizes their results.
@@ -88,7 +84,10 @@ AgentMesh models this with `SUB_WORKFLOW` tasks inside a `FORK`/`JOIN` for paral
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "messages": [
-          { "role": "user", "message": "Break this research task into sub-tasks: ${workflow.input.topic}" }
+          {
+            "role": "user",
+            "message": "Break this research task into sub-tasks: ${workflow.input.topic}"
+          }
         ]
       }
     },
@@ -131,7 +130,10 @@ AgentMesh models this with `SUB_WORKFLOW` tasks inside a `FORK`/`JOIN` for paral
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "messages": [
-          { "role": "user", "message": "Synthesize these findings:\n\nWeb research: ${web_research.output}\n\nData analysis: ${data_analysis.output}" }
+          {
+            "role": "user",
+            "message": "Synthesize these findings:\n\nWeb research: ${web_research.output}\n\nData analysis: ${data_analysis.output}"
+          }
         ]
       }
     }
@@ -150,7 +152,6 @@ Both sub-agents run concurrently. The `JOIN` waits for both to complete before t
 - **Failure propagation with compensation.** If a sub-agent fails and the parent should also fail, `failureWorkflow` runs compensation across the entire agent tree.
 - **Independent scaling.** Each sub-agent type can have its own workers scaled independently. A CPU-heavy data analysis agent doesn't compete for resources with a lightweight web research agent.
 
-
 ## Observability
 
 Every agent execution in AgentMesh is fully observable — not through external logging you have to set up, but as a built-in property of the execution model. Because every step is persisted, the observability is automatic and complete.
@@ -168,7 +169,6 @@ Every agent execution in AgentMesh is fully observable — not through external 
 This observability applies to every workflow — including workflows [generated dynamically by an LLM](dynamic-workflows.md). A workflow that was created 30 seconds ago by an agent's planning step gets the same execution visibility as one that was registered months ago.
 
 For programmatic access, the [Workflow API](../../documentation/api/workflow.md) and [Task API](../../documentation/api/task.md) provide the same data via REST: query execution status, retrieve task inputs/outputs, and search across executions.
-
 
 ## Next steps
 

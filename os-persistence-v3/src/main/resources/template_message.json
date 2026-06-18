@@ -1,5 +1,5 @@
 {
-  "index_patterns": [ "*message*" ],
+  "index_patterns": ["*message*"],
   "priority": 3,
   "template": {
     "settings": {
@@ -24,6 +24,6 @@
         }
       }
     },
-    "aliases": { }
+    "aliases": {}
   }
 }

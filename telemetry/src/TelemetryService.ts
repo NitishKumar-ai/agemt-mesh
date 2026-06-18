@@ -20,7 +20,7 @@ export class TelemetryService {
 
   constructor(config: TelemetryConfig = {}) {
     const serviceName = config.serviceName || 'agentmesh-agent-mesh';
-    
+
     // Initialize Langfuse client for manual operations if needed
     if (config.langfusePublicKey && config.langfuseSecretKey) {
       this.langfuse = new Langfuse({
@@ -35,8 +35,8 @@ export class TelemetryService {
     const traceExporter = new OTLPTraceExporter({
       url: (config.langfuseBaseUrl || 'https://cloud.langfuse.com') + '/api/public/otel/v1/traces',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${config.langfusePublicKey}:${config.langfuseSecretKey}`).toString('base64')}`
-      }
+        Authorization: `Basic ${Buffer.from(`${config.langfusePublicKey}:${config.langfuseSecretKey}`).toString('base64')}`,
+      },
     });
 
     this.sdk = new NodeSDK({
@@ -44,13 +44,13 @@ export class TelemetryService {
         [ATTR_SERVICE_NAME]: serviceName,
       }),
       traceExporter,
-      instrumentations: [getNodeAutoInstrumentations()]
+      instrumentations: [getNodeAutoInstrumentations()],
     });
 
     try {
       if (config.langfusePublicKey) {
-         this.sdk.start();
-         console.log('Telemetry initialized.');
+        this.sdk.start();
+        console.log('Telemetry initialized.');
       }
     } catch (error) {
       console.warn('Error initializing telemetry', error);
@@ -76,7 +76,7 @@ export class TelemetryService {
   public async traceAsync<T>(
     name: string,
     attributes: Record<string, string | number | boolean>,
-    fn: (span: Span) => Promise<T>
+    fn: (span: Span) => Promise<T>,
   ): Promise<T> {
     return new Promise((resolve, reject) => {
       this.tracer.startActiveSpan(name, { attributes }, async (span) => {

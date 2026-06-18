@@ -1,8 +1,8 @@
-import { Observable } from "rxjs";
-import { Message } from "./core/Message";
-import { ObservableQueue } from "./core/ObservableQueue";
-import { AMQPSettings } from "./config/AMQPSettings";
-import { AMQPRetryPattern } from "./AMQPConnection";
+import { Observable } from 'rxjs';
+import { Message } from './core/Message';
+import { ObservableQueue } from './core/ObservableQueue';
+import { AMQPSettings } from './config/AMQPSettings';
+import { AMQPRetryPattern } from './AMQPConnection';
 export declare class AMQPObservableQueue implements ObservableQueue {
   private readonly settings;
   private readonly retrySettings;

@@ -13,8 +13,8 @@ const lightButton: Partial<Components<Theme>> = {
     styleOverrides: {
       root: {
         textTransform: "none",
-        borderRadius: "6px",
-        transition: "none",
+        borderRadius: "8px",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         fontWeight: 500,
         boxShadow: "none",
         padding: "8px 12px 8px 12px",
@@ -46,16 +46,17 @@ const lightButton: Partial<Components<Theme>> = {
 
         ":hover": {
           color: colors.white,
-          backgroundColor: colors.blueLightMode,
-          border: `1px solid ${colors.blueLightMode}`,
-          boxShadow: `3px 3px 0px 0px ${colors.primaryHoverBoxShadow}`,
+          backgroundColor: "#4338ca", // Darker indigo
+          border: `1px solid #4338ca`,
+          boxShadow: `0 4px 12px rgba(79, 70, 229, 0.3)`,
+          transform: "translateY(-1px)",
         },
 
         ":active": {
-          color: colors.sidebarBlacky,
-          backgroundColor: colors.darkBlueLightMode,
-          borderColor: colors.darkBlueLightMode,
+          backgroundColor: "#3730a3",
+          borderColor: "#3730a3",
           boxShadow: "none",
+          transform: "translateY(0)",
         },
 
         "&.Mui-disabled": {
@@ -200,8 +201,8 @@ const darkButton: Partial<Components<Theme>> = {
     styleOverrides: {
       root: {
         textTransform: "none",
-        borderRadius: "6px",
-        transition: "none",
+        borderRadius: "8px",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         fontWeight: 500,
         boxShadow: "none",
         padding: "8px",
@@ -228,15 +229,8 @@ const darkButton: Partial<Components<Theme>> = {
         },
 
         ":hover": {
-          color: colors.sidebarFaintGrey,
-          backgroundColor: colors.sidebarGreyDark,
-          border: `1px solid ${colors.sidebarGreyDark}`,
-
-          ":after": {
-            opacity: 1,
-            right: -5,
-            bottom: -5,
-          },
+          transform: "translateY(-1px)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
         },
       },
       sizeSmall: {

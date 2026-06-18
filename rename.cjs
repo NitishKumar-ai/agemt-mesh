@@ -2,7 +2,16 @@ const fs = require('fs');
 const path = require('path');
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.claude', 'dist', '.turbo', '.pnpm-store']);
-const ALLOWED_EXTS = new Set(['.ts', '.js', '.json', '.md', '.yml', '.yaml', '.gradle', '.properties']);
+const ALLOWED_EXTS = new Set([
+  '.ts',
+  '.js',
+  '.json',
+  '.md',
+  '.yml',
+  '.yaml',
+  '.gradle',
+  '.properties',
+]);
 
 function replaceInFile(filePath) {
   let content = fs.readFileSync(filePath, 'utf8');

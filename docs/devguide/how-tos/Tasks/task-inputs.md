@@ -1,23 +1,26 @@
 ---
-description: "Wire task inputs in AgentMesh workflows — reference workflow inputs, task outputs, and variables using dynamic expressions in this open source workflow orchestration engine."
+description: 'Wire task inputs in AgentMesh workflows — reference workflow inputs, task outputs, and variables using dynamic expressions in this open source workflow orchestration engine.'
 ---
 
 # Wiring Task Inputs
 
 In AgentMesh, task inputs can be provided in the workflow definition in multiple ways:
 
-- As a hard-coded value – 
+- As a hard-coded value –
+
 ```
 "taskInputA": true
 ```
-- As a dynamic reference to the workflow inputs, workflow variables, or the inputs/outputs of prior tasks – 
+
+- As a dynamic reference to the workflow inputs, workflow variables, or the inputs/outputs of prior tasks –
+
 ```
 "taskInputA": "${workflow.input.someValue}
 ```
 
 ## Syntax for dynamic references
 
-All dynamic references are formatted as the following expression: 
+All dynamic references are formatted as the following expression:
 
 ```
 "${type.jsonpath}"
@@ -25,90 +28,123 @@ All dynamic references are formatted as the following expression:
 
 These dynamic references are formatted as dot-notation expressions, taking after [JSONPath syntax](https://goessner.net/articles/JsonPath/).
 
-| Component            | Description                                                                                                                    |
-| -------------------- | ----------------------------------------------------------------------------------------------------- |
-| `${...}`             | The root notation indicating that the variable will be dynamically replaced at runtime.             |
-| type                 | The type of reference. Supported values:<ul><li>**workflow**—Refers to the current workflow instance.</li> <li>**workflow.input**—Refers to the workflow’s input parameters.</li> <li>**workflow.output**—Refers to the workflow’s output parameters.</li> <li>**workflow.variables**—Refers to the workflow variables set in the workflow using the [Set Variable](../../../documentation/configuration/workflowdef/operators/set-variable-task.md) task.</li> <li>**_taskReferenceName_**—Refers to a task in the current workflow instance by its reference name. (For example, “http_ref”).</li> <li>**_taskReferenceName_.input**—Refers to the task’s input parameters.</li> <li>**_taskReferenceName_.output**—Refers to the task’s output parameters.</li></ul> |
-| jsonpath             | The [JSONPath](https://goessner.net/articles/JsonPath/) expression in dot-notation.                 |
-
+| Component | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `${...}`  | The root notation indicating that the variable will be dynamically replaced at runtime.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| type      | The type of reference. Supported values:<ul><li>**workflow**—Refers to the current workflow instance.</li> <li>**workflow.input**—Refers to the workflow’s input parameters.</li> <li>**workflow.output**—Refers to the workflow’s output parameters.</li> <li>**workflow.variables**—Refers to the workflow variables set in the workflow using the [Set Variable](../../../documentation/configuration/workflowdef/operators/set-variable-task.md) task.</li> <li>**_taskReferenceName_**—Refers to a task in the current workflow instance by its reference name. (For example, “http*ref”).</li> <li>\*\*\_taskReferenceName*.input**—Refers to the task’s input parameters.</li> <li>**_taskReferenceName_.output\*\*—Refers to the task’s output parameters.</li></ul> |
+| jsonpath  | The [JSONPath](https://goessner.net/articles/JsonPath/) expression in dot-notation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### Sample expressions
 
 Here is a non-exhaustive list of dynamic references you can use:
 
-- To reference a task’s input payload –        
+- To reference a task’s input payload –
+
 ```
 ${<taskReferenceName>.input}
 ```
-- To reference a task’s output payload –        
+
+- To reference a task’s output payload –
+
 ```
 ${<taskReferenceName>.output}
 ```
-- To reference a task’s input parameter –        
+
+- To reference a task’s input parameter –
+
 ```
 ${<taskReferenceName>.input.<someKey>}
 ```
-- To reference a task’s output parameter –        
+
+- To reference a task’s output parameter –
+
 ```
 ${<taskReferenceName>.output.<someKey>}
 ```
-- To reference the workflow's input payload –        
+
+- To reference the workflow's input payload –
+
 ```
 ${workflow.input}
 ```
-- To reference the workflow's output payload –        
+
+- To reference the workflow's output payload –
+
 ```
 ${workflow.output}
 ```
-- To reference the workflow's input parameter –        
+
+- To reference the workflow's input parameter –
+
 ```
 ${workflow.input.<someKey>}
 ```
-- To reference the workflow's output parameter –        
+
+- To reference the workflow's output parameter –
+
 ```
 ${workflow.output.<someKey>}
 ```
-- To reference the workflow's current status (RUNNING, PAUSED, TIMED_OUT, TERMINATED, FAILED, or COMPLETED) –        
+
+- To reference the workflow's current status (RUNNING, PAUSED, TIMED_OUT, TERMINATED, FAILED, or COMPLETED) –
+
 ```
 ${workflow.status}
 ```
-- To reference the workflow's (execution) ID –        
+
+- To reference the workflow's (execution) ID –
+
 ```
 ${workflow.workflowId}
 ```
-- (Used in sub-workflows) To reference the parent workflow (execution) ID –        
+
+- (Used in sub-workflows) To reference the parent workflow (execution) ID –
+
 ```
 ${workflow.parentWorkflowId}
 ```
-- (Used in sub-workflows) To reference the task execution ID for the Sub Workflow task in the parent workflow –        
+
+- (Used in sub-workflows) To reference the task execution ID for the Sub Workflow task in the parent workflow –
+
 ```
 ${workflow.parentWorkflowTaskId}
 ```
-- To reference the workflow's name –        
-```
-${workflow.workflowType} 
-```  
-- To reference the workflow's version –        
-```
-${workflow.version} 
-```    
-- To reference the start time of the workflow execution –        
-```
-${workflow.createTime} 
-```  
-- To reference the workflow's correlation ID –        
-```
-${workflow.correlationId} 
-```  
-- To reference the workflow’s domain name that was invoked during its execution –        
-```
-${workflow.taskToDomain.<domainName>} 
-```  
-- To reference the workflow's variable created using the Set Variable task –        
-```
-${workflow.variables.<someKey>} 
-```   
 
+- To reference the workflow's name –
+
+```
+${workflow.workflowType}
+```
+
+- To reference the workflow's version –
+
+```
+${workflow.version}
+```
+
+- To reference the start time of the workflow execution –
+
+```
+${workflow.createTime}
+```
+
+- To reference the workflow's correlation ID –
+
+```
+${workflow.correlationId}
+```
+
+- To reference the workflow’s domain name that was invoked during its execution –
+
+```
+${workflow.taskToDomain.<domainName>}
+```
+
+- To reference the workflow's variable created using the Set Variable task –
+
+```
+${workflow.variables.<someKey>}
+```
 
 ## Examples
 
@@ -208,7 +244,6 @@ The variable can be referenced in the same workflow using the following expressi
 
 </details>
 
-
 <details>
 <summary>Referencing data between parent workflow and sub-workflow​</summary>
 
@@ -254,7 +289,6 @@ To pass parameters from a parent workflow into its sub-workflow, you must declar
  "outputParameters": {}
 }
 ```
-
 
 To pass parameters from a sub-workflow back to its parent workflow, you must pass them as the sub-workflow’s output parameters in the sub-workflow definition.
 
@@ -304,7 +338,6 @@ To pass parameters from a sub-workflow back to its parent workflow, you must pas
 In the parent workflow, these sub-workflow outputs can be referenced using the expression format `${<sub_workflow_ref>.output.<someKey>}`.
 
 </details>
-
 
 ## Troubleshooting
 

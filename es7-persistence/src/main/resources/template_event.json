@@ -1,5 +1,5 @@
 {
-  "index_patterns": [ "*event*" ],
+  "index_patterns": ["*event*"],
   "template": {
     "settings": {
       "refresh_interval": "1s"
@@ -43,6 +43,6 @@
         }
       }
     },
-    "aliases" : { }
+    "aliases": {}
   }
 }

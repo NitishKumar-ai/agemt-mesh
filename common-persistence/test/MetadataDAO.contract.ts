@@ -44,7 +44,7 @@ export function runMetadataDAOContractTests(
 
         // Get all
         const all = await dao.getAllTaskDefs();
-        expect(all.some(t => t.name === 'agent_mesh_task_1')).toBe(true);
+        expect(all.some((t) => t.name === 'agent_mesh_task_1')).toBe(true);
 
         // Delete
         await dao.removeTaskDef('agent_mesh_task_1');
@@ -99,8 +99,8 @@ export function runMetadataDAOContractTests(
         expect(names).toContain('agent_mesh_flow_1');
 
         const versions = await dao.getWorkflowVersions('agent_mesh_flow_1');
-        expect(versions.map(v => v.version)).toContain(1);
-        expect(versions.map(v => v.version)).toContain(2);
+        expect(versions.map((v) => v.version)).toContain(1);
+        expect(versions.map((v) => v.version)).toContain(2);
 
         // Delete
         await dao.removeWorkflowDef('agent_mesh_flow_1', 1);
@@ -123,11 +123,11 @@ export function runMetadataDAOContractTests(
 
         // Get all
         let all = await dao.getAllEventHandlers();
-        expect(all.some(h => h.name === 'agent_mesh_event_handler_1')).toBe(true);
+        expect(all.some((h) => h.name === 'agent_mesh_event_handler_1')).toBe(true);
 
         // Get active only for event
         let handlersForEvent = await dao.getEventHandlersForEvent('agent_mesh_event_a', true);
-        expect(handlersForEvent.some(h => h.name === 'agent_mesh_event_handler_1')).toBe(true);
+        expect(handlersForEvent.some((h) => h.name === 'agent_mesh_event_handler_1')).toBe(true);
 
         // Update
         handler.active = false;
@@ -135,16 +135,16 @@ export function runMetadataDAOContractTests(
 
         // Get active only should now be empty for this event
         handlersForEvent = await dao.getEventHandlersForEvent('agent_mesh_event_a', true);
-        expect(handlersForEvent.some(h => h.name === 'agent_mesh_event_handler_1')).toBe(false);
+        expect(handlersForEvent.some((h) => h.name === 'agent_mesh_event_handler_1')).toBe(false);
 
         // Get inactive for event should still exist
         handlersForEvent = await dao.getEventHandlersForEvent('agent_mesh_event_a', false);
-        expect(handlersForEvent.some(h => h.name === 'agent_mesh_event_handler_1')).toBe(true);
+        expect(handlersForEvent.some((h) => h.name === 'agent_mesh_event_handler_1')).toBe(true);
 
         // Delete
         await dao.removeEventHandlerStatus('agent_mesh_event_handler_1');
         all = await dao.getAllEventHandlers();
-        expect(all.some(h => h.name === 'agent_mesh_event_handler_1')).toBe(false);
+        expect(all.some((h) => h.name === 'agent_mesh_event_handler_1')).toBe(false);
       });
     });
   });

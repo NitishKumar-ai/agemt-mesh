@@ -21,7 +21,7 @@ services:
       # Shared with host so file:// URIs from the server resolve on the e2e runner.
       - /tmp/agentmesh-file-storage-e2e:/tmp/agentmesh-file-storage-e2e
     healthcheck:
-      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
+      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
       interval: 60s
       timeout: 30s
       retries: 12
@@ -34,10 +34,10 @@ services:
       agentmesh-redis:
         condition: service_healthy
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
   agentmesh-redis:
     image: redis:6.2.3-alpine
@@ -46,13 +46,13 @@ services:
     networks:
       - internal
     healthcheck:
-      test: [ "CMD", "redis-cli","ping" ]
+      test: ['CMD', 'redis-cli', 'ping']
 
   agentmesh-elasticsearch:
     # Keep ES image aligned with elasticsearch-java client version (8.19.11).
     image: docker.elastic.co/elasticsearch/elasticsearch:8.19.11
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx1024m'
       - xpack.security.enabled=false
       - discovery.type=single-node
     volumes:
@@ -65,10 +65,10 @@ services:
       timeout: 5s
       retries: 12
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "1k"
-        max-file: "3"
+        max-size: '1k'
+        max-file: '3'
 
 volumes:
   esdata-agentmesh:

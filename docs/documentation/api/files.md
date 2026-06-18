@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh File API — create, upload, download, and inspect file payloads. Includes single-shot and multipart presigned URL flows."
+description: 'AgentMesh File API — create, upload, download, and inspect file payloads. Includes single-shot and multipart presigned URL flows.'
 ---
 
 # File API
@@ -8,7 +8,7 @@ The File API manages binary file payloads associated with workflow executions. A
 
 Path variables carry the bare `fileId` (a UUID assigned at creation). Request and response bodies carry the prefixed handle as `fileHandleId` (`agentmesh://file/<fileId>`); pass either form back in to subsequent calls — the server normalizes them.
 
-Download access is *workflow-family scoped*: callers must supply a `workflowId` that belongs to the same workflow family (self, ancestors, or descendants) as the file's owning workflow. Cross-family access returns `403 Forbidden`.
+Download access is _workflow-family scoped_: callers must supply a `workflowId` that belongs to the same workflow family (self, ancestors, or descendants) as the file's owning workflow. Cross-family access returns `403 Forbidden`.
 
 ## Create a File
 
@@ -20,12 +20,12 @@ Reserves a `fileId`, persists the metadata record, and returns a presigned uploa
 
 **Request body:**
 
-| Field | Description | Required |
-|---|---|---|
-| `workflowId` | Workflow execution that owns this file. Used for download-access scoping. | Yes |
-| `fileName` | Original file name. | No |
-| `contentType` | MIME type. | No |
-| `taskId` | Task that produced the file, if applicable. | No |
+| Field         | Description                                                               | Required |
+| ------------- | ------------------------------------------------------------------------- | -------- |
+| `workflowId`  | Workflow execution that owns this file. Used for download-access scoping. | Yes      |
+| `fileName`    | Original file name.                                                       | No       |
+| `contentType` | MIME type.                                                                | No       |
+| `taskId`      | Task that produced the file, if applicable.                               | No       |
 
 ```shell
 curl -X POST 'http://localhost:8080/api/files' \
@@ -114,10 +114,10 @@ GET /api/files/{workflowId}/{fileId}/download-url
 
 Issues a presigned download URL. The caller's `workflowId` must be in the same workflow family as the file's owning workflow.
 
-| Parameter | Description |
-|---|---|
+| Parameter    | Description                                            |
+| ------------ | ------------------------------------------------------ |
 | `workflowId` | The caller's workflow ID, used for family-scope check. |
-| `fileId` | The file to download. |
+| `fileId`     | The file to download.                                  |
 
 ```shell
 curl 'http://localhost:8080/api/files/3a5b8c2d-1234-5678-9abc-def012345678/a1b2c3d4-5678-90ab-cdef-111111111111/download-url'
@@ -246,11 +246,11 @@ curl -X POST 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-1111111111
 
 ## Errors
 
-| Status | Cause |
-|---|---|
-| `400 Bad Request` | Missing `workflowId` on create; download requested before file is `UPLOADED`. |
-| `403 Forbidden` | Caller's `workflowId` is not in the file's workflow family. |
-| `404 Not Found` | Unknown `fileId`, or `agentmesh.file-storage.enabled=false`. |
-| `409 Conflict` | Confirm-upload called on a file already in `UPLOADED` status. |
-| `413 Payload Too Large` | `FileStorageException` raised by a backend (e.g., upstream size enforcement). |
+| Status                      | Cause                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `400 Bad Request`           | Missing `workflowId` on create; download requested before file is `UPLOADED`.                     |
+| `403 Forbidden`             | Caller's `workflowId` is not in the file's workflow family.                                       |
+| `404 Not Found`             | Unknown `fileId`, or `agentmesh.file-storage.enabled=false`.                                      |
+| `409 Conflict`              | Confirm-upload called on a file already in `UPLOADED` status.                                     |
+| `413 Payload Too Large`     | `FileStorageException` raised by a backend (e.g., upstream size enforcement).                     |
 | `500 Internal Server Error` | Backend reports object missing on confirm/complete; other transient/non-transient backend errors. |

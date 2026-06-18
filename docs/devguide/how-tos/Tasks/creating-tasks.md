@@ -1,5 +1,5 @@
 ---
-description: "Create and update task definitions in AgentMesh to configure timeouts, retries, rate limits, and input templates for worker and system tasks."
+description: 'Create and update task definitions in AgentMesh to configure timeouts, retries, rate limits, and input templates for worker and system tasks.'
 ---
 
 # Creating / Updating Task Definitions
@@ -58,27 +58,25 @@ Refer to [Task Definitions](../../../documentation/configuration/taskdef.md) for
 You can also create task definitions using the Create Task Definition API (`POST api/metadata/taskdefs`). The API accepts an array of task definitions, allowing you to create them in bulk.
 
 ??? note "Example using cURL"
-    ```shell
+`shell
     curl '{{ server_host }}/api/metadata/taskdefs' \
       -H 'accept: */*' \
       -H 'content-type: application/json' \
       --data-raw '[{"createdBy":"user","name":"sample_task_name_1","description":"This is a sample task for demo","responseTimeoutSeconds":10,"timeoutSeconds":30,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"TIME_OUT_WF","retryCount":3,"retryLogic":"FIXED","retryDelaySeconds":5,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1}]'
-    ```
-
+    `
 
 ### Updating task definitions
 
 You can update task definitions using the Update Task Definition API (`PUT api/metadata/taskdefs`). This API can only be used to update a single task definition at a time.
 
 ??? note "Example using cURL"
-    ```shell
+`shell
     curl '{{ server_host }}/api/metadata/taskdefs' \
       -X 'PUT' \
       -H 'accept: */*' \
       -H 'content-type: application/json' \
       --data-raw '{"createdBy":"user","name":"sample_task_name_1","description":"This is a sample task for demo","responseTimeoutSeconds":10,"timeoutSeconds":30,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"TIME_OUT_WF","retryCount":3,"retryLogic":"FIXED","retryDelaySeconds":5,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1}'
-    ```
-
+    `
 
 ## Using SDKs
 
@@ -91,32 +89,30 @@ Refer to [Task Definitions](../../../documentation/configuration/taskdef.md) for
 In this example, the JavaScript Fetch API is used to create the task definition `sample_task_name_1`.
 
 ```javascript
-fetch("{{ server_host }}/api/metadata/taskdefs", {
-    "headers": {
-        "accept": "*/*",
-        "content-type": "application/json",
-    },
-    "body": "[{\"createdBy\":\"user\",\"name\":\"sample_task_name_1\",\"description\":\"This is a sample task for demo\",\"responseTimeoutSeconds\":10,\"timeoutSeconds\":30,\"inputKeys\":[],\"outputKeys\":[],\"timeoutPolicy\":\"TIME_OUT_WF\",\"retryCount\":3,\"retryLogic\":\"FIXED\",\"retryDelaySeconds\":5,\"inputTemplate\":{},\"rateLimitPerFrequency\":0,\"rateLimitFrequencyInSeconds\":1}]",
-    "method": "POST"
+fetch('{{ server_host }}/api/metadata/taskdefs', {
+  headers: {
+    accept: '*/*',
+    'content-type': 'application/json',
+  },
+  body: '[{"createdBy":"user","name":"sample_task_name_1","description":"This is a sample task for demo","responseTimeoutSeconds":10,"timeoutSeconds":30,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"TIME_OUT_WF","retryCount":3,"retryLogic":"FIXED","retryDelaySeconds":5,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1}]',
+  method: 'POST',
 });
 ```
-
 
 ### Updating task definitions - Example using JavaScript
 
 In this example, the JavaScript Fetch API is used to update the task definition `sample_task_name_1`.
 
 ```javascript
-fetch("{{ server_host }}/api/metadata/taskdefs", {
-    "headers": {
-        "accept": "*/*",
-        "content-type": "application/json",
-    },
-    "body": "{\"createdBy\":\"user\",\"name\":\"sample_task_name_1\",\"description\":\"This is a sample task for demo\",\"responseTimeoutSeconds\":10,\"timeoutSeconds\":30,\"inputKeys\":[],\"outputKeys\":[],\"timeoutPolicy\":\"TIME_OUT_WF\",\"retryCount\":3,\"retryLogic\":\"FIXED\",\"retryDelaySeconds\":5,\"inputTemplate\":{},\"rateLimitPerFrequency\":0,\"rateLimitFrequencyInSeconds\":1}",
-    "method": "PUT"
+fetch('{{ server_host }}/api/metadata/taskdefs', {
+  headers: {
+    accept: '*/*',
+    'content-type': 'application/json',
+  },
+  body: '{"createdBy":"user","name":"sample_task_name_1","description":"This is a sample task for demo","responseTimeoutSeconds":10,"timeoutSeconds":30,"inputKeys":[],"outputKeys":[],"timeoutPolicy":"TIME_OUT_WF","retryCount":3,"retryLogic":"FIXED","retryDelaySeconds":5,"inputTemplate":{},"rateLimitPerFrequency":0,"rateLimitFrequencyInSeconds":1}',
+  method: 'PUT',
 });
 ```
-
 
 ## Reusing tasks
 

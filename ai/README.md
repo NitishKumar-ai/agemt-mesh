@@ -3,6 +3,7 @@
 The AgentMesh AI module provides built-in integration with 12 popular LLM providers and vector databases, enabling AI-powered workflows through simple task definitions -- including chat, embeddings, image generation, audio synthesis, video generation, document generation, and tool calling.
 
 ## Table of Contents
+
 - [Supported Providers](#supported-providers)
 - [AI Task Types](#ai-task-types)
 - [Configuration](#configuration)
@@ -16,28 +17,28 @@ The AgentMesh AI module provides built-in integration with 12 popular LLM provid
 
 ### LLM Providers
 
-| Provider | Chat | Embeddings | Image Gen | Audio Gen | Video Gen | Models |
-|----------|:----:|:----------:|:---------:|:---------:|:---------:|--------|
-| **OpenAI** | ✅ | ✅ | ✅ | ✅ | ✅ | GPT-4o, GPT-4o-mini, DALL-E-3, Sora-2, text-embedding-3-small/large |
-| **Anthropic** | ✅ | ❌ | ❌ | ❌ | ❌ | Claude 3.5 Sonnet, Claude 3 Opus/Sonnet/Haiku, Claude 4 Sonnet |
-| **Google Gemini** | ✅ | ✅ | ✅ | ✅ | ✅ | Gemini 2.5 Flash/Pro, Veo 2/3, Imagen, text-embedding-004 |
-| **Azure OpenAI** | ✅ | ✅ | ✅ | ❌ | ❌ | GPT-4o, GPT-4, GPT-3.5-turbo, text-embedding-ada-002, DALL-E-3 |
-| **AWS Bedrock** | ✅ | ✅ | ❌ | ❌ | ❌ | Claude 3.x, Titan, Llama 3.x, amazon.titan-embed-text-v2:0 |
-| **Mistral AI** | ✅ | ✅ | ❌ | ❌ | ❌ | Mistral Small/Medium/Large, Mixtral 8x7B, mistral-embed |
-| **Cohere** | ✅ | ✅ | ❌ | ❌ | ❌ | Command, Command-R, Command-R+, embed-english-v3.0 |
-| **Grok** | ✅ | ❌ | ❌ | ❌ | ❌ | Grok-3, Grok-3-mini |
-| **Perplexity AI** | ✅ | ❌ | ❌ | ❌ | ❌ | Sonar, Sonar Pro |
-| **HuggingFace** | ✅ | ❌ | ❌ | ❌ | ❌ | Llama 3.x, Mistral 7B, Zephyr |
-| **Ollama** | ✅ | ✅ | ❌ | ❌ | ❌ | Llama 3.x, Mistral, Phi, nomic-embed-text (local deployment) |
-| **Stability AI** | ❌ | ❌ | ✅ | ❌ | ❌ | SD3.5 Large/Medium, Stable Image Core, Stable Image Ultra |
+| Provider          | Chat | Embeddings | Image Gen | Audio Gen | Video Gen | Models                                                              |
+| ----------------- | :--: | :--------: | :-------: | :-------: | :-------: | ------------------------------------------------------------------- |
+| **OpenAI**        |  ✅  |     ✅     |    ✅     |    ✅     |    ✅     | GPT-4o, GPT-4o-mini, DALL-E-3, Sora-2, text-embedding-3-small/large |
+| **Anthropic**     |  ✅  |     ❌     |    ❌     |    ❌     |    ❌     | Claude 3.5 Sonnet, Claude 3 Opus/Sonnet/Haiku, Claude 4 Sonnet      |
+| **Google Gemini** |  ✅  |     ✅     |    ✅     |    ✅     |    ✅     | Gemini 2.5 Flash/Pro, Veo 2/3, Imagen, text-embedding-004           |
+| **Azure OpenAI**  |  ✅  |     ✅     |    ✅     |    ❌     |    ❌     | GPT-4o, GPT-4, GPT-3.5-turbo, text-embedding-ada-002, DALL-E-3      |
+| **AWS Bedrock**   |  ✅  |     ✅     |    ❌     |    ❌     |    ❌     | Claude 3.x, Titan, Llama 3.x, amazon.titan-embed-text-v2:0          |
+| **Mistral AI**    |  ✅  |     ✅     |    ❌     |    ❌     |    ❌     | Mistral Small/Medium/Large, Mixtral 8x7B, mistral-embed             |
+| **Cohere**        |  ✅  |     ✅     |    ❌     |    ❌     |    ❌     | Command, Command-R, Command-R+, embed-english-v3.0                  |
+| **Grok**          |  ✅  |     ❌     |    ❌     |    ❌     |    ❌     | Grok-3, Grok-3-mini                                                 |
+| **Perplexity AI** |  ✅  |     ❌     |    ❌     |    ❌     |    ❌     | Sonar, Sonar Pro                                                    |
+| **HuggingFace**   |  ✅  |     ❌     |    ❌     |    ❌     |    ❌     | Llama 3.x, Mistral 7B, Zephyr                                       |
+| **Ollama**        |  ✅  |     ✅     |    ❌     |    ❌     |    ❌     | Llama 3.x, Mistral, Phi, nomic-embed-text (local deployment)        |
+| **Stability AI**  |  ❌  |     ❌     |    ✅     |    ❌     |    ❌     | SD3.5 Large/Medium, Stable Image Core, Stable Image Ultra           |
 
 ### Vector Database Providers
 
-| Provider | Storage | Search | Description |
-|----------|:-------:|:------:|-------------|
-| **PostgreSQL (pgvector)** | ✅ | ✅ | Postgres with vector extension |
-| **Pinecone** | ✅ | ✅ | Managed vector database |
-| **MongoDB Atlas** | ✅ | ✅ | MongoDB vector search |
+| Provider                  | Storage | Search | Description                    |
+| ------------------------- | :-----: | :----: | ------------------------------ |
+| **PostgreSQL (pgvector)** |   ✅    |   ✅   | Postgres with vector extension |
+| **Pinecone**              |   ✅    |   ✅   | Managed vector database        |
+| **MongoDB Atlas**         |   ✅    |   ✅   | MongoDB vector search          |
 
 > **Note**: Multiple named instances of these providers can be configured. See [Vector Database Configuration](VECTORDB_CONFIGURATION.md) for details.
 
@@ -45,22 +46,22 @@ The AgentMesh AI module provides built-in integration with 12 popular LLM provid
 
 ### Overview
 
-| Task Type | Task Name | Description |
-|-----------|-----------|-------------|
-| **Chat Complete** | `LLM_CHAT_COMPLETE` | Multi-turn conversational AI with optional tool calling |
-| **Text Complete** | `LLM_TEXT_COMPLETE` | Single prompt completion |
-| **Generate Embeddings** | `LLM_GENERATE_EMBEDDINGS` | Convert text to vector embeddings |
-| **Image Generation** | `GENERATE_IMAGE` | Generate images from text prompts |
-| **Audio Generation** | `GENERATE_AUDIO` | Text-to-speech synthesis |
-| **Video Generation** | `GENERATE_VIDEO` | Generate videos from text/image prompts (async) |
-| **Index Text** | `LLM_INDEX_TEXT` | Store text with embeddings in vector DB |
-| **Store Embeddings** | `LLM_STORE_EMBEDDINGS` | Store pre-computed embeddings |
-| **Search Index** | `LLM_SEARCH_INDEX` | Semantic search using text query |
-| **Search Embeddings** | `LLM_SEARCH_EMBEDDINGS` | Search using embedding vectors |
-| **Get Embeddings** | `LLM_GET_EMBEDDINGS` | Retrieve stored embeddings |
-| **List MCP Tools** | `LIST_MCP_TOOLS` | List tools from MCP server |
-| **Generate PDF** | `GENERATE_PDF` | Convert markdown to PDF document |
-| **Call MCP Tool** | `CALL_MCP_TOOL` | Call a tool on MCP server |
+| Task Type               | Task Name                 | Description                                             |
+| ----------------------- | ------------------------- | ------------------------------------------------------- |
+| **Chat Complete**       | `LLM_CHAT_COMPLETE`       | Multi-turn conversational AI with optional tool calling |
+| **Text Complete**       | `LLM_TEXT_COMPLETE`       | Single prompt completion                                |
+| **Generate Embeddings** | `LLM_GENERATE_EMBEDDINGS` | Convert text to vector embeddings                       |
+| **Image Generation**    | `GENERATE_IMAGE`          | Generate images from text prompts                       |
+| **Audio Generation**    | `GENERATE_AUDIO`          | Text-to-speech synthesis                                |
+| **Video Generation**    | `GENERATE_VIDEO`          | Generate videos from text/image prompts (async)         |
+| **Index Text**          | `LLM_INDEX_TEXT`          | Store text with embeddings in vector DB                 |
+| **Store Embeddings**    | `LLM_STORE_EMBEDDINGS`    | Store pre-computed embeddings                           |
+| **Search Index**        | `LLM_SEARCH_INDEX`        | Semantic search using text query                        |
+| **Search Embeddings**   | `LLM_SEARCH_EMBEDDINGS`   | Search using embedding vectors                          |
+| **Get Embeddings**      | `LLM_GET_EMBEDDINGS`      | Retrieve stored embeddings                              |
+| **List MCP Tools**      | `LIST_MCP_TOOLS`          | List tools from MCP server                              |
+| **Generate PDF**        | `GENERATE_PDF`            | Convert markdown to PDF document                        |
+| **Call MCP Tool**       | `CALL_MCP_TOOL`           | Call a tool on MCP server                               |
 
 ---
 
@@ -70,34 +71,34 @@ Multi-turn conversational AI with support for tool calling.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | ✅ | Provider name (e.g., `openai`, `anthropic`, `gemini`) |
-| `model` | String | ✅ | Model identifier (e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`) |
-| `messages` | Array | ✅ | Conversation messages with `role` and `message` fields |
-| `temperature` | Number | ❌ | Sampling temperature (0.0-2.0, default: 1.0) |
-| `maxTokens` | Integer | ❌ | Maximum tokens in response |
-| `topP` | Number | ❌ | Nucleus sampling parameter |
-| `stopSequences` | Array | ❌ | Sequences that stop generation |
-| `tools` | Array | ❌ | Tool definitions for function calling |
-| `webSearch` | Boolean | ❌ | Enable provider-native web search (OpenAI, Anthropic, Gemini) |
-| `codeInterpreter` | Boolean | ❌ | Enable sandboxed code execution (OpenAI, Anthropic, Gemini) |
-| `fileSearchVectorStoreIds` | Array | ❌ | Vector store IDs for OpenAI file search |
-| `thinkingTokenLimit` | Integer | ❌ | Token budget for extended thinking (Anthropic, Gemini) |
-| `reasoningEffort` | String | ❌ | Reasoning effort: `low`, `medium`, `high` (OpenAI) |
-| `googleSearchRetrieval` | Boolean | ❌ | Enable Google Search grounding (Gemini only) |
-| `previousResponseId` | String | ❌ | Chain multi-turn conversations without resending history (OpenAI/Azure) |
+| Parameter                  | Type    | Required | Description                                                             |
+| -------------------------- | ------- | :------: | ----------------------------------------------------------------------- |
+| `llmProvider`              | String  |    ✅    | Provider name (e.g., `openai`, `anthropic`, `gemini`)                   |
+| `model`                    | String  |    ✅    | Model identifier (e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`)         |
+| `messages`                 | Array   |    ✅    | Conversation messages with `role` and `message` fields                  |
+| `temperature`              | Number  |    ❌    | Sampling temperature (0.0-2.0, default: 1.0)                            |
+| `maxTokens`                | Integer |    ❌    | Maximum tokens in response                                              |
+| `topP`                     | Number  |    ❌    | Nucleus sampling parameter                                              |
+| `stopSequences`            | Array   |    ❌    | Sequences that stop generation                                          |
+| `tools`                    | Array   |    ❌    | Tool definitions for function calling                                   |
+| `webSearch`                | Boolean |    ❌    | Enable provider-native web search (OpenAI, Anthropic, Gemini)           |
+| `codeInterpreter`          | Boolean |    ❌    | Enable sandboxed code execution (OpenAI, Anthropic, Gemini)             |
+| `fileSearchVectorStoreIds` | Array   |    ❌    | Vector store IDs for OpenAI file search                                 |
+| `thinkingTokenLimit`       | Integer |    ❌    | Token budget for extended thinking (Anthropic, Gemini)                  |
+| `reasoningEffort`          | String  |    ❌    | Reasoning effort: `low`, `medium`, `high` (OpenAI)                      |
+| `googleSearchRetrieval`    | Boolean |    ❌    | Enable Google Search grounding (Gemini only)                            |
+| `previousResponseId`       | String  |    ❌    | Chain multi-turn conversations without resending history (OpenAI/Azure) |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `result` | String | Generated response text |
-| `finishReason` | String | Why generation stopped (`STOP`, `TOOL_CALLS`, `LENGTH`) |
-| `tokenUsed` | Integer | Total tokens used |
-| `promptTokens` | Integer | Tokens in the prompt |
-| `completionTokens` | Integer | Tokens in the response |
-| `toolCalls` | Array | Tool invocations (when `finishReason` is `TOOL_CALLS`) |
+| Field              | Type    | Description                                             |
+| ------------------ | ------- | ------------------------------------------------------- |
+| `result`           | String  | Generated response text                                 |
+| `finishReason`     | String  | Why generation stopped (`STOP`, `TOOL_CALLS`, `LENGTH`) |
+| `tokenUsed`        | Integer | Total tokens used                                       |
+| `promptTokens`     | Integer | Tokens in the prompt                                    |
+| `completionTokens` | Integer | Tokens in the response                                  |
+| `toolCalls`        | Array   | Tool invocations (when `finishReason` is `TOOL_CALLS`)  |
 
 ---
 
@@ -107,20 +108,20 @@ Single prompt text completion.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | ✅ | Provider name |
-| `model` | String | ✅ | Model identifier |
-| `prompt` | String | ✅ | Text prompt to complete |
-| `temperature` | Number | ❌ | Sampling temperature |
-| `maxTokens` | Integer | ❌ | Maximum tokens in response |
+| Parameter     | Type    | Required | Description                |
+| ------------- | ------- | :------: | -------------------------- |
+| `llmProvider` | String  |    ✅    | Provider name              |
+| `model`       | String  |    ✅    | Model identifier           |
+| `prompt`      | String  |    ✅    | Text prompt to complete    |
+| `temperature` | Number  |    ❌    | Sampling temperature       |
+| `maxTokens`   | Integer |    ❌    | Maximum tokens in response |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `result` | String | Generated completion text |
-| `tokenUsed` | Integer | Total tokens used |
+| Field       | Type    | Description               |
+| ----------- | ------- | ------------------------- |
+| `result`    | String  | Generated completion text |
+| `tokenUsed` | Integer | Total tokens used         |
 
 ---
 
@@ -130,16 +131,16 @@ Convert text to vector embeddings for semantic search.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | ✅ | Provider name |
-| `model` | String | ✅ | Embedding model (e.g., `text-embedding-3-small`) |
-| `text` | String | ✅ | Text to embed |
+| Parameter     | Type   | Required | Description                                      |
+| ------------- | ------ | :------: | ------------------------------------------------ |
+| `llmProvider` | String |    ✅    | Provider name                                    |
+| `model`       | String |    ✅    | Embedding model (e.g., `text-embedding-3-small`) |
+| `text`        | String |    ✅    | Text to embed                                    |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field    | Type            | Description                                         |
+| -------- | --------------- | --------------------------------------------------- |
 | `result` | Array\<Number\> | Vector embedding (e.g., 1536 dimensions for OpenAI) |
 
 ---
@@ -150,21 +151,21 @@ Generate images from text prompts.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | ✅ | Provider name (e.g., `openai`) |
-| `model` | String | ✅ | Image model (e.g., `dall-e-3`) |
-| `prompt` | String | ✅ | Image description |
-| `width` | Integer | ❌ | Image width in pixels |
-| `height` | Integer | ❌ | Image height in pixels |
-| `n` | Integer | ❌ | Number of images to generate |
-| `style` | String | ❌ | Style preset (e.g., `vivid`, `natural`) |
+| Parameter     | Type    | Required | Description                             |
+| ------------- | ------- | :------: | --------------------------------------- |
+| `llmProvider` | String  |    ✅    | Provider name (e.g., `openai`)          |
+| `model`       | String  |    ✅    | Image model (e.g., `dall-e-3`)          |
+| `prompt`      | String  |    ✅    | Image description                       |
+| `width`       | Integer |    ❌    | Image width in pixels                   |
+| `height`      | Integer |    ❌    | Image height in pixels                  |
+| `n`           | Integer |    ❌    | Number of images to generate            |
+| `style`       | String  |    ❌    | Style preset (e.g., `vivid`, `natural`) |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `url` | String | URL to generated image |
+| Field      | Type   | Description                              |
+| ---------- | ------ | ---------------------------------------- |
+| `url`      | String | URL to generated image                   |
 | `b64_json` | String | Base64-encoded image data (if requested) |
 
 ---
@@ -175,17 +176,17 @@ Text-to-speech synthesis.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | ✅ | Provider name |
-| `model` | String | ✅ | TTS model (e.g., `tts-1`, `tts-1-hd`) |
-| `text` | String | ✅ | Text to convert to speech |
-| `voice` | String | ❌ | Voice selection (e.g., `alloy`, `echo`, `nova`) |
+| Parameter     | Type   | Required | Description                                     |
+| ------------- | ------ | :------: | ----------------------------------------------- |
+| `llmProvider` | String |    ✅    | Provider name                                   |
+| `model`       | String |    ✅    | TTS model (e.g., `tts-1`, `tts-1-hd`)           |
+| `text`        | String |    ✅    | Text to convert to speech                       |
+| `voice`       | String |    ❌    | Voice selection (e.g., `alloy`, `echo`, `nova`) |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field   | Type  | Description                                           |
+| ------- | ----- | ----------------------------------------------------- |
 | `media` | Array | Media items with `location` (URL/path) and `mimeType` |
 
 ---
@@ -198,35 +199,35 @@ Generate videos from text or image prompts. This is an **async task** -- it subm
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `llmProvider` | String | Yes | Provider name (`openai`, `vertex_ai`, or `google_gemini`) |
-| `model` | String | Yes | Video model (e.g., `sora-2`, `veo-3`) |
-| `prompt` | String | Yes | Text description of the video to generate |
-| `duration` | Integer | No | Duration in seconds (OpenAI: 4, 8, or 12; default: 5) |
-| `size` | String | No | Video dimensions, e.g., `1280x720` (OpenAI) |
-| `aspectRatio` | String | No | Aspect ratio, e.g., `16:9`, `9:16` (Gemini) |
-| `resolution` | String | No | Resolution preset: `720p`, `1080p` (Gemini) |
-| `style` | String | No | Style preset (e.g., `cinematic`) |
-| `n` | Integer | No | Number of videos to generate (default: 1) |
-| `inputImage` | String | No | URL or base64 image for image-to-video generation |
-| `negativePrompt` | String | No | What to exclude from the video (Gemini) |
-| `personGeneration` | String | No | Person policy: `dont_allow`, `allow_adult` (Gemini) |
-| `generateAudio` | Boolean | No | Generate audio with video (Gemini Veo 3+) |
-| `seed` | Integer | No | Seed for reproducibility |
-| `maxDurationSeconds` | Integer | No | Hard limit on video duration |
-| `maxCostDollars` | Float | No | Estimated cost limit |
+| Parameter            | Type    | Required | Description                                               |
+| -------------------- | ------- | :------: | --------------------------------------------------------- |
+| `llmProvider`        | String  |   Yes    | Provider name (`openai`, `vertex_ai`, or `google_gemini`) |
+| `model`              | String  |   Yes    | Video model (e.g., `sora-2`, `veo-3`)                     |
+| `prompt`             | String  |   Yes    | Text description of the video to generate                 |
+| `duration`           | Integer |    No    | Duration in seconds (OpenAI: 4, 8, or 12; default: 5)     |
+| `size`               | String  |    No    | Video dimensions, e.g., `1280x720` (OpenAI)               |
+| `aspectRatio`        | String  |    No    | Aspect ratio, e.g., `16:9`, `9:16` (Gemini)               |
+| `resolution`         | String  |    No    | Resolution preset: `720p`, `1080p` (Gemini)               |
+| `style`              | String  |    No    | Style preset (e.g., `cinematic`)                          |
+| `n`                  | Integer |    No    | Number of videos to generate (default: 1)                 |
+| `inputImage`         | String  |    No    | URL or base64 image for image-to-video generation         |
+| `negativePrompt`     | String  |    No    | What to exclude from the video (Gemini)                   |
+| `personGeneration`   | String  |    No    | Person policy: `dont_allow`, `allow_adult` (Gemini)       |
+| `generateAudio`      | Boolean |    No    | Generate audio with video (Gemini Veo 3+)                 |
+| `seed`               | Integer |    No    | Seed for reproducibility                                  |
+| `maxDurationSeconds` | Integer |    No    | Hard limit on video duration                              |
+| `maxCostDollars`     | Float   |    No    | Estimated cost limit                                      |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `media` | Array | Generated media items (video MP4 + optional thumbnail) |
-| `media[].location` | String | HTTP URL to the stored video or thumbnail file |
-| `media[].mimeType` | String | MIME type (`video/mp4` for video, `image/webp` for thumbnail) |
-| `jobId` | String | Provider's async job ID |
-| `status` | String | Final status (`COMPLETED` or `FAILED`) |
-| `pollCount` | Integer | Number of polling iterations |
+| Field              | Type    | Description                                                   |
+| ------------------ | ------- | ------------------------------------------------------------- |
+| `media`            | Array   | Generated media items (video MP4 + optional thumbnail)        |
+| `media[].location` | String  | HTTP URL to the stored video or thumbnail file                |
+| `media[].mimeType` | String  | MIME type (`video/mp4` for video, `image/webp` for thumbnail) |
+| `jobId`            | String  | Provider's async job ID                                       |
+| `status`           | String  | Final status (`COMPLETED` or `FAILED`)                        |
+| `pollCount`        | Integer | Number of polling iterations                                  |
 
 **Provider-Specific Notes:**
 
@@ -241,16 +242,16 @@ Store text with auto-generated embeddings in a vector database.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `vectorDB` | String | ✅ | Configured vector database instance name |
-| `namespace` | String | ✅ | Namespace for organization |
-| `index` | String | ✅ | Index name |
-| `embeddingModelProvider` | String | ✅ | Provider for embeddings |
-| `embeddingModel` | String | ✅ | Embedding model name |
-| `text` | String | ✅ | Text to index |
-| `docId` | String | ❌ | Document identifier (auto-generated if not provided) |
-| `metadata` | Object | ❌ | Additional metadata to store |
+| Parameter                | Type   | Required | Description                                          |
+| ------------------------ | ------ | :------: | ---------------------------------------------------- |
+| `vectorDB`               | String |    ✅    | Configured vector database instance name             |
+| `namespace`              | String |    ✅    | Namespace for organization                           |
+| `index`                  | String |    ✅    | Index name                                           |
+| `embeddingModelProvider` | String |    ✅    | Provider for embeddings                              |
+| `embeddingModel`         | String |    ✅    | Embedding model name                                 |
+| `text`                   | String |    ✅    | Text to index                                        |
+| `docId`                  | String |    ❌    | Document identifier (auto-generated if not provided) |
+| `metadata`               | Object |    ❌    | Additional metadata to store                         |
 
 ---
 
@@ -260,14 +261,14 @@ Store pre-computed embeddings in a vector database.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `vectorDB` | String | ✅ | Configured vector database instance name |
-| `namespace` | String | ✅ | Namespace for organization |
-| `index` | String | ✅ | Index name |
-| `embeddings` | Array\<Number\> | ✅ | Pre-computed embedding vector |
-| `docId` | String | ❌ | Document identifier |
-| `metadata` | Object | ❌ | Additional metadata |
+| Parameter    | Type            | Required | Description                              |
+| ------------ | --------------- | :------: | ---------------------------------------- |
+| `vectorDB`   | String          |    ✅    | Configured vector database instance name |
+| `namespace`  | String          |    ✅    | Namespace for organization               |
+| `index`      | String          |    ✅    | Index name                               |
+| `embeddings` | Array\<Number\> |    ✅    | Pre-computed embedding vector            |
+| `docId`      | String          |    ❌    | Document identifier                      |
+| `metadata`   | Object          |    ❌    | Additional metadata                      |
 
 ---
 
@@ -277,15 +278,15 @@ Semantic search using a text query (auto-generates embeddings).
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `vectorDB` | String | ✅ | Configured vector database instance name |
-| `namespace` | String | ✅ | Namespace to search |
-| `index` | String | ✅ | Index name |
-| `embeddingModelProvider` | String | ✅ | Provider for query embedding |
-| `embeddingModel` | String | ✅ | Embedding model name |
-| `query` | String | ✅ | Search query text |
-| `llmMaxResults` | Integer | ❌ | Maximum results to return (default: 10) |
+| Parameter                | Type    | Required | Description                              |
+| ------------------------ | ------- | :------: | ---------------------------------------- |
+| `vectorDB`               | String  |    ✅    | Configured vector database instance name |
+| `namespace`              | String  |    ✅    | Namespace to search                      |
+| `index`                  | String  |    ✅    | Index name                               |
+| `embeddingModelProvider` | String  |    ✅    | Provider for query embedding             |
+| `embeddingModel`         | String  |    ✅    | Embedding model name                     |
+| `query`                  | String  |    ✅    | Search query text                        |
+| `llmMaxResults`          | Integer |    ❌    | Maximum results to return (default: 10)  |
 
 ---
 
@@ -295,13 +296,13 @@ Search using pre-computed embedding vectors.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `vectorDB` | String | ✅ | Configured vector database instance name |
-| `namespace` | String | ✅ | Namespace to search |
-| `index` | String | ✅ | Index name |
-| `embeddings` | Array\<Number\> | ✅ | Query embedding vector |
-| `llmMaxResults` | Integer | ❌ | Maximum results to return |
+| Parameter       | Type            | Required | Description                              |
+| --------------- | --------------- | :------: | ---------------------------------------- |
+| `vectorDB`      | String          |    ✅    | Configured vector database instance name |
+| `namespace`     | String          |    ✅    | Namespace to search                      |
+| `index`         | String          |    ✅    | Index name                               |
+| `embeddings`    | Array\<Number\> |    ✅    | Query embedding vector                   |
+| `llmMaxResults` | Integer         |    ❌    | Maximum results to return                |
 
 ---
 
@@ -311,17 +312,17 @@ Retrieve stored embeddings by document ID.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `vectorDB` | String | ✅ | Configured vector database instance name |
-| `namespace` | String | ✅ | Namespace |
-| `index` | String | ✅ | Index name |
-| `docId` | String | ✅ | Document identifier |
+| Parameter   | Type   | Required | Description                              |
+| ----------- | ------ | :------: | ---------------------------------------- |
+| `vectorDB`  | String |    ✅    | Configured vector database instance name |
+| `namespace` | String |    ✅    | Namespace                                |
+| `index`     | String |    ✅    | Index name                               |
+| `docId`     | String |    ✅    | Document identifier                      |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field    | Type            | Description             |
+| -------- | --------------- | ----------------------- |
 | `result` | Array\<Number\> | Stored embedding vector |
 
 ---
@@ -332,47 +333,47 @@ Convert markdown text to a PDF document. Supports full GitHub Flavored Markdown 
 
 **Inputs:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|:--------:|---------|-------------|
-| `markdown` | String | ✅ | - | Markdown text to convert to PDF |
-| `pageSize` | String | ❌ | `A4` | Page size: `A4`, `LETTER`, `LEGAL`, `A3`, `A5` |
-| `marginTop` | Number | ❌ | `72` | Top margin in points (72pt = 1 inch) |
-| `marginRight` | Number | ❌ | `72` | Right margin in points |
-| `marginBottom` | Number | ❌ | `72` | Bottom margin in points |
-| `marginLeft` | Number | ❌ | `72` | Left margin in points |
-| `theme` | String | ❌ | `default` | Style preset: `default` or `compact` |
-| `baseFontSize` | Number | ❌ | `11` | Base font size in points |
-| `outputLocation` | String | ❌ | auto | Output URI (e.g., `file:///tmp/report.pdf`). Defaults to payload store. |
-| `pdfMetadata` | Object | ❌ | - | PDF metadata: `title`, `author`, `subject`, `keywords` |
-| `imageBaseUrl` | String | ❌ | - | Base URL for resolving relative image paths |
+| Parameter        | Type   | Required | Default   | Description                                                             |
+| ---------------- | ------ | :------: | --------- | ----------------------------------------------------------------------- |
+| `markdown`       | String |    ✅    | -         | Markdown text to convert to PDF                                         |
+| `pageSize`       | String |    ❌    | `A4`      | Page size: `A4`, `LETTER`, `LEGAL`, `A3`, `A5`                          |
+| `marginTop`      | Number |    ❌    | `72`      | Top margin in points (72pt = 1 inch)                                    |
+| `marginRight`    | Number |    ❌    | `72`      | Right margin in points                                                  |
+| `marginBottom`   | Number |    ❌    | `72`      | Bottom margin in points                                                 |
+| `marginLeft`     | Number |    ❌    | `72`      | Left margin in points                                                   |
+| `theme`          | String |    ❌    | `default` | Style preset: `default` or `compact`                                    |
+| `baseFontSize`   | Number |    ❌    | `11`      | Base font size in points                                                |
+| `outputLocation` | String |    ❌    | auto      | Output URI (e.g., `file:///tmp/report.pdf`). Defaults to payload store. |
+| `pdfMetadata`    | Object |    ❌    | -         | PDF metadata: `title`, `author`, `subject`, `keywords`                  |
+| `imageBaseUrl`   | String |    ❌    | -         | Base URL for resolving relative image paths                             |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `result.location` | String | URI of the generated PDF file |
-| `result.sizeBytes` | Integer | Size of the generated PDF in bytes |
-| `media` | Array | Media items with `location` and `mimeType` (`application/pdf`) |
-| `finishReason` | String | `COMPLETED` on success |
+| Field              | Type    | Description                                                    |
+| ------------------ | ------- | -------------------------------------------------------------- |
+| `result.location`  | String  | URI of the generated PDF file                                  |
+| `result.sizeBytes` | Integer | Size of the generated PDF in bytes                             |
+| `media`            | Array   | Media items with `location` and `mimeType` (`application/pdf`) |
+| `finishReason`     | String  | `COMPLETED` on success                                         |
 
 **Supported Markdown Features:**
 
-| Feature | Syntax |
-|---------|--------|
-| Headings | `# H1` through `###### H6` |
-| Bold / Italic | `**bold**`, `*italic*`, `***both***` |
-| Tables | GFM pipe tables with header row |
-| Code blocks | Fenced (` ``` `) and indented code blocks |
-| Bullet lists | `- item` or `* item` (nested supported) |
-| Ordered lists | `1. item` (nested supported) |
-| Task lists | `- [x] done`, `- [ ] todo` |
-| Blockquotes | `> quoted text` |
-| Links | `[text](url)` (rendered as clickable PDF links) |
-| Images | `![alt](url)` (HTTP/HTTPS, file://, data: URIs, relative paths) |
-| Horizontal rules | `---` |
-| Strikethrough | `~~strikethrough~~` |
-| Inline code | `` `code` `` |
-| Footnotes | `[^1]` references |
+| Feature          | Syntax                                                          |
+| ---------------- | --------------------------------------------------------------- |
+| Headings         | `# H1` through `###### H6`                                      |
+| Bold / Italic    | `**bold**`, `*italic*`, `***both***`                            |
+| Tables           | GFM pipe tables with header row                                 |
+| Code blocks      | Fenced (` ``` `) and indented code blocks                       |
+| Bullet lists     | `- item` or `* item` (nested supported)                         |
+| Ordered lists    | `1. item` (nested supported)                                    |
+| Task lists       | `- [x] done`, `- [ ] todo`                                      |
+| Blockquotes      | `> quoted text`                                                 |
+| Links            | `[text](url)` (rendered as clickable PDF links)                 |
+| Images           | `![alt](url)` (HTTP/HTTPS, file://, data: URIs, relative paths) |
+| Horizontal rules | `---`                                                           |
+| Strikethrough    | `~~strikethrough~~`                                             |
+| Inline code      | `` `code` ``                                                    |
+| Footnotes        | `[^1]` references                                               |
 
 ---
 
@@ -382,15 +383,15 @@ List available tools from an MCP (Model Context Protocol) server.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `mcpServer` | String | ✅ | MCP server URL (e.g., `http://localhost:3000/mcp`) |
-| `headers` | Object | ❌ | HTTP headers for authentication |
+| Parameter   | Type   | Required | Description                                        |
+| ----------- | ------ | :------: | -------------------------------------------------- |
+| `mcpServer` | String |    ✅    | MCP server URL (e.g., `http://localhost:3000/mcp`) |
+| `headers`   | Object |    ❌    | HTTP headers for authentication                    |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field   | Type  | Description                                                    |
+| ------- | ----- | -------------------------------------------------------------- |
 | `tools` | Array | Tool definitions with `name`, `description`, and `inputSchema` |
 
 ---
@@ -401,20 +402,19 @@ Call a specific tool on an MCP server.
 
 **Inputs:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `mcpServer` | String | ✅ | MCP server URL |
-| `method` | String | ✅ | Tool name to call |
-| `headers` | Object | ❌ | HTTP headers for authentication |
-| `*` | Any | ❌ | All other parameters passed as tool arguments |
+| Parameter   | Type   | Required | Description                                   |
+| ----------- | ------ | :------: | --------------------------------------------- |
+| `mcpServer` | String |    ✅    | MCP server URL                                |
+| `method`    | String |    ✅    | Tool name to call                             |
+| `headers`   | Object |    ❌    | HTTP headers for authentication               |
+| `*`         | Any    |    ❌    | All other parameters passed as tool arguments |
 
 **Outputs:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `content` | Array | Result content items with `type` and `text` |
-| `isError` | Boolean | Whether the call resulted in an error |
-
+| Field     | Type    | Description                                 |
+| --------- | ------- | ------------------------------------------- |
+| `content` | Array   | Result content items with `type` and `text` |
+| `isError` | Boolean | Whether the call resulted in an error       |
 
 ## Configuration
 
@@ -450,11 +450,11 @@ agentmesh.ai.openai.base-url=https://api.openai.com/v1
 agentmesh.ai.openai.organization-id=org-xxxxx
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | OpenAI API key |
-| `base-url` | ❌ | `https://api.openai.com/v1` | API base URL |
-| `organization-id` | ❌ | - | Organization ID |
+| Property          | Required | Default                     | Description     |
+| ----------------- | :------: | --------------------------- | --------------- |
+| `api-key`         |    ✅    | -                           | OpenAI API key  |
+| `base-url`        |    ❌    | `https://api.openai.com/v1` | API base URL    |
+| `organization-id` |    ❌    | -                           | Organization ID |
 
 #### Anthropic
 
@@ -465,13 +465,13 @@ agentmesh.ai.anthropic.version=2023-06-01
 agentmesh.ai.anthropic.beta-version=prompt-caching-2024-07-31
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Anthropic API key |
-| `base-url` | ❌ | `https://api.anthropic.com` | API base URL |
-| `version` | ❌ | - | API version |
-| `beta-version` | ❌ | - | Beta features (e.g., prompt caching) |
-| `completions-path` | ❌ | - | Custom completions endpoint path |
+| Property           | Required | Default                     | Description                          |
+| ------------------ | :------: | --------------------------- | ------------------------------------ |
+| `api-key`          |    ✅    | -                           | Anthropic API key                    |
+| `base-url`         |    ❌    | `https://api.anthropic.com` | API base URL                         |
+| `version`          |    ❌    | -                           | API version                          |
+| `beta-version`     |    ❌    | -                           | Beta features (e.g., prompt caching) |
+| `completions-path` |    ❌    | -                           | Custom completions endpoint path     |
 
 #### Google Gemini / Vertex AI
 
@@ -497,13 +497,13 @@ agentmesh.ai.gemini.location=us-central1
 agentmesh.ai.gemini.publisher=google
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ❌ | - | Gemini API key from [Google AI Studio](https://aistudio.google.com/). Enables all features (chat, tools, image, audio, video) via REST. |
-| `project-id` | ❌ | - | GCP project ID (for Vertex AI gRPC path) |
-| `location` | ❌ | `us-central1` | GCP region |
-| `base-url` | ❌ | `{location}-aiplatform.googleapis.com:443` | API endpoint (Vertex AI path only) |
-| `publisher` | ❌ | - | Model publisher |
+| Property     | Required | Default                                    | Description                                                                                                                             |
+| ------------ | :------: | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `api-key`    |    ❌    | -                                          | Gemini API key from [Google AI Studio](https://aistudio.google.com/). Enables all features (chat, tools, image, audio, video) via REST. |
+| `project-id` |    ❌    | -                                          | GCP project ID (for Vertex AI gRPC path)                                                                                                |
+| `location`   |    ❌    | `us-central1`                              | GCP region                                                                                                                              |
+| `base-url`   |    ❌    | `{location}-aiplatform.googleapis.com:443` | API endpoint (Vertex AI path only)                                                                                                      |
+| `publisher`  |    ❌    | -                                          | Model publisher                                                                                                                         |
 
 > **How it works**: When only `api-key` is set (no GCP credentials), AgentMesh uses Spring AI's `GoogleGenAiChatModel` which calls the Google AI Studio REST API directly. When GCP credentials are available (`GOOGLE_APPLICATION_CREDENTIALS` or Workload Identity), it uses `VertexAiGeminiChatModel` with gRPC. Both paths support chat completion with tool calling.
 
@@ -516,12 +516,12 @@ agentmesh.ai.azureopenai.deployment-name=gpt-4o-mini
 agentmesh.ai.azureopenai.user=your-user-id
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Azure OpenAI API key |
-| `base-url` | ✅ | - | Azure resource endpoint |
-| `deployment-name` | ✅ | - | Deployment name |
-| `user` | ❌ | - | User identifier for tracking |
+| Property          | Required | Default | Description                  |
+| ----------------- | :------: | ------- | ---------------------------- |
+| `api-key`         |    ✅    | -       | Azure OpenAI API key         |
+| `base-url`        |    ✅    | -       | Azure resource endpoint      |
+| `deployment-name` |    ✅    | -       | Deployment name              |
+| `user`            |    ❌    | -       | User identifier for tracking |
 
 #### AWS Bedrock
 
@@ -533,12 +533,12 @@ agentmesh.ai.bedrock.region=us-east-1
 agentmesh.ai.bedrock.bearer-token=${AWS_SESSION_TOKEN}
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `access-key` | ✅* | - | AWS access key ID |
-| `secret-key` | ✅* | - | AWS secret access key |
-| `region` | ✅ | `us-east-1` | AWS region |
-| `bearer-token` | ❌ | - | AWS session token (for temporary credentials) |
+| Property       | Required | Default     | Description                                   |
+| -------------- | :------: | ----------- | --------------------------------------------- |
+| `access-key`   |   ✅\*   | -           | AWS access key ID                             |
+| `secret-key`   |   ✅\*   | -           | AWS secret access key                         |
+| `region`       |    ✅    | `us-east-1` | AWS region                                    |
+| `bearer-token` |    ❌    | -           | AWS session token (for temporary credentials) |
 
 \* Required unless using bearer token or IAM roles
 
@@ -549,10 +549,10 @@ agentmesh.ai.mistral.api-key=${MISTRAL_API_KEY}
 agentmesh.ai.mistral.base-url=https://api.mistral.ai
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Mistral AI API key |
-| `base-url` | ❌ | `https://api.mistral.ai` | API base URL |
+| Property   | Required | Default                  | Description        |
+| ---------- | :------: | ------------------------ | ------------------ |
+| `api-key`  |    ✅    | -                        | Mistral AI API key |
+| `base-url` |    ❌    | `https://api.mistral.ai` | API base URL       |
 
 #### Cohere
 
@@ -561,10 +561,10 @@ agentmesh.ai.cohere.api-key=${COHERE_API_KEY}
 agentmesh.ai.cohere.base-url=https://api.cohere.ai
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Cohere API key |
-| `base-url` | ❌ | `https://api.cohere.ai` | API base URL |
+| Property   | Required | Default                 | Description    |
+| ---------- | :------: | ----------------------- | -------------- |
+| `api-key`  |    ✅    | -                       | Cohere API key |
+| `base-url` |    ❌    | `https://api.cohere.ai` | API base URL   |
 
 #### Grok (xAI)
 
@@ -573,10 +573,10 @@ agentmesh.ai.grok.api-key=${GROK_API_KEY}
 agentmesh.ai.grok.base-url=https://api.x.ai/v1
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Grok API key |
-| `base-url` | ❌ | `https://api.x.ai/v1` | API base URL |
+| Property   | Required | Default               | Description  |
+| ---------- | :------: | --------------------- | ------------ |
+| `api-key`  |    ✅    | -                     | Grok API key |
+| `base-url` |    ❌    | `https://api.x.ai/v1` | API base URL |
 
 #### Perplexity AI
 
@@ -585,10 +585,10 @@ agentmesh.ai.perplexity.api-key=${PERPLEXITY_API_KEY}
 agentmesh.ai.perplexity.base-url=https://api.perplexity.ai
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | Perplexity API key |
-| `base-url` | ❌ | `https://api.perplexity.ai` | API base URL |
+| Property   | Required | Default                     | Description        |
+| ---------- | :------: | --------------------------- | ------------------ |
+| `api-key`  |    ✅    | -                           | Perplexity API key |
+| `base-url` |    ❌    | `https://api.perplexity.ai` | API base URL       |
 
 #### HuggingFace
 
@@ -597,10 +597,10 @@ agentmesh.ai.huggingface.api-key=${HUGGINGFACE_API_KEY}
 agentmesh.ai.huggingface.base-url=https://api-inference.huggingface.co/models
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | ✅ | - | HuggingFace API token |
-| `base-url` | ❌ | `https://api-inference.huggingface.co/models` | API base URL |
+| Property   | Required | Default                                       | Description           |
+| ---------- | :------: | --------------------------------------------- | --------------------- |
+| `api-key`  |    ✅    | -                                             | HuggingFace API token |
+| `base-url` |    ❌    | `https://api-inference.huggingface.co/models` | API base URL          |
 
 #### Ollama (Local)
 
@@ -610,11 +610,11 @@ agentmesh.ai.ollama.auth-header-name=Authorization
 agentmesh.ai.ollama.auth-header=Bearer token-here
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `base-url` | ❌ | `http://localhost:11434` | Ollama server URL |
-| `auth-header-name` | ❌ | - | Custom auth header name |
-| `auth-header` | ❌ | - | Custom auth header value |
+| Property           | Required | Default                  | Description              |
+| ------------------ | :------: | ------------------------ | ------------------------ |
+| `base-url`         |    ❌    | `http://localhost:11434` | Ollama server URL        |
+| `auth-header-name` |    ❌    | -                        | Custom auth header name  |
+| `auth-header`      |    ❌    | -                        | Custom auth header value |
 
 #### Stability AI
 
@@ -622,9 +622,9 @@ agentmesh.ai.ollama.auth-header=Bearer token-here
 agentmesh.ai.stabilityai.api-key=${STABILITY_API_KEY}
 ```
 
-| Property | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `api-key` | Yes | - | Stability AI API key |
+| Property  | Required | Default | Description          |
+| --------- | :------: | ------- | -------------------- |
+| `api-key` |   Yes    | -       | Stability AI API key |
 
 Supported models: `sd3.5-large`, `sd3.5-large-turbo`, `sd3.5-medium`, `sd3-large`, `sd3-medium`, `core` (Stable Image Core), `ultra` (Stable Image Ultra). The endpoint is selected automatically based on the model name.
 
@@ -634,28 +634,28 @@ The AI module reads from standard environment variables automatically. Set the e
 
 ### Quick Reference
 
-| Provider | Environment Variable | Description |
-|----------|---------------------|-------------|
-| OpenAI | `OPENAI_API_KEY` | API key from [platform.openai.com](https://platform.openai.com/api-keys) |
-| OpenAI | `OPENAI_ORG_ID` | Optional organization ID |
-| Anthropic | `ANTHROPIC_API_KEY` | API key from [console.anthropic.com](https://console.anthropic.com/) |
-| Mistral AI | `MISTRAL_API_KEY` | API key from [console.mistral.ai](https://console.mistral.ai/) |
-| Cohere | `COHERE_API_KEY` | API key from [dashboard.cohere.com](https://dashboard.cohere.com/) |
-| Grok / xAI | `XAI_API_KEY` | API key from [x.ai](https://x.ai/) |
-| Perplexity | `PERPLEXITY_API_KEY` | API key from [perplexity.ai](https://www.perplexity.ai/) |
-| HuggingFace | `HUGGINGFACE_API_KEY` | Token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) |
-| Stability AI | `STABILITY_API_KEY` | API key from [platform.stability.ai](https://platform.stability.ai/) |
-| Azure OpenAI | `AZURE_OPENAI_API_KEY` | API key from Azure portal |
-| Azure OpenAI | `AZURE_OPENAI_ENDPOINT` | Endpoint URL (e.g., `https://your-resource.openai.azure.com`) |
-| Azure OpenAI | `AZURE_OPENAI_DEPLOYMENT` | Deployment name |
-| AWS Bedrock | `AWS_ACCESS_KEY_ID` | AWS access key |
-| AWS Bedrock | `AWS_SECRET_ACCESS_KEY` | AWS secret key |
-| AWS Bedrock | `AWS_REGION` | AWS region (default: `us-east-1`) |
-| Google Gemini | `GEMINI_API_KEY` | API key from [Google AI Studio](https://aistudio.google.com/) — enables all features (chat, tools, image, audio, video) |
-| Google Gemini | `GOOGLE_CLOUD_PROJECT` | GCP project ID (only needed for Vertex AI path) |
-| Google Gemini | `GOOGLE_CLOUD_LOCATION` | GCP region (default: `us-central1`, Vertex AI path only) |
-| Google Gemini | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (Vertex AI path only) |
-| Ollama | `OLLAMA_HOST` | Ollama server URL (default: `http://localhost:11434`) |
+| Provider      | Environment Variable             | Description                                                                                                             |
+| ------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| OpenAI        | `OPENAI_API_KEY`                 | API key from [platform.openai.com](https://platform.openai.com/api-keys)                                                |
+| OpenAI        | `OPENAI_ORG_ID`                  | Optional organization ID                                                                                                |
+| Anthropic     | `ANTHROPIC_API_KEY`              | API key from [console.anthropic.com](https://console.anthropic.com/)                                                    |
+| Mistral AI    | `MISTRAL_API_KEY`                | API key from [console.mistral.ai](https://console.mistral.ai/)                                                          |
+| Cohere        | `COHERE_API_KEY`                 | API key from [dashboard.cohere.com](https://dashboard.cohere.com/)                                                      |
+| Grok / xAI    | `XAI_API_KEY`                    | API key from [x.ai](https://x.ai/)                                                                                      |
+| Perplexity    | `PERPLEXITY_API_KEY`             | API key from [perplexity.ai](https://www.perplexity.ai/)                                                                |
+| HuggingFace   | `HUGGINGFACE_API_KEY`            | Token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)                                     |
+| Stability AI  | `STABILITY_API_KEY`              | API key from [platform.stability.ai](https://platform.stability.ai/)                                                    |
+| Azure OpenAI  | `AZURE_OPENAI_API_KEY`           | API key from Azure portal                                                                                               |
+| Azure OpenAI  | `AZURE_OPENAI_ENDPOINT`          | Endpoint URL (e.g., `https://your-resource.openai.azure.com`)                                                           |
+| Azure OpenAI  | `AZURE_OPENAI_DEPLOYMENT`        | Deployment name                                                                                                         |
+| AWS Bedrock   | `AWS_ACCESS_KEY_ID`              | AWS access key                                                                                                          |
+| AWS Bedrock   | `AWS_SECRET_ACCESS_KEY`          | AWS secret key                                                                                                          |
+| AWS Bedrock   | `AWS_REGION`                     | AWS region (default: `us-east-1`)                                                                                       |
+| Google Gemini | `GEMINI_API_KEY`                 | API key from [Google AI Studio](https://aistudio.google.com/) — enables all features (chat, tools, image, audio, video) |
+| Google Gemini | `GOOGLE_CLOUD_PROJECT`           | GCP project ID (only needed for Vertex AI path)                                                                         |
+| Google Gemini | `GOOGLE_CLOUD_LOCATION`          | GCP region (default: `us-central1`, Vertex AI path only)                                                                |
+| Google Gemini | `GOOGLE_APPLICATION_CREDENTIALS` | Path to service account JSON (Vertex AI path only)                                                                      |
+| Ollama        | `OLLAMA_HOST`                    | Ollama server URL (default: `http://localhost:11434`)                                                                   |
 
 ### Usage
 
@@ -701,7 +701,7 @@ services:
   agentmesh:
     image: agentmesh:server
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -778,7 +778,7 @@ docker run -d \
 ```json
 {
   "name": "chat_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -807,6 +807,7 @@ docker run -d \
 ```
 
 **Output:**
+
 ```json
 {
   "result": "The capital of France is Paris.",
@@ -825,7 +826,7 @@ docker run -d \
 ```json
 {
   "name": "embedding_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -843,6 +844,7 @@ docker run -d \
 ```
 
 **Output:**
+
 ```json
 {
   "result": [0.123, -0.456, 0.789, ...]  // 1536-dimensional vector
@@ -854,7 +856,7 @@ docker run -d \
 ```json
 {
   "name": "image_gen_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -876,6 +878,7 @@ docker run -d \
 ```
 
 **Output:**
+
 ```json
 {
   "url": "https://...",
@@ -888,7 +891,7 @@ docker run -d \
 ```json
 {
   "name": "tts_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -907,6 +910,7 @@ docker run -d \
 ```
 
 **Output:**
+
 ```json
 {
   "url": "https://...",
@@ -919,7 +923,7 @@ docker run -d \
 ```json
 {
   "name": "semantic_search_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -955,6 +959,7 @@ docker run -d \
 ```
 
 **Output:**
+
 ```json
 {
   "result": [
@@ -1111,7 +1116,11 @@ A self-contained workflow that indexes documents, searches them, and generates a
     }
   ],
   "outputParameters": {
-    "indexed_docs": ["${index_doc_1_ref.output}", "${index_doc_2_ref.output}", "${index_doc_3_ref.output}"],
+    "indexed_docs": [
+      "${index_doc_1_ref.output}",
+      "${index_doc_2_ref.output}",
+      "${index_doc_3_ref.output}"
+    ],
     "search_results": "${search_ref.output.result}",
     "answer": "${answer_ref.output.result}"
   }
@@ -1119,6 +1128,7 @@ A self-contained workflow that indexes documents, searches them, and generates a
 ```
 
 **Run without input:**
+
 ```bash
 curl -X POST 'http://localhost:8080/api/workflow/complete_rag_demo' \
   -H 'Content-Type: application/json' \
@@ -1134,7 +1144,7 @@ MCP allows workflows to interact with external tools and data sources via HTTP/H
 ```json
 {
   "name": "mcp_list_tools_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -1150,6 +1160,7 @@ MCP allows workflows to interact with external tools and data sources via HTTP/H
 ```
 
 **Output:**
+
 ```json
 {
   "tools": [
@@ -1159,7 +1170,7 @@ MCP allows workflows to interact with external tools and data sources via HTTP/H
       "inputSchema": {
         "type": "object",
         "properties": {
-          "location": {"type": "string"}
+          "location": { "type": "string" }
         },
         "required": ["location"]
       }
@@ -1169,6 +1180,7 @@ MCP allows workflows to interact with external tools and data sources via HTTP/H
 ```
 
 The Model Context Protocol supports multiple [transport types](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports):
+
 - **Streamable HTTP** (default): Standard HTTP/HTTPS endpoints (recommended per MCP spec 2025-11-25)
 - **SSE** (deprecated): Only used when URL explicitly contains `/sse` endpoint
 
@@ -1177,7 +1189,7 @@ The Model Context Protocol supports multiple [transport types](https://modelcont
 ```json
 {
   "name": "mcp_weather_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -1196,6 +1208,7 @@ The Model Context Protocol supports multiple [transport types](https://modelcont
 ```
 
 **Output:**
+
 ```json
 {
   "content": [
@@ -1209,6 +1222,7 @@ The Model Context Protocol supports multiple [transport types](https://modelcont
 ```
 
 **MCP Server URL Formats:**
+
 - **HTTP**: `http://localhost:3000` (uses Streamable HTTP transport)
 - **HTTP/SSE (deprecated)**: `http://localhost:3000/sse`
 - **HTTP/Streamable**: `http://localhost:3000/mcp`
@@ -1223,7 +1237,7 @@ Complete example combining MCP tools with LLM for autonomous agent behavior:
 ```json
 {
   "name": "mcp_ai_agent_workflow",
-    "version": 1,
+  "version": 1,
   "schemaVersion": 2,
   "tasks": [
     {
@@ -1286,6 +1300,7 @@ Complete example combining MCP tools with LLM for autonomous agent behavior:
 ```
 
 **Workflow Input:**
+
 ```json
 {
   "task": "Get the current weather in San Francisco"
@@ -1293,22 +1308,23 @@ Complete example combining MCP tools with LLM for autonomous agent behavior:
 ```
 
 **Workflow Output:**
+
 ```json
 {
   "discover_tools": {
     "tools": [
-      {"name": "get_weather", "description": "..."},
-      {"name": "calculate", "description": "..."}
+      { "name": "get_weather", "description": "..." },
+      { "name": "calculate", "description": "..." }
     ]
   },
   "plan": {
     "result": {
       "method": "get_weather",
-      "arguments": {"location": "San Francisco", "units": "fahrenheit"}
+      "arguments": { "location": "San Francisco", "units": "fahrenheit" }
     }
   },
   "execute": {
-    "content": [{"type": "text", "text": "72°F, Sunny"}]
+    "content": [{ "type": "text", "text": "72°F, Sunny" }]
   },
   "summarize": {
     "result": "The current weather in San Francisco is 72°F and sunny."
@@ -1343,6 +1359,7 @@ Complete example combining MCP tools with LLM for autonomous agent behavior:
 ```
 
 **Output:**
+
 ```json
 {
   "media": [
@@ -1459,6 +1476,7 @@ Generate a PDF document from markdown content with layout options and metadata:
 ```
 
 **Output:**
+
 ```json
 {
   "result": {
@@ -1530,6 +1548,7 @@ A multi-step workflow that uses an LLM to generate a markdown report and then co
 ```
 
 **Workflow Input:**
+
 ```json
 {
   "topic": "Cloud Migration Best Practices",
@@ -1538,6 +1557,7 @@ A multi-step workflow that uses an LLM to generate a markdown report and then co
 ```
 
 **Workflow Output:**
+
 ```json
 {
   "reportMarkdown": "# Cloud Migration Best Practices\n\n## Executive Summary\n...",
@@ -1577,11 +1597,11 @@ When the LLM decides to call tools, the output looks like this:
 ```
 
 > **Key Points:**
+>
 > - `finishReason: "TOOL_CALLS"` indicates the LLM wants to invoke tools
 > - `toolCalls` array contains all tool invocations with their parameters
 > - Each tool call has a unique `taskReferenceName` for workflow orchestration
 > - The `configParams.mcpServer` in each tool definition specifies the MCP server URL
-
 
 ## Enable/Disable AI Workers
 
@@ -1648,19 +1668,19 @@ env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY ./gradlew :agentmesh-ai:test
 
 ### Test Environment Variables
 
-| Provider | Environment Variable |
-|----------|---------------------|
-| OpenAI | `OPENAI_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| Mistral | `MISTRAL_API_KEY` |
-| Grok | `GROK_API_KEY` |
-| Cohere | `COHERE_API_KEY` |
-| HuggingFace | `HUGGINGFACE_API_KEY` |
-| Perplexity | `PERPLEXITY_API_KEY` |
-| Ollama | `OLLAMA_BASE_URL` |
-| AWS Bedrock | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
-| Azure OpenAI | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` |
-| Gemini Vertex | `GOOGLE_CLOUD_PROJECT` |
+| Provider      | Environment Variable                            |
+| ------------- | ----------------------------------------------- |
+| OpenAI        | `OPENAI_API_KEY`                                |
+| Anthropic     | `ANTHROPIC_API_KEY`                             |
+| Mistral       | `MISTRAL_API_KEY`                               |
+| Grok          | `GROK_API_KEY`                                  |
+| Cohere        | `COHERE_API_KEY`                                |
+| HuggingFace   | `HUGGINGFACE_API_KEY`                           |
+| Perplexity    | `PERPLEXITY_API_KEY`                            |
+| Ollama        | `OLLAMA_BASE_URL`                               |
+| AWS Bedrock   | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`    |
+| Azure OpenAI  | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` |
+| Gemini Vertex | `GOOGLE_CLOUD_PROJECT`                          |
 
 ## License
 

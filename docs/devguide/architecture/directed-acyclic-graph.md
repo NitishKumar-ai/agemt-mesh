@@ -1,6 +1,7 @@
 ---
-description: "Directed Acyclic Graph (DAG) — understand how AgentMesh models workflows as DAGs for reliable task orchestration."
+description: 'Directed Acyclic Graph (DAG) — understand how AgentMesh models workflows as DAGs for reliable task orchestration.'
 ---
+
 # Directed Acyclic Graph (DAG)
 
 All AgentMesh workflows are directed acyclic graphs (DAGs). A directed acyclic graph (DAG) is a set of vertices where the connections are unidirectional without any repetition. DAG workflows can only "move forward" and cannot redo a step (or series of steps).
@@ -9,23 +10,23 @@ Here is a breakdown of what DAG means:
 
 - **Graph**
 
-    For DAGs, a graph refers to "a collection of vertices (or points) and edges (or lines) that indicate connections between the vertices."
+  For DAGs, a graph refers to "a collection of vertices (or points) and edges (or lines) that indicate connections between the vertices."
 
     <img alt="A regular graph (source: Wikipedia)." src="regular_graph.png" width="300">
 
-    Imagine that each vertex in the graph above is a microservice. The lines represent a dependency relation between each microservice. However, this graph is not a directed graph, as there is no direction given to each dependency.
+  Imagine that each vertex in the graph above is a microservice. The lines represent a dependency relation between each microservice. However, this graph is not a directed graph, as there is no direction given to each dependency.
 
 - **Directed**
 
-    A directed graph means that there is a direction to each connection. For example, this graph is directed:
+  A directed graph means that there is a direction to each connection. For example, this graph is directed:
 
     <img alt="A directed graph." src="directed_graph.png" width="300">
 
-    Each line has a direction. In the example above, Point N can proceed directly to B, but B cannot proceed directly to N.
+  Each line has a direction. In the example above, Point N can proceed directly to B, but B cannot proceed directly to N.
 
 - **Acyclic**
 
-    Acyclic means without circular or cyclic paths. The example shown above contains directed cyclic graphs, such as A -> B -> D -> A. In contrast, a directed acyclic graph can only begin at one point and end at a different point (A -> B -> D).
+  Acyclic means without circular or cyclic paths. The example shown above contains directed cyclic graphs, such as A -> B -> D -> A. In contrast, a directed acyclic graph can only begin at one point and end at a different point (A -> B -> D).
 
 ## Workflows as DAGs
 
@@ -34,7 +35,6 @@ Since a AgentMesh workflow is a series of tasks that can connect in only a speci
 ![A AgentMesh workflow.](dag_workflow2.png)
 
 The flow of tasks is specified in a `tasks` array in a JSON file called a workflow definition, which can also be written in code (Python, Java, JavaScript, C#, Go, Clojure).
-
 
 ### Can a workflow contain loops and still be a DAG?
 

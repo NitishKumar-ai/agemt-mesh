@@ -1,7 +1,9 @@
 ---
-description: "No-Op Task — a pass-through task in AgentMesh workflows useful for routing, placeholder steps, and workflow testing."
+description: 'No-Op Task — a pass-through task in AgentMesh workflows useful for routing, placeholder steps, and workflow testing.'
 ---
+
 # No Op Task
+
 ```json
 "type" : "NOOP"
 ```
@@ -14,9 +16,9 @@ Here is the task configuration for a No Op task.
 
 ```json
 {
-	"name": "noop",
-    "taskReferenceName": "noop_ref",
-	"inputParameters": {},
-	"type": "NOOP"
+  "name": "noop",
+  "taskReferenceName": "noop_ref",
+  "inputParameters": {},
+  "type": "NOOP"
 }
 ```

@@ -80,7 +80,12 @@ export class WorkflowService {
     return workflow.workflowId;
   }
 
-  async executeWorkflow(req: { name: string; version: number; input: Record<string, unknown>; requestId?: string }): Promise<WorkflowModel> {
+  async executeWorkflow(req: {
+    name: string;
+    version: number;
+    input: Record<string, unknown>;
+    requestId?: string;
+  }): Promise<WorkflowModel> {
     const workflowId = await this.startWorkflow({
       name: req.name,
       version: req.version,
@@ -91,10 +96,15 @@ export class WorkflowService {
     for (let i = 0; i < 60; i++) {
       const wf = await this.getWorkflow(workflowId, true);
       const status = wf?.status as any;
-      if (wf && (status === WorkflowStatus.COMPLETED || status === WorkflowStatus.FAILED || status === WorkflowStatus.TERMINATED)) {
+      if (
+        wf &&
+        (status === WorkflowStatus.COMPLETED ||
+          status === WorkflowStatus.FAILED ||
+          status === WorkflowStatus.TERMINATED)
+      ) {
         return wf;
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
     const wf = await this.getWorkflow(workflowId, true);
     if (!wf) throw new Error(`Workflow ${workflowId} not found after execution`);
@@ -141,7 +151,10 @@ export class WorkflowService {
     if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
 
     await this.executionDAO.removeWorkflow(workflowId);
-    await this.executionDAO.removeFromPendingWorkflow(workflow.workflowType ?? workflow.workflowName, workflowId);
+    await this.executionDAO.removeFromPendingWorkflow(
+      workflow.workflowType ?? workflow.workflowName,
+      workflowId,
+    );
     await this.queueDAO.remove(DECIDER_QUEUE, workflowId);
   }
 
@@ -227,7 +240,11 @@ export class WorkflowService {
     await this.queueDAO.pushIfNotExists(DECIDER_QUEUE, workflowId, 0, 0);
   }
 
-  async terminateRemove(workflowId: string, reason?: string, archiveWorkflow = true): Promise<void> {
+  async terminateRemove(
+    workflowId: string,
+    reason?: string,
+    archiveWorkflow = true,
+  ): Promise<void> {
     await this.terminateWorkflow(workflowId, reason);
     await this.deleteWorkflow(workflowId, archiveWorkflow);
   }
@@ -243,8 +260,8 @@ export class WorkflowService {
 
     let tasks = workflow.tasks ?? [];
     if (status && status.length > 0) {
-      const upper = status.map(s => s.toUpperCase());
-      tasks = tasks.filter(t => t.status && upper.includes(t.status));
+      const upper = status.map((s) => s.toUpperCase());
+      tasks = tasks.filter((t) => t.status && upper.includes(t.status));
     }
 
     const totalHits = tasks.length;

@@ -1,4 +1,10 @@
 import { Module, DynamicModule, Global } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import {
   RestModule,
   EXECUTION_DAO,
@@ -8,7 +14,7 @@ import {
   WORKFLOW_EXECUTOR as WORKFLOW_EXECUTOR_TOKEN,
   START_TIME,
   VERSION,
-  DB_PROBE
+  DB_PROBE,
 } from '@agentmesh/rest';
 import type { WorkflowExecutor } from '@agentmesh/core';
 
@@ -31,7 +37,13 @@ export class AppModule {
   static register(options: AppModuleOptions): DynamicModule {
     return {
       module: AppModule,
-      imports: [RestModule.forRoot()],
+      imports: [
+        RestModule.forRoot(),
+        ServeStaticModule.forRoot({
+          rootPath: path.resolve(__dirname, '../../ui-next/dist'),
+          exclude: ['/api/(.*)', '/swagger-ui/(.*)', '/health', '/api-docs/(.*)'],
+        }),
+      ],
       providers: [
         { provide: EXECUTION_DAO, useValue: options.executionDAO },
         { provide: METADATA_DAO, useValue: options.metadataDAO },

@@ -1,5 +1,5 @@
 ---
-description: "Deploy AgentMesh as a self-hosted workflow engine in production — architecture overview, horizontal scaling, database, queue, indexing, and lock configuration, workflow monitoring, and recommended production deployment settings for this open source workflow orchestration platform."
+description: 'Deploy AgentMesh as a self-hosted workflow engine in production — architecture overview, horizontal scaling, database, queue, indexing, and lock configuration, workflow monitoring, and recommended production deployment settings for this open source workflow orchestration platform.'
 ---
 
 # Self-hosted deployment guide
@@ -14,17 +14,17 @@ A AgentMesh deployment consists of these components:
 
 **What each component does:**
 
-| Component | Role |
-|:--|:--|
-| **API Server** | Exposes REST and gRPC endpoints for workflow and task operations. |
-| **Decider** | The core state machine. Evaluates workflow state and schedules the next set of tasks. |
-| **Sweeper** | Background process that polls for running workflows and triggers the decider to evaluate them. Required for progress on long-running workflows. |
-| **System Task Workers** | Execute built-in task types (HTTP, Event, Wait, Inline, JSON_JQ, etc.) within the server JVM. |
-| **Event Processor** | Listens to configured event buses and triggers workflows or completes tasks based on incoming events. |
-| **Database** | Persists workflow definitions, execution state, task state, and poll data. |
-| **Queue** | Manages task scheduling — pending tasks, delayed tasks, and the sweeper's own work queue. |
-| **Index** | Powers workflow and task search in the UI and via the search API. |
-| **Lock** | Distributed lock that prevents concurrent decider evaluations of the same workflow. **Required in production.** |
+| Component               | Role                                                                                                                                            |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **API Server**          | Exposes REST and gRPC endpoints for workflow and task operations.                                                                               |
+| **Decider**             | The core state machine. Evaluates workflow state and schedules the next set of tasks.                                                           |
+| **Sweeper**             | Background process that polls for running workflows and triggers the decider to evaluate them. Required for progress on long-running workflows. |
+| **System Task Workers** | Execute built-in task types (HTTP, Event, Wait, Inline, JSON_JQ, etc.) within the server JVM.                                                   |
+| **Event Processor**     | Listens to configured event buses and triggers workflows or completes tasks based on incoming events.                                           |
+| **Database**            | Persists workflow definitions, execution state, task state, and poll data.                                                                      |
+| **Queue**               | Manages task scheduling — pending tasks, delayed tasks, and the sweeper's own work queue.                                                       |
+| **Index**               | Powers workflow and task search in the UI and via the search API.                                                                               |
+| **Lock**                | Distributed lock that prevents concurrent decider evaluations of the same workflow. **Required in production.**                                 |
 
 ---
 
@@ -40,23 +40,23 @@ docker compose -f docker/docker-compose.yaml up
 
 This starts AgentMesh with Redis (database + queue), Elasticsearch (indexing), and the server with UI on port **8080**.
 
-| URL | Description |
-|:----|:---|
-| `http://localhost:8080` | AgentMesh UI |
+| URL                                           | Description   |
+| :-------------------------------------------- | :------------ |
+| `http://localhost:8080`                       | AgentMesh UI  |
 | `http://localhost:8080/swagger-ui/index.html` | REST API docs |
-| `http://localhost:8080/api/` | API base URL |
+| `http://localhost:8080/api/`                  | API base URL  |
 
 Pre-built compose files for other backend combinations:
 
-| Compose file | Database | Queue | Index |
-|:--|:--|:--|:--|
-| `docker-compose.yaml` | Redis | Redis | Elasticsearch 7 |
-| `docker-compose-es8.yaml` | Redis | Redis | Elasticsearch 8 |
-| `docker-compose-postgres.yaml` | PostgreSQL | PostgreSQL | PostgreSQL |
+| Compose file                       | Database   | Queue      | Index           |
+| :--------------------------------- | :--------- | :--------- | :-------------- |
+| `docker-compose.yaml`              | Redis      | Redis      | Elasticsearch 7 |
+| `docker-compose-es8.yaml`          | Redis      | Redis      | Elasticsearch 8 |
+| `docker-compose-postgres.yaml`     | PostgreSQL | PostgreSQL | PostgreSQL      |
 | `docker-compose-postgres-es7.yaml` | PostgreSQL | PostgreSQL | Elasticsearch 7 |
-| `docker-compose-mysql.yaml` | MySQL | Redis | Elasticsearch 7 |
-| `docker-compose-redis-os2.yaml` | Redis | Redis | OpenSearch 2 |
-| `docker-compose-redis-os3.yaml` | Redis | Redis | OpenSearch 3 |
+| `docker-compose-mysql.yaml`        | MySQL      | Redis      | Elasticsearch 7 |
+| `docker-compose-redis-os2.yaml`    | Redis      | Redis      | OpenSearch 2    |
+| `docker-compose-redis-os3.yaml`    | Redis      | Redis      | OpenSearch 3    |
 
 ```shell
 # Example: PostgreSQL for everything
@@ -88,13 +88,13 @@ agentmesh.db.type=postgres
 
 **Supported database backends:**
 
-| Backend | Property value | When to use | Notes |
-|:--|:--|:--|:--|
-| PostgreSQL | `postgres` | **Recommended for production.** ACID, battle-tested, supports indexing too. | Requires `spring.datasource.*` config. |
-| MySQL | `mysql` | Production alternative if your team already runs MySQL. | Requires `spring.datasource.*` config. Needs separate queue backend (Redis). |
-| Redis | `redis_standalone` | Fast, simple. Good for moderate scale. | Requires `agentmesh.redis.*` config. |
-| Cassandra | `cassandra` | High write throughput, multi-region. | Requires `agentmesh.cassandra.*` config. |
-| SQLite | `sqlite` | **Local development only.** Single-file, zero config. | Default. Not for production. |
+| Backend    | Property value     | When to use                                                                 | Notes                                                                        |
+| :--------- | :----------------- | :-------------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| PostgreSQL | `postgres`         | **Recommended for production.** ACID, battle-tested, supports indexing too. | Requires `spring.datasource.*` config.                                       |
+| MySQL      | `mysql`            | Production alternative if your team already runs MySQL.                     | Requires `spring.datasource.*` config. Needs separate queue backend (Redis). |
+| Redis      | `redis_standalone` | Fast, simple. Good for moderate scale.                                      | Requires `agentmesh.redis.*` config.                                         |
+| Cassandra  | `cassandra`        | High write throughput, multi-region.                                        | Requires `agentmesh.cassandra.*` config.                                     |
+| SQLite     | `sqlite`           | **Local development only.** Single-file, zero config.                       | Default. Not for production.                                                 |
 
 #### PostgreSQL
 
@@ -161,14 +161,14 @@ agentmesh.queue.type=postgres
 
 **Supported queue backends:**
 
-| Backend | Property value | When to use |
-|:--|:--|:--|
-| PostgreSQL | `postgres` | Use when database is also PostgreSQL. Simplest stack. |
-| Redis | `redis_standalone` | Use when database is Redis or MySQL. Fast, low-latency. |
-| SQLite | `sqlite` | Local development only. |
+| Backend    | Property value     | When to use                                             |
+| :--------- | :----------------- | :------------------------------------------------------ |
+| PostgreSQL | `postgres`         | Use when database is also PostgreSQL. Simplest stack.   |
+| Redis      | `redis_standalone` | Use when database is Redis or MySQL. Fast, low-latency. |
+| SQLite     | `sqlite`           | Local development only.                                 |
 
 !!! tip "Match your queue backend to your database"
-    PostgreSQL database + PostgreSQL queue is the simplest production stack — one fewer dependency. If you use MySQL for the database, pair it with Redis for the queue.
+PostgreSQL database + PostgreSQL queue is the simplest production stack — one fewer dependency. If you use MySQL for the database, pair it with Redis for the queue.
 
 ---
 
@@ -183,15 +183,15 @@ agentmesh.indexing.type=postgres
 
 **Supported indexing backends:**
 
-| Backend | Property value | When to use | Notes |
-|:--|:--|:--|:--|
-| PostgreSQL | `postgres` | Simplest stack when database is also PostgreSQL. | Set `agentmesh.elasticsearch.version=0` to disable ES client. |
-| Elasticsearch 7 | `elasticsearch` | Best search performance at scale. Full-text search. | Set `agentmesh.elasticsearch.version=7`. |
-| Elasticsearch 8 | `elasticsearch8` | Use when running the ES8 persistence module. | Set `agentmesh.elasticsearch.version=8`. |
-| OpenSearch 2 | `opensearch2` | Open-source ES alternative. | Compatible with ES 7 queries. |
-| OpenSearch 3 | `opensearch3` | Latest OpenSearch. | |
-| SQLite | `sqlite` | Local development only. | |
-| Disabled | N/A | Set `agentmesh.indexing.enabled=false`. UI search won't work. | |
+| Backend         | Property value   | When to use                                                   | Notes                                                         |
+| :-------------- | :--------------- | :------------------------------------------------------------ | :------------------------------------------------------------ |
+| PostgreSQL      | `postgres`       | Simplest stack when database is also PostgreSQL.              | Set `agentmesh.elasticsearch.version=0` to disable ES client. |
+| Elasticsearch 7 | `elasticsearch`  | Best search performance at scale. Full-text search.           | Set `agentmesh.elasticsearch.version=7`.                      |
+| Elasticsearch 8 | `elasticsearch8` | Use when running the ES8 persistence module.                  | Set `agentmesh.elasticsearch.version=8`.                      |
+| OpenSearch 2    | `opensearch2`    | Open-source ES alternative.                                   | Compatible with ES 7 queries.                                 |
+| OpenSearch 3    | `opensearch3`    | Latest OpenSearch.                                            |                                                               |
+| SQLite          | `sqlite`         | Local development only.                                       |                                                               |
+| Disabled        | N/A              | Set `agentmesh.indexing.enabled=false`. UI search won't work. |                                                               |
 
 #### PostgreSQL indexing
 
@@ -272,7 +272,7 @@ agentmesh.app.eventExecutionIndexingEnabled=true
 ### Locking
 
 !!! warning "Required for production"
-    Distributed locking prevents race conditions when multiple server instances evaluate the same workflow concurrently. **Always enable locking in production with a distributed lock provider** (Redis or Zookeeper).
+Distributed locking prevents race conditions when multiple server instances evaluate the same workflow concurrently. **Always enable locking in production with a distributed lock provider** (Redis or Zookeeper).
 
 ```properties
 agentmesh.workflow-execution-lock.type=redis
@@ -281,11 +281,11 @@ agentmesh.app.workflowExecutionLockEnabled=true
 
 **Supported lock providers:**
 
-| Provider | Property value | When to use |
-|:--|:--|:--|
-| Redis | `redis` | **Recommended.** Use when Redis is already in the stack. |
-| Zookeeper | `zookeeper` | Use when Zookeeper is available (e.g. Kafka deployments). |
-| Local | `local_only` | Single-instance development only. **Not safe for multi-instance.** |
+| Provider  | Property value | When to use                                                        |
+| :-------- | :------------- | :----------------------------------------------------------------- |
+| Redis     | `redis`        | **Recommended.** Use when Redis is already in the stack.           |
+| Zookeeper | `zookeeper`    | Use when Zookeeper is available (e.g. Kafka deployments).          |
+| Local     | `local_only`   | Single-instance development only. **Not safe for multi-instance.** |
 
 #### Redis lock
 
@@ -305,11 +305,13 @@ agentmesh.redis-lock.ignoreLockingExceptions=false
 
 > **Sentinel with multiple endpoints:** When using `SENTINEL` server type, you can provide
 > multiple sentinel addresses separated by semicolons for improved high availability:
+>
 > ```properties
 > agentmesh.redis-lock.serverType=SENTINEL
 > agentmesh.redis-lock.serverAddress=redis://sentinel-0:26379;redis://sentinel-1:26379
 > agentmesh.redis-lock.serverMasterName=mymaster
 > ```
+>
 > This ensures the lock client can discover the master even if one sentinel node is down.
 
 #### Zookeeper lock
@@ -349,7 +351,7 @@ agentmesh.app.sweeper.queuePopTimeout=100
 ```
 
 !!! tip "Sweeper sizing"
-    Start with `sweeperThreadCount = 2 * CPU cores`. If you see workflows stuck in RUNNING state, increase it. If CPU usage is high on idle, decrease it.
+Start with `sweeperThreadCount = 2 * CPU cores`. If you see workflows stuck in RUNNING state, increase it. If CPU usage is high on idle, decrease it.
 
 ---
 
@@ -584,9 +586,9 @@ docker run -p 8080:8080 \
 
 ### Accessing AgentMesh
 
-| URL | Description |
-|:----|:---|
-| `http://localhost:8080` | AgentMesh UI |
+| URL                                           | Description   |
+| :-------------------------------------------- | :------------ |
+| `http://localhost:8080`                       | AgentMesh UI  |
 | `http://localhost:8080/swagger-ui/index.html` | REST API docs |
 
 ### Shutting down
@@ -630,10 +632,10 @@ For high availability and horizontal scaling, run multiple AgentMesh server inst
 
 ## Troubleshooting
 
-| Issue | Fix |
-|:--|:--|
-| Out of memory or slow performance | Check JVM heap usage and adjust `-Xms` / `-Xmx` as necessary. Monitor with `jstat` or the `/actuator/health` endpoint. |
-| Elasticsearch stuck in yellow health | Set `agentmesh.elasticsearch.clusterHealthColor=yellow` or add more ES nodes for green. |
-| Workflows stuck in RUNNING | Check sweeper is running and `sweeperThreadCount > 0`. Check lock provider is reachable. |
-| System tasks not executing | Verify `systemTaskWorkerThreadCount > 0` and the queue backend is reachable. |
-| Config changes not taking effect | Properties are baked into the Docker image at build time. Mount a volume instead of rebuilding. |
+| Issue                                | Fix                                                                                                                    |
+| :----------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| Out of memory or slow performance    | Check JVM heap usage and adjust `-Xms` / `-Xmx` as necessary. Monitor with `jstat` or the `/actuator/health` endpoint. |
+| Elasticsearch stuck in yellow health | Set `agentmesh.elasticsearch.clusterHealthColor=yellow` or add more ES nodes for green.                                |
+| Workflows stuck in RUNNING           | Check sweeper is running and `sweeperThreadCount > 0`. Check lock provider is reachable.                               |
+| System tasks not executing           | Verify `systemTaskWorkerThreadCount > 0` and the queue backend is reachable.                                           |
+| Config changes not taking effect     | Properties are baked into the Docker image at build time. Mount a volume instead of rebuilding.                        |

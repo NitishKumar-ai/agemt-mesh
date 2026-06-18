@@ -58,8 +58,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -83,8 +82,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -108,8 +106,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -191,8 +188,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -216,8 +212,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -241,8 +236,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -325,8 +319,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -350,8 +343,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -375,8 +367,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -439,12 +430,8 @@
       "outputData": {
         "response": {
           "headers": {
-            "Content-Length": [
-              "121"
-            ],
-            "Content-Type": [
-              "application/json; charset=UTF-8"
-            ]
+            "Content-Length": ["121"],
+            "Content-Type": ["application/json; charset=UTF-8"]
           },
           "reasonPhrase": "OK",
           "body": {
@@ -499,9 +486,7 @@
       "taskId": "5a596a36-09eb-4a11-a952-01ab5a7c362f",
       "callbackAfterSeconds": 0,
       "outputData": {
-        "caseOutput": [
-          "0"
-        ]
+        "caseOutput": ["0"]
       },
       "workflowTask": {
         "name": "oddEvenDecision",
@@ -830,8 +815,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -855,8 +839,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,
@@ -880,8 +863,7 @@
             "dynamicTaskNameParam": null,
             "caseValueParam": null,
             "caseExpression": null,
-            "decisionCases": {
-            },
+            "decisionCases": {},
             "dynamicForkJoinTasksParam": null,
             "dynamicForkTasksParam": null,
             "dynamicForkTasksInputParamName": null,

@@ -1,5 +1,5 @@
 ---
-description: "Workflow as code — build code-first workflows dynamically in Python using the AgentMesh SDK. Conditional branching, loops, parallel execution, and runtime-generated dynamic workflows."
+description: 'Workflow as code — build code-first workflows dynamically in Python using the AgentMesh SDK. Conditional branching, loops, parallel execution, and runtime-generated dynamic workflows.'
 ---
 
 # Dynamic workflows in code
@@ -180,6 +180,7 @@ workflow.register(overwrite=True)
 Combine built-in system tasks (HTTP, Wait, JQ Transform) with custom workers — no extra deployment needed for system tasks.
 
 {% raw %}
+
 ```python
 from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
 from agentmesh.client.workflow.task.http_task import HttpTask
@@ -221,6 +222,7 @@ workflow >> fetch >> transform >> enrich >> cooldown >> store
 workflow.output_parameters({'stored': store.output('count')})
 workflow.register(overwrite=True)
 ```
+
 {% endraw %}
 
 ---
@@ -271,6 +273,7 @@ parent.register(overwrite=True)
 Build a workflow definition at runtime and execute it without pre-registration. This runtime workflow pattern enables dynamic workflows where the task graph is generated on-the-fly — useful for AI agents, data pipelines, and any scenario where the steps are not known ahead of time.
 
 {% raw %}
+
 ```python
 from agentmesh.client.configuration.configuration import Configuration
 from agentmesh.client.orkes_clients import OrkesClients
@@ -312,6 +315,7 @@ request = StartWorkflowRequest(
 workflow_id = executor.start_workflow(request)
 print(f'Started dynamic workflow: {workflow_id}')
 ```
+
 {% endraw %}
 
 This pattern is powerful for AI agents that generate execution plans at runtime — the LLM produces the list of steps, your code builds the workflow definition, and AgentMesh executes it with full durability, retries, and observability.

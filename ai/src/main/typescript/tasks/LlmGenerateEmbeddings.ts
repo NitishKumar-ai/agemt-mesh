@@ -17,22 +17,33 @@ export class LlmGenerateEmbeddings extends WorkflowSystemTask {
     super(LlmGenerateEmbeddings.NAME);
   }
 
-  override start(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override start(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     task.status = TaskStatus.IN_PROGRESS;
   }
 
-  async executeAsync(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): Promise<void> {
+  async executeAsync(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): Promise<void> {
     const doExecute = async (span?: Span) => {
       try {
         const inputData = task.inputData as unknown as EmbeddingGenRequest;
-        
+
         const aiModel = this.modelClient.route(inputData as any);
         inputData.llmProvider = aiModel.getModelProvider();
 
-        const response = await this.llms.generateEmbeddings({
-          taskId: task.taskId,
-          workflowInstanceId: workflow.workflowId,
-        }, inputData);
+        const response = await this.llms.generateEmbeddings(
+          {
+            taskId: task.taskId,
+            workflowInstanceId: workflow.workflowId,
+          },
+          inputData,
+        );
 
         task.outputData = {
           embeddings: response,
@@ -48,18 +59,26 @@ export class LlmGenerateEmbeddings extends WorkflowSystemTask {
     };
 
     if (this.telemetryService) {
-      await this.telemetryService.traceAsync('LlmGenerateEmbeddings.execute', {
-        agentId: String((task.inputData as any)?.agentId || 'unknown'),
-        tenantId: String((task.inputData as any)?.tenantId || 'unknown'),
-        taskId: String(task.taskId),
-        workflowId: String(workflow.workflowId),
-      }, doExecute);
+      await this.telemetryService.traceAsync(
+        'LlmGenerateEmbeddings.execute',
+        {
+          agentId: String((task.inputData as any)?.agentId || 'unknown'),
+          tenantId: String((task.inputData as any)?.tenantId || 'unknown'),
+          taskId: String(task.taskId),
+          workflowId: String(workflow.workflowId),
+        },
+        doExecute,
+      );
     } else {
       await doExecute();
     }
   }
 
-  override execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
+  override execute(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): boolean {
     return false;
   }
 

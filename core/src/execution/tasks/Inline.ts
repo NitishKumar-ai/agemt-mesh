@@ -41,9 +41,7 @@ export class Inline extends WorkflowSystemTask {
         ? ((e as Error).cause as Error).message
         : (e as Error).message;
       task.status =
-        (e as Error).name === 'TerminateWorkflowError'
-          ? ('FAILED_WITH_TERMINAL_ERROR')
-          : ('FAILED');
+        (e as Error).name === 'TerminateWorkflowError' ? 'FAILED_WITH_TERMINAL_ERROR' : 'FAILED';
       task.reasonForIncompletion = errorMessage;
       task.outputData['error'] = errorMessage;
     }
@@ -58,9 +56,7 @@ export class Inline extends WorkflowSystemTask {
       );
     }
     if (!this.evaluators.has(evaluatorType)) {
-      throw new TerminateWorkflowError(
-        `Unknown evaluator '${evaluatorType}' in INLINE task.`,
-      );
+      throw new TerminateWorkflowError(`Unknown evaluator '${evaluatorType}' in INLINE task.`);
     }
   }
 

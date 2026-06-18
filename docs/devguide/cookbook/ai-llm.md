@@ -1,5 +1,5 @@
 ---
-description: "LLM orchestration cookbook — AI agent orchestration recipes for chat completion, RAG pipelines, MCP agents with function calling, web search, code execution, coding agents, extended thinking, image generation, LLM-to-PDF, and provider configuration."
+description: 'LLM orchestration cookbook — AI agent orchestration recipes for chat completion, RAG pipelines, MCP agents with function calling, web search, code execution, coding agents, extended thinking, image generation, LLM-to-PDF, and provider configuration.'
 ---
 
 # AI & LLM orchestration recipes
@@ -24,8 +24,8 @@ A single-step workflow that sends a question to an LLM and returns the answer.
         "llmProvider": "openai",
         "model": "gpt-4o-mini",
         "messages": [
-          {"role": "system", "message": "You are a helpful assistant."},
-          {"role": "user", "message": "${workflow.input.question}"}
+          { "role": "system", "message": "You are a helpful assistant." },
+          { "role": "user", "message": "${workflow.input.question}" }
         ],
         "temperature": 0.7,
         "maxTokens": 500
@@ -86,8 +86,11 @@ A vector database workflow for retrieval-augmented generation: vector search ret
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "messages": [
-          {"role": "system", "message": "Answer based on the following context: ${search.output.result}"},
-          {"role": "user", "message": "${workflow.input.question}"}
+          {
+            "role": "system",
+            "message": "Answer based on the following context: ${search.output.result}"
+          },
+          { "role": "user", "message": "${workflow.input.question}" }
         ],
         "temperature": 0.3
       }
@@ -113,7 +116,7 @@ curl -X POST 'http://localhost:8080/api/workflow/rag_workflow' \
 ```
 
 !!! note "Prerequisites"
-    Requires a vector database (pgvector, Pinecone, or MongoDB Atlas) configured as a AgentMesh integration, plus at least one LLM provider. See [AI provider configuration](#ai-provider-configuration) below.
+Requires a vector database (pgvector, Pinecone, or MongoDB Atlas) configured as a AgentMesh integration, plus at least one LLM provider. See [AI provider configuration](#ai-provider-configuration) below.
 
 ---
 
@@ -144,8 +147,14 @@ A four-step agentic workflow demonstrating AI agent orchestration with function 
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "messages": [
-          {"role": "system", "message": "You are an AI agent. Available tools: ${discover_tools.output.tools}. User wants to: ${workflow.input.task}"},
-          {"role": "user", "message": "Which tool should I use and what parameters? Respond with JSON: {method: string, arguments: object}"}
+          {
+            "role": "system",
+            "message": "You are an AI agent. Available tools: ${discover_tools.output.tools}. User wants to: ${workflow.input.task}"
+          },
+          {
+            "role": "user",
+            "message": "Which tool should I use and what parameters? Respond with JSON: {method: string, arguments: object}"
+          }
         ],
         "temperature": 0.1,
         "maxTokens": 500
@@ -169,7 +178,10 @@ A four-step agentic workflow demonstrating AI agent orchestration with function 
         "llmProvider": "openai",
         "model": "gpt-4o-mini",
         "messages": [
-          {"role": "user", "message": "Summarize this result for the user: ${execute.output.content}"}
+          {
+            "role": "user",
+            "message": "Summarize this result for the user: ${execute.output.content}"
+          }
         ],
         "maxTokens": 200
       }
@@ -262,8 +274,14 @@ An LLM generates a structured markdown report, then AgentMesh converts it to a d
         "llmProvider": "openai",
         "model": "gpt-4o-mini",
         "messages": [
-          {"role": "system", "message": "You are a professional report writer. Generate well-structured markdown reports."},
-          {"role": "user", "message": "Write a detailed report about: ${workflow.input.topic}\nTarget audience: ${workflow.input.audience}"}
+          {
+            "role": "system",
+            "message": "You are a professional report writer. Generate well-structured markdown reports."
+          },
+          {
+            "role": "user",
+            "message": "Write a detailed report about: ${workflow.input.topic}\nTarget audience: ${workflow.input.audience}"
+          }
         ],
         "temperature": 0.7,
         "maxTokens": 2000
@@ -325,8 +343,8 @@ Enable the LLM's built-in web search to answer questions about current events or
         "llmProvider": "openai",
         "model": "gpt-4o-mini",
         "messages": [
-          {"role": "system", "message": "Use web search to find current information."},
-          {"role": "user", "message": "${workflow.input.question}"}
+          { "role": "system", "message": "Use web search to find current information." },
+          { "role": "user", "message": "${workflow.input.question}" }
         ],
         "webSearch": true,
         "maxTokens": 1000
@@ -352,7 +370,7 @@ curl -X POST 'http://localhost:8080/api/workflow/web_search_workflow' \
 ```
 
 !!! note "Provider support"
-    Web search is supported by OpenAI, Anthropic, and Google Gemini. Set `"webSearch": true` — the same parameter works across all providers.
+Web search is supported by OpenAI, Anthropic, and Google Gemini. Set `"webSearch": true` — the same parameter works across all providers.
 
 ---
 
@@ -375,8 +393,11 @@ Let the LLM write and run code in a sandboxed environment. Useful for data analy
         "llmProvider": "google_gemini",
         "model": "gemini-2.5-flash",
         "messages": [
-          {"role": "system", "message": "Use code execution to compute results and analyze data."},
-          {"role": "user", "message": "${workflow.input.task}"}
+          {
+            "role": "system",
+            "message": "Use code execution to compute results and analyze data."
+          },
+          { "role": "user", "message": "${workflow.input.task}" }
         ],
         "codeInterpreter": true,
         "maxTokens": 2000
@@ -402,7 +423,7 @@ curl -X POST 'http://localhost:8080/api/workflow/code_execution_workflow' \
 ```
 
 !!! note "Provider support"
-    Code execution is supported by OpenAI (`code_interpreter`), Anthropic (`code_execution`), and Google Gemini (`codeExecution`). Set `"codeInterpreter": true` — the same parameter works across all providers.
+Code execution is supported by OpenAI (`code_interpreter`), Anthropic (`code_execution`), and Google Gemini (`codeExecution`). Set `"codeInterpreter": true` — the same parameter works across all providers.
 
 ---
 
@@ -425,8 +446,8 @@ A three-step agent that plans an implementation, writes and executes the code us
         "llmProvider": "openai",
         "model": "gpt-4o",
         "messages": [
-          {"role": "system", "message": "Break down the coding task into clear numbered steps."},
-          {"role": "user", "message": "${workflow.input.task}"}
+          { "role": "system", "message": "Break down the coding task into clear numbered steps." },
+          { "role": "user", "message": "${workflow.input.task}" }
         ],
         "temperature": 0.2,
         "maxTokens": 1000
@@ -440,8 +461,14 @@ A three-step agent that plans an implementation, writes and executes the code us
         "llmProvider": "openai",
         "model": "gpt-4o",
         "messages": [
-          {"role": "system", "message": "Write the code, run it, verify the output, and fix any errors."},
-          {"role": "user", "message": "Plan:\n${plan.output.result}\n\nTask: ${workflow.input.task}"}
+          {
+            "role": "system",
+            "message": "Write the code, run it, verify the output, and fix any errors."
+          },
+          {
+            "role": "user",
+            "message": "Plan:\n${plan.output.result}\n\nTask: ${workflow.input.task}"
+          }
         ],
         "codeInterpreter": true,
         "temperature": 0.1,
@@ -456,8 +483,14 @@ A three-step agent that plans an implementation, writes and executes the code us
         "llmProvider": "openai",
         "model": "gpt-4o-mini",
         "messages": [
-          {"role": "system", "message": "Review the implementation for correctness and code quality."},
-          {"role": "user", "message": "Task: ${workflow.input.task}\n\nCode:\n${code.output.result}"}
+          {
+            "role": "system",
+            "message": "Review the implementation for correctness and code quality."
+          },
+          {
+            "role": "user",
+            "message": "Task: ${workflow.input.task}\n\nCode:\n${code.output.result}"
+          }
         ],
         "maxTokens": 1000
       }
@@ -502,9 +535,7 @@ Give the LLM a token budget for step-by-step reasoning before generating its fin
       "inputParameters": {
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
-        "messages": [
-          {"role": "user", "message": "${workflow.input.problem}"}
-        ],
+        "messages": [{ "role": "user", "message": "${workflow.input.problem}" }],
         "thinkingTokenLimit": 10000,
         "maxTokens": 16000
       }
@@ -529,7 +560,7 @@ curl -X POST 'http://localhost:8080/api/workflow/extended_thinking_workflow' \
 ```
 
 !!! note "Provider support"
-    Extended thinking is supported by Anthropic (`thinkingTokenLimit`) and Google Gemini (`thinkingBudgetTokens`). OpenAI uses `"reasoningEffort": "high"` for a similar effect.
+Extended thinking is supported by Anthropic (`thinkingTokenLimit`) and Google Gemini (`thinkingBudgetTokens`). OpenAI uses `"reasoningEffort": "high"` for a similar effect.
 
 ---
 
@@ -553,8 +584,11 @@ Chain multiple LLM calls as a conversation without resending the full message hi
         "llmProvider": "openai",
         "model": "gpt-4o",
         "messages": [
-          {"role": "system", "message": "You are a technical architect. Be concise."},
-          {"role": "user", "message": "Design a high-level architecture for: ${workflow.input.topic}"}
+          { "role": "system", "message": "You are a technical architect. Be concise." },
+          {
+            "role": "user",
+            "message": "Design a high-level architecture for: ${workflow.input.topic}"
+          }
         ],
         "temperature": 0.3,
         "maxTokens": 2000
@@ -568,7 +602,10 @@ Chain multiple LLM calls as a conversation without resending the full message hi
         "llmProvider": "openai",
         "model": "gpt-4o",
         "messages": [
-          {"role": "user", "message": "Now list the key risks and mitigations for this architecture."}
+          {
+            "role": "user",
+            "message": "Now list the key risks and mitigations for this architecture."
+          }
         ],
         "previousResponseId": "${turn1.output.responseId}",
         "temperature": 0.3,
@@ -598,7 +635,7 @@ curl -X POST 'http://localhost:8080/api/workflow/multi_turn_chain' \
 The second call sends only the new user message — OpenAI already has the full conversation context from `previousResponseId`. This is especially useful for long agent loops where resending the full history each iteration would be expensive.
 
 !!! note "Provider support"
-    `previousResponseId` is supported by OpenAI and Azure OpenAI (Responses API). Other providers require sending the full message history in each call.
+`previousResponseId` is supported by OpenAI and Azure OpenAI (Responses API). Other providers require sending the full message history in each call.
 
 ---
 
@@ -621,8 +658,11 @@ A multi-step agent that uses web search to gather information, an LLM with exten
         "llmProvider": "openai",
         "model": "gpt-4o",
         "messages": [
-          {"role": "system", "message": "Use web search to find comprehensive, current information. Search for multiple perspectives and recent developments."},
-          {"role": "user", "message": "Research this topic thoroughly: ${workflow.input.topic}"}
+          {
+            "role": "system",
+            "message": "Use web search to find comprehensive, current information. Search for multiple perspectives and recent developments."
+          },
+          { "role": "user", "message": "Research this topic thoroughly: ${workflow.input.topic}" }
         ],
         "webSearch": true,
         "temperature": 0.3,
@@ -637,8 +677,14 @@ A multi-step agent that uses web search to gather information, an LLM with exten
         "llmProvider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "messages": [
-          {"role": "system", "message": "Synthesize the research into a well-structured markdown report with sections, key findings, and citations."},
-          {"role": "user", "message": "Topic: ${workflow.input.topic}\n\nResearch:\n${research.output.result}\n\nWrite a comprehensive report."}
+          {
+            "role": "system",
+            "message": "Synthesize the research into a well-structured markdown report with sections, key findings, and citations."
+          },
+          {
+            "role": "user",
+            "message": "Topic: ${workflow.input.topic}\n\nResearch:\n${research.output.result}\n\nWrite a comprehensive report."
+          }
         ],
         "thinkingTokenLimit": 5000,
         "maxTokens": 8000

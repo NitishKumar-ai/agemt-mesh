@@ -8,14 +8,12 @@ AgentMesh stores workflow definitions as JSON. This is not a UI convenience or a
 
 For agent orchestration and dynamic workloads, this is a structural advantage.
 
-
 ## What "JSON + code native" means mechanically
 
 1. **Storage.** The workflow definition is a JSON document persisted in the data store. The execution engine reads this document to schedule tasks.
 2. **Versioning.** Each version is a distinct JSON document. Multiple versions can run concurrently. Running executions use a snapshot taken at start time and are immutable against later changes.
 3. **API parity.** The JSON you write in a file is the same JSON you send to the API, see in the UI, and get back from the SDK. There is no compiled intermediate form.
 4. **Dynamic creation.** You can construct a workflow definition as a JSON object at runtime and pass it directly to the `StartWorkflowRequest` API. AgentMesh executes it immediately without pre-registration.
-
 
 ## Why this matters for agents
 
@@ -58,7 +56,6 @@ Because definitions are JSON, you can:
 - Run canary deployments by routing traffic between versions.
 
 Running executions are never affected by definition changes&mdash;they use the snapshot taken at start time.
-
 
 ## Dynamic workflows in detail
 
@@ -139,10 +136,9 @@ The `DYNAMIC_FORK` operator creates parallel branches at runtime:
 
 The number of branches, their task types, and their inputs are all determined at runtime. This enables an agent to decide how many tools to call in parallel based on its plan.
 
-
 ## Deterministic by construction
 
-JSON workflow definitions are pure orchestration — they describe *what* runs and in *what order*, but contain no executable code. This separation is not a limitation; it is a structural guarantee.
+JSON workflow definitions are pure orchestration — they describe _what_ runs and in _what order_, but contain no executable code. This separation is not a limitation; it is a structural guarantee.
 
 **No side effects in the workflow definition.** A JSON definition cannot open a database connection, write to a file, or call an API outside of a declared task. Every side effect lives in a worker or system task — isolated, testable, and independently deployable. The workflow definition itself is inert data.
 
@@ -164,10 +160,9 @@ Combined, these primitives make AgentMesh the most dynamic workflow engine avail
 
 ### AI-native by design
 
-LLMs produce structured output. JSON *is* structured output. There is no impedance mismatch — an agent can generate a AgentMesh workflow definition directly, and AgentMesh executes it with full durability, observability, and replayability. No code generation, no compilation, no deployment pipeline. The workflow evolves as fast as the agent can think.
+LLMs produce structured output. JSON _is_ structured output. There is no impedance mismatch — an agent can generate a AgentMesh workflow definition directly, and AgentMesh executes it with full durability, observability, and replayability. No code generation, no compilation, no deployment pipeline. The workflow evolves as fast as the agent can think.
 
 Code-based workflow engines require generated code to be compiled, tested, and deployed before it runs — a friction that fundamentally limits how dynamically an AI system can operate.
-
 
 ## Exposing workflows as APIs and MCP tools
 
@@ -182,10 +177,11 @@ agentmesh workflow status {executionId}
 ```
 
 ??? note "Using cURL"
-    ```bash
-    curl -X POST http://localhost:8080/api/workflow/my_agent \
-      -H 'Content-Type: application/json' \
-      -d '{"query": "summarize this document"}'
+
+````bash
+curl -X POST http://localhost:8080/api/workflow/my_agent \
+ -H 'Content-Type: application/json' \
+ -d '{"query": "summarize this document"}'
 
     curl http://localhost:8080/api/workflow/{executionId}
     ```
@@ -194,7 +190,6 @@ Workflows return structured JSON output defined by `outputParameters` in the def
 
 For MCP integration, a AgentMesh workflow can be registered as an MCP tool, allowing LLMs and agent frameworks to discover and invoke it directly with structured input/output.
 
-
 ## Next steps
 
 - **[Durable Execution Semantics](durable-execution.md)** &mdash; What persists, what gets retried, failure matrix.
@@ -202,3 +197,4 @@ For MCP integration, a AgentMesh workflow can be registered as an MCP tool, allo
 - **[Quickstart](../quickstart/index.md)** &mdash; Get running in 5 minutes.
 - **[Workflow Definition Reference](../documentation/configuration/workflowdef/index.md)** &mdash; Full JSON schema for workflow definitions.
 - **[Dynamic Fork](../documentation/configuration/workflowdef/operators/dynamic-fork-task.md)** &mdash; Runtime-determined parallel execution.
+````

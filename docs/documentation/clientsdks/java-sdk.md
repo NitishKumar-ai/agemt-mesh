@@ -1,11 +1,11 @@
 ---
-description: "Build AgentMesh workers in Java with automated polling, thread management, and Spring Boot integration."
+description: 'Build AgentMesh workers in Java with automated polling, thread management, and Spring Boot integration.'
 ---
 
 # Java SDK
 
 !!! info "Source"
-    GitHub: [agentmesh-oss/java-sdk](https://github.com/agentmesh-oss/java-sdk) | Report issues and contribute on GitHub.
+GitHub: [agentmesh-oss/java-sdk](https://github.com/agentmesh-oss/java-sdk) | Report issues and contribute on GitHub.
 
 ## Start AgentMesh server
 
@@ -16,14 +16,17 @@ If you don't already have a AgentMesh server running, pick one:
 ```shell
 docker run -p 8080:8080 agentmeshoss/agentmesh:latest
 ```
+
 The UI will be available at `http://localhost:8080` and the API at `http://localhost:8080/api`
 
 **MacOS / Linux (one-liner):** (If you don't want to use docker, you can install and run the binary directly)
+
 ```shell
 curl -sSL https://raw.githubusercontent.com/agentmesh-oss/agentmesh/main/agentmesh_server.sh | sh
 ```
 
 **AgentMesh CLI**
+
 ```shell
 # Installs agentmesh cli
 npm install -g @agentmesh-oss/agentmesh-cli
@@ -57,7 +60,9 @@ dependencies {
     <version>5.0.1</version>
 </dependency>
 ```
-*Optionally, you can also add spring module for auto configuration*
+
+_Optionally, you can also add spring module for auto configuration_
+
 ```xml
 <dependency>
     <groupId>org.agentmeshoss</groupId>
@@ -65,7 +70,6 @@ dependencies {
     <version>5.0.1</version>
 </dependency>
 ```
-
 
 ## 60-Second Quickstart
 
@@ -75,7 +79,7 @@ Workers are Java classes that implement the `Worker` interface and poll AgentMes
 
 ```java
 public class GreetWorker implements Worker {
-    
+
     @Override
     public String getTaskDefName() {
         return "greet";
@@ -154,6 +158,7 @@ Run it:
 ```
 
 > ### Using Orkes AgentMesh / Remote Server?
+>
 > Export your authentication credentials as well:
 >
 > ```shell
@@ -170,6 +175,7 @@ That's it -- you just defined a worker, built a workflow, and executed it. Open 
 ## Comprehensive worker example
 
 See [examples/basics/hello-world/](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/basics/hello-world) for a complete working example with:
+
 - Workflow definition using the SDK
 - Worker implementation with annotations
 - Workflow execution and monitoring
@@ -184,7 +190,7 @@ Workers are Java classes that execute AgentMesh tasks. Implement the `Worker` in
 
 ```java
 public class MyWorker implements Worker {
-    
+
     @Override
     public String getTaskDefName() {
         return "my_task";
@@ -205,12 +211,12 @@ public class MyWorker implements Worker {
 
 ```java
 public class Workers {
-    
+
     @WorkerTask("greet")
     public String greet(@InputParam("name") String name) {
         return "Hello, " + name + "!";
     }
-    
+
     @WorkerTask("process_data")
     public Map<String, Object> processData(@InputParam("data") Map<String, Object> data) {
         // Process and return data
@@ -248,14 +254,15 @@ executor.initWorkers("com.mycompany.workers");  // Package to scan for @WorkerTa
 
 **Worker vs. HTTP Endpoints:**
 
-| Feature | Worker | HTTP Endpoint |
-|---------|--------|---------------|
-| Deployment | Embedded in application | Separate service |
-| Scalability | Horizontal (add more instances) | Horizontal (add more instances) |
-| Latency | Lower (direct polling) | Higher (network overhead) |
-| Complexity | Simple | Complex (service mesh, load balancer) |
+| Feature     | Worker                          | HTTP Endpoint                         |
+| ----------- | ------------------------------- | ------------------------------------- |
+| Deployment  | Embedded in application         | Separate service                      |
+| Scalability | Horizontal (add more instances) | Horizontal (add more instances)       |
+| Latency     | Lower (direct polling)          | Higher (network overhead)             |
+| Complexity  | Simple                          | Complex (service mesh, load balancer) |
 
 **Learn more:**
+
 - [Worker SDK Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) — Complete worker framework documentation
 - [Worker Examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/) — Sample worker implementations
 
@@ -341,33 +348,39 @@ workflowClient.restartWorkflow(workflowId, false);
 ```
 
 **Learn more:**
+
 - [Workflow SDK Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) — Workflow-as-code documentation
 - [Workflow Testing](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md) — Unit testing workflows
 
 ## Troubleshooting
 
 **Worker stops polling or crashes:**
+
 - Check network connectivity to AgentMesh server
 - Verify `AGENTMESH_SERVER_URL` is set correctly
 - Ensure sufficient thread pool size for your workload
 - Monitor JVM memory and GC pauses
 
 **Connection refused errors:**
+
 - Verify AgentMesh server is running: `curl http://localhost:8080/health`
 - Check firewall rules if connecting to remote server
 - For Orkes AgentMesh, verify auth credentials are correct
 
 **Tasks stuck in SCHEDULED state:**
+
 - Ensure workers are polling for the correct task type
 - Check that `getTaskDefName()` matches the task name in workflow
 - Verify worker thread count is sufficient
 
 **Workflow execution timeout:**
+
 - Increase workflow timeout in definition
 - Check if tasks are completing within expected time
 - Monitor AgentMesh server logs for errors
 
 **Authentication errors with Orkes AgentMesh:**
+
 - Verify `AGENTMESH_AUTH_KEY` and `AGENTMESH_AUTH_SECRET` are set
 - Ensure the application has required permissions
 - Check that credentials haven't expired
@@ -380,11 +393,11 @@ For workflows that move binary file payloads, the SDK exposes `FileHandler` — 
 
 The relevant types in `org.agentmeshoss.agentmesh.sdk.file`:
 
-| Type | Use |
-|---|---|
-| `FileHandler` | Worker parameter type for files. Static `fromLocalFile(Path)` / `fromLocalFile(Path, contentType)` create a handle for a local file the worker is producing. |
-| `FileUploader` | Explicit upload API; obtained from `task.getFileUploader()` inside a `Worker` impl, or from `WorkflowFileClient` outside one. |
-| `FileUploadOptions` | Optional metadata: `contentType`, `fileName`, `taskId`, `multipart`. |
+| Type                | Use                                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FileHandler`       | Worker parameter type for files. Static `fromLocalFile(Path)` / `fromLocalFile(Path, contentType)` create a handle for a local file the worker is producing. |
+| `FileUploader`      | Explicit upload API; obtained from `task.getFileUploader()` inside a `Worker` impl, or from `WorkflowFileClient` outside one.                                |
+| `FileUploadOptions` | Optional metadata: `contentType`, `fileName`, `taskId`, `multipart`.                                                                                         |
 
 **Worker that consumes a file:**
 
@@ -433,20 +446,20 @@ AgentMesh supports AI-native workflows including agentic tool calling, RAG pipel
 
 Build AI agents where LLMs dynamically select and call Java workers as tools. All agentic examples live in [`AgenticExamplesRunner.java`](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/AgenticExamplesRunner.java) — a single unified runner.
 
-| Workflow | Description |
-|----------|-------------|
-| `llm_chat_workflow` | Automated multi-turn Q&A using `LLM_CHAT_COMPLETE` system task |
-| `llm_chat_human_in_loop` | Interactive chat with WAIT task pauses for user input |
-| `multiagent_chat_demo` | Multi-agent debate with moderator routing between two LLM panelists |
+| Workflow                    | Description                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `llm_chat_workflow`         | Automated multi-turn Q&A using `LLM_CHAT_COMPLETE` system task                 |
+| `llm_chat_human_in_loop`    | Interactive chat with WAIT task pauses for user input                          |
+| `multiagent_chat_demo`      | Multi-agent debate with moderator routing between two LLM panelists            |
 | `function_calling_workflow` | LLM picks which Java worker to call, returns JSON, dispatch worker executes it |
-| `mcp_ai_agent` | AI agent using MCP tools (ListMcpTools → LLM plans → CallMcpTool → summarize) |
+| `mcp_ai_agent`              | AI agent using MCP tools (ListMcpTools → LLM plans → CallMcpTool → summarize)  |
 
 **LLM and RAG Workflows**
 
-| Example | Description |
-|---------|-------------|
-| [RagWorkflowExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java) | End-to-end RAG: document indexing, semantic search, answer generation |
-| [VectorDbExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/VectorDbExample.java) | Vector database operations: text indexing, embedding generation, and semantic search |
+| Example                                                                                                                                                                   | Description                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [RagWorkflowExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java) | End-to-end RAG: document indexing, semantic search, answer generation                |
+| [VectorDbExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/VectorDbExample.java)       | Vector database operations: text indexing, embedding generation, and semantic search |
 
 **Using LLM Tasks in Workflows:**
 
@@ -517,38 +530,38 @@ export OPENAI_API_KEY=your-key   # or ANTHROPIC_API_KEY
 
 See the [Examples Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) for the full catalog. Key examples:
 
-| Example | Description | Run |
-|---------|-------------|-----|
-| [Hello World](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/basics/hello-world) | Minimal workflow with worker | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.helloworld.Main` |
-| [Workflow Operations](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/workflowops) | Pause, resume, terminate workflows | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.workflowops.Main` |
-| [Shipment Workflow](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/shipment) | Real-world order processing | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.shipment.Main` |
-| [Events](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/events) | Event-driven workflows | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.events.EventHandlerExample` |
-| [All AI examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/AgenticExamplesRunner.java) | All agentic/LLM workflows | `./gradlew :examples:run --args="--all"` |
-| [RAG Workflow](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java) | RAG pipeline (index → search → answer) | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.agentic.RagWorkflowExample` |
-| [Media Transcoder](https://github.com/agentmesh-oss/file-storage-java-sdk/tree/main/examples/file-storage/media-transcoder) | File-handling pipeline: upload video → transcode → thumbnail → manifest | `mvn -f examples/file-storage/media-transcoder/pom.xml exec:java` |
+| Example                                                                                                                                                              | Description                                                             | Run                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [Hello World](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/basics/hello-world)                                                                       | Minimal workflow with worker                                            | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.helloworld.Main`            |
+| [Workflow Operations](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/workflowops)                    | Pause, resume, terminate workflows                                      | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.workflowops.Main`                |
+| [Shipment Workflow](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/shipment)                    | Real-world order processing                                             | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.shipment.Main`              |
+| [Events](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/events)                                 | Event-driven workflows                                                  | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.events.EventHandlerExample` |
+| [All AI examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/AgenticExamplesRunner.java) | All agentic/LLM workflows                                               | `./gradlew :examples:run --args="--all"`                                                              |
+| [RAG Workflow](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java)       | RAG pipeline (index → search → answer)                                  | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.agentic.RagWorkflowExample`      |
+| [Media Transcoder](https://github.com/agentmesh-oss/file-storage-java-sdk/tree/main/examples/file-storage/media-transcoder)                                          | File-handling pipeline: upload video → transcode → thumbnail → manifest | `mvn -f examples/file-storage/media-transcoder/pom.xml exec:java`                                     |
 
 ## API Journey Examples
 
 End-to-end examples covering all APIs for each domain:
 
-| Example | APIs | Run |
-|---------|------|-----|
-| [Metadata Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/MetadataManagement.java) | Task & workflow definitions | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.MetadataManagement` |
-| [Workflow Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/WorkflowManagement.java) | Start, monitor, control workflows | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.WorkflowManagement` |
-| [Authorization Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/AuthorizationManagement.java) | Users, groups, permissions | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.AuthorizationManagement` |
-| [Scheduler Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/SchedulerManagement.java) | Workflow scheduling | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.SchedulerManagement` |
+| Example                                                                                                                                                                 | APIs                              | Run                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Metadata Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/MetadataManagement.java)           | Task & workflow definitions       | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.MetadataManagement`      |
+| [Workflow Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/WorkflowManagement.java)           | Start, monitor, control workflows | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.WorkflowManagement`      |
+| [Authorization Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/AuthorizationManagement.java) | Users, groups, permissions        | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.AuthorizationManagement` |
+| [Scheduler Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/SchedulerManagement.java)         | Workflow scheduling               | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.SchedulerManagement`     |
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Worker SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) | Complete worker framework guide |
-| [Workflow SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) | Workflow-as-code documentation |
-| [Testing Framework](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md) | Unit testing workflows and workers |
-| [AgentMesh Client](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client/README.md) | HTTP client library documentation |
-| [Client Metrics](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-metrics/README.md) | Prometheus metrics collection |
-| [Spring Integration](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-spring/README.md) | Spring Boot auto-configuration |
-| [Examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) | Complete examples catalog |
+| Document                                                                                                    | Description                        |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| [Worker SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/worker_sdk.md)                    | Complete worker framework guide    |
+| [Workflow SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md)                | Workflow-as-code documentation     |
+| [Testing Framework](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md)      | Unit testing workflows and workers |
+| [AgentMesh Client](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client/README.md)          | HTTP client library documentation  |
+| [Client Metrics](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-metrics/README.md)    | Prometheus metrics collection      |
+| [Spring Integration](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-spring/README.md) | Spring Boot auto-configuration     |
+| [Examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md)                          | Complete examples catalog          |
 
 ## Support
 
@@ -607,12 +620,11 @@ The SDK provides a test framework that uses AgentMesh's `POST /api/workflow/test
 
 Apache 2.0
 
-
 ## Examples
 
 Browse all examples on GitHub: [agentmesh-oss/java-sdk/examples](https://github.com/agentmesh-oss/java-sdk/tree/main/examples)
 
-| Example | Type |
-|---|---|
-| [Readme](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) | file |
-| [Examples](https://github.com/agentmesh-oss/java-sdk/tree/main/examples) | directory |
+| Example                                                                          | Type      |
+| -------------------------------------------------------------------------------- | --------- |
+| [Readme](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) | file      |
+| [Examples](https://github.com/agentmesh-oss/java-sdk/tree/main/examples)         | directory |

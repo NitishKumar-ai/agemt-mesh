@@ -8,15 +8,21 @@ export abstract class WorkflowSystemTask {
     this.taskType = taskType;
   }
 
-  start(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
-  }
+  start(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): Promise<void> | void {}
 
-  execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
+  execute(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): Promise<boolean> | boolean {
     return false;
   }
 
-  cancel(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
-  }
+  cancel(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {}
 
   getEvaluationOffset(taskModel: TaskModel, maxOffset: number): number | undefined {
     return undefined;

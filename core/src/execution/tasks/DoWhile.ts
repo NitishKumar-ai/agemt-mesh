@@ -2,7 +2,12 @@ import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
 import { TaskType, isTaskSuccessful, isTaskTerminal } from '@agentmesh/common';
-import { removeIterationFromTaskRefName, appendIteration, workflowTaskHas, workflowTaskNext } from '../ExecutorUtils.js';
+import {
+  removeIterationFromTaskRefName,
+  appendIteration,
+  workflowTaskHas,
+  workflowTaskNext,
+} from '../ExecutorUtils.js';
 
 export class DoWhile extends WorkflowSystemTask {
   constructor() {
@@ -67,8 +72,9 @@ export class DoWhile extends WorkflowSystemTask {
     }
     doWhileTaskModel.outputData[String(doWhileTaskModel.iteration)] = output;
 
-    const keepLastN =
-      doWhileTaskModel.workflowTask?.inputParameters?.['keepLastN'] as number | undefined;
+    const keepLastN = doWhileTaskModel.workflowTask?.inputParameters?.['keepLastN'] as
+      | number
+      | undefined;
     if (keepLastN != null && doWhileTaskModel.iteration > keepLastN) {
       this.removeIterations(workflow, doWhileTaskModel, keepLastN);
     }
@@ -176,7 +182,11 @@ export class DoWhile extends WorkflowSystemTask {
     return true;
   }
 
-  private markTaskFailure(taskModel: TaskModel, status: TaskModel['status'], failureReason: string): boolean {
+  private markTaskFailure(
+    taskModel: TaskModel,
+    status: TaskModel['status'],
+    failureReason: string,
+  ): boolean {
     taskModel.reasonForIncompletion = failureReason;
     taskModel.status = status;
     return true;
@@ -212,9 +222,7 @@ export class DoWhile extends WorkflowSystemTask {
       const itemsValue = inputParams['_items'];
       return (
         itemsValue != null &&
-        (typeof itemsValue === 'string' ||
-          Array.isArray(itemsValue) ||
-          itemsValue instanceof Set)
+        (typeof itemsValue === 'string' || Array.isArray(itemsValue) || itemsValue instanceof Set)
       );
     }
 
@@ -252,11 +260,14 @@ export class DoWhile extends WorkflowSystemTask {
 
       const condition = task.workflowTask?.loopCondition;
       if (condition != null && condition.trim().length > 0) {
-        return ScriptEvaluator.evalBool(condition, {
-          ...workflow.input,
-          loopIndex,
-          loopItem: loopIndex >= 0 && loopIndex < itemsList.length ? itemsList[loopIndex] : undefined,
-        }) && hasMoreItems;
+        return (
+          ScriptEvaluator.evalBool(condition, {
+            ...workflow.input,
+            loopIndex,
+            loopItem:
+              loopIndex >= 0 && loopIndex < itemsList.length ? itemsList[loopIndex] : undefined,
+          }) && hasMoreItems
+        );
       }
 
       return hasMoreItems;

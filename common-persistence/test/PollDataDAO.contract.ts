@@ -31,8 +31,8 @@ export function runPollDataDAOContractTests(
       // Get for task
       const pollsForTask = await dao.getPollDataForTask('agent_mesh_task_poll');
       expect(pollsForTask.length).toBe(2);
-      expect(pollsForTask.map(p => p.domain)).toContain('domain_a');
-      expect(pollsForTask.map(p => p.domain)).toContain('domain_b');
+      expect(pollsForTask.map((p) => p.domain)).toContain('domain_a');
+      expect(pollsForTask.map((p) => p.domain)).toContain('domain_b');
 
       // Get all
       const allPolls = await dao.getAllPollData();

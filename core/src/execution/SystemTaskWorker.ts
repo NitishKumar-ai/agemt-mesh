@@ -58,7 +58,11 @@ export class SystemTaskWorker {
   async pollAndExecute(systemTask: WorkflowSystemTask, queueName: string): Promise<void> {
     if (!this.running) return;
     try {
-      const taskIds = await this.queueDAO.pop(queueName, this.properties.systemTaskWorkerThreadCount, 200);
+      const taskIds = await this.queueDAO.pop(
+        queueName,
+        this.properties.systemTaskWorkerThreadCount,
+        200,
+      );
       if (!taskIds || taskIds.length === 0) return;
 
       for (const taskId of taskIds) {
@@ -82,16 +86,23 @@ export class SystemTaskWorker {
         return;
       }
 
-      const workflowModel = this.executionDAOFacade.getWorkflowModel(taskModel.workflowInstanceId, true);
+      const workflowModel = this.executionDAOFacade.getWorkflowModel(
+        taskModel.workflowInstanceId,
+        true,
+      );
       if (!workflowModel) return;
 
       if (taskModel.status === 'SCHEDULED') {
-        systemTask.start(workflowModel, taskModel, this.workflowExecutor);
+        await systemTask.start(workflowModel, taskModel, this.workflowExecutor);
       } else if (taskModel.status === 'IN_PROGRESS') {
-        systemTask.execute(workflowModel, taskModel, this.workflowExecutor);
+        await systemTask.execute(workflowModel, taskModel, this.workflowExecutor);
       }
 
-      if (!systemTask.isAsyncComplete(taskModel) && !isTaskTerminal(taskModel.status) && taskModel.status !== 'SCHEDULED') {
+      if (
+        !systemTask.isAsyncComplete(taskModel) &&
+        !isTaskTerminal(taskModel.status) &&
+        taskModel.status !== 'SCHEDULED'
+      ) {
         this.workflowExecutor.updateTask({
           taskId: taskModel.taskId,
           workflowInstanceId: taskModel.workflowInstanceId,

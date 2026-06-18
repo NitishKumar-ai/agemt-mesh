@@ -1,5 +1,5 @@
 {
-  "index_patterns": [ "*event*" ],
+  "index_patterns": ["*event*"],
   "priority": 2,
   "template": {
     "settings": {
@@ -44,6 +44,6 @@
         }
       }
     },
-    "aliases" : { }
+    "aliases": {}
   }
 }

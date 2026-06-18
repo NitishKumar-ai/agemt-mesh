@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh cookbook — dynamic parallelism recipes with Dynamic Fork for different tasks per branch, fan-out with same task, and parallel sub-workflows."
+description: 'AgentMesh cookbook — dynamic parallelism recipes with Dynamic Fork for different tasks per branch, fan-out with same task, and parallel sub-workflows.'
 ---
 
 # Dynamic parallelism
@@ -76,9 +76,24 @@ Use `forkTaskName` + `forkTaskInputs` when running the **same** task type across
       "inputParameters": {
         "forkTaskName": "HTTP",
         "forkTaskInputs": [
-          {"http_request": {"uri": "https://jsonplaceholder.typicode.com/posts/1", "method": "GET"}},
-          {"http_request": {"uri": "https://jsonplaceholder.typicode.com/posts/2", "method": "GET"}},
-          {"http_request": {"uri": "https://jsonplaceholder.typicode.com/posts/3", "method": "GET"}}
+          {
+            "http_request": {
+              "uri": "https://jsonplaceholder.typicode.com/posts/1",
+              "method": "GET"
+            }
+          },
+          {
+            "http_request": {
+              "uri": "https://jsonplaceholder.typicode.com/posts/2",
+              "method": "GET"
+            }
+          },
+          {
+            "http_request": {
+              "uri": "https://jsonplaceholder.typicode.com/posts/3",
+              "method": "GET"
+            }
+          }
         ]
       }
     },
@@ -92,7 +107,7 @@ Use `forkTaskName` + `forkTaskInputs` when running the **same** task type across
 ```
 
 !!! tip
-    AgentMesh injects `__index` into each fork's input so you can track the position of each parallel branch in the results.
+AgentMesh injects `__index` into each fork's input so you can track the position of each parallel branch in the results.
 
 **Register and run:**
 
@@ -126,9 +141,9 @@ Use `forkTaskWorkflow` + `forkTaskInputs` to fan out across instances of another
         "forkTaskWorkflow": "process_region",
         "forkTaskWorkflowVersion": 1,
         "forkTaskInputs": [
-          {"region": "us-east-1", "data": "batch_a"},
-          {"region": "eu-west-1", "data": "batch_b"},
-          {"region": "ap-southeast-1", "data": "batch_c"}
+          { "region": "us-east-1", "data": "batch_a" },
+          { "region": "eu-west-1", "data": "batch_b" },
+          { "region": "ap-southeast-1", "data": "batch_c" }
         ]
       }
     },

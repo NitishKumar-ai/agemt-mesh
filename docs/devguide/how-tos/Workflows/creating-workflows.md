@@ -1,5 +1,5 @@
 ---
-description: "Create and update workflow definitions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Supports versioning and JSON configuration."
+description: 'Create and update workflow definitions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Supports versioning and JSON configuration.'
 ---
 
 # Creating / Updating Workflows
@@ -24,12 +24,11 @@ With the UI, you can create or update workflow definitions visually.
 
 **To update a workflow definition:**
 
-1. In **[Definitions](http://localhost:8080/workflowDefs**)**, select the workflow to be updated.
+1. In **[Definitions](http://localhost:8080/workflowDefs**)\*\*, select the workflow to be updated.
 2. Modify the workflow definition JSON. Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/index.md) for the reference guide on the full parameters.
 3. Select **Save**. The workflow version will automatically increment by 1.
 4. (Optional) Clear the **Automatically set version** checkbox to save the updated workflow definition without creating a new version.
 5. Select **Save** again to confirm.
-
 
 ## Using the CLI
 
@@ -48,13 +47,13 @@ You can also create or update workflow definitions using the Update Workflow Def
 Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/index.md) for the reference guide on the full parameters.
 
 ??? note "Example using cURL"
-    ```shell
+`shell
     curl '{{ server_host }}/api/metadata/workflow' \
       -X 'PUT' \
       -H 'accept: */*' \
       -H 'content-type: application/json' \
       --data-raw '[{"name":"sample_workflow","description":"shipping","version":1,"tasks":[{"name":"ship_via","taskReferenceName":"ship_via","type":"SIMPLE","inputParameters":{"service":"${workflow.input.service}"}}],"inputParameters":["service"],"outputParameters":{},"schemaVersion":2, "ownerEmail": "example@email.com"}]'
-    ```
+    `
 
 ## Using SDKs
 
@@ -67,12 +66,12 @@ Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/
 In this example, the JavaScript Fetch API is used to create the workflow `sample_workflow`.
 
 ```javascript
-fetch("{{ server_host }}/api/metadata/workflow", {
-  "headers": {
-    "accept": "*/*",
-    "content-type": "application/json"
+fetch('{{ server_host }}/api/metadata/workflow', {
+  headers: {
+    accept: '*/*',
+    'content-type': 'application/json',
   },
-  "body": "[{\"name\":\"sample_workflow\",\"description\":\"shipping\",\"version\":1,\"tasks\":[{\"name\":\"ship_via\",\"taskReferenceName\":\"ship_via\",\"type\":\"SIMPLE\",\"inputParameters\":{\"service\":\"${workflow.input.service}\"}}],\"inputParameters\":[\"service\"],\"outputParameters\":{},\"schemaVersion\":2,\"ownerEmail\": \"example@email.com\"}]",
-  "method": "PUT"
+  body: '[{"name":"sample_workflow","description":"shipping","version":1,"tasks":[{"name":"ship_via","taskReferenceName":"ship_via","type":"SIMPLE","inputParameters":{"service":"${workflow.input.service}"}}],"inputParameters":["service"],"outputParameters":{},"schemaVersion":2,"ownerEmail": "example@email.com"}]',
+  method: 'PUT',
 });
 ```

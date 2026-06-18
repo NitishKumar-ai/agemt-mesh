@@ -1,6 +1,7 @@
 ---
-description: "PostgreSQL Backend — configure AgentMesh to use PostgreSQL for workflow persistence, queues, indexing, and locking."
+description: 'PostgreSQL Backend — configure AgentMesh to use PostgreSQL for workflow persistence, queues, indexing, and locking.'
 ---
+
 # PostgreSQL
 
 By default agentmesh runs with an in-memory Redis mock. However, you
@@ -8,7 +9,6 @@ can run AgentMesh against PostgreSQL which provides workflow management, queues,
 There are a number of configuration options that enable you to use more or less of PostgreSQL functionality for your needs.
 It has the benefit of requiring fewer moving parts for the infrastructure, but does not scale as well to handle high volumes of workflows.
 You should benchmark AgentMesh with Postgres against your specific workload to be sure.
-
 
 ## Configuration
 
@@ -38,6 +38,7 @@ agentmesh.elasticsearch.version=0
 ```
 
 To use PostgreSQL for locking, set the following configurations:
+
 ```properties
 agentmesh.app.workflowExecutionLockEnabled=true
 agentmesh.workflow-execution-lock.type=postgres

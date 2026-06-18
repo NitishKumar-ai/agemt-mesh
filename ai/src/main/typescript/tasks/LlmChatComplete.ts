@@ -18,22 +18,33 @@ export class LlmChatComplete extends WorkflowSystemTask {
     super(LlmChatComplete.NAME);
   }
 
-  override start(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override start(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     task.status = TaskStatus.IN_PROGRESS;
   }
 
-  async executeAsync(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): Promise<void> {
+  async executeAsync(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): Promise<void> {
     const doExecute = async (span?: Span) => {
       try {
         const inputData = task.inputData as any;
-        
+
         const aiModel = this.modelClient.route(inputData);
         inputData.llmProvider = aiModel.getModelProvider();
 
-        const response: LLMResponse = await this.llms.chatComplete({
-          taskId: task.taskId,
-          workflowInstanceId: workflow.workflowId,
-        }, inputData);
+        const response: LLMResponse = await this.llms.chatComplete(
+          {
+            taskId: task.taskId,
+            workflowInstanceId: workflow.workflowId,
+          },
+          inputData,
+        );
 
         task.outputData = {
           ...response,
@@ -64,18 +75,26 @@ export class LlmChatComplete extends WorkflowSystemTask {
     };
 
     if (this.telemetryService) {
-      await this.telemetryService.traceAsync('LlmChatComplete.execute', {
-        agentId: String(task.inputData?.agentId || 'unknown'),
-        tenantId: String(task.inputData?.tenantId || 'unknown'),
-        taskId: String(task.taskId),
-        workflowId: String(workflow.workflowId),
-      }, doExecute);
+      await this.telemetryService.traceAsync(
+        'LlmChatComplete.execute',
+        {
+          agentId: String(task.inputData?.agentId || 'unknown'),
+          tenantId: String(task.inputData?.tenantId || 'unknown'),
+          taskId: String(task.taskId),
+          workflowId: String(workflow.workflowId),
+        },
+        doExecute,
+      );
     } else {
       await doExecute();
     }
   }
 
-  override execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
+  override execute(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): boolean {
     // We execute async and return true to let the engine know we have updated the task.
     // However, since it's an async operation, we'd normally queue it to an async executor.
     // Assuming AgentMesh's AsyncSystemTaskExecutor will handle async logic:

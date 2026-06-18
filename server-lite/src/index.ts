@@ -2,7 +2,11 @@ import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
 import { InitialSchemaMigration, AgentRuntimeMigration } from '@agentmesh/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
+import {
+  SqliteExecutionDAO,
+  SqliteMetadataDAO,
+  SqliteQueueDAO,
+} from '@agentmesh/sqlite-persistence';
 import { WorkflowService, TaskService } from '@agentmesh/rest';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -19,7 +23,11 @@ import {
   ProcessManager,
   createAgentDef,
   BudgetManager,
-  createCommitGuardTools
+  createCommitGuardTools,
+  createMarketingTools,
+  createSchedulerTools,
+  createSelfHealTools,
+  createResearchTools,
 } from '@agentmesh/agent-runtime';
 import {
   LLMs,
@@ -28,7 +36,7 @@ import {
   AnthropicProvider,
   GeminiProvider,
   LlmChatComplete,
-  LlmGenerateEmbeddings
+  LlmGenerateEmbeddings,
 } from '@agentmesh/ai';
 import {
   SystemTaskRegistry,
@@ -61,7 +69,7 @@ import {
   SubWorkflowTaskMapper,
   SwitchTaskMapper,
   TerminateTaskMapper,
-  WaitTaskMapper
+  WaitTaskMapper,
 } from '@agentmesh/core';
 import { TelemetryService } from '@agentmesh/telemetry';
 import { SandboxSystemTask } from '@agentmesh/sandbox';
@@ -98,7 +106,7 @@ function loadConfig(): Config {
     port: parseInt(process.env.PORT ?? '8080', 10),
     dbPath: process.env.DB_PATH ?? ':memory:',
     version: process.env.AGENTMESH_VERSION ?? '0.0.0',
-    corsOrigins: (process.env.CORS_ORIGINS ?? '*').split(',').map(s => s.trim()),
+    corsOrigins: (process.env.CORS_ORIGINS ?? '*').split(',').map((s) => s.trim()),
     logFormat: process.env.LOG_FORMAT ?? 'dev',
     langfusePublicKey: process.env.LANGFUSE_PUBLIC_KEY,
     langfuseSecretKey: process.env.LANGFUSE_SECRET_KEY,
@@ -122,7 +130,11 @@ ${border}
 `);
 }
 
-async function sweeperLoop(syncAdapter: SyncSqliteAdapter, sweeper: WorkflowSweeper, state: { running: boolean }): Promise<void> {
+async function sweeperLoop(
+  syncAdapter: SyncSqliteAdapter,
+  sweeper: WorkflowSweeper,
+  state: { running: boolean },
+): Promise<void> {
   console.log('Sweeper loop started');
   while (state.running) {
     try {
@@ -130,11 +142,11 @@ async function sweeperLoop(syncAdapter: SyncSqliteAdapter, sweeper: WorkflowSwee
       if (workflowId) {
         await sweeper.sweep(workflowId);
       } else {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     } catch (e) {
       console.error('Error in sweeper loop:', e);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
   console.log('Sweeper loop stopped');
@@ -183,22 +195,22 @@ async function main(): Promise<void> {
   console.log('Initializing AI modules...');
   const aiProvider = new AIModelProvider([
     {
-      get: () => new AnthropicProvider(cfg.anthropicApiKey || 'dummy-key')
+      get: () => new AnthropicProvider(cfg.anthropicApiKey || 'dummy-key'),
     },
     {
-      get: () => new GeminiProvider(cfg.geminiApiKey || 'dummy-key')
-    }
+      get: () => new GeminiProvider(cfg.geminiApiKey || 'dummy-key'),
+    },
   ]);
   const modelClient = new ModelClient(aiProvider);
-  
+
   // Minimal implementations for LLMHelper requirements
   const noopLoader = {
     supports: () => false,
     download: () => new Uint8Array(),
-    upload: () => 'noop'
+    upload: () => 'noop',
   };
   const noopValidator = {
-    validate: () => []
+    validate: () => [],
   };
 
   const llms = new LLMs([noopLoader as any], noopValidator as any, aiProvider);
@@ -225,7 +237,7 @@ async function main(): Promise<void> {
     new Wait(),
     new LlmChatComplete(llms as any, modelClient as any, telemetry as any, budgetManager as any),
     new LlmGenerateEmbeddings(llms as any, modelClient as any, telemetry as any),
-    new SandboxSystemTask(cfg.e2bApiKey || 'dummy-key', ['api.github.com'])
+    new SandboxSystemTask(cfg.e2bApiKey || 'dummy-key', ['api.github.com']),
   ];
 
   const systemTaskRegistry = new SystemTaskRegistry(systemTasks as any);
@@ -245,7 +257,7 @@ async function main(): Promise<void> {
 
   const deciderService = new DeciderService({
     taskMappers: taskMappers as any,
-    systemTaskRegistry: systemTaskRegistry as any
+    systemTaskRegistry: systemTaskRegistry as any,
   });
 
   const executorOps = new WorkflowExecutorOps({
@@ -262,7 +274,7 @@ async function main(): Promise<void> {
       onWorkflowResumedIfEnabled: () => {},
       onWorkflowRestartedIfEnabled: () => {},
       onWorkflowRetriedIfEnabled: () => {},
-      onWorkflowRerunIfEnabled: () => {}
+      onWorkflowRerunIfEnabled: () => {},
     } as any,
     taskStatusListener: {
       onTaskCompletedIfEnabled: () => {},
@@ -271,14 +283,14 @@ async function main(): Promise<void> {
       onTaskFailedWithTerminalErrorIfEnabled: () => {},
       onTaskTimedOutIfEnabled: () => {},
       onTaskInProgressIfEnabled: () => {},
-      onTaskScheduledIfEnabled: () => {}
+      onTaskScheduledIfEnabled: () => {},
     } as any,
     systemTaskRegistry: systemTaskRegistry as any,
     executionLockService: {
       acquireLock: () => true,
       acquireLockWithLease: () => true,
       releaseLock: () => {},
-      deleteLock: () => {}
+      deleteLock: () => {},
     } as any,
     properties: {
       activeWorkerLastPollTimeout: 10000,
@@ -286,8 +298,8 @@ async function main(): Promise<void> {
       lockLeaseTime: 30000,
       humanTaskPreventsDeciderQueue: false,
       maxPostponeDurationSeconds: 60,
-      systemTaskPostponeThreshold: 10
-    }
+      systemTaskPostponeThreshold: 10,
+    },
   });
 
   const sweeper = new WorkflowSweeper({
@@ -300,19 +312,19 @@ async function main(): Promise<void> {
       lockLeaseTime: 30000,
       humanTaskPreventsDeciderQueue: false,
       maxPostponeDurationSeconds: 60,
-      systemTaskPostponeThreshold: 10
+      systemTaskPostponeThreshold: 10,
     },
     sweeperProperties: {
       sweepBatchSize: 100,
-      queuePopTimeout: 1000
+      queuePopTimeout: 1000,
     },
     systemTaskRegistry: systemTaskRegistry as any,
     executionLockService: {
       acquireLock: () => true,
       acquireLockWithLease: () => true,
       releaseLock: () => {},
-      deleteLock: () => {}
-    } as any
+      deleteLock: () => {},
+    } as any,
   });
 
   // Start sweeper loop
@@ -326,18 +338,21 @@ async function main(): Promise<void> {
   };
 
   const startTime = Date.now();
-  
+
   console.log('Creating NestJS app...');
-  const app = await NestFactory.create(AppModule.register({
-    executionDAO: executionDAO as never,
-    metadataDAO: metadataDAO as never,
-    queueDAO: queueDAO as never,
-    pollDataDAO: metadataDAO as never,
-    version: cfg.version,
-    dbProbe,
-    startTime,
-    workflowExecutor: executorOps as any
-  }), { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] });
+  const app = await NestFactory.create(
+    AppModule.register({
+      executionDAO: executionDAO as never,
+      metadataDAO: metadataDAO as never,
+      queueDAO: queueDAO as never,
+      pollDataDAO: metadataDAO as never,
+      version: cfg.version,
+      dbProbe,
+      startTime,
+      workflowExecutor: executorOps as any,
+    }),
+    { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] },
+  );
 
   // OpenAPI/Swagger
   const swaggerConfig = new DocumentBuilder()
@@ -354,7 +369,6 @@ async function main(): Promise<void> {
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.use(morgan(cfg.logFormat));
-  expressApp.use(express.static(path.join(__dirname, '..', 'public')));
 
   // --- Agent Runtime Wiring ---
   console.log('Initializing agent runtime wiring...');
@@ -365,9 +379,21 @@ async function main(): Promise<void> {
   const eventBus = new InProcessEventBus();
   const killswitch = new DbKillswitch(db as never);
   const systemTools = new ToolRegistry();
-  
-  // Register CommitGuard tools
+
+  // Register tools for all agents
   for (const tool of createCommitGuardTools()) {
+    systemTools.register(tool);
+  }
+  for (const tool of createMarketingTools()) {
+    systemTools.register(tool);
+  }
+  for (const tool of createSchedulerTools()) {
+    systemTools.register(tool);
+  }
+  for (const tool of createSelfHealTools()) {
+    systemTools.register(tool);
+  }
+  for (const tool of createResearchTools()) {
     systemTools.register(tool);
   }
 
@@ -375,49 +401,186 @@ async function main(): Promise<void> {
   const agentExecutor = new AgentWorkflowExecutor(taskService as never, workflowService as never);
 
   // Register CommitGuard reference agent
-  agentRegistry.register(createAgentDef({
-    agentId: 'commit_guard',
-    name: 'CommitGuard',
-    description: 'An autonomous security agent that clones, scans, and files issues for vulnerable code.',
-    modelExecute: 'claude-3-7-sonnet-20250219',
-    tools: [
-      {
-        name: 'git_clone',
-        description: 'Clone a git repository to a temporary workspace for analysis.',
-        parameters: { repo_url: 'string' },
-        riskLevel: 'low',
-        handler: 'git_clone'
-      },
-      {
-        name: 'security_scan',
-        description: 'Run a suite of security scanners (SAST, secret detection) on the workspace.',
-        parameters: { path: 'string' },
-        riskLevel: 'medium',
-        handler: 'security_scan'
-      },
-      {
-        name: 'verify_findings',
-        description: 'Verify security findings to eliminate false positives.',
-        parameters: { findings: 'string' },
-        riskLevel: 'low',
-        handler: 'verify_findings'
-      },
-      {
-        name: 'file_issue',
-        description: 'File a security issue in the project tracking system.',
-        parameters: { title: 'string', body: 'string' },
-        riskLevel: 'medium',
-        handler: 'file_issue'
-      },
-      {
-        name: 'cleanup_workspace',
-        description: 'Delete the temporary workspace and all sensitive scan data.',
-        parameters: { path: 'string' },
-        riskLevel: 'low',
-        handler: 'cleanup_workspace'
-      }
-    ]
-  }));
+  agentRegistry.register(
+    createAgentDef({
+      agentId: 'commit_guard',
+      name: 'CommitGuard',
+      description:
+        'An autonomous security agent that clones, scans, and files issues for vulnerable code.',
+      modelExecute: 'claude-3-7-sonnet-20250219',
+      tools: [
+        {
+          name: 'git_clone',
+          description: 'Clone a git repository to a temporary workspace for analysis.',
+          parameters: { repo_url: 'string' },
+          riskLevel: 'low',
+          handler: 'git_clone',
+        },
+        {
+          name: 'security_scan',
+          description:
+            'Run a suite of security scanners (SAST, secret detection) on the workspace.',
+          parameters: { path: 'string' },
+          riskLevel: 'medium',
+          handler: 'security_scan',
+        },
+        {
+          name: 'verify_findings',
+          description: 'Verify security findings to eliminate false positives.',
+          parameters: { findings: 'string' },
+          riskLevel: 'low',
+          handler: 'verify_findings',
+        },
+        {
+          name: 'file_issue',
+          description: 'File a security issue in the project tracking system.',
+          parameters: { title: 'string', body: 'string' },
+          riskLevel: 'medium',
+          handler: 'file_issue',
+        },
+        {
+          name: 'cleanup_workspace',
+          description: 'Delete the temporary workspace and all sensitive scan data.',
+          parameters: { path: 'string' },
+          riskLevel: 'low',
+          handler: 'cleanup_workspace',
+        },
+      ],
+    }),
+  );
+
+  // Register Marketing agent
+  agentRegistry.register(
+    createAgentDef({
+      agentId: 'marketing',
+      name: 'Marketing Agent',
+      description:
+        'Researches findings and generates outreach content via the Research -> Write pipeline.',
+      modelExecute: 'claude-3-7-sonnet-20250219',
+      tools: [
+        {
+          name: 'research_finding',
+          description: 'Research an audience and a security finding to create a research brief.',
+          parameters: {
+            campaign_id: 'string',
+            audience: 'string',
+            channel: 'string',
+            finding_summary: 'string',
+            evidence: 'string',
+          },
+          riskLevel: 'low',
+          handler: 'research_finding',
+        },
+        {
+          name: 'generate_content',
+          description: 'Generate marketing content (draft) based on a research brief.',
+          parameters: {
+            campaign_id: 'string',
+            channel: 'string',
+            campaign_name: 'string',
+            value_proposition: 'string',
+            finding_summary: 'string',
+            research_brief: 'string',
+          },
+          riskLevel: 'low',
+          handler: 'generate_content',
+        },
+        {
+          name: 'schedule_campaign',
+          description: 'Schedule an approved campaign for delivery.',
+          parameters: { campaign_id: 'string' },
+          riskLevel: 'medium',
+          handler: 'schedule_campaign',
+        },
+      ],
+    }),
+  );
+
+  // Register Scheduler agent
+  agentRegistry.register(
+    createAgentDef({
+      agentId: 'scheduler',
+      name: 'Scheduler Agent',
+      description: 'Runs recurring natural-language tasks on configurable intervals.',
+      modelExecute: 'claude-3-7-sonnet-20250219',
+      tools: [
+        {
+          name: 'cron_execution',
+          description: 'Execute scheduler-based cron operations.',
+          parameters: { schedule_id: 'string' },
+          riskLevel: 'low',
+          handler: 'cron_execution',
+        },
+        {
+          name: 'self_healing',
+          description: 'Trigger self-healing checks on active systems.',
+          parameters: {},
+          riskLevel: 'medium',
+          handler: 'self_healing',
+        },
+      ],
+    }),
+  );
+
+  // Register Self-Heal agent
+  agentRegistry.register(
+    createAgentDef({
+      agentId: 'selfheal',
+      name: 'Self-Heal Agent',
+      description: 'Diagnoses failed builds from webhook events and generates fix PRs.',
+      modelExecute: 'claude-3-7-sonnet-20250219',
+      tools: [
+        {
+          name: 'build_diagnosis',
+          description: 'Diagnose failed builds by reviewing build logs.',
+          parameters: { build_id: 'string' },
+          riskLevel: 'low',
+          handler: 'build_diagnosis',
+        },
+        {
+          name: 'patch_generation',
+          description: 'Generate patch files to fix diagnosed build failures.',
+          parameters: { diagnosis: 'string' },
+          riskLevel: 'low',
+          handler: 'patch_generation',
+        },
+        {
+          name: 'pr_creation',
+          description: 'Create a GitHub Pull Request with the generated patch.',
+          parameters: { patch: 'string', repo: 'string' },
+          riskLevel: 'medium',
+          handler: 'pr_creation',
+        },
+      ],
+    }),
+  );
+
+  // Register Research agent
+  agentRegistry.register(
+    createAgentDef({
+      agentId: 'research',
+      name: 'Research Agent',
+      description: 'Search the web and query local knowledge base.',
+      modelExecute: 'claude-3-7-sonnet-20250219',
+      tools: [
+        {
+          name: 'web_search',
+          description: 'Search the web for up-to-date information on a topic.',
+          parameters: { query: 'string' },
+          riskLevel: 'low',
+          handler: 'web_search',
+        },
+        {
+          name: 'rag',
+          description:
+            'Query the internal knowledge base for past security findings and documentation.',
+          parameters: { query: 'string' },
+          riskLevel: 'low',
+          handler: 'rag',
+        },
+      ],
+    }),
+  );
 
   const cronScheduler = new CronScheduler({
     db: db as never,
@@ -429,13 +592,13 @@ async function main(): Promise<void> {
         agentExecutor.startWorkflow({
           name: def.name,
           version: 1,
-          input: { agentId: schedule.agentId }
+          input: { agentId: schedule.agentId },
         });
       }
     },
-    pollIntervalMs: 10000
+    pollIntervalMs: 10000,
   });
-  
+
   // Dummy LLM for testing
   const dummyLlm = async (model: string, prompt: string) => {
     console.log(`[LLM ${model}] received prompt length ${prompt.length}`);
@@ -452,7 +615,7 @@ async function main(): Promise<void> {
     eventBus,
     systemTools,
     telemetry as any,
-    budgetManager as any
+    budgetManager as any,
   );
   agentWorkerPool.start();
   cronScheduler.start();
@@ -462,7 +625,7 @@ async function main(): Promise<void> {
     eventBus,
     killswitch,
     cronScheduler,
-    agentExecutor as never
+    agentExecutor as never,
   );
 
   expressApp.use('/api/agents', agentRouter);
@@ -475,10 +638,10 @@ async function main(): Promise<void> {
   console.log(`Listening on http://localhost:${cfg.port}`);
 
   const processManager = new ProcessManager();
-  
+
   processManager.register({
     name: 'http-server',
-    shutdown: () => app.close()
+    shutdown: () => app.close(),
   });
 
   processManager.register({
@@ -486,31 +649,31 @@ async function main(): Promise<void> {
     shutdown: async () => {
       sweeperState.running = false;
       await sweeperPromise;
-    }
+    },
   });
 
   processManager.register({
     name: 'agent-worker-pool',
-    shutdown: async () => agentWorkerPool.stop()
+    shutdown: async () => agentWorkerPool.stop(),
   });
 
   processManager.register({
     name: 'cron-scheduler',
-    shutdown: async () => cronScheduler.stop()
+    shutdown: async () => cronScheduler.stop(),
   });
 
   processManager.register({
     name: 'database',
     shutdown: async () => {
       await db.destroy();
-    }
+    },
   });
 
   processManager.register({
     name: 'telemetry',
     shutdown: async () => {
       await telemetry.shutdown();
-    }
+    },
   });
 
   processManager.installSignalHandlers();

@@ -1,17 +1,17 @@
 ---
-description: "Learn about workers in AgentMesh — the code that executes tasks in workflows, written in any language and hosted anywhere you choose."
+description: 'Learn about workers in AgentMesh — the code that executes tasks in workflows, written in any language and hosted anywhere you choose.'
 ---
 
 # Workers
+
 A worker is responsible for executing a task in a workflow. Each type of worker implements the core functionality of each task, handling the logic as defined in its code.
 
 System task workers are managed by AgentMesh within its JVM, while `SIMPLE` task workers are to be implemented by yourself. These workers can be implemented in any programming language of your choice (Python, Java, JavaScript, C#, Go, and Clojure) and hosted anywhere outside the AgentMesh environment.
 
 !!! Note
-    AgentMesh provides a set of worker frameworks in its SDKs. These frameworks come with comes with features like polling threads, metrics, and server communication, making it easy to create custom workers.
+AgentMesh provides a set of worker frameworks in its SDKs. These frameworks come with comes with features like polling threads, metrics, and server communication, making it easy to create custom workers.
 
 These workers communicate with the AgentMesh server via REST/gRPC, allowing them to poll for tasks and update the task status. Learn more in [Architecture](../architecture/index.md).
-
 
 ## How workers work
 
@@ -21,23 +21,21 @@ These workers communicate with the AgentMesh server via REST/gRPC, allowing them
 
 AgentMesh handles scheduling, retries, and state persistence. Your worker just focuses on business logic.
 
-
 ## Worker configuration
 
 Workers are configured through the task definition on the AgentMesh server. Key settings:
 
-| Parameter | Description |
-| :--- | :--- |
-| `retryCount` | Number of times AgentMesh retries a failed task. |
-| `retryDelaySeconds` | Delay between retries. |
-| `responseTimeoutSeconds` | Max time for a worker to respond after polling. |
-| `timeoutSeconds` | Overall SLA for task completion. |
-| `pollTimeoutSeconds` | Max time for a worker to poll before timeout. |
-| `rateLimitPerFrequency` | Max task executions per frequency window. |
-| `concurrentExecLimit` | Max concurrent executions across all workers. |
+| Parameter                | Description                                      |
+| :----------------------- | :----------------------------------------------- |
+| `retryCount`             | Number of times AgentMesh retries a failed task. |
+| `retryDelaySeconds`      | Delay between retries.                           |
+| `responseTimeoutSeconds` | Max time for a worker to respond after polling.  |
+| `timeoutSeconds`         | Overall SLA for task completion.                 |
+| `pollTimeoutSeconds`     | Max time for a worker to poll before timeout.    |
+| `rateLimitPerFrequency`  | Max task executions per frequency window.        |
+| `concurrentExecLimit`    | Max concurrent executions across all workers.    |
 
 See [Task Definitions](../../documentation/configuration/taskdef.md) for the full reference.
-
 
 ## Scaling task workers
 

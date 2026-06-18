@@ -12,7 +12,11 @@ export class Wait extends WorkflowSystemTask {
     task.status = 'IN_PROGRESS';
   }
 
-  override cancel(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): void {
+  override cancel(
+    workflow: WorkflowModel,
+    task: TaskModel,
+    workflowExecutor: WorkflowExecutor,
+  ): void {
     task.status = 'CANCELED';
   }
 

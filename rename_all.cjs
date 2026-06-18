@@ -2,7 +2,18 @@ const fs = require('fs');
 const path = require('path');
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.claude', 'dist', '.turbo', '.pnpm-store']);
-const BINARY_EXTS = new Set(['.jar', '.class', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.zip', '.tar', '.gz']);
+const BINARY_EXTS = new Set([
+  '.jar',
+  '.class',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.ico',
+  '.zip',
+  '.tar',
+  '.gz',
+]);
 
 function replaceInFile(filePath) {
   let content = fs.readFileSync(filePath, 'utf8');
@@ -41,7 +52,7 @@ function moveDirContents(src, dest) {
 function processDirectory(dir) {
   let changedCount = 0;
   let items = fs.readdirSync(dir);
-  
+
   for (const item of items) {
     if (SKIP_DIRS.has(item)) continue;
     const fullPath = path.join(dir, item);
@@ -72,7 +83,7 @@ function processDirectory(dir) {
       fs.renameSync(dir, newPath);
     }
   }
-  
+
   return changedCount;
 }
 

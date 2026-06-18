@@ -1,5 +1,5 @@
 ---
-description: "AgentMesh system architecture — worker-task queue model, state machine evaluator, pluggable data stores, and RPC-based polling for durable code execution."
+description: 'AgentMesh system architecture — worker-task queue model, state machine evaluator, pluggable data stores, and RPC-based polling for durable code execution.'
 ---
 
 # Architecture Overview
@@ -8,33 +8,27 @@ This diagram showcases an overview of AgentMesh's system architecture:
 
 ![AgentMesh's Architecture diagram.](agentmesh-architecture.png)
 
+In AgentMesh, workflows are executed on a worker-task queue architecture, where each task type (HTTP, Event, Wait, _example_simple_task_ and so on) has its own dedicated task queue. The key components of AgentMesh’s core orchestration engine include:
 
-In AgentMesh, workflows are executed on a worker-task queue architecture, where each task type (HTTP, Event, Wait, *example_simple_task* and so on) has its own dedicated task queue. The key components of AgentMesh’s core orchestration engine include:
-
-* **State machine evaluator**—Orchestrates workflows by scheduling tasks to their relevant queues and assigning them to active workers when polled. Monitors each task's state and ensures it is completed, retried, or failed as required.
-* **Task queues**—Distributed queues for each task type, where tasks are completed on a first-in-first-out basis.
-* **Task workers**—Poll the AgentMesh server via HTTP or gRPC for tasks, execute tasks, and update the server on the task status. Each worker is responsible for carrying out a specific task type.
-* **Data stores** (Redis by default)—High-availability persistence stores that maintain workflow and task metadata, task queues, and execution history
-* **APIs**—REST APIs for programmatic access to the AgentMesh server. 
-
+- **State machine evaluator**—Orchestrates workflows by scheduling tasks to their relevant queues and assigning them to active workers when polled. Monitors each task's state and ensures it is completed, retried, or failed as required.
+- **Task queues**—Distributed queues for each task type, where tasks are completed on a first-in-first-out basis.
+- **Task workers**—Poll the AgentMesh server via HTTP or gRPC for tasks, execute tasks, and update the server on the task status. Each worker is responsible for carrying out a specific task type.
+- **Data stores** (Redis by default)—High-availability persistence stores that maintain workflow and task metadata, task queues, and execution history
+- **APIs**—REST APIs for programmatic access to the AgentMesh server.
 
 By default, AgentMesh uses Redis as its data store, with Elasticsearch used for its indexing backend. These [storage layers are pluggable](../../documentation/advanced/extend.md), allowing you to work with alternative backends and queue service providers.
 
-
 ## Task execution
 
-With a worker-task queue architecture, AgentMesh schedules and assigns tasks to its designated task queues based on its task type. AgentMesh follows an RPC-based communication model where task workers run on a separate machine from the server and communicate over HTTP-based endpoints with the server. 
+With a worker-task queue architecture, AgentMesh schedules and assigns tasks to its designated task queues based on its task type. AgentMesh follows an RPC-based communication model where task workers run on a separate machine from the server and communicate over HTTP-based endpoints with the server.
 
 The workers employ a polling model for managing their designated queues, and update AgentMesh with the task status.
 
 ![Runtime Model of AgentMesh.](overview.png)
 
-
-
 ### Worker-server polling mechanism
 
-
-Each worker declares beforehand what task(s) it can execute. At runtime, task workers poll its designated task queue(s) to receive and execute scheduled work. AgentMesh passes task inputs to the worker for execution and collects the task outputs, continuing the process according to the workflow definition. 
+Each worker declares beforehand what task(s) it can execute. At runtime, task workers poll its designated task queue(s) to receive and execute scheduled work. AgentMesh passes task inputs to the worker for execution and collects the task outputs, continuing the process according to the workflow definition.
 
 By default, workers infinitely poll AgentMesh every 100ms. The polling interval value for each type of worker can be adjusted accordingly based on factors like workload. Here is the polling mechanism in detail:
 

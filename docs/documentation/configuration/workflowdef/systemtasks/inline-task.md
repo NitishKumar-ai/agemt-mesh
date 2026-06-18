@@ -1,7 +1,9 @@
 ---
-description: "Inline Task — execute JavaScript expressions inside AgentMesh workflows for data transformation and conditional logic."
+description: 'Inline Task — execute JavaScript expressions inside AgentMesh workflows for data transformation and conditional logic.'
 ---
+
 # Inline Task
+
 ```json
 "type": "INLINE"
 ```
@@ -14,11 +16,11 @@ The Inline task is best for small, deterministic logic like simple validation or
 
 Use these parameters inside `inputParameters` in the Inline task configuration.
 
-| Parameter          | Type                | Description                                       | Required / Optional  |
-| ------------------ | ------------------- | ------------------------------------------------- | -------------------- |
-| evaluatorType | String | The type of evaluator used. Supported types: `graaljs` (recommended), `javascript`, `python`, `value-param`. | Required. |
-| expression    | String | The expression to be evaluated by the evaluator. The expression must return a value. <br/><br/> The `graaljs` evaluator uses GraalVM JavaScript and supports modern ECMAScript. The `python` evaluator runs Python via GraalVM polyglot. The `javascript` evaluator is a legacy option. The `value-param` evaluator returns a parameter value directly. | Required. |
-| inputParameters    | Map[String, Any] | Any other input parameters for the Inline task. You can include any other input values required for evaluation here, which can be referenced in `expression` as `$.value`. | Optional. |
+| Parameter       | Type             | Description                                                                                                                                                                                                                                                                                                                                             | Required / Optional |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| evaluatorType   | String           | The type of evaluator used. Supported types: `graaljs` (recommended), `javascript`, `python`, `value-param`.                                                                                                                                                                                                                                            | Required.           |
+| expression      | String           | The expression to be evaluated by the evaluator. The expression must return a value. <br/><br/> The `graaljs` evaluator uses GraalVM JavaScript and supports modern ECMAScript. The `python` evaluator runs Python via GraalVM polyglot. The `javascript` evaluator is a legacy option. The `value-param` evaluator returns a parameter value directly. | Required.           |
+| inputParameters | Map[String, Any] | Any other input parameters for the Inline task. You can include any other input values required for evaluation here, which can be referenced in `expression` as `$.value`.                                                                                                                                                                              | Optional.           |
 
 ## JSON configuration
 
@@ -38,13 +40,12 @@ Here is the task configuration for an Inline task.
 }
 ```
 
-
 ## Output
 
 The Inline task will return the following parameters.
 
-| Name             | Type         | Description                                                   |
-| ---------------- | ------------ | ------------------------------------------------------------- |
+| Name   | Type | Description                                                              |
+| ------ | ---- | ------------------------------------------------------------------------ |
 | result | Map  | Contains the output returned by the evaluator based on the `expression`. |
 
 ## Examples
@@ -53,7 +54,7 @@ Here are some examples for using the Inline task.
 
 ### Simple example
 
-``` json
+```json
 {
   "name": "INLINE_TASK",
   "taskReferenceName": "inline_test",
@@ -70,12 +71,11 @@ Here are some examples for using the Inline task.
 The Inline task output can then be referenced in downstream tasks using the expression
 `"${inline_test.output.result.testvalue}"`.
 
-
 ### Formatting data
 
 In this example, the Inline task is used to ensure that downstream tasks only receive weather data in Celcius.
 
-``` json
+```json
 {
   "name": "INLINE_TASK",
   "taskReferenceName": "inline_test",
@@ -84,7 +84,7 @@ In this example, the Inline task is used to ensure that downstream tasks only re
       "scale": "${workflow.input.tempScale}",
 	    "temperature": "${workflow.input.temperature}",
       "evaluatorType": "javascript",
-      "expression": "function SIvaluesOnly(){if ($.scale === "F"){ centigrade = ($.temperature -32)*5/9; return {temperature: centigrade} } else { return 
+      "expression": "function SIvaluesOnly(){if ($.scale === "F"){ centigrade = ($.temperature -32)*5/9; return {temperature: centigrade} } else { return
       {temperature: $.temperature} }} SIvaluesOnly();"
   }
 }

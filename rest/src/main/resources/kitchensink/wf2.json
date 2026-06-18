@@ -69,10 +69,7 @@
       "taskReferenceName": "join",
       "type": "JOIN",
       "startDelay": 0,
-      "joinOn": [
-        "task_21",
-        "task_11"
-      ],
+      "joinOn": ["task_21", "task_11"],
       "callbackFromWorker": true
     },
     {

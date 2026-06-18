@@ -1,11 +1,11 @@
 ---
-description: "Build AgentMesh workers in Rust with type-safe task definitions and async workflow management."
+description: 'Build AgentMesh workers in Rust with type-safe task definitions and async workflow management.'
 ---
 
 # Rust SDK
 
 !!! info "Source"
-    GitHub: [agentmesh-oss/rust-sdk](https://github.com/agentmesh-oss/rust-sdk) | Report issues and contribute on GitHub.
+GitHub: [agentmesh-oss/rust-sdk](https://github.com/agentmesh-oss/rust-sdk) | Report issues and contribute on GitHub.
 
 ## Start AgentMesh server
 
@@ -16,14 +16,17 @@ If you don't already have a AgentMesh server running, pick one:
 ```shell
 docker run -p 8080:8080 agentmeshoss/agentmesh:latest
 ```
+
 The UI will be available at `http://localhost:8080` and the API at `http://localhost:8080/api`
 
 **MacOS / Linux (one-liner):** (If you don't want to use docker, you can install and run the binary directly)
+
 ```shell
 curl -sSL https://raw.githubusercontent.com/agentmesh-oss/agentmesh/main/agentmesh_server.sh | sh
 ```
 
 **AgentMesh CLI**
+
 ```shell
 # Installs agentmesh cli
 npm install -g @agentmesh-oss/agentmesh-cli
@@ -157,6 +160,7 @@ cargo run
 ```
 
 > ### Using Orkes AgentMesh / Remote Server?
+>
 > Export your authentication credentials as well:
 >
 > ```shell
@@ -166,6 +170,7 @@ cargo run
 > export AGENTMESH_AUTH_KEY="your-key"
 > export AGENTMESH_AUTH_SECRET="your-secret"
 > ```
+>
 > See the [rust-sdk README](https://github.com/agentmesh-oss/rust-sdk) for details.
 
 That's it -- you just defined a worker, built a workflow, and executed it. Open the AgentMesh UI (default:
@@ -267,6 +272,7 @@ task_handler.start().await?;
 See the [rust-sdk README](https://github.com/agentmesh-oss/rust-sdk) for details.
 
 **Learn more:**
+
 - [Worker Guide](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKER.md) — All worker patterns (function, closure, macro, async)
 - [Worker Configuration](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) — Environment variable configuration system
 
@@ -327,6 +333,7 @@ workflow_client.restart_workflow(&workflow_id, false).await?;
 ```
 
 **Learn more:**
+
 - [Workflow Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKFLOW.md) — Start, pause, resume, terminate, retry, search
 - [Metadata Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/METADATA.md) — Task & workflow definitions
 
@@ -346,20 +353,20 @@ AgentMesh supports AI-native workflows including agentic tool calling, RAG pipel
 
 Build AI agents where LLMs dynamically select and call Rust workers as tools. See [examples/](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/) for all examples.
 
-| Example | Description |
-|---------|-------------|
-| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | Automated multi-turn science Q&A between two LLMs |
-| [llm_chat_human_in_loop.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | Interactive chat with WAIT task pauses for user input |
-| [multiagent_chat.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | Multi-agent discussion with expert, critic, and synthesizer |
-| [function_calling_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | LLM picks which function to call based on user queries |
-| [agentic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | AI agent with tool calling and switch-based routing |
+| Example                                                                                                                 | Description                                                 |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs)                 | Automated multi-turn science Q&A between two LLMs           |
+| [llm_chat_human_in_loop.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs)     | Interactive chat with WAIT task pauses for user input       |
+| [multiagent_chat.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs)                   | Multi-agent discussion with expert, critic, and synthesizer |
+| [function_calling_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | LLM picks which function to call based on user queries      |
+| [agentic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs)                 | AI agent with tool calling and switch-based routing         |
 
 **LLM and RAG Workflows**
 
-| Example | Description |
-|---------|-------------|
-| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | End-to-end RAG: text indexing, semantic search, answer generation |
-| [vector_db_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | Vector database operations with embedding generation |
+| Example                                                                                                   | Description                                                       |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs)           | End-to-end RAG: text indexing, semantic search, answer generation |
+| [vector_db_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | Vector database operations with embedding generation              |
 
 ```shell
 # Automated multi-turn chat
@@ -376,44 +383,44 @@ cargo run --example rag_workflow
 
 See the examples directory for the full catalog. Key examples:
 
-| Example | Description | Run |
-|---------|-------------|-----|
-| [worker_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs) | End-to-end: sync + async workers, metrics | `cargo run --example worker_example` |
-| [hello_world.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs) | Minimal hello world | `cargo run --example hello_world` |
-| [dynamic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | Build workflows programmatically | `cargo run --example dynamic_workflow` |
-| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | AI multi-turn chat | `cargo run --example llm_chat_example` |
-| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | RAG pipeline | `cargo run --example rag_workflow` |
-| [task_context_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs) | Long-running tasks with TaskContext | `cargo run --example task_context_example` |
-| [workflow_ops.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | Pause, resume, terminate workflows | `cargo run --example workflow_ops` |
-| [test_workflows.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs) | Unit testing workflows | `cargo run --example test_workflows` |
-| [kitchensink.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs) | All task types (HTTP, JS, JQ, Switch) | `cargo run --example kitchensink` |
+| Example                                                                                                         | Description                               | Run                                        |
+| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------ |
+| [worker_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs)             | End-to-end: sync + async workers, metrics | `cargo run --example worker_example`       |
+| [hello_world.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs)                   | Minimal hello world                       | `cargo run --example hello_world`          |
+| [dynamic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs)         | Build workflows programmatically          | `cargo run --example dynamic_workflow`     |
+| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs)         | AI multi-turn chat                        | `cargo run --example llm_chat_example`     |
+| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs)                 | RAG pipeline                              | `cargo run --example rag_workflow`         |
+| [task_context_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs) | Long-running tasks with TaskContext       | `cargo run --example task_context_example` |
+| [workflow_ops.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs)                 | Pause, resume, terminate workflows        | `cargo run --example workflow_ops`         |
+| [test_workflows.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs)             | Unit testing workflows                    | `cargo run --example test_workflows`       |
+| [kitchensink.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs)                   | All task types (HTTP, JS, JQ, Switch)     | `cargo run --example kitchensink`          |
 
 ## API Journey Examples
 
 End-to-end examples covering all APIs for each domain:
 
-| Example | APIs | Run |
-|---------|------|-----|
+| Example                                                                                                           | APIs               | Run                                         |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------- |
 | [authorization_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/authorization_example.rs) | Authorization APIs | `cargo run --example authorization_example` |
-| [metadata_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | Metadata APIs | `cargo run --example metadata_journey` |
-| [schedule_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | Schedule APIs | `cargo run --example schedule_journey` |
-| [prompt_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | Prompt APIs | `cargo run --example prompt_journey` |
+| [metadata_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs)           | Metadata APIs      | `cargo run --example metadata_journey`      |
+| [schedule_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs)           | Schedule APIs      | `cargo run --example schedule_journey`      |
+| [prompt_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs)               | Prompt APIs        | `cargo run --example prompt_journey`        |
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Worker Guide](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKER.md) | All worker patterns (function, closure, macro, async) |
-| [Worker Configuration](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) | Hierarchical environment variable configuration |
-| [Workflow Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKFLOW.md) | Start, pause, resume, terminate, retry, search |
-| [Task Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/TASK_MANAGEMENT.md) | Task operations |
-| [Metadata](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/METADATA.md) | Task & workflow definitions |
-| [Authorization](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/AUTHORIZATION.md) | Users, groups, applications, permissions |
-| [Schedules](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SCHEDULE.md) | Workflow scheduling |
-| [Secrets](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SECRET_MANAGEMENT.md) | Secret storage |
-| [Prompts](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/PROMPT.md) | AI/LLM prompt templates |
-| [Integrations](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/INTEGRATION.md) | AI/LLM provider integrations |
-| [Metrics](https://github.com/agentmesh-oss/rust-sdk) | Prometheus metrics collection |
+| Document                                                                                            | Description                                           |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [Worker Guide](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKER.md)                  | All worker patterns (function, closure, macro, async) |
+| [Worker Configuration](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) | Hierarchical environment variable configuration       |
+| [Workflow Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKFLOW.md)         | Start, pause, resume, terminate, retry, search        |
+| [Task Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/TASK_MANAGEMENT.md)      | Task operations                                       |
+| [Metadata](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/METADATA.md)                    | Task & workflow definitions                           |
+| [Authorization](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/AUTHORIZATION.md)          | Users, groups, applications, permissions              |
+| [Schedules](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SCHEDULE.md)                   | Workflow scheduling                                   |
+| [Secrets](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SECRET_MANAGEMENT.md)            | Secret storage                                        |
+| [Prompts](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/PROMPT.md)                       | AI/LLM prompt templates                               |
+| [Integrations](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/INTEGRATION.md)             | AI/LLM provider integrations                          |
+| [Metrics](https://github.com/agentmesh-oss/rust-sdk)                                                | Prometheus metrics collection                         |
 
 ## Support
 
@@ -472,46 +479,45 @@ The SDK provides a test framework that uses AgentMesh's `POST /api/workflow/test
 
 Apache 2.0
 
-
 ## Examples
 
 Browse all examples on GitHub: [agentmesh-oss/rust-sdk/examples](https://github.com/agentmesh-oss/rust-sdk/tree/main/examples)
 
-| Example | Type |
-|---|---|
-| [Agentic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | file |
-| [Async Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/async_workers.rs) | file |
-| [Authorization Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/authorization_example.rs) | file |
+| Example                                                                                                                | Type |
+| ---------------------------------------------------------------------------------------------------------------------- | ---- |
+| [Agentic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs)                   | file |
+| [Async Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/async_workers.rs)                         | file |
+| [Authorization Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/authorization_example.rs)         | file |
 | [Connection Config Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/connection_config_example.rs) | file |
-| [Dynamic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | file |
-| [Event Listener Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/event_listener_example.rs) | file |
-| [Fork Join Script Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/fork_join_script_example.rs) | file |
-| [Function Calling Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | file |
-| [Hello World](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs) | file |
-| [Http Poll Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/http_poll_example.rs) | file |
-| [Kitchensink](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs) | file |
-| [Kitchensink Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink_workers.rs) | file |
-| [Llm Chat Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | file |
-| [Llm Chat Human In Loop](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | file |
-| [Metadata Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | file |
-| [Metrics Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metrics_example.rs) | file |
-| [Multiagent Chat](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | file |
-| [Openai Helloworld](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/openai_helloworld.rs) | file |
-| [Prompt Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | file |
-| [Rag Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | file |
-| [Schedule Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | file |
-| [Secret Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/secret_example.rs) | file |
+| [Dynamic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs)                   | file |
+| [Event Listener Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/event_listener_example.rs)       | file |
+| [Fork Join Script Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/fork_join_script_example.rs)   | file |
+| [Function Calling Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs)   | file |
+| [Hello World](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs)                             | file |
+| [Http Poll Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/http_poll_example.rs)                 | file |
+| [Kitchensink](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs)                             | file |
+| [Kitchensink Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink_workers.rs)             | file |
+| [Llm Chat Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs)                   | file |
+| [Llm Chat Human In Loop](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs)       | file |
+| [Metadata Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs)                   | file |
+| [Metrics Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metrics_example.rs)                     | file |
+| [Multiagent Chat](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs)                     | file |
+| [Openai Helloworld](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/openai_helloworld.rs)                 | file |
+| [Prompt Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs)                       | file |
+| [Rag Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs)                           | file |
+| [Schedule Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs)                   | file |
+| [Secret Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/secret_example.rs)                       | file |
 | [Sync State Update Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/sync_state_update_example.rs) | file |
-| [Task Configure](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_configure.rs) | file |
-| [Task Context Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs) | file |
+| [Task Configure](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_configure.rs)                       | file |
+| [Task Context Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs)           | file |
 | [Task Status Audit Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_status_audit_example.rs) | file |
-| [Task Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_workers.rs) | file |
-| [Test Workflows](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs) | file |
-| [Vector Db Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | file |
-| [Wait For Webhook Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/wait_for_webhook_example.rs) | file |
-| [Worker Config Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_config_example.rs) | file |
-| [Worker Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs) | file |
-| [Worker Macro Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_macro_example.rs) | file |
-| [Workflow Ops](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | file |
-| [Workflow Rerun Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_rerun_example.rs) | file |
-| [Workflow Status Listener](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_status_listener.rs) | file |
+| [Task Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_workers.rs)                           | file |
+| [Test Workflows](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs)                       | file |
+| [Vector Db Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs)                 | file |
+| [Wait For Webhook Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/wait_for_webhook_example.rs)   | file |
+| [Worker Config Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_config_example.rs)         | file |
+| [Worker Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs)                       | file |
+| [Worker Macro Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_macro_example.rs)           | file |
+| [Workflow Ops](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs)                           | file |
+| [Workflow Rerun Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_rerun_example.rs)       | file |
+| [Workflow Status Listener](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_status_listener.rs)   | file |

@@ -1,5 +1,5 @@
 ---
-description: "Start AgentMesh workflow executions — asynchronous, synchronous, and dynamic workflow execution via REST API with curl examples."
+description: 'Start AgentMesh workflow executions — asynchronous, synchronous, and dynamic workflow execution via REST API with curl examples.'
 ---
 
 # Start Workflow API
@@ -14,16 +14,16 @@ Starts a new workflow execution asynchronously. Returns the workflow ID immediat
 
 ### Request Body
 
-| Field | Description | Required |
-|---|---|---|
-| `name` | Workflow name (must be registered) | Yes |
-| `version` | Workflow version | No (defaults to latest) |
-| `input` | JSON object with input parameters for the workflow | No |
-| `correlationId` | Unique ID to correlate multiple workflow executions | No |
-| `taskToDomain` | Task-to-domain mapping. See [Task Domains](taskdomains.md). | No |
-| `workflowDef` | Inline [Workflow Definition](../configuration/workflowdef/index.md) for dynamic workflows. See [Dynamic Workflows](#dynamic-workflows). | No |
-| `externalInputPayloadStoragePath` | Path to external payload storage. See [External Payload Storage](../advanced/externalpayloadstorage.md). | No |
-| `priority` | Priority level (0–99) for tasks within this workflow | No |
+| Field                             | Description                                                                                                                             | Required                |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `name`                            | Workflow name (must be registered)                                                                                                      | Yes                     |
+| `version`                         | Workflow version                                                                                                                        | No (defaults to latest) |
+| `input`                           | JSON object with input parameters for the workflow                                                                                      | No                      |
+| `correlationId`                   | Unique ID to correlate multiple workflow executions                                                                                     | No                      |
+| `taskToDomain`                    | Task-to-domain mapping. See [Task Domains](taskdomains.md).                                                                             | No                      |
+| `workflowDef`                     | Inline [Workflow Definition](../configuration/workflowdef/index.md) for dynamic workflows. See [Dynamic Workflows](#dynamic-workflows). | No                      |
+| `externalInputPayloadStoragePath` | Path to external payload storage. See [External Payload Storage](../advanced/externalpayloadstorage.md).                                | No                      |
+| `priority`                        | Priority level (0–99) for tasks within this workflow                                                                                    | No                      |
 
 ### Example
 
@@ -59,12 +59,12 @@ POST /api/workflow/{name}
 
 Alternative way to start a workflow — specify the name in the path and pass input as the request body.
 
-| Parameter | Type | Description | Required |
-|---|---|---|---|
-| `name` | Path | Workflow name | Yes |
-| `version` | Query | Workflow version | No |
-| `correlationId` | Query | Correlation ID | No |
-| `priority` | Query | Priority 0–99 (default: 0) | No |
+| Parameter       | Type  | Description                | Required |
+| --------------- | ----- | -------------------------- | -------- |
+| `name`          | Path  | Workflow name              | Yes      |
+| `version`       | Query | Workflow version           | No       |
+| `correlationId` | Query | Correlation ID             | No       |
+| `priority`      | Query | Priority 0–99 (default: 0) | No       |
 
 ```shell
 curl -X POST 'http://localhost:8080/api/workflow/myWorkflow?version=1&correlationId=order-123' \
@@ -84,15 +84,15 @@ POST /api/workflow/execute/{name}/{version}
 
 Starts a workflow and **waits for completion** (or a specified condition) before returning the result. This eliminates the need to poll for workflow status.
 
-| Parameter | Type | Description | Required |
-|---|---|---|---|
-| `name` | Path | Workflow name | Yes |
-| `version` | Path | Workflow version (use `0` for latest) | Yes |
-| `requestId` | Query | Idempotency key | No (auto-generated) |
-| `waitUntilTaskRef` | Query | Comma-separated task reference names to wait for | No |
-| `waitForSeconds` | Query | Maximum wait time in seconds | No (default: 10) |
-| `consistency` | Query | `DURABLE` or `EVENTUAL` | No (default: `DURABLE`) |
-| `returnStrategy` | Query | Controls which workflow state is returned | No (default: `TARGET_WORKFLOW`) |
+| Parameter          | Type  | Description                                      | Required                        |
+| ------------------ | ----- | ------------------------------------------------ | ------------------------------- |
+| `name`             | Path  | Workflow name                                    | Yes                             |
+| `version`          | Path  | Workflow version (use `0` for latest)            | Yes                             |
+| `requestId`        | Query | Idempotency key                                  | No (auto-generated)             |
+| `waitUntilTaskRef` | Query | Comma-separated task reference names to wait for | No                              |
+| `waitForSeconds`   | Query | Maximum wait time in seconds                     | No (default: 10)                |
+| `consistency`      | Query | `DURABLE` or `EVENTUAL`                          | No (default: `DURABLE`)         |
+| `returnStrategy`   | Query | Controls which workflow state is returned        | No (default: `TARGET_WORKFLOW`) |
 
 Request body: a StartWorkflowRequest object (same format as the [async start](#start-a-workflow-asynchronous)).
 
@@ -175,4 +175,4 @@ curl -X POST 'http://localhost:8080/api/workflow' \
 **Response** `200 OK` — returns the workflow ID as plain text.
 
 !!! note
-    If a `taskDefinition` is already registered via the Metadata API, it does not need to be included inline in the dynamic workflow definition.
+If a `taskDefinition` is already registered via the Metadata API, it does not need to be included inline in the dynamic workflow definition.

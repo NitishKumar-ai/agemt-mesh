@@ -1,6 +1,7 @@
 ---
-description: "License — AgentMesh is released under the Apache License 2.0 for free commercial and open-source use."
+description: 'License — AgentMesh is released under the Apache License 2.0 for free commercial and open-source use.'
 ---
+
 # License
 
 Copyright 2023 AgentMesh authors.

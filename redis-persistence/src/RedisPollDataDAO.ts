@@ -19,7 +19,7 @@ export class RedisPollDataDAO implements PollDataDAO {
 
   async getPollDataForTask(taskDefName: string): Promise<PollData[]> {
     const all = await this.getAllPollData();
-    return all.filter(p => p.queueName === taskDefName);
+    return all.filter((p) => p.queueName === taskDefName);
   }
 
   async getAllPollData(): Promise<PollData[]> {

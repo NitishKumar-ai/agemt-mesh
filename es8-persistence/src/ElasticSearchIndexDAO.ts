@@ -141,7 +141,7 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     freeText: string,
     start: number,
     count: number,
-    sort: string[]
+    sort: string[],
   ): Promise<SearchResult<string>> {
     const response = await this.client.search({
       index: this.workflowIndexName,
@@ -152,7 +152,10 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     const results = response.hits.hits.map((hit) => hit._id as string);
     return {
       results,
-      totalHits: typeof response.hits.total === 'number' ? response.hits.total : response.hits.total?.value || 0,
+      totalHits:
+        typeof response.hits.total === 'number'
+          ? response.hits.total
+          : response.hits.total?.value || 0,
     };
   }
 
@@ -161,7 +164,7 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     freeText: string,
     start: number,
     count: number,
-    sort: string[]
+    sort: string[],
   ): Promise<SearchResult<WorkflowModel>> {
     const response = await this.client.search<WorkflowModel>({
       index: this.workflowIndexName,
@@ -172,7 +175,10 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     const results = response.hits.hits.map((hit) => hit._source!);
     return {
       results,
-      totalHits: typeof response.hits.total === 'number' ? response.hits.total : response.hits.total?.value || 0,
+      totalHits:
+        typeof response.hits.total === 'number'
+          ? response.hits.total
+          : response.hits.total?.value || 0,
     };
   }
 
@@ -181,7 +187,7 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     freeText: string,
     start: number,
     count: number,
-    sort: string[]
+    sort: string[],
   ): Promise<SearchResult<string>> {
     const response = await this.client.search({
       index: this.taskIndexName,
@@ -192,7 +198,10 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     const results = response.hits.hits.map((hit) => hit._id as string);
     return {
       results,
-      totalHits: typeof response.hits.total === 'number' ? response.hits.total : response.hits.total?.value || 0,
+      totalHits:
+        typeof response.hits.total === 'number'
+          ? response.hits.total
+          : response.hits.total?.value || 0,
     };
   }
 
@@ -201,7 +210,7 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     freeText: string,
     start: number,
     count: number,
-    sort: string[]
+    sort: string[],
   ): Promise<SearchResult<TaskModel>> {
     const response = await this.client.search<TaskModel>({
       index: this.taskIndexName,
@@ -212,15 +221,22 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     const results = response.hits.hits.map((hit) => hit._source!);
     return {
       results,
-      totalHits: typeof response.hits.total === 'number' ? response.hits.total : response.hits.total?.value || 0,
+      totalHits:
+        typeof response.hits.total === 'number'
+          ? response.hits.total
+          : response.hits.total?.value || 0,
     };
   }
 
   async removeWorkflow(workflowId: string): Promise<void> {
-    await this.client.delete({
-      index: this.workflowIndexName,
-      id: workflowId,
-    }).catch(e => { if (e.meta?.statusCode !== 404) throw e; });
+    await this.client
+      .delete({
+        index: this.workflowIndexName,
+        id: workflowId,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
   async asyncRemoveWorkflow(workflowId: string): Promise<void> {
@@ -232,41 +248,67 @@ export class ElasticSearchIndexDAO implements IndexDAO {
     keys.forEach((key, i) => {
       doc[key] = values[i];
     });
-    await this.client.update({
-      index: this.workflowIndexName,
-      id: workflowInstanceId,
-      doc,
-    }).catch(e => { if (e.meta?.statusCode !== 404) throw e; });
+    await this.client
+      .update({
+        index: this.workflowIndexName,
+        id: workflowInstanceId,
+        doc,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
-  async asyncUpdateWorkflow(workflowInstanceId: string, keys: string[], values: any[]): Promise<void> {
+  async asyncUpdateWorkflow(
+    workflowInstanceId: string,
+    keys: string[],
+    values: any[],
+  ): Promise<void> {
     await this.updateWorkflow(workflowInstanceId, keys, values);
   }
 
   async removeTask(workflowId: string, taskId: string): Promise<void> {
-    await this.client.delete({
-      index: this.taskIndexName,
-      id: taskId,
-    }).catch(e => { if (e.meta?.statusCode !== 404) throw e; });
+    await this.client
+      .delete({
+        index: this.taskIndexName,
+        id: taskId,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
   async asyncRemoveTask(workflowId: string, taskId: string): Promise<void> {
     await this.removeTask(workflowId, taskId);
   }
 
-  async updateTask(workflowId: string, taskId: string, keys: string[], values: any[]): Promise<void> {
+  async updateTask(
+    workflowId: string,
+    taskId: string,
+    keys: string[],
+    values: any[],
+  ): Promise<void> {
     const doc: any = {};
     keys.forEach((key, i) => {
       doc[key] = values[i];
     });
-    await this.client.update({
-      index: this.taskIndexName,
-      id: taskId,
-      doc,
-    }).catch(e => { if (e.meta?.statusCode !== 404) throw e; });
+    await this.client
+      .update({
+        index: this.taskIndexName,
+        id: taskId,
+        doc,
+      })
+      .catch((e) => {
+        if (e.meta?.statusCode !== 404) throw e;
+      });
   }
 
-  async asyncUpdateTask(workflowId: string, taskId: string, keys: string[], values: any[]): Promise<void> {
+  async asyncUpdateTask(
+    workflowId: string,
+    taskId: string,
+    keys: string[],
+    values: any[],
+  ): Promise<void> {
     await this.updateTask(workflowId, taskId, keys, values);
   }
 
@@ -301,7 +343,7 @@ export class ElasticSearchIndexDAO implements IndexDAO {
       },
       size: 1000,
     });
-    return response.hits.hits.map(hit => hit._id as string);
+    return response.hits.hits.map((hit) => hit._id as string);
   }
 
   async getWorkflowCount(query: string, freeText: string): Promise<number> {

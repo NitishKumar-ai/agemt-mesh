@@ -1,6 +1,7 @@
 ---
-description: "Annotation Processor — use code generation during AgentMesh builds with annotation-based processing for protobuf and more."
+description: 'Annotation Processor — use code generation during AgentMesh builds with annotation-based processing for protobuf and more.'
 ---
+
 # Annotation Processor
 
 This module is strictly for code generation tasks during builds based on annotations.
@@ -26,4 +27,3 @@ task protogen(dependsOn: jar, type: JavaExec) {
     )
 }
 ```
-

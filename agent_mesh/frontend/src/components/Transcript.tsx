@@ -1,10 +1,10 @@
-import { ArrowDown, Check, ChevronDown, Clock } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { eventBody, eventTitle, shortTime } from "../lib/format";
-import type { MeshEvent, SessionMessage } from "../lib/types";
-import { MessageCard } from "./MessageCard";
-import { ThinkingIndicator } from "./ThinkingIndicator";
-import { StatusBadge } from "./StatusBadge";
+import { ArrowDown, Check, ChevronDown, Clock } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { eventBody, eventTitle, shortTime } from '../lib/format';
+import type { MeshEvent, SessionMessage } from '../lib/types';
+import { MessageCard } from './MessageCard';
+import { ThinkingIndicator } from './ThinkingIndicator';
+import { StatusBadge } from './StatusBadge';
 
 type Props = {
   messages: SessionMessage[];
@@ -24,7 +24,7 @@ export function Transcript({ messages, events, workflowId, running, onApprove }:
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (autoScroll && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     } else if (messages.length > prevMessageCount.current) {
       setShowNewMessages(true);
     }
@@ -41,7 +41,7 @@ export function Transcript({ messages, events, workflowId, running, onApprove }:
   }, []);
 
   function scrollToBottom() {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     setShowNewMessages(false);
     setAutoScroll(true);
   }
@@ -53,9 +53,7 @@ export function Transcript({ messages, events, workflowId, running, onApprove }:
         <MessageCard
           key={message.id}
           message={message}
-          onApprove={
-            message.role === "approval" ? onApprove : undefined
-          }
+          onApprove={message.role === 'approval' ? onApprove : undefined}
         />
       ))}
 
@@ -64,11 +62,11 @@ export function Transcript({ messages, events, workflowId, running, onApprove }:
         .slice()
         .reverse()
         .map((event) => {
-          const needsApproval = event.eventType.includes("approval");
+          const needsApproval = event.eventType.includes('approval');
           return (
             <article
               key={event.id}
-              className={`step-card ${needsApproval ? "step-card--approval" : ""}`}
+              className={`step-card ${needsApproval ? 'step-card--approval' : ''}`}
             >
               <div className="step-icon">
                 {needsApproval ? <Clock size={17} /> : <Check size={17} />}
@@ -113,11 +111,11 @@ export function Transcript({ messages, events, workflowId, running, onApprove }:
       {running && (
         <ThinkingIndicator
           label={
-            messages.some((m) => m.status === "planning")
-              ? "Planning…"
-              : messages.some((m) => m.status === "executing")
-              ? "Executing…"
-              : "Thinking…"
+            messages.some((m) => m.status === 'planning')
+              ? 'Planning…'
+              : messages.some((m) => m.status === 'executing')
+                ? 'Executing…'
+                : 'Thinking…'
           }
           startTime={messages.length ? messages[messages.length - 1].time : undefined}
         />

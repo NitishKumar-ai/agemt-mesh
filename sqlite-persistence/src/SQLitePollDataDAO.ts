@@ -44,7 +44,10 @@ export class SqlitePollDataDAO implements PollDataDAO {
     }
   }
 
-  async getPollData(taskDefName: string, domain: string | undefined): Promise<PollData | undefined> {
+  async getPollData(
+    taskDefName: string,
+    domain: string | undefined,
+  ): Promise<PollData | undefined> {
     const effectiveDomain = domain ?? 'DEFAULT';
     const row = await this.db
       .selectFrom('poll_data')

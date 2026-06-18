@@ -94,37 +94,26 @@ describe('Postgres DAOs Integration', () => {
       'event_execution',
       'meta_workflow_def',
       'meta_task_def',
-      'meta_event_handler'
+      'meta_event_handler',
     ];
     for (const table of tables) {
       await db.deleteFrom(table as any).execute();
     }
   };
 
-  runQueueDAOContractTests(
-    async () => new PostgresQueueDAO(db),
-    clearAllTables,
-  );
+  runQueueDAOContractTests(async () => new PostgresQueueDAO(db), clearAllTables);
 
-  runMetadataDAOContractTests(
-    async () => new PostgresMetadataDAO(db),
-    clearAllTables,
-  );
+  runMetadataDAOContractTests(async () => new PostgresMetadataDAO(db), clearAllTables);
 
-  runExecutionDAOContractTests(
-    async () => new PostgresExecutionDAO(db),
-    clearAllTables,
-  );
+  runExecutionDAOContractTests(async () => new PostgresExecutionDAO(db), clearAllTables);
 
-  runPollDataDAOContractTests(
-    async () => new PostgresPollDataDAO(db),
-    clearAllTables,
-  );
+  runPollDataDAOContractTests(async () => new PostgresPollDataDAO(db), clearAllTables);
 
   runConcurrentExecutionLimitDAOContractTests(
     async () => new PostgresConcurrentExecutionLimitDAO(db),
     async (taskDefName, taskId, workflowId, inProgress) => {
-      await db.insertInto('task_in_progress')
+      await db
+        .insertInto('task_in_progress')
         .values({
           task_def_name: taskDefName,
           task_id: taskId,
@@ -136,8 +125,5 @@ describe('Postgres DAOs Integration', () => {
     clearAllTables,
   );
 
-  runRateLimitingDAOContractTests(
-    async () => new PostgresRateLimitingDAO(db),
-    clearAllTables,
-  );
+  runRateLimitingDAOContractTests(async () => new PostgresRateLimitingDAO(db), clearAllTables);
 });

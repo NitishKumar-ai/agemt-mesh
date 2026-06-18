@@ -25,9 +25,9 @@ async function startServer() {
         PORT: PORT.toString(),
         DB_PATH: DB_PATH,
         NODE_ENV: 'test',
-        LOG_FORMAT: 'tiny'
+        LOG_FORMAT: 'tiny',
       },
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     const timeout = setTimeout(() => {
@@ -92,16 +92,16 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
         name: 'chaos_task',
         taskReferenceName: 't1',
         type: 'SIMPLE',
-        inputParameters: {}
-      }
-    ]
+        inputParameters: {},
+      },
+    ],
   });
 
   // 2. Start workflow
   const startRes = await axios.post(`${BASE_URL}/api/workflow`, {
     name: wfName,
     version: 1,
-    input: {}
+    input: {},
   });
   const workflowId = startRes.data;
   console.log(`Started workflow: ${workflowId}`);
@@ -132,7 +132,7 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
     workflowInstanceId: workflowId,
     taskId: task.taskId,
     status: 'COMPLETED',
-    outputData: { result: 'recovered' }
+    outputData: { result: 'recovered' },
   });
 
   // 8. Wait for completion
@@ -143,7 +143,7 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
       completed = true;
       break;
     }
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
   }
   expect(completed).toBe(true);
   console.log('Chaos test passed: workflow recovered and completed.');

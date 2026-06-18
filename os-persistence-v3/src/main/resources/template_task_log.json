@@ -1,5 +1,5 @@
 {
-  "index_patterns": [ "*task*log*" ],
+  "index_patterns": ["*task*log*"],
   "priority": 1,
   "template": {
     "settings": {
@@ -19,6 +19,6 @@
         }
       }
     },
-    "aliases": { }
+    "aliases": {}
   }
 }

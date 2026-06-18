@@ -1,49 +1,47 @@
 ---
-description: "Building from Source — build and run the AgentMesh server and UI locally from source for development and testing."
+description: 'Building from Source — build and run the AgentMesh server and UI locally from source for development and testing.'
 ---
+
 # Building from source
 
 Build and run AgentMesh server and UI locally from source. The default configuration uses in-memory persistence with no indexing — all data is lost when the server stops. This setup is for development and testing only.
 
 For persistent backends, use [Docker Compose](deploy.md) or configure a database backend.
 
-
 ## Prerequisites
 
 - Java (JDK) 21+
 - (Optional) [Docker](https://www.docker.com/get-started/) for running tests
 
-
 ## Building and running the server
 
 1. Clone the repository:
 
-    ```shell
-    git clone https://github.com/agentmesh-oss/agentmesh.git
-    cd agentmesh
-    ```
+   ```shell
+   git clone https://github.com/agentmesh-oss/agentmesh.git
+   cd agentmesh
+   ```
 
 2. Run with Gradle:
 
-    ```shell
-    cd server
-    ../gradlew bootRun
-    ```
+   ```shell
+   cd server
+   ../gradlew bootRun
+   ```
 
-    To use a custom configuration file:
+   To use a custom configuration file:
 
-    ```shell
-    CONFIG_PROP=config.properties ../gradlew bootRun
-    ```
+   ```shell
+   CONFIG_PROP=config.properties ../gradlew bootRun
+   ```
 
 3. The server is now running:
 
-    | URL | Description |
-    |:----|:---|
-    | `http://localhost:8080` | AgentMesh UI |
-    | `http://localhost:8080/swagger-ui/index.html` | REST API docs |
-    | `http://localhost:8080/api/` | API base URL |
-
+   | URL                                           | Description   |
+   | :-------------------------------------------- | :------------ |
+   | `http://localhost:8080`                       | AgentMesh UI  |
+   | `http://localhost:8080/swagger-ui/index.html` | REST API docs |
+   | `http://localhost:8080/api/`                  | API base URL  |
 
 ## Running from a pre-compiled JAR
 
@@ -56,7 +54,6 @@ curl $REPO_URL/$AGENTMESH_VER/agentmesh-core-$AGENTMESH_VER-boot.jar \
   --output agentmesh-core-$AGENTMESH_VER-boot.jar
 java -jar agentmesh-core-$AGENTMESH_VER-boot.jar
 ```
-
 
 ## Running the UI from source
 

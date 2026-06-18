@@ -1,7 +1,7 @@
 services:
   agentmesh-server:
     ports:
-      - "8000:8080"
-      - "8127:5000"
+      - '8000:8080'
+      - '8127:5000'
   agentmesh-postgres:
     image: postgres:16
