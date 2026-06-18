@@ -3,7 +3,9 @@ import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@conductor/common-persistence';
 import { InitialSchemaMigration } from '@conductor/common-persistence';
 import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@conductor/sqlite-persistence';
-import { createApp, WorkflowService, TaskService } from '@conductor/rest';
+import { WorkflowService, TaskService } from '@conductor/rest';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './AppModule.js';
 import {
   AgentWorkerPool,
   AgentWorkflowExecutor,
@@ -93,11 +95,25 @@ async function main(): Promise<void> {
     await queueDAO.getSize('__probe__');
   };
 
-  const app = createApp({ executionDAO, metadataDAO, queueDAO, pollDataDAO: metadataDAO as never, dbProbe }, cfg.version);
+  const startTime = Date.now();
+  
+  const app = await NestFactory.create(AppModule.register({
+    executionDAO: executionDAO as never,
+    metadataDAO: metadataDAO as never,
+    queueDAO: queueDAO as never,
+    pollDataDAO: metadataDAO as never,
+    version: cfg.version,
+    dbProbe,
+    startTime
+  }), { cors: { origin: cfg.corsOrigins }, logger: false });
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use(morgan(cfg.logFormat));
 
   // --- Agent Runtime Wiring ---
-  const workflowService = new WorkflowService(executionDAO as never, metadataDAO as never, queueDAO as never);
-  const taskService = new TaskService(executionDAO as never, queueDAO as never, metadataDAO as never, metadataDAO as never);
+  // Resolve services from NestJS DI
+  const workflowService = app.get(WorkflowService);
+  const taskService = app.get(TaskService);
 
   const eventBus = new InProcessEventBus();
   const killswitch = new DbKillswitch(executionDAO as never);
@@ -187,25 +203,18 @@ async function main(): Promise<void> {
     agentExecutor as never
   );
 
-  app.use(cors({ origin: cfg.corsOrigins }));
-  app.use(morgan(cfg.logFormat));
-  
-  app.use('/api/agents', agentRouter);
+  expressApp.use('/api/agents', agentRouter);
 
-  const server = app.listen(cfg.port, () => {
-    console.log(`Listening on http://localhost:${cfg.port}`);
-  });
+  await app.init();
+  const server = app.getHttpServer();
+  await app.listen(cfg.port);
+  console.log(`Listening on http://localhost:${cfg.port}`);
 
   const processManager = new ProcessManager();
   
   processManager.register({
     name: 'http-server',
-    shutdown: () => new Promise<void>((resolve, reject) => {
-      server.close((err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    })
+    shutdown: () => app.close()
   });
 
   processManager.register({

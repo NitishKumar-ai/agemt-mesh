@@ -137,10 +137,10 @@ Nest application (DI of core + persistence + tasks). Keep paths **identical** to
 Java (per CLAUDE.md — paths are the spec, e.g. `POST execute/{name}/{version}`).
 
 **Exit criteria**
-- [ ] Endpoint parity: every kept Java route exists with identical path + verb
-- [ ] OpenAPI spec generated; contract tests green
-- [ ] End-to-end: start workflow via REST → runs to completion on SQLite locally
-- [ ] `server-lite` boots in < 5s and passes a health check
+- [x] Endpoint parity: every kept Java route exists with identical path + verb
+- [x] OpenAPI spec generated; contract tests green
+- [x] End-to-end: start workflow via REST → runs to completion on SQLite locally
+- [x] `server-lite` boots in < 5s and passes a health check
 
 ### Phase 5 — AI module integration (`@agentmesh/ai`)
 Finish the in-progress `ai/src/main/typescript` port; expose LLM chat/embeddings/
