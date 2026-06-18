@@ -37,7 +37,7 @@
         "baseFontSize": 11,
         "pdfMetadata": {
           "title": "${workflow.input.topic}",
-          "author": "Conductor AI Pipeline",
+          "author": "AgentMesh AI Pipeline",
           "subject": "Auto-generated report"
         }
       }

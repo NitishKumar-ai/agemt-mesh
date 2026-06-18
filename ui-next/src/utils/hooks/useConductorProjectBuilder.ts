@@ -4,7 +4,7 @@ import {
 } from "components/features/getStartedSample/types";
 import { useState, useEffect, useCallback } from "react";
 
-interface UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsBase {
   apiKey?: string;
   apiSecret?: string;
   serverUrl: string;
@@ -13,58 +13,58 @@ interface UseConductorProjectBuilderOptionsBase {
   useEnvVars: boolean;
 }
 
-interface UseConductorProjectBuilderOptionsJava extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsJava extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.JAVA;
   languageSet: JavaLanguageSet;
   projectName?: string;
   packageName?: string;
 }
 
-interface UseConductorProjectBuilderOptionsGo extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsGo extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.GO;
 }
 
-interface UseConductorProjectBuilderOptionsPython extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsPython extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.PYTHON;
 }
 
-interface UseConductorProjectBuilderOptionsJavaScript extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsJavaScript extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.JS;
 }
 
-interface UseConductorProjectBuilderOptionsCSharp extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsCSharp extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.CSHARP;
   namespace?: string;
 }
 
-interface UseConductorProjectBuilderOptionsClojure extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsClojure extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.CLOJURE;
 }
 
-interface UseConductorProjectBuilderOptionsGroovy extends UseConductorProjectBuilderOptionsBase {
+interface UseAgentMeshProjectBuilderOptionsGroovy extends UseAgentMeshProjectBuilderOptionsBase {
   language: CodeLanguage.GROOVY;
   packageName?: string;
 }
 
-type UseConductorProjectBuilderOptions =
-  | UseConductorProjectBuilderOptionsJava
-  | UseConductorProjectBuilderOptionsGo
-  | UseConductorProjectBuilderOptionsPython
-  | UseConductorProjectBuilderOptionsJavaScript
-  | UseConductorProjectBuilderOptionsCSharp
-  | UseConductorProjectBuilderOptionsClojure
-  | UseConductorProjectBuilderOptionsGroovy;
+type UseAgentMeshProjectBuilderOptions =
+  | UseAgentMeshProjectBuilderOptionsJava
+  | UseAgentMeshProjectBuilderOptionsGo
+  | UseAgentMeshProjectBuilderOptionsPython
+  | UseAgentMeshProjectBuilderOptionsJavaScript
+  | UseAgentMeshProjectBuilderOptionsCSharp
+  | UseAgentMeshProjectBuilderOptionsClojure
+  | UseAgentMeshProjectBuilderOptionsGroovy;
 
-interface UseConductorProjectBuilderReturn {
+interface UseAgentMeshProjectBuilderReturn {
   displayCode: string;
   onDownload: () => Promise<void>;
 }
 
 const BASE_URL = "https://m9mk8uem2r.us-east-1.awsapprunner.com/";
 
-export const useConductorProjectBuilder = (
-  options: UseConductorProjectBuilderOptions,
-): UseConductorProjectBuilderReturn => {
+export const useAgentMeshProjectBuilder = (
+  options: UseAgentMeshProjectBuilderOptions,
+): UseAgentMeshProjectBuilderReturn => {
   const { apiKey, apiSecret, serverUrl, language, taskName, useEnvVars } =
     options;
   const [displayCode, setDisplayCode] = useState<string>("");
@@ -201,20 +201,20 @@ export const useConductorProjectBuilder = (
         ...(useEnvVars && { useEnvVars }),
         ...(options.language === CodeLanguage.JAVA && {
           projectName:
-            (options as UseConductorProjectBuilderOptionsJava).projectName ||
+            (options as UseAgentMeshProjectBuilderOptionsJava).projectName ||
             undefined,
           packageName:
-            (options as UseConductorProjectBuilderOptionsJava).packageName ||
+            (options as UseAgentMeshProjectBuilderOptionsJava).packageName ||
             undefined,
         }),
         ...(options.language === CodeLanguage.CSHARP && {
           namespace:
-            (options as UseConductorProjectBuilderOptionsCSharp).namespace ||
+            (options as UseAgentMeshProjectBuilderOptionsCSharp).namespace ||
             undefined,
         }),
         ...(options.language === CodeLanguage.GROOVY && {
           packageNacme:
-            (options as UseConductorProjectBuilderOptionsGroovy).packageName ||
+            (options as UseAgentMeshProjectBuilderOptionsGroovy).packageName ||
             undefined,
         }),
       };

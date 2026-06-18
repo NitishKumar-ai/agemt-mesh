@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, isTaskTerminal, isWorkflowTerminal, isWorkflowSuccessful } from '@conductor/common';
+import { TaskType, isTaskTerminal, isWorkflowTerminal, isWorkflowSuccessful } from '@agentmesh/common';
 
 const SUB_WORKFLOW_ID = 'subWorkflowId';
 const SUB_WORKFLOW_LAUNCH_ERROR = 'subWorkflowLaunchError';

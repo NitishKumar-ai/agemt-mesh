@@ -1,6 +1,6 @@
 import { Kysely, Transaction, sql } from 'kysely';
-import { MetadataDAO, Database, WorkflowDefSummary } from '@conductor/common-persistence';
-import { TaskDef, WorkflowDef, EventHandler, NotFoundException, ConflictException } from '@conductor/common';
+import { MetadataDAO, Database, WorkflowDefSummary } from '@agentmesh/common-persistence';
+import { TaskDef, WorkflowDef, EventHandler, NotFoundException, ConflictException } from '@agentmesh/common';
 
 export class SqliteMetadataDAO implements MetadataDAO {
   constructor(private readonly db: Kysely<Database>) {}

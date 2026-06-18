@@ -1,5 +1,5 @@
 ---
-description: "Conductor Workflow API — manage workflow executions including pause, resume, retry, restart, rerun, terminate, search, and test workflows via REST."
+description: "AgentMesh Workflow API — manage workflow executions including pause, resume, retry, restart, rerun, terminate, search, and test workflows via REST."
 ---
 
 # Workflow API

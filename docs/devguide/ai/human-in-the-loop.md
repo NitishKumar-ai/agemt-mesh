@@ -4,9 +4,9 @@ description: Human-in-the-loop patterns for AI agents — pre-execution approval
 
 # Human-in-the-loop
 
-Production agents need oversight. Conductor's `HUMAN` task is a durable pause — the workflow stops, persists its state, and resumes only when a human responds via the Task Update API. This pause survives server restarts, deploys, and infrastructure changes. Whether the reviewer responds in 5 seconds or 5 days, the workflow state is preserved and execution resumes exactly where it left off.
+Production agents need oversight. AgentMesh's `HUMAN` task is a durable pause — the workflow stops, persists its state, and resumes only when a human responds via the Task Update API. This pause survives server restarts, deploys, and infrastructure changes. Whether the reviewer responds in 5 seconds or 5 days, the workflow state is preserved and execution resumes exactly where it left off.
 
-Conductor supports two distinct patterns for human oversight, plus LLM-as-judge for automated review.
+AgentMesh supports two distinct patterns for human oversight, plus LLM-as-judge for automated review.
 
 
 ## Pre-execution review

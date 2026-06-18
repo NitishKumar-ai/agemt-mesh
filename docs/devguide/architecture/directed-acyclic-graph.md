@@ -1,9 +1,9 @@
 ---
-description: "Directed Acyclic Graph (DAG) — understand how Conductor models workflows as DAGs for reliable task orchestration."
+description: "Directed Acyclic Graph (DAG) — understand how AgentMesh models workflows as DAGs for reliable task orchestration."
 ---
 # Directed Acyclic Graph (DAG)
 
-All Conductor workflows are directed acyclic graphs (DAGs). A directed acyclic graph (DAG) is a set of vertices where the connections are unidirectional without any repetition. DAG workflows can only "move forward" and cannot redo a step (or series of steps).
+All AgentMesh workflows are directed acyclic graphs (DAGs). A directed acyclic graph (DAG) is a set of vertices where the connections are unidirectional without any repetition. DAG workflows can only "move forward" and cannot redo a step (or series of steps).
 
 Here is a breakdown of what DAG means:
 
@@ -29,18 +29,18 @@ Here is a breakdown of what DAG means:
 
 ## Workflows as DAGs
 
-Since a Conductor workflow is a series of tasks that can connect in only a specific direction and cannot loop, it is a directed acyclic graph:
+Since a AgentMesh workflow is a series of tasks that can connect in only a specific direction and cannot loop, it is a directed acyclic graph:
 
-![A Conductor workflow.](dag_workflow2.png)
+![A AgentMesh workflow.](dag_workflow2.png)
 
 The flow of tasks is specified in a `tasks` array in a JSON file called a workflow definition, which can also be written in code (Python, Java, JavaScript, C#, Go, Clojure).
 
 
 ### Can a workflow contain loops and still be a DAG?
 
-Yes. Take the following Conductor workflow, which contains Do While loops, for example:
+Yes. Take the following AgentMesh workflow, which contains Do While loops, for example:
 
-![A Conductor workflow with Do While loop.](dag_workflow.png)
+![A AgentMesh workflow with Do While loop.](dag_workflow.png)
 
 This workflow is still a DAG because the loop is just a simplified representation for running multiple instances of the same tasks repeatedly. For example, if the 2nd loop in the above workflow is run three times, the workflow path will be:
 

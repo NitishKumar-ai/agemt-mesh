@@ -1,7 +1,7 @@
 {
-  "name": "@conductor/annotations-processor",
+  "name": "@agentmesh/annotations-processor",
   "version": "1.0.0",
-  "description": "Protobuf code generator for @conductor/annotations decorators",
+  "description": "Protobuf code generator for @agentmesh/annotations decorators",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -13,7 +13,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@conductor/annotations": "file:../annotations",
+    "@agentmesh/annotations": "file:../annotations",
     "handlebars": "^4.7.8",
     "reflect-metadata": "^0.2.2"
   },

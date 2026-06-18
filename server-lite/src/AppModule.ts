@@ -1,8 +1,18 @@
 import { Module, DynamicModule, Global } from '@nestjs/common';
-import { RestModule } from '@conductor/rest';
-import type { WorkflowExecutor } from '@conductor/core';
+import {
+  RestModule,
+  EXECUTION_DAO,
+  METADATA_DAO,
+  QUEUE_DAO,
+  POLL_DATA_DAO,
+  WORKFLOW_EXECUTOR as WORKFLOW_EXECUTOR_TOKEN,
+  START_TIME,
+  VERSION,
+  DB_PROBE
+} from '@agentmesh/rest';
+import type { WorkflowExecutor } from '@agentmesh/core';
 
-export const WORKFLOW_EXECUTOR = 'WORKFLOW_EXECUTOR';
+export const WORKFLOW_EXECUTOR = WORKFLOW_EXECUTOR_TOKEN;
 
 export interface AppModuleOptions {
   executionDAO: any;
@@ -23,23 +33,23 @@ export class AppModule {
       module: AppModule,
       imports: [RestModule.forRoot()],
       providers: [
-        { provide: 'EXECUTION_DAO', useValue: options.executionDAO },
-        { provide: 'METADATA_DAO', useValue: options.metadataDAO },
-        { provide: 'QUEUE_DAO', useValue: options.queueDAO },
-        { provide: 'POLL_DATA_DAO', useValue: options.pollDataDAO },
-        { provide: 'VERSION', useValue: options.version },
-        { provide: 'START_TIME', useValue: options.startTime },
-        { provide: 'DB_PROBE', useValue: options.dbProbe },
+        { provide: EXECUTION_DAO, useValue: options.executionDAO },
+        { provide: METADATA_DAO, useValue: options.metadataDAO },
+        { provide: QUEUE_DAO, useValue: options.queueDAO },
+        { provide: POLL_DATA_DAO, useValue: options.pollDataDAO },
+        { provide: VERSION, useValue: options.version },
+        { provide: START_TIME, useValue: options.startTime },
+        { provide: DB_PROBE, useValue: options.dbProbe },
         { provide: WORKFLOW_EXECUTOR, useValue: options.workflowExecutor ?? null },
       ],
       exports: [
-        'EXECUTION_DAO',
-        'METADATA_DAO',
-        'QUEUE_DAO',
-        'POLL_DATA_DAO',
-        'VERSION',
-        'START_TIME',
-        'DB_PROBE',
+        EXECUTION_DAO,
+        METADATA_DAO,
+        QUEUE_DAO,
+        POLL_DATA_DAO,
+        VERSION,
+        START_TIME,
+        DB_PROBE,
         WORKFLOW_EXECUTOR,
       ],
     };

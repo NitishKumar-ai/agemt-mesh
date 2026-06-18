@@ -18,7 +18,7 @@ export const sampleJavaCode = ({
  * 
  * Project Directory Structure:
  *
- * conductor-sample/
+ * agentmesh-sample/
  * ├── src/
  * │   └── main/
  * │       └── java/
@@ -30,8 +30,8 @@ export const sampleJavaCode = ({
  * 2. Add the following dependency to your pom.xml file:
  *
  * <dependency>
- *   <groupId>io.orkes.conductor</groupId>
- *   <artifactId>orkes-conductor-client</artifactId>
+ *   <groupId>io.orkes.agentmesh</groupId>
+ *   <artifactId>orkes-agentmesh-client</artifactId>
  *   <version>1.1.14</version>
  * </dependency>
  *
@@ -44,11 +44,11 @@ export const sampleJavaCode = ({
  */
 
 package org.example;
-import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
-import com.netflix.conductor.sdk.workflow.task.InputParam;
-import com.netflix.conductor.sdk.workflow.task.WorkerTask;
-import io.orkes.conductor.client.ApiClient;
-import io.orkes.conductor.client.OrkesClients;
+import com.agentmesh.agentmesh.sdk.workflow.executor.WorkflowExecutor;
+import com.agentmesh.agentmesh.sdk.workflow.task.InputParam;
+import com.agentmesh.agentmesh.sdk.workflow.task.WorkerTask;
+import io.orkes.agentmesh.client.ApiClient;
+import io.orkes.agentmesh.client.OrkesClients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Collection;
@@ -114,19 +114,19 @@ export const samplePythonCode = ({
 #    conda activate myenv
 #
 # 3. Install the necessary dependencies:
-#    pip install conductor-python
+#    pip install agentmesh-python
 #
 # 4. Run the Python script (replace script.py with your actual script name):
 #    python script.py
 
-from conductor.client.automator.task_handler import TaskHandler
-from conductor.client.configuration.configuration import Configuration
-from conductor.client.worker.worker_task import worker_task
+from agentmesh.client.automator.task_handler import TaskHandler
+from agentmesh.client.configuration.configuration import Configuration
+from agentmesh.client.worker.worker_task import worker_task
 import os
 
-os.environ['CONDUCTOR_SERVER_URL'] = '${window.location.origin}/api'
-os.environ['CONDUCTOR_AUTH_KEY'] = 'SomeKey'
-os.environ['CONDUCTOR_AUTH_SECRET'] = 'SomeValue'
+os.environ['AGENTMESH_SERVER_URL'] = '${window.location.origin}/api'
+os.environ['AGENTMESH_AUTH_KEY'] = 'SomeKey'
+os.environ['AGENTMESH_AUTH_SECRET'] = 'SomeValue'
 
 @worker_task(task_definition_name='${taskDefName}')
 def greet(${
@@ -159,8 +159,8 @@ export const sampleGolangCode = ({
  * 1. Create a Go module for your project:
  *    go mod init mymodule
  *
- * 2. Install the Conductor Go SDK:
- *    go get github.com/conductor-sdk/conductor-go
+ * 2. Install the AgentMesh Go SDK:
+ *    go get github.com/agentmesh-sdk/agentmesh-go
  *
  * 3. Run the Go program (replace main.go with your actual file name):
  *    go run main.go
@@ -177,12 +177,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/conductor-sdk/conductor-go/sdk/client"
-	"github.com/conductor-sdk/conductor-go/sdk/model"
-	"github.com/conductor-sdk/conductor-go/sdk/settings"
+	"github.com/agentmesh-sdk/agentmesh-go/sdk/client"
+	"github.com/agentmesh-sdk/agentmesh-go/sdk/model"
+	"github.com/agentmesh-sdk/agentmesh-go/sdk/settings"
 
-	"github.com/conductor-sdk/conductor-go/sdk/worker"
-	"github.com/conductor-sdk/conductor-go/sdk/workflow/executor"
+	"github.com/agentmesh-sdk/agentmesh-go/sdk/worker"
+	"github.com/agentmesh-sdk/agentmesh-go/sdk/workflow/executor"
 )
 
 var (
@@ -211,7 +211,7 @@ func authSettings() *settings.AuthenticationSettings {
 func httpSettings() *settings.HttpSettings {
 	url := "${window.location.origin}/api" 
 	if url == "" {
-		log.Error("Error: CONDUCTOR_SERVER_URL env variable is not set")
+		log.Error("Error: AGENTMESH_SERVER_URL env variable is not set")
 		os.Exit(1)
 	}
 
@@ -276,8 +276,8 @@ export const sampleCSharpCode = ({
  * 2. Change to the project directory:
  *    cd MyProject
  *
- * 3. Add the Conductor C# SDK:
- *    dotnet add package conductor-csharp
+ * 3. Add the AgentMesh C# SDK:
+ *    dotnet add package agentmesh-csharp
  *
  * 4. Add your worker code in Program.cs or create a separate class file for better organization.
  *
@@ -285,18 +285,18 @@ export const sampleCSharpCode = ({
  *    dotnet run
  */
 
-using Conductor.Api;
-using Conductor.Client.Extensions;
-using Conductor.Definition;
-using Conductor.Client.Worker;
-using Conductor.Client;
-using Conductor.Client.Models;
-using Conductor.Client.Interfaces;
-using Task = Conductor.Client.Models.Task;
+using AgentMesh.Api;
+using AgentMesh.Client.Extensions;
+using AgentMesh.Definition;
+using AgentMesh.Client.Worker;
+using AgentMesh.Client;
+using AgentMesh.Client.Models;
+using AgentMesh.Client.Interfaces;
+using Task = AgentMesh.Client.Models.Task;
 using System.Text.Json;
-using Conductor.Executor;
-using Conductor.Client.Authentication;
-using Conductor.Definition.TaskType;
+using AgentMesh.Executor;
+using AgentMesh.Client.Authentication;
+using AgentMesh.Definition.TaskType;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -363,22 +363,22 @@ export const sampleJavaScriptCode = ({
 }) => `/*
  * To set up the project, install the dependencies, and run the application, follow these steps:
  *
- * 1. Install the Conductor JavaScript SDK:
- *    npm install @io-orkes/conductor-javascript
+ * 1. Install the AgentMesh JavaScript SDK:
+ *    npm install @io-orkes/agentmesh-javascript
  *    or
- *    yarn add @io-orkes/conductor-javascript
+ *    yarn add @io-orkes/agentmesh-javascript
  *
  * 2. Run the JavaScript file (replace yourFile.js with your actual file name):
  *    node yourFile.js
  */
 
 import {
-  orkesConductorClient,
+  orkesAgentMeshClient,
   TaskManager,
-} from "@io-orkes/conductor-javascript";
+} from "@io-orkes/agentmesh-javascript";
 
 async function test() {
-  const clientPromise = orkesConductorClient({
+  const clientPromise = orkesAgentMeshClient({
     // keyId: "XXX", // optional
     // keySecret: "XXXX", // optional
      TOKEN: "${accessToken}",
@@ -424,10 +424,10 @@ export const sampleTypeScriptCode = ({
 }) => `/*
  * To set up the project, install the dependencies, and run the application, follow these steps:
  *
- * 1. Install the Conductor JavaScript SDK:
- *    npm install @io-orkes/conductor-javascript
+ * 1. Install the AgentMesh JavaScript SDK:
+ *    npm install @io-orkes/agentmesh-javascript
  *    or
- *    yarn add @io-orkes/conductor-javascript
+ *    yarn add @io-orkes/agentmesh-javascript
  *
  * 2. Install ts-node if not already installed:
  *    npm install ts-node
@@ -439,13 +439,13 @@ export const sampleTypeScriptCode = ({
  */
 
 import {
-  ConductorWorker,
-  orkesConductorClient,
+  AgentMeshWorker,
+  orkesAgentMeshClient,
   TaskManager,
-} from "@io-orkes/conductor-javascript";
+} from "@io-orkes/agentmesh-javascript";
 
 async function test() {
-  const clientPromise = orkesConductorClient({
+  const clientPromise = orkesAgentMeshClient({
     // keyId: "XXX", // optional
     // keySecret: "XXXX", // optional
     TOKEN: "${accessToken}",
@@ -454,7 +454,7 @@ async function test() {
 
   const client = await clientPromise;
 
-  const customWorker: ConductorWorker = {
+  const customWorker: AgentMeshWorker = {
     taskDefName: "${taskDefName}",
     execute: async ({ inputData${
       inputParamKeys && inputParamKeys?.length > 0

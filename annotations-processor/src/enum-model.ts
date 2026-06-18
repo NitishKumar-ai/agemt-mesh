@@ -1,4 +1,4 @@
-import { PROTO_ENUM_KEY } from '@conductor/annotations';
+import { PROTO_ENUM_KEY } from '@agentmesh/annotations';
 import { AbstractMessage, Field } from './abstract-message';
 import { MessageType } from './types/message-type';
 

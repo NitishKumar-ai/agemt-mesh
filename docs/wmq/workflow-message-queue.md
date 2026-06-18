@@ -4,12 +4,12 @@
 
 ## How it works
 
-WMQ adds a persistent message queue to every running Conductor workflow. While the workflow is active you can push messages to it from anywhere — another service, a Kafka consumer, a webhook handler, a human — and the workflow will pick them up and act on them.
+WMQ adds a persistent message queue to every running AgentMesh workflow. While the workflow is active you can push messages to it from anywhere — another service, a Kafka consumer, a webhook handler, a human — and the workflow will pick them up and act on them.
 
 Two pieces make this work:
 
-1. **`POST /api/workflow/{workflowId}/messages`** — an HTTP endpoint exposed by Conductor that accepts a JSON payload and enqueues it on the workflow's queue.
-2. **`PULL_WORKFLOW_MESSAGES`** — a new Conductor system task that blocks until messages arrive, then completes with `output.messages` containing the batch.
+1. **`POST /api/workflow/{workflowId}/messages`** — an HTTP endpoint exposed by AgentMesh that accepts a JSON payload and enqueues it on the workflow's queue.
+2. **`PULL_WORKFLOW_MESSAGES`** — a new AgentMesh system task that blocks until messages arrive, then completes with `output.messages` containing the batch.
 
 ## Prerequisites
 
@@ -17,8 +17,8 @@ WMQ requires changes that are currently in review:
 
 | Component | PR |
 |---|---|
-| Conductor OSS | https://github.com/conductor-oss/conductor/pull/917 |
-| Python SDK (`conductor-python`) | https://github.com/conductor-oss/python-sdk/pull/389 |
+| AgentMesh OSS | https://github.com/agentmesh-oss/agentmesh/pull/917 |
+| Python SDK (`agentmesh-python`) | https://github.com/agentmesh-oss/python-sdk/pull/389 |
 
 ## Using WMQ
 
@@ -59,7 +59,7 @@ The task completes with:
 }
 ```
 
-Your workflow accesses the user data via `output.messages[0].payload`. The `id` and `receivedAt` fields are added by Conductor at ingestion time.
+Your workflow accesses the user data via `output.messages[0].payload`. The `id` and `receivedAt` fields are added by AgentMesh at ingestion time.
 
 **Push errors:**
 - `409 Conflict` — workflow is not in `RUNNING` state (completed, failed, terminated, etc.). The message is not stored.
@@ -138,7 +138,7 @@ with AgentRuntime() as runtime:
 
 The pattern also works as a bridge from external event streams.
 
-Run the agent (it runs as a workflow in Conductor), then send messages from a Kafka consumer:
+Run the agent (it runs as a workflow in AgentMesh), then send messages from a Kafka consumer:
 
 ```python
 with AgentRuntime() as runtime:
@@ -161,10 +161,10 @@ Full examples: [`72_wait_for_message.py`](../sdk/python/examples/72_wait_for_mes
 ## Configuration
 
 ```properties
-conductor.workflow-message-queue.enabled=true
-conductor.workflow-message-queue.maxQueueSize=1000
-conductor.workflow-message-queue.ttlSeconds=86400
-conductor.workflow-message-queue.maxBatchSize=100
+agentmesh.workflow-message-queue.enabled=true
+agentmesh.workflow-message-queue.maxQueueSize=1000
+agentmesh.workflow-message-queue.ttlSeconds=86400
+agentmesh.workflow-message-queue.maxBatchSize=100
 ```
 
 | Property | Default | Description |

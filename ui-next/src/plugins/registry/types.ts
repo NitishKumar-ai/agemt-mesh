@@ -1,7 +1,7 @@
 /**
  * Plugin Registry Types
  *
- * This module defines the interfaces for the Conductor UI plugin system.
+ * This module defines the interfaces for the AgentMesh UI plugin system.
  * Plugins can extend the application with:
  * - Routes (authenticated and public)
  * - Sidebar menu items
@@ -369,9 +369,9 @@ export interface DependencySectionRegistration {
 // ============================================================================
 
 /**
- * A Conductor UI plugin that can extend the application
+ * A AgentMesh UI plugin that can extend the application
  */
-export interface ConductorPlugin {
+export interface AgentMeshPlugin {
   /**
    * Unique identifier for the plugin
    */
@@ -523,12 +523,12 @@ export interface PluginRegistry {
   /**
    * Register a plugin
    */
-  register(plugin: ConductorPlugin): void;
+  register(plugin: AgentMeshPlugin): void;
 
   /**
    * Get all registered plugins
    */
-  getPlugins(): ConductorPlugin[];
+  getPlugins(): AgentMeshPlugin[];
 
   /**
    * Get all authenticated routes from plugins

@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/postgres-external-storage",
+  "name": "@agentmesh/postgres-external-storage",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

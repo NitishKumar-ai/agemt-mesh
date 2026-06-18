@@ -1,5 +1,5 @@
 ---
-description: "Conductor Bulk Operations API — pause, resume, restart, retry, terminate, remove, and search workflows in batch."
+description: "AgentMesh Bulk Operations API — pause, resume, restart, retry, terminate, remove, and search workflows in batch."
 ---
 
 # Bulk Operations API

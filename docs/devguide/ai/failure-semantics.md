@@ -1,10 +1,10 @@
 ---
-description: "The exact failure contract for AI agents on Conductor — what happens when LLM calls fail, tools timeout, humans don't respond, callbacks arrive twice, branches partially complete, versions change mid-flight, and workers deploy during active executions."
+description: "The exact failure contract for AI agents on AgentMesh — what happens when LLM calls fail, tools timeout, humans don't respond, callbacks arrive twice, branches partially complete, versions change mid-flight, and workers deploy during active executions."
 ---
 
 # Failure semantics for AI agents
 
-This page defines exactly what happens when things go wrong in an agent workflow. Not "Conductor is durable" — but the precise behavior under every failure scenario an agent can encounter.
+This page defines exactly what happens when things go wrong in an agent workflow. Not "AgentMesh is durable" — but the precise behavior under every failure scenario an agent can encounter.
 
 
 ## LLM task failure
@@ -14,7 +14,7 @@ This page defines exactly what happens when things go wrong in an agent workflow
 **What happens:**
 
 1. The task moves to `FAILED`.
-2. Conductor checks the task's retry configuration (`retryCount`, `retryLogic`, `retryDelaySeconds`).
+2. AgentMesh checks the task's retry configuration (`retryCount`, `retryLogic`, `retryDelaySeconds`).
 3. A new task execution is created with an incremented retry count.
 4. The task is requeued after the configured delay.
 5. If all retries are exhausted, the task moves to `FAILED` terminal state.
@@ -95,7 +95,7 @@ If validation fails, use a `SWITCH` to re-run the LLM with a corrective prompt, 
 3. `responseTimeoutSeconds` fires. The task moves to `TIMED_OUT`, then `SCHEDULED` (retry).
 4. A new worker picks up the task and sends the email again.
 
-**This is at-least-once delivery.** Conductor guarantees the task will execute at least once, but it may execute more than once if the worker fails after performing side effects.
+**This is at-least-once delivery.** AgentMesh guarantees the task will execute at least once, but it may execute more than once if the worker fails after performing side effects.
 
 **How to handle it:**
 
@@ -144,17 +144,17 @@ This times out after 24 hours and fails the workflow. Alternatively, use `timeou
 
 ## Callback delivered twice
 
-**Scenario:** An external system calls the Task Update API to complete a `HUMAN` task, but the network is flaky and the call is retried. Conductor receives the completion signal twice.
+**Scenario:** An external system calls the Task Update API to complete a `HUMAN` task, but the network is flaky and the call is retried. AgentMesh receives the completion signal twice.
 
 **What happens:**
 
 The first call moves the task from `IN_PROGRESS` to `COMPLETED` and advances the workflow. The second call arrives for a task that is already in a terminal state.
 
-- Conductor rejects the update. The task is already `COMPLETED`.
+- AgentMesh rejects the update. The task is already `COMPLETED`.
 - No duplicate execution occurs. The workflow does not advance twice.
 - The second call returns an error indicating the task is already in a terminal state.
 
-**This is safe by default.** Conductor's task state machine enforces that a task can only transition to a terminal state once. Duplicate callbacks are harmless.
+**This is safe by default.** AgentMesh's task state machine enforces that a task can only transition to a terminal state once. Duplicate callbacks are harmless.
 
 
 ## Branch partially completes in a FORK/JOIN
@@ -205,7 +205,7 @@ Running executions are **not affected**. Each execution uses an immutable snapsh
 
 - Keep `responseTimeoutSeconds` short (10-60 seconds for most tasks).
 - Use graceful shutdown in your workers — complete in-progress tasks before stopping.
-- For the Conductor server itself: the sweeper service re-evaluates in-progress workflows on startup and requeues stalled tasks.
+- For the AgentMesh server itself: the sweeper service re-evaluates in-progress workflows on startup and requeues stalled tasks.
 
 **What is never lost:** Completed task outputs. The workflow state. The execution history. Only the in-progress task is affected, and it is automatically retried.
 
@@ -223,7 +223,7 @@ The `DYNAMIC` task fails with a resolution error — the specified task type can
 
 ## Network partition between worker and server
 
-**Scenario:** A worker is executing a task (e.g., an LLM call). A network partition occurs. The worker completes the task but cannot report the result to the Conductor server.
+**Scenario:** A worker is executing a task (e.g., an LLM call). A network partition occurs. The worker completes the task but cannot report the result to the AgentMesh server.
 
 **What happens:**
 
@@ -242,7 +242,7 @@ The `DYNAMIC` task fails with a resolution error — the specified task type can
 
 **What happens:**
 
-This is a normal operating mode for Conductor. The workflow stays `RUNNING` with individual tasks in `IN_PROGRESS` (for active work) or `COMPLETED` (for finished steps).
+This is a normal operating mode for AgentMesh. The workflow stays `RUNNING` with individual tasks in `IN_PROGRESS` (for active work) or `COMPLETED` (for finished steps).
 
 - `WAIT` tasks consume no resources. The durable timer fires when the duration elapses, even across deploys.
 - `HUMAN` tasks consume no resources. They persist until the signal arrives.
@@ -257,7 +257,7 @@ This is a normal operating mode for Conductor. The workflow stays `RUNNING` with
 
 ## Summary: the failure contract
 
-| Failure | What Conductor does | What you should do |
+| Failure | What AgentMesh does | What you should do |
 |---------|--------------------|--------------------|
 | LLM call fails | Retries with configured backoff | Set retry policy on task definition |
 | LLM returns bad output | Downstream task fails on input resolution | Add a validation step after LLM calls |
@@ -277,5 +277,5 @@ This is a normal operating mode for Conductor. The workflow stays `RUNNING` with
 
 - **[Production Agent Architecture](production-agent-architecture.md)** — The canonical end-to-end agent pattern.
 - **[Durable Execution Semantics](../../architecture/durable-execution.md)** — The full persistence model, task state machine, and retry configuration.
-- **[Why Conductor for Agents](why-conductor.md)** — What Conductor gives you out of the box for agentic workflows.
+- **[Why AgentMesh for Agents](why-agentmesh.md)** — What AgentMesh gives you out of the box for agentic workflows.
 - **[Token Efficiency](token-efficiency.md)** — How durable execution saves tokens across all these failure scenarios.

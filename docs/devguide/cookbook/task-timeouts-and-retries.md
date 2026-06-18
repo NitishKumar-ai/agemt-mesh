@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — task timeout and retry recipes covering responseTimeout with lease extension, totalTimeoutSeconds, exponential backoff with cap and jitter, and thundering herd prevention."
+description: "AgentMesh cookbook — task timeout and retry recipes covering responseTimeout with lease extension, totalTimeoutSeconds, exponential backoff with cap and jitter, and thundering herd prevention."
 ---
 
 # Task timeouts and retries
@@ -42,7 +42,7 @@ Retries with exponential backoff for a task that calls an external API. The cap 
 
 ### Lease extension for long-running workers
 
-`responseTimeoutSeconds` is the heartbeat window: if the worker doesn't report back within this duration, Conductor marks the task `TIMED_OUT` and retries it. For tasks that take longer than the heartbeat window, workers extend the lease by posting an `IN_PROGRESS` update with `callbackAfterSeconds`.
+`responseTimeoutSeconds` is the heartbeat window: if the worker doesn't report back within this duration, AgentMesh marks the task `TIMED_OUT` and retries it. For tasks that take longer than the heartbeat window, workers extend the lease by posting an `IN_PROGRESS` update with `callbackAfterSeconds`.
 
 **Task definition**
 
@@ -59,14 +59,14 @@ Retries with exponential backoff for a task that calls an external API. The cap 
 }
 ```
 
-`responseTimeoutSeconds: 30` — Conductor will reschedule the task if the worker is silent for 30 seconds.
+`responseTimeoutSeconds: 30` — AgentMesh will reschedule the task if the worker is silent for 30 seconds.
 `timeoutSeconds: 3600` — the task itself can take up to 1 hour across all heartbeats.
 
 **Worker: extend the lease every 25 seconds**
 
 ```python
 import time
-from conductor.client.http.models import TaskResult
+from agentmesh.client.http.models import TaskResult
 
 def transcode_video(task):
     task_id = task.task_id
@@ -76,7 +76,7 @@ def transcode_video(task):
         transcode_chunk(chunk)
 
         # Extend the lease before responseTimeoutSeconds (30s) expires.
-        # callbackAfterSeconds tells Conductor to leave this task invisible
+        # callbackAfterSeconds tells AgentMesh to leave this task invisible
         # in the queue for another 25s — resetting the response clock.
         heartbeat = TaskResult(
             task_id=task_id,
@@ -85,7 +85,7 @@ def transcode_video(task):
             callback_after_seconds=25,
             output_data={"progress": chunk.index / len(video_chunks)}
         )
-        conductor_client.update_task(heartbeat)
+        agentmesh_client.update_task(heartbeat)
 
     return TaskResult(
         task_id=task_id,

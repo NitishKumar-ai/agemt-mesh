@@ -1,5 +1,5 @@
 ---
-description: "Configure Human tasks in Conductor to pause workflows for manual approval or external signals. Supports human-in-the-loop and agentic workflow patterns."
+description: "Configure Human tasks in AgentMesh to pause workflows for manual approval or external signals. Supports human-in-the-loop and agentic workflow patterns."
 ---
 
 # Human Task
@@ -9,7 +9,7 @@ description: "Configure Human tasks in Conductor to pause workflows for manual a
 
 The Human task (`HUMAN`) is used to pause the workflow and wait for an external signal. It acts as a gate that remains in IN_PROGRESS until marked as COMPLETED or FAILED by an external trigger.
 
-The Human task can be used when the workflow needs to pause and wait for human intervention, such as manual approval. It can also be used with an event coming from external source such as Kafka, SQS, or Conductor's internal queueing mechanism.
+The Human task can be used when the workflow needs to pause and wait for human intervention, such as manual approval. It can also be used with an event coming from external source such as Kafka, SQS, or AgentMesh's internal queueing mechanism.
 
 ## Task parameters
 
@@ -42,7 +42,7 @@ Use the Task Update API (`POST api/tasks`) to complete a Human task. Provide the
 Using the CLI:
 
 ```bash
-conductor task update-execution --workflow-id {workflowId} --task-ref-name waiting_around_ref --status COMPLETED --output '{"data_key":"somedatatoWait1","data_key2":"somedatatoWAit2"}'
+agentmesh task update-execution --workflow-id {workflowId} --task-ref-name waiting_around_ref --status COMPLETED --output '{"data_key":"somedatatoWait1","data_key2":"somedatatoWAit2"}'
 ```
 
 ### Event handler
@@ -91,14 +91,14 @@ Parse the response to find tasks with `taskType: "HUMAN"` and `status: "IN_PROGR
 **Pros:** Simple to implement, no additional configuration
 **Cons:** Requires polling, not real-time
 
-### Pattern 2: Event Handlers with Conductor Internal Events
+### Pattern 2: Event Handlers with AgentMesh Internal Events
 
-Conductor can publish internal events when tasks change state. You can configure an event handler to listen for these events:
+AgentMesh can publish internal events when tasks change state. You can configure an event handler to listen for these events:
 
 ```json
 {
   "name": "human_task_notification_handler",
-  "event": "conductor:TASK_STATUS_CHANGE",
+  "event": "agentmesh:TASK_STATUS_CHANGE",
   "condition": "$.taskType == 'HUMAN' && $.status == 'IN_PROGRESS'",
   "actions": [
     {

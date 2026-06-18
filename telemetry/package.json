@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/telemetry",
+  "name": "@agentmesh/telemetry",
   "version": "0.0.0",
   "description": "Telemetry and Observability for Agent Mesh",
   "type": "module",

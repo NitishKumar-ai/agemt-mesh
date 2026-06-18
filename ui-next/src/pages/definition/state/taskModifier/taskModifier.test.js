@@ -500,7 +500,7 @@ describe("updateTaskReferenceName", () => {
               type: "HTTP_POLL",
               inputParameters: {
                 http_request: {
-                  uri: "https://orkes-api-tester.orkesconductor.com/api",
+                  uri: "https://orkes-api-tester.orkesagentmesh.com/api",
                   method: "GET",
                   accept: "application/json",
                   contentType: "application/json",

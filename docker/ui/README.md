@@ -1,13 +1,13 @@
 # Docker
-## Conductor UI
-This Dockerfile create the conductor:ui image
+## AgentMesh UI
+This Dockerfile create the agentmesh:ui image
 
 ## Building the image
 
 Run the following commands from the project root.
 
-`docker build -f docker/ui/Dockerfile -t conductor:ui .`
+`docker build -f docker/ui/Dockerfile -t agentmesh:ui .`
 
-## Running the conductor server
- - With localhost conductor server: `docker run -p 5000:5000 -d -t conductor:ui`
- - With external conductor server: `docker run -p 5000:5000 -d -t -e "WF_SERVER=http://conductor-server:8080" conductor:ui`
+## Running the agentmesh server
+ - With localhost agentmesh server: `docker run -p 5000:5000 -d -t agentmesh:ui`
+ - With external agentmesh server: `docker run -p 5000:5000 -d -t -e "WF_SERVER=http://agentmesh-server:8080" agentmesh:ui`

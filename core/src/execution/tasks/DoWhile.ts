@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, isTaskSuccessful, isTaskTerminal } from '@conductor/common';
+import { TaskType, isTaskSuccessful, isTaskTerminal } from '@agentmesh/common';
 import { removeIterationFromTaskRefName, appendIteration, workflowTaskHas, workflowTaskNext } from '../ExecutorUtils.js';
 
 export class DoWhile extends WorkflowSystemTask {

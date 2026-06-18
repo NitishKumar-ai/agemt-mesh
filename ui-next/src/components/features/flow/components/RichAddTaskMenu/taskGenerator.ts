@@ -641,7 +641,7 @@ export const generateQueryProcessorTask: GenerateTaskFn<
       workflowNames: [],
       statuses: [],
       correlationIds: [],
-      queryType: QueryProcessorType.CONDUCTOR_API,
+      queryType: QueryProcessorType.AGENTMESH_API,
     },
     type: TaskType.QUERY_PROCESSOR,
     ...overrides,

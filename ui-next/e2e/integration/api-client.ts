@@ -1,17 +1,17 @@
 /**
- * Typed REST client for the Conductor API.
+ * Typed REST client for the AgentMesh API.
  *
  * Used by integration test files to create and clean up test data directly
  * against the backend (bypassing the UI) so tests stay focused on the
  * behaviour being verified rather than on setup navigation.
  *
- * All requests go directly to the Conductor server, not through the Vite
+ * All requests go directly to the AgentMesh server, not through the Vite
  * proxy, so this can be called from Node.js test hooks as well as from
  * browser page.evaluate() calls.
  */
 
 const BASE =
-  (process.env.CONDUCTOR_SERVER_URL ?? "http://localhost:8000") + "/api";
+  (process.env.AGENTMESH_SERVER_URL ?? "http://localhost:8000") + "/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

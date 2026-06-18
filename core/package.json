@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/core",
+  "name": "@agentmesh/core",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@conductor/common": "workspace:*"
+    "@agentmesh/common": "workspace:*"
   },
   "type": "module"
 }

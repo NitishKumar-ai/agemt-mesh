@@ -2,25 +2,25 @@
 hide:
   - navigation
   - toc
-description: Conductor is an open source workflow engine and durable execution platform for workflow orchestration, microservice orchestration, and AI agent orchestration. Self-hosted, Apache 2.0 licensed. 14+ native LLM providers, MCP tool calling, and built-in vector database support. Build distributed workflows with saga pattern compensation, at-least-once task delivery, human-in-the-loop approval, and polyglot workers. The workflow automation platform for teams that need LLM orchestration and durable execution at scale.
+description: AgentMesh is an open source workflow engine and durable execution platform for workflow orchestration, microservice orchestration, and AI agent orchestration. Self-hosted, Apache 2.0 licensed. 14+ native LLM providers, MCP tool calling, and built-in vector database support. Build distributed workflows with saga pattern compensation, at-least-once task delivery, human-in-the-loop approval, and polyglot workers. The workflow automation platform for teams that need LLM orchestration and durable execution at scale.
 ---
 
 <div class="home-wrapper">
 
 <div class="hero">
-  <div class="hero-badge">Apache 2.0 Licensed &middot; Originally created at Netflix</div>
+  <div class="hero-badge">Apache 2.0 Licensed &middot; Originally created at AgentMesh</div>
   <h1 class="hero-title">Code breaks. Infrastructure fails.<br/><span class="hero-highlight">Your workflows don't.</span></h1>
-  <p class="hero-subtitle">Crash-proof workflows and AI agents that finish what they start &mdash; powered by durable execution at Netflix scale.</p>
+  <p class="hero-subtitle">Crash-proof workflows and AI agents that finish what they start &mdash; powered by durable execution at AgentMesh scale.</p>
   <p class="hero-differentiators">No SDK restrictions. No non-determinism bugs. No cloud lock-in.</p>
   <div class="hero-actions">
     <a href="quickstart/index.html" class="btn-primary">Get Started<span class="btn-arrow">&rarr;</span></a>
-    <a href="https://github.com/conductor-oss/conductor" class="repo-link" id="hero-repo-link">
+    <a href="https://github.com/agentmesh-oss/agentmesh" class="repo-link" id="hero-repo-link">
       <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-      <span>conductor-oss/conductor</span>
+      <span>agentmesh-oss/agentmesh</span>
       <span class="repo-stats" id="repo-stats"></span>
     </a>
     <script>
-      fetch("https://api.github.com/repos/conductor-oss/conductor")
+      fetch("https://api.github.com/repos/agentmesh-oss/agentmesh")
         .then(function(r){return r.json()})
         .then(function(d){
           var el=document.getElementById("repo-stats");
@@ -32,7 +32,7 @@ description: Conductor is an open source workflow engine and durable execution p
         }).catch(function(){});
     </script>
   </div>
-  <div class="hero-install"><code>$ npm install -g @conductor-oss/conductor-cli</code></div>
+  <div class="hero-install"><code>$ npm install -g @agentmesh-oss/agentmesh-cli</code></div>
   <div class="hero-ai-card">
     <div class="hero-ai-header">
       <div class="hero-ai-icon">
@@ -42,8 +42,8 @@ description: Conductor is an open source workflow engine and durable execution p
     </div>
     <div class="hero-ai-body">
       <div class="hero-ai-item">
-        <a href="devguide/how-tos/conductor-skills.html" class="hero-ai-link" title="Conductor Skills for AI agent orchestration">Conductor Skills &rarr;</a>
-        <span class="hero-ai-sub">Install Conductor Skills for your AI Agent</span>
+        <a href="devguide/how-tos/agentmesh-skills.html" class="hero-ai-link" title="AgentMesh Skills for AI agent orchestration">AgentMesh Skills &rarr;</a>
+        <span class="hero-ai-sub">Install AgentMesh Skills for your AI Agent</span>
       </div>
       <div class="hero-ai-item">
         <a href="devguide/ai/index.html" class="hero-ai-link" title="AI Cookbook — LLM orchestration, MCP tools, and durable agents">AI Cookbook &rarr;</a>
@@ -67,7 +67,7 @@ description: Conductor is an open source workflow engine and durable execution p
   <p class="logo-wall-label">Trusted by engineering teams at</p>
   <div class="logo-marquee">
     <div class="logo-track">
-      <span class="logo-name">Netflix</span>
+      <span class="logo-name">AgentMesh</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -77,7 +77,7 @@ description: Conductor is an open source workflow engine and durable execution p
       <span class="logo-name">VMware</span>
       <span class="logo-name">Coupang</span>
       <span class="logo-name">Swiggy</span>
-      <span class="logo-name">Netflix</span>
+      <span class="logo-name">AgentMesh</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -125,19 +125,19 @@ description: Conductor is an open source workflow engine and durable execution p
       <h3>Polyglot workers</h3>
       <p>Write task workers in any language. Workers poll for tasks, execute your logic, and report results&mdash;run them anywhere.</p>
       <div class="lang-logos">
-        <a href="https://github.com/conductor-oss/java-sdk" title="Java"><img src="https://orkes.io/content/img/java.svg" alt="Java"></a>
-        <a href="https://github.com/conductor-oss/python-sdk" title="Python"><img src="https://orkes.io/content/img/Python_logo.svg" alt="Python"></a>
-        <a href="https://github.com/conductor-oss/go-sdk" title="Go"><img src="https://orkes.io/content/img/Go_Logo_Blue.svg" alt="Go"></a>
-        <a href="https://github.com/conductor-oss/csharp-sdk" title="C#"><img src="https://orkes.io/content/img/csharp.png" alt="C#"></a>
-        <a href="https://github.com/conductor-oss/javascript-sdk" title="JavaScript"><img src="https://orkes.io/content/img/JavaScript_logo_2.svg" alt="JavaScript"></a>
-        <a href="https://github.com/conductor-oss/ruby-sdk" title="Ruby"><img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" alt="Ruby"></a>
-        <a href="https://github.com/conductor-oss/rust-sdk" title="Rust"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg" alt="Rust"></a>
+        <a href="https://github.com/agentmesh-oss/java-sdk" title="Java"><img src="https://orkes.io/content/img/java.svg" alt="Java"></a>
+        <a href="https://github.com/agentmesh-oss/python-sdk" title="Python"><img src="https://orkes.io/content/img/Python_logo.svg" alt="Python"></a>
+        <a href="https://github.com/agentmesh-oss/go-sdk" title="Go"><img src="https://orkes.io/content/img/Go_Logo_Blue.svg" alt="Go"></a>
+        <a href="https://github.com/agentmesh-oss/csharp-sdk" title="C#"><img src="https://orkes.io/content/img/csharp.png" alt="C#"></a>
+        <a href="https://github.com/agentmesh-oss/javascript-sdk" title="JavaScript"><img src="https://orkes.io/content/img/JavaScript_logo_2.svg" alt="JavaScript"></a>
+        <a href="https://github.com/agentmesh-oss/ruby-sdk" title="Ruby"><img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" alt="Ruby"></a>
+        <a href="https://github.com/agentmesh-oss/rust-sdk" title="Rust"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg" alt="Rust"></a>
       </div>
     </div>
     <div class="feature-card">
       <div class="feature-tag">Reliability</div>
       <h3>Saga pattern &amp; compensation</h3>
-      <p>Model distributed transactions as sagas. When a step fails, Conductor automatically runs undo logic in reverse order&mdash;no manual intervention.</p>
+      <p>Model distributed transactions as sagas. When a step fails, AgentMesh automatically runs undo logic in reverse order&mdash;no manual intervention.</p>
       <a href="devguide/how-tos/Workflows/handling-errors.html" class="feature-link">Error handling &rarr;</a>
     </div>
   </div>
@@ -177,68 +177,68 @@ description: Conductor is an open source workflow engine and durable execution p
   </div>
   <div class="faq-grid">
     <details class="faq-item">
-      <summary>How do I run Conductor with Docker?</summary>
-      <p>Run <code>docker run -p 8080:8080 conductoross/conductor:latest</code> to start Conductor with all dependencies included. The server will be available at <code>http://localhost:8080</code>. For production deployments with external persistence, see the <a href="devguide/running/deploy.html">Docker deployment guide</a>.</p>
+      <summary>How do I run AgentMesh with Docker?</summary>
+      <p>Run <code>docker run -p 8080:8080 agentmeshoss/agentmesh:latest</code> to start AgentMesh with all dependencies included. The server will be available at <code>http://localhost:8080</code>. For production deployments with external persistence, see the <a href="devguide/running/deploy.html">Docker deployment guide</a>.</p>
     </details>
     <details class="faq-item">
-      <summary>Is Conductor open source?</summary>
-      <p>Yes. Conductor is a fully open source workflow engine, Apache 2.0 licensed. You can self-host it on your own infrastructure with no vendor lock-in. It supports 5 persistence backends, 6 message brokers, and runs anywhere Docker runs.</p>
+      <summary>Is AgentMesh open source?</summary>
+      <p>Yes. AgentMesh is a fully open source workflow engine, Apache 2.0 licensed. You can self-host it on your own infrastructure with no vendor lock-in. It supports 5 persistence backends, 6 message brokers, and runs anywhere Docker runs.</p>
     </details>
     <details class="faq-item">
-      <summary>Is this the same as Netflix Conductor?</summary>
-      <p>Yes. Conductor OSS is the continuation of the original Netflix Conductor repository after Netflix contributed the project to the open-source foundation.</p>
+      <summary>Is this the same as AgentMesh AgentMesh?</summary>
+      <p>Yes. AgentMesh OSS is the continuation of the original AgentMesh AgentMesh repository after AgentMesh contributed the project to the open-source foundation.</p>
     </details>
     <details class="faq-item">
       <summary>Is this project actively maintained?</summary>
-      <p>Yes. <a href="https://orkes.io">Orkes</a> is the primary maintainer of this repository and offers an enterprise SaaS platform for Conductor across all major cloud providers.</p>
+      <p>Yes. <a href="https://orkes.io">Orkes</a> is the primary maintainer of this repository and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.</p>
     </details>
     <details class="faq-item">
-      <summary>Can Conductor scale to handle my workload?</summary>
-      <p>Conductor was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.</p>
+      <summary>Can AgentMesh scale to handle my workload?</summary>
+      <p>AgentMesh was built at AgentMesh to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.</p>
     </details>
     <details class="faq-item">
-      <summary>Does Conductor support durable execution?</summary>
-      <p>Yes. Conductor pioneered durable execution patterns, ensuring workflows and durable agents complete reliably even in the face of infrastructure failures, process crashes, or network issues.</p>
+      <summary>Does AgentMesh support durable execution?</summary>
+      <p>Yes. AgentMesh pioneered durable execution patterns, ensuring workflows and durable agents complete reliably even in the face of infrastructure failures, process crashes, or network issues.</p>
     </details>
     <details class="faq-item">
       <summary>Can I replay a workflow after it completes or fails?</summary>
-      <p>Yes. Conductor preserves full execution history indefinitely. You can restart from the beginning, rerun from any specific task, or retry just the failed step &mdash; even months later. Use the API (<code>/restart</code>, <code>/rerun</code>, <code>/retry</code>) or the UI.</p>
+      <p>Yes. AgentMesh preserves full execution history indefinitely. You can restart from the beginning, rerun from any specific task, or retry just the failed step &mdash; even months later. Use the API (<code>/restart</code>, <code>/rerun</code>, <code>/retry</code>) or the UI.</p>
     </details>
     <details class="faq-item">
       <summary>Are workflows always asynchronous?</summary>
-      <p>No. While Conductor excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.</p>
+      <p>No. While AgentMesh excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.</p>
     </details>
     <details class="faq-item">
-      <summary>Do I need to use a Conductor-specific framework?</summary>
-      <p>No. Conductor is language and framework agnostic. Use your preferred language and framework&mdash;SDKs provide native integration for Java, Python, JavaScript, Go, C#, and more.</p>
+      <summary>Do I need to use a AgentMesh-specific framework?</summary>
+      <p>No. AgentMesh is language and framework agnostic. Use your preferred language and framework&mdash;SDKs provide native integration for Java, Python, JavaScript, Go, C#, and more.</p>
     </details>
     <details class="faq-item">
       <summary>Isn't JSON too limited for complex workflows?</summary>
       <p>The opposite. JSON separates orchestration from implementation, making every workflow deterministic by construction &mdash; no side effects, no hidden state. Dynamic forks, dynamic tasks, and dynamic sub-workflows let you build workflows that are more flexible than code-based engines. JSON is also AI-native: LLMs can generate and modify workflow definitions at runtime without a compile/deploy cycle. Code-based engines require redeployment for every change.</p>
     </details>
     <details class="faq-item">
-      <summary>Is Conductor a low-code/no-code platform?</summary>
-      <p>No. Conductor is designed for developers who write code. While workflows can be defined in JSON, the power comes from building workers and tasks in your preferred programming language.</p>
+      <summary>Is AgentMesh a low-code/no-code platform?</summary>
+      <p>No. AgentMesh is designed for developers who write code. While workflows can be defined in JSON, the power comes from building workers and tasks in your preferred programming language.</p>
     </details>
     <details class="faq-item">
-      <summary>Can Conductor handle complex workflows?</summary>
-      <p>Conductor was specifically designed for complex orchestration. It supports advanced patterns including nested loops, dynamic branching, sub-workflows, and workflows with thousands of tasks.</p>
+      <summary>Can AgentMesh handle complex workflows?</summary>
+      <p>AgentMesh was specifically designed for complex orchestration. It supports advanced patterns including nested loops, dynamic branching, sub-workflows, and workflows with thousands of tasks.</p>
     </details>
     <details class="faq-item">
-      <summary>Is Netflix Conductor abandoned?</summary>
-      <p>No. The original Netflix repository has transitioned to Conductor OSS, which is the new home for the project. Active development and maintenance continues here.</p>
+      <summary>Is AgentMesh AgentMesh abandoned?</summary>
+      <p>No. The original AgentMesh repository has transitioned to AgentMesh OSS, which is the new home for the project. Active development and maintenance continues here.</p>
     </details>
     <details class="faq-item">
-      <summary>Is Orkes Conductor compatible with Conductor OSS?</summary>
-      <p>100% compatible. Orkes Conductor is built on top of Conductor OSS, ensuring full compatibility between the open-source version and the enterprise offering.</p>
+      <summary>Is Orkes AgentMesh compatible with AgentMesh OSS?</summary>
+      <p>100% compatible. Orkes AgentMesh is built on top of AgentMesh OSS, ensuring full compatibility between the open-source version and the enterprise offering.</p>
     </details>
     <details class="faq-item">
-      <summary>Can Conductor orchestrate AI agents and LLMs?</summary>
-      <p>Yes. Conductor provides AI agent orchestration and LLM orchestration as native capabilities. 14+ LLM providers (Anthropic, OpenAI, Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, and more), MCP tool calling and function calling (LIST_MCP_TOOLS, CALL_MCP_TOOL), vector database integration (Pinecone, pgvector, MongoDB Atlas) for RAG, and content generation (image, audio, video, PDF). All with the same durability guarantees as any other workflow task.</p>
+      <summary>Can AgentMesh orchestrate AI agents and LLMs?</summary>
+      <p>Yes. AgentMesh provides AI agent orchestration and LLM orchestration as native capabilities. 14+ LLM providers (Anthropic, OpenAI, Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, and more), MCP tool calling and function calling (LIST_MCP_TOOLS, CALL_MCP_TOOL), vector database integration (Pinecone, pgvector, MongoDB Atlas) for RAG, and content generation (image, audio, video, PDF). All with the same durability guarantees as any other workflow task.</p>
     </details>
     <details class="faq-item">
-      <summary>How does Conductor compare to other workflow engines?</summary>
-      <p>Conductor is the only open source workflow engine with native LLM task types for 14+ providers, built-in MCP integration, and vector database support. Combined with durable execution, 7+ language SDKs (Java, Python, Go, JavaScript, C#, Ruby, Rust), 6 message brokers, 5 persistence backends, and battle-tested scale at Netflix, Tesla, LinkedIn, and JP Morgan, Conductor provides the most complete workflow orchestration platform available. Unlike Temporal, Step Functions, or Airflow, Conductor is fully self-hosted, supports both code-first and JSON workflow definitions, and provides native AI agent orchestration out of the box.</p>
+      <summary>How does AgentMesh compare to other workflow engines?</summary>
+      <p>AgentMesh is the only open source workflow engine with native LLM task types for 14+ providers, built-in MCP integration, and vector database support. Combined with durable execution, 7+ language SDKs (Java, Python, Go, JavaScript, C#, Ruby, Rust), 6 message brokers, 5 persistence backends, and battle-tested scale at AgentMesh, Tesla, LinkedIn, and JP Morgan, AgentMesh provides the most complete workflow orchestration platform available. Unlike Temporal, Step Functions, or Airflow, AgentMesh is fully self-hosted, supports both code-first and JSON workflow definitions, and provides native AI agent orchestration out of the box.</p>
     </details>
   </div>
 </div>
@@ -247,7 +247,7 @@ description: Conductor is an open source workflow engine and durable execution p
   <p class="logo-wall-label">Trusted by engineering teams at</p>
   <div class="logo-marquee">
     <div class="logo-track">
-      <span class="logo-name">Netflix</span>
+      <span class="logo-name">AgentMesh</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -257,7 +257,7 @@ description: Conductor is an open source workflow engine and durable execution p
       <span class="logo-name">VMware</span>
       <span class="logo-name">Coupang</span>
       <span class="logo-name">Swiggy</span>
-      <span class="logo-name">Netflix</span>
+      <span class="logo-name">AgentMesh</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -274,9 +274,9 @@ description: Conductor is an open source workflow engine and durable execution p
 <div class="cta-section">
   <div class="cta-content">
     <h2>Open source workflow engine. Community driven.</h2>
-    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Originally created at Netflix, now maintained by the community.</p>
+    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Originally created at AgentMesh, now maintained by the community.</p>
     <div class="cta-actions">
-      <a href="https://github.com/conductor-oss/conductor" class="btn-primary">Star on GitHub<span class="btn-arrow">&rarr;</span></a>
+      <a href="https://github.com/agentmesh-oss/agentmesh" class="btn-primary">Star on GitHub<span class="btn-arrow">&rarr;</span></a>
       <a href="resources/contributing.html" class="btn-ghost">Contributing guide</a>
     </div>
   </div>

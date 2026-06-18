@@ -38,6 +38,14 @@ export class RestModule {
         VersionResource,
       ],
       providers: [
+        { provide: EXECUTION_DAO, useValue: null },
+        { provide: METADATA_DAO, useValue: null },
+        { provide: QUEUE_DAO, useValue: null },
+        { provide: POLL_DATA_DAO, useValue: null },
+        { provide: VERSION, useValue: null },
+        { provide: START_TIME, useValue: null },
+        { provide: DB_PROBE, useValue: null },
+        { provide: WORKFLOW_EXECUTOR, useValue: null },
         {
           provide: MetadataService,
           useFactory: (metadataDAO) => new MetadataService(metadataDAO),

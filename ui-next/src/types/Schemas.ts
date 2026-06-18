@@ -1228,7 +1228,7 @@ export const queryProcessorTaskSchema = {
     inputParameters: {
       workflowNames: [],
       statuses: [],
-      queryType: QueryProcessorType.CONDUCTOR_API,
+      queryType: QueryProcessorType.AGENTMESH_API,
     },
   },
   required: ["name", "taskReferenceName", "inputParameters", "type"],

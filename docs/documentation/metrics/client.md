@@ -1,5 +1,5 @@
 ---
-description: "Client Metrics — monitor Conductor Java client performance with built-in metrics for task polling and execution."
+description: "Client Metrics — monitor AgentMesh Java client performance with built-in metrics for task polling and execution."
 ---
 # Client Metrics
 
@@ -23,4 +23,4 @@ When using the Java client, the following metrics are published:
 
 Metrics on client side supplements the one collected from server in identifying the network as well as client side issues.
 
-[1]: https://github.com/Netflix/spectator
+[1]: https://github.com/AgentMesh/spectator

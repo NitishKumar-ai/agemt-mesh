@@ -1,12 +1,12 @@
 ---
-description: "Complete reference for Conductor workflow definitions — properties, task configurations, input expressions, failure workflows, and timeout policies."
+description: "Complete reference for AgentMesh workflow definitions — properties, task configurations, input expressions, failure workflows, and timeout policies."
 ---
 
 # Workflow Definition
 
 The Workflow Definition contains all the information necessary to define the behavior of a workflow. The most important part of this definition is the `tasks` property, which is an array of [**Task Configurations**](#task-configurations).
 
-For the formal JSON Schema definitions of workflow and task structures, see the [`schemas/`](https://github.com/conductor-oss/conductor/tree/main/schemas) directory in the repository.
+For the formal JSON Schema definitions of workflow and task structures, see the [`schemas/`](https://github.com/agentmesh-oss/agentmesh/tree/main/schemas) directory in the repository.
 
 
 ## Workflow Properties
@@ -20,7 +20,7 @@ For the formal JSON Schema definitions of workflow and task structures, see the 
 | outputParameters              | object                           | JSON template used to generate the output of the workflow                                                                       | If not specified, the output is defined as the output of the _last_ executed task                 |
 | inputTemplate                 | object                           | Default input values. See [Using inputTemplate](#default-input-with-inputtemplate)                                              | Optional.                                                                                         |
 | failureWorkflow               | string                           | Workflow to be run on current Workflow failure. Useful for cleanup or post actions on failure. [Explanation](#failure-workflow) | Optional.                                                                                         |
-| schemaVersion                 | number                           | Current Conductor Schema version. schemaVersion 1 is discontinued.                                                              | Must be 2                                                                                         |
+| schemaVersion                 | number                           | Current AgentMesh Schema version. schemaVersion 1 is discontinued.                                                              | Must be 2                                                                                         |
 | restartable                   | boolean                          | Flag to allow Workflow restarts                                                                                                 | Defaults to true                                                                                  |
 | workflowStatusListenerEnabled | boolean                          | Enable status callback. [Explanation](#workflow-status-listener)                                                                | Defaults to false                                                                                 |
 | ownerEmail                    | string                           | Email address of the team that owns the workflow                                                                                | Required                                                                                          |
@@ -46,7 +46,7 @@ Setting the `workflowStatusListenerEnabled` field in your Workflow Definition to
 
 To add a custom implementation of the Workflow Status Listener. Refer to the [Workflow Status Listener extension guide](../../advanced/extend.md#workflow-status-listener).
 
-The listener can be implemented in such a way as to either send a notification to an external system or to send an event on the conductor queue to complete/fail another task in another workflow as described in the [event handlers guide](../eventhandlers.md).
+The listener can be implemented in such a way as to either send a notification to an external system or to send an event on the agentmesh queue to complete/fail another task in another workflow as described in the [event handlers guide](../eventhandlers.md).
 
 ### Default Input with `inputTemplate`
 
@@ -76,7 +76,7 @@ Note: Task Configuration should not be confused with **Task Definitions**, which
 
 | Field             | Type    | Description                                                                                                                                    | Notes                                                                 |
 | :---------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| name              | string  | Name of the task. MUST be registered as a Task Type with Conductor before starting workflow                                                    |                                                                       |
+| name              | string  | Name of the task. MUST be registered as a Task Type with AgentMesh before starting workflow                                                    |                                                                       |
 | taskReferenceName | string  | Alias used to refer the task within the workflow.  MUST be unique within workflow.                                                             |                                                                       |
 | type              | string  | Type of task. SIMPLE for tasks executed by remote workers, or one of the system task types                                                     |                                                                       |
 | description       | string  | Description of the task                                                                                                                        | optional                                                              |
@@ -109,7 +109,7 @@ Generally, `inputParameters` can use *expressions* of the following syntax:
 
 
 !!! note "JSON Path Support"
-    Conductor supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses the [jayway/JsonPath](https://github.com/jayway/JsonPath) Java implementation.
+    AgentMesh supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses the [jayway/JsonPath](https://github.com/jayway/JsonPath) Java implementation.
 
 !!! note "Escaping expressions"
     To escape an expression, prefix it with an extra _$_ character (ex.: ```$${workflow.input...}```).
@@ -171,7 +171,7 @@ We can configure these two tasks in the `tasks` array of our Workflow Definition
   "failureWorkflow": "shipping_issues",
   "restartable": true,
   "workflowStatusListenerEnabled": true,
-  "ownerEmail": "conductor@example.com",
+  "ownerEmail": "agentmesh@example.com",
   "timeoutPolicy": "ALERT_ONLY",
   "timeoutSeconds": 0,
   "variables": {},
@@ -226,7 +226,7 @@ Consider a task `http_task` with input configured to use input/output parameters
       }
     }
   ],
-  "ownerEmail": "conductor@example.com",
+  "ownerEmail": "agentmesh@example.com",
   "variables": {},
   "inputTemplate": {}
 }
@@ -251,7 +251,7 @@ And the output of the _loc_task_ as the following;
 }
 ```
 
-When scheduling the task, Conductor will merge the values from workflow input and `loc_task`'s output and create the input to the `http_task` as follows:
+When scheduling the task, AgentMesh will merge the values from workflow input and `loc_task`'s output and create the input to the `http_task` as follows:
 
 ```json
 {

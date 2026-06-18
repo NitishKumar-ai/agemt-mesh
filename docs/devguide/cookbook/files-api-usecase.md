@@ -1,12 +1,12 @@
-# Conductor OSS — File Management Use Cases
+# AgentMesh OSS — File Management Use Cases
 
-Five real-world scenarios where Conductor orchestrates file creation, processing, and delivery across workflow stages.
+Five real-world scenarios where AgentMesh orchestrates file creation, processing, and delivery across workflow stages.
 
 ---
 
 ## 1. Returns & Refund Document Processing
 
-A customer initiates a product return. Conductor orchestrates the intake of return photos/documents, validates eligibility, generates an RMA (Return Merchandise Authorization) form, and produces the final refund receipt — all as a single traceable workflow.
+A customer initiates a product return. AgentMesh orchestrates the intake of return photos/documents, validates eligibility, generates an RMA (Return Merchandise Authorization) form, and produces the final refund receipt — all as a single traceable workflow.
 
 ### Workflow
 
@@ -50,7 +50,7 @@ flowchart TD
 | Refund Receipt | `receipt_RET-9001.pdf` | PDF |
 | Denial Letter | `denial_RET-9001.pdf` | PDF (if ineligible) |
 
-### Conductor Primitives
+### AgentMesh Primitives
 
 SWITCH, HUMAN, FORK/JOIN, HTTP, INLINE, SUB_WORKFLOW
 
@@ -58,7 +58,7 @@ SWITCH, HUMAN, FORK/JOIN, HTTP, INLINE, SUB_WORKFLOW
 
 ## 2. AI-Powered Knowledge Base Builder (RAG Pipeline)
 
-An organization ingests documents (PDFs, Word files, web pages) into an AI-ready knowledge base. Conductor orchestrates crawling, extraction, chunking, embedding generation, and vector store indexing — enabling retrieval-augmented generation (RAG) for chatbots and search.
+An organization ingests documents (PDFs, Word files, web pages) into an AI-ready knowledge base. AgentMesh orchestrates crawling, extraction, chunking, embedding generation, and vector store indexing — enabling retrieval-augmented generation (RAG) for chatbots and search.
 
 ### Workflow
 
@@ -103,7 +103,7 @@ flowchart TD
 | Master Manifest | `kb_manifest_{run_id}.json` | JSON |
 | Pipeline Log | `pipeline_log_{run_id}.txt` | Text |
 
-### Conductor Primitives
+### AgentMesh Primitives
 
 DO_WHILE, SWITCH, DYNAMIC_FORK, LLM_TEXT_COMPLETE, HTTP, INLINE
 
@@ -111,7 +111,7 @@ DO_WHILE, SWITCH, DYNAMIC_FORK, LLM_TEXT_COMPLETE, HTTP, INLINE
 
 ## 3. Multi-Format Media Transcoding & Publishing
 
-A media company uploads a master video file. Conductor fans out transcoding jobs to produce multiple resolutions and formats, generates thumbnails, extracts subtitles via speech-to-text, and publishes everything to a CDN — all in parallel where possible.
+A media company uploads a master video file. AgentMesh fans out transcoding jobs to produce multiple resolutions and formats, generates thumbnails, extracts subtitles via speech-to-text, and publishes everything to a CDN — all in parallel where possible.
 
 ### Workflow
 
@@ -168,7 +168,7 @@ flowchart TD
 | Subtitles | `subs_en.srt`, `subs_en.vtt` | SRT, VTT |
 | Manifest | `publish_manifest.json` | JSON |
 
-### Conductor Primitives
+### AgentMesh Primitives
 
 FORK/JOIN, DYNAMIC_FORK, LLM_TEXT_COMPLETE, HTTP, INLINE
 
@@ -176,7 +176,7 @@ FORK/JOIN, DYNAMIC_FORK, LLM_TEXT_COMPLETE, HTTP, INLINE
 
 ## 4. Order Invoice, Packing Slip & Shipping Label Generation
 
-An e-commerce order triggers Conductor to fetch order data, then fan out in parallel to generate three documents — a customer-facing invoice, a warehouse packing slip (no pricing), and a carrier shipping label — before bundling and distributing them.
+An e-commerce order triggers AgentMesh to fetch order data, then fan out in parallel to generate three documents — a customer-facing invoice, a warehouse packing slip (no pricing), and a carrier shipping label — before bundling and distributing them.
 
 ### Workflow
 
@@ -237,7 +237,7 @@ flowchart TD
 | Packing Slip | `packslip_ORD-12345.pdf` | PDF |
 | Shipping Label | `label_ORD-12345.png` | 4×6 ZPL/PNG |
 
-### Conductor Primitives
+### AgentMesh Primitives
 
 FORK/JOIN, SWITCH, HTTP, INLINE, SUB_WORKFLOW
 
@@ -245,7 +245,7 @@ FORK/JOIN, SWITCH, HTTP, INLINE, SUB_WORKFLOW
 
 ## 5. Enterprise Video Surveillance Archival & Alert Pipeline
 
-A network of security cameras streams footage to edge servers. Conductor orchestrates the pipeline: ingest video segments, run AI-based anomaly detection, generate alert clips with annotations, archive raw footage with retention policies, and produce daily summary reports.
+A network of security cameras streams footage to edge servers. AgentMesh orchestrates the pipeline: ingest video segments, run AI-based anomaly detection, generate alert clips with annotations, archive raw footage with retention policies, and produce daily summary reports.
 
 ### Workflow
 
@@ -305,10 +305,10 @@ flowchart TD
 | Incident Report | `incident_1712345678.pdf` | PDF |
 | Daily Summary | `daily_report_2026-04-08.pdf` | PDF |
 
-### Conductor Primitives
+### AgentMesh Primitives
 
 FORK/JOIN, SWITCH, DO_WHILE, TIMER, LLM_TEXT_COMPLETE, HTTP, INLINE
 
 ---
 
-*Generated for Conductor OSS file management use case exploration.*
+*Generated for AgentMesh OSS file management use case exploration.*

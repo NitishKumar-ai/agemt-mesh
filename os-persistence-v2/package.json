@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/os-persistence-v2",
+  "name": "@agentmesh/os-persistence-v2",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

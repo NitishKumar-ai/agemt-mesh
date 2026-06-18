@@ -1,7 +1,7 @@
 /**
  * Plugins Module
  *
- * This module provides the plugin system and extension points for Conductor UI.
+ * This module provides the plugin system and extension points for AgentMesh UI.
  *
  * - Plugin Registry: Register plugins to extend routes, sidebar, task forms, etc.
  * - Fetch: Authenticated HTTP client
@@ -13,7 +13,7 @@ export {
   pluginRegistry,
   registerPlugin,
   // Types
-  type ConductorPlugin,
+  type AgentMeshPlugin,
   type PluginRegistry,
   type PluginTaskFormProps,
   type TaskFormRegistration,

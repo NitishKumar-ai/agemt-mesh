@@ -1,9 +1,9 @@
 ---
-description: "Versioning Workflows — safely run multiple Conductor workflow versions side by side without disrupting production."
+description: "Versioning Workflows — safely run multiple AgentMesh workflow versions side by side without disrupting production."
 ---
 # Versioning Workflows
 
-Conductor allows you to safely run different workflow versions without disrupting ongoing or scheduled workflow executions in production. 
+AgentMesh allows you to safely run different workflow versions without disrupting ongoing or scheduled workflow executions in production. 
 
 Refer to [Updating workflows](creating-workflows.md#updating-workflows) for more information on modifying a workflow and saving it as a new version.
 
@@ -21,7 +21,7 @@ With workflow versioning, you can begin transitioning traffic onto version 2 for
 
 ## Runtime behavior with multiple workflow versions
 
-At runtime, all Conductor workflows will reference a snapshot of the workflow definition at the start of its invocation. In other words, all changes to a workflow definition are decoupled from all of its ongoing workflow executions.
+At runtime, all AgentMesh workflows will reference a snapshot of the workflow definition at the start of its invocation. In other words, all changes to a workflow definition are decoupled from all of its ongoing workflow executions.
 
 Here is an illustration of workflow versions at runtime, when you run workflows based on the latest version, versus when you run workflows based on a specific version.
 
@@ -50,9 +50,9 @@ At T2, if a V1 execution is restarted with the latest definitions, the V1 execut
 
 Since any changes to a workflow definition will not impact its ongoing executions, running workflows need to be explicitly upgraded if required.
 
-Using the Conductor UI or APIs, you can upgrade a running workflow by terminating the execution and restarting it with the latest definition.
+Using the AgentMesh UI or APIs, you can upgrade a running workflow by terminating the execution and restarting it with the latest definition.
 
-### Using Conductor UI
+### Using AgentMesh UI
 
 **To upgrade a running workflow**:
 
@@ -60,6 +60,6 @@ Using the Conductor UI or APIs, you can upgrade a running workflow by terminatin
 2. In the top right, select **Actions** > **Terminate**.
 3. Once terminated, select **Actions** > **Restart with Latest Definitions**.
 
-### Using Conductor APIs
+### Using AgentMesh APIs
 
 The API approach allows you to upgrade running workflows in bulk. Use the Bulk Terminate API (`POST /api/workflow/bulk/terminate`) to specify a list of ongoing workflows. Then, use the Bulk Restart API (`POST /api/workflow/bulk/restart`) to restart the terminated workflows.

@@ -10,7 +10,7 @@
       "inputParameters": {
         "llmProvider": "openai",
         "model": "text-embedding-3-small",
-        "text": "Conductor is an orchestration platform"
+        "text": "AgentMesh is an orchestration platform"
       }
     }
   ]

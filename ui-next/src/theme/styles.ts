@@ -1,5 +1,5 @@
 import { SxProps, Theme } from "@mui/material";
-import type { ConductorInputStyleProps } from "components/ui/inputs/ConductorInput";
+import type { AgentMeshInputStyleProps } from "components/ui/inputs/AgentMeshInput";
 import { fontSizes } from "theme/tokens/variables";
 import { getColor } from "./theme";
 
@@ -19,7 +19,7 @@ export const inputLabelStyle = ({
   isFocused,
   error,
   isInputEmpty,
-}: ConductorInputStyleProps): SxProps<Theme> => ({
+}: AgentMeshInputStyleProps): SxProps<Theme> => ({
   ...baseLabelStyle,
   color: getColor({ theme, isFocused, error, isLabel: true, isInputEmpty }),
   fontWeight: isFocused ? 500 : 200,
@@ -34,7 +34,7 @@ export const formHelperStyle = ({
   isFocused,
   error,
   isInputEmpty,
-}: ConductorInputStyleProps): SxProps<Theme> => ({
+}: AgentMeshInputStyleProps): SxProps<Theme> => ({
   fontSize: `${labelScale}em`,
   color: getColor({ theme, isFocused, error, isLabel: true, isInputEmpty }),
   pl: "8px",

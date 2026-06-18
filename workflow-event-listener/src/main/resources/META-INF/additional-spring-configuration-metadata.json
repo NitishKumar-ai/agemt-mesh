@@ -1,96 +1,96 @@
 {
   "properties": [
     {
-      "name": "conductor.metrics-logger.reportPeriodSeconds",
+      "name": "agentmesh.metrics-logger.reportPeriodSeconds",
       "type": "java.lang.Long",
       "description": "The interval (in seconds) at which the metrics will be reported into the log stream by the metrics-logger."
     },
     {
-      "name": "conductor.tasks.http.readTimeout",
+      "name": "agentmesh.tasks.http.readTimeout",
       "type": "java.lang.Integer",
       "description": "The read timeout of the underlying HttpClient used by the HTTP task."
     },
     {
-      "name": "conductor.tasks.http.connectTimeout",
+      "name": "agentmesh.tasks.http.connectTimeout",
       "type": "java.lang.Integer",
       "description": "The connection timeout of the underlying HttpClient used by the HTTP task."
     },
     {
-      "name": "conductor.tasks.kafka-publish.requestTimeoutMs",
+      "name": "agentmesh.tasks.kafka-publish.requestTimeoutMs",
       "type": "java.lang.String",
       "description": "The request.timeout.ms value that the kafka producer is configured with in the KAFKA_PUBLISH task."
     },
     {
-      "name": "conductor.tasks.kafka-publish.maxBlockMs",
+      "name": "agentmesh.tasks.kafka-publish.maxBlockMs",
       "type": "java.lang.String",
       "description": "The max.block.ms value that the kafka producer is configured with in the KAFKA_PUBLISH task."
     },
     {
-      "name": "conductor.tasks.kafka-publish.cacheSize",
+      "name": "agentmesh.tasks.kafka-publish.cacheSize",
       "type": "java.lang.Integer",
       "description": "The maximum number of entries permitted in the in-memory cache used by the KAFKA_PUBLISH task."
     },
     {
-      "name": "conductor.tasks.kafka-publish.cacheTimeMs",
+      "name": "agentmesh.tasks.kafka-publish.cacheTimeMs",
       "type": "java.lang.Integer",
       "description": "The duration after which a cached entry will be removed from the in-memory cache used by the KAFKA_PUBLISH task."
     },
     {
-      "name": "conductor.workflow-status-listener.type",
+      "name": "agentmesh.workflow-status-listener.type",
       "type": "java.lang.String",
       "description": "The implementation of the workflow status listener to be used."
     },
     {
-      "name": "conductor.workflow-execution-lock.type",
+      "name": "agentmesh.workflow-execution-lock.type",
       "type": "java.lang.String",
       "description": "The implementation of the workflow execution lock to be used.",
       "defaultValue": "noop_lock"
     },
     {
-      "name": "conductor.event-queues.sqs.enabled",
+      "name": "agentmesh.event-queues.sqs.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the use of AWS SQS implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.contribs.queue.sqs.config.SQSEventQueueConfiguration"
+      "sourceType": "com.agentmesh.agentmesh.contribs.queue.sqs.config.SQSEventQueueConfiguration"
     },
     {
-      "name": "conductor.event-queues.amqp.enabled",
+      "name": "agentmesh.event-queues.amqp.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the use of RabbitMQ implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.contribs.queue.amqp.config.AMQPEventQueueConfiguration"
+      "sourceType": "com.agentmesh.agentmesh.contribs.queue.amqp.config.AMQPEventQueueConfiguration"
     },
     {
-      "name": "conductor.event-queues.nats.enabled",
+      "name": "agentmesh.event-queues.nats.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the use of NATS implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.contribs.queue.nats.config.NATSConfiguration"
+      "sourceType": "com.agentmesh.agentmesh.contribs.queue.nats.config.NATSConfiguration"
     },
     {
-      "name": "conductor.event-queues.nats-stream.enabled",
+      "name": "agentmesh.event-queues.nats-stream.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the use of NATS Streaming implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.contribs.queue.nats.config.NATSStreamConfiguration"
+      "sourceType": "com.agentmesh.agentmesh.contribs.queue.nats.config.NATSStreamConfiguration"
     },
     {
-      "name": "conductor.event-queues.kafka.enabled",
+      "name": "agentmesh.event-queues.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the use of Kafka implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.event-queue.kafkaeq.config.KafkaEventQueueConfiguration"
+      "sourceType": "com.agentmesh.agentmesh.event-queue.kafkaeq.config.KafkaEventQueueConfiguration"
     },
     {
-      "name": "conductor.default-event-queue.type",
+      "name": "agentmesh.default-event-queue.type",
       "type": "java.lang.String",
       "description": "The default event queue type to listen on for the WAIT task."
     },
     {
-      "name": "conductor.workflow-status-listener.composite.types",
+      "name": "agentmesh.workflow-status-listener.composite.types",
       "type": "java.util.List",
       "description": "List of workflow listener types to enable when using composite listener. Valid values: workflow_publisher, queue_publisher, kafka, archive",
-      "sourceType": "com.netflix.conductor.contribs.listener.composite.CompositeWorkflowStatusListenerProperties"
+      "sourceType": "com.agentmesh.agentmesh.contribs.listener.composite.CompositeWorkflowStatusListenerProperties"
     }
   ],
   "hints": [
     {
-      "name": "conductor.workflow-status-listener.type",
+      "name": "agentmesh.workflow-status-listener.type",
       "values": [
         {
           "value": "stub",
@@ -110,12 +110,12 @@
         },
         {
           "value": "composite",
-          "description": "Use the composite implementation to enable multiple workflow status listeners simultaneously. Configure the listeners to enable using conductor.workflow-status-listener.composite.types property."
+          "description": "Use the composite implementation to enable multiple workflow status listeners simultaneously. Configure the listeners to enable using agentmesh.workflow-status-listener.composite.types property."
         }
       ]
     },
     {
-      "name": "conductor.default-event-queue.type",
+      "name": "agentmesh.default-event-queue.type",
       "values": [
         {
           "value": "sqs",
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "name": "conductor.workflow-execution-lock.type",
+      "name": "agentmesh.workflow-execution-lock.type",
       "values": [
         {
           "value": "noop_lock",

@@ -1,10 +1,10 @@
 ---
-description: "Conductor Metadata API — register, update, validate, and delete workflow and task definitions. Manage your orchestration blueprints via REST."
+description: "AgentMesh Metadata API — register, update, validate, and delete workflow and task definitions. Manage your orchestration blueprints via REST."
 ---
 
 # Metadata API
 
-The Metadata API manages workflow and task definitions — the blueprints that Conductor uses to orchestrate executions. All endpoints use the base path `/api/metadata`.
+The Metadata API manages workflow and task definitions — the blueprints that AgentMesh uses to orchestrate executions. All endpoints use the base path `/api/metadata`.
 
 ## Workflow Definitions
 

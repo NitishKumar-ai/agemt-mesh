@@ -67,8 +67,8 @@ export const persistCopyInLocalStorage = (
 export const fetchSecrets = async ({
   authHeaders: headers,
 }: DefinitionMachineContext) => {
-  // OSS ships with `window.conductor.SECRETS: false` (see public/context.js).
-  // Orkes / conductor-ui enables SECRETS so workflow validation can load names.
+  // OSS ships with `window.agentmesh.SECRETS: false` (see public/context.js).
+  // Orkes / agentmesh-ui enables SECRETS so workflow validation can load names.
   if (!featureFlags.isEnabled(FEATURES.SECRETS)) {
     return [];
   }

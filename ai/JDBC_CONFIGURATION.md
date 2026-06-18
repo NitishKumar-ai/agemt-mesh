@@ -1,10 +1,10 @@
 # JDBC Configuration
 
-This document describes the configuration format for JDBC database connections in Conductor.
+This document describes the configuration format for JDBC database connections in AgentMesh.
 
 ## Overview
 
-Conductor supports configuring **multiple named JDBC instances** for use by the `JDBC` worker task. This allows you to:
+AgentMesh supports configuring **multiple named JDBC instances** for use by the `JDBC` worker task. This allows you to:
 
 - Connect to multiple databases (MySQL, PostgreSQL, Oracle, etc.)
 - Separate environments (prod, dev, staging)
@@ -12,10 +12,10 @@ Conductor supports configuring **multiple named JDBC instances** for use by the 
 
 ## Configuration Format
 
-JDBC instances are configured using a list-based approach under `conductor.jdbc.instances`:
+JDBC instances are configured using a list-based approach under `agentmesh.jdbc.instances`:
 
 ```yaml
-conductor:
+agentmesh:
   jdbc:
     instances:
       - name: "instance-name"        # Unique identifier for this instance
@@ -32,14 +32,14 @@ conductor:
 ### Single MySQL Instance
 
 ```yaml
-conductor:
+agentmesh:
   jdbc:
     instances:
       - name: "mysql-prod"
         connection:
           datasourceURL: "jdbc:mysql://prod-db:3306/myapp"
           jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "conductor"
+          user: "agentmesh"
           password: "secret"
           maximumPoolSize: 20
           minimumIdle: 5
@@ -48,14 +48,14 @@ conductor:
 ### Multiple Instances
 
 ```yaml
-conductor:
+agentmesh:
   jdbc:
     instances:
       - name: "mysql-prod"
         connection:
           datasourceURL: "jdbc:mysql://prod-db:3306/myapp"
           jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "conductor"
+          user: "agentmesh"
           password: "prod-secret"
           maximumPoolSize: 20
 
@@ -70,7 +70,7 @@ conductor:
         connection:
           datasourceURL: "jdbc:mysql://staging-db:3306/myapp"
           jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "conductor"
+          user: "agentmesh"
           password: "staging-secret"
           maximumPoolSize: 5
           minimumIdle: 1
@@ -166,23 +166,23 @@ If the actual update count does not match `expectedUpdateCount`, the transaction
 ### Old Format
 
 ```properties
-conductor.worker.jdbc.connectionIds=mysql,postgres
-conductor.worker.jdbc.mysql.connectionURL=jdbc:mysql://localhost:3306/db
-conductor.worker.jdbc.mysql.driverClassName=com.mysql.cj.jdbc.Driver
-conductor.worker.jdbc.mysql.username=root
-conductor.worker.jdbc.mysql.password=secret
-conductor.worker.jdbc.mysql.maximum-pool-size=10
+agentmesh.worker.jdbc.connectionIds=mysql,postgres
+agentmesh.worker.jdbc.mysql.connectionURL=jdbc:mysql://localhost:3306/db
+agentmesh.worker.jdbc.mysql.driverClassName=com.mysql.cj.jdbc.Driver
+agentmesh.worker.jdbc.mysql.username=root
+agentmesh.worker.jdbc.mysql.password=secret
+agentmesh.worker.jdbc.mysql.maximum-pool-size=10
 
-conductor.worker.jdbc.postgres.connectionURL=jdbc:postgresql://localhost:5432/db
-conductor.worker.jdbc.postgres.driverClassName=org.postgresql.Driver
-conductor.worker.jdbc.postgres.username=pguser
-conductor.worker.jdbc.postgres.password=pgpass
+agentmesh.worker.jdbc.postgres.connectionURL=jdbc:postgresql://localhost:5432/db
+agentmesh.worker.jdbc.postgres.driverClassName=org.postgresql.Driver
+agentmesh.worker.jdbc.postgres.username=pguser
+agentmesh.worker.jdbc.postgres.password=pgpass
 ```
 
 ### New Format
 
 ```yaml
-conductor:
+agentmesh:
   jdbc:
     instances:
       - name: "mysql"
@@ -201,7 +201,7 @@ conductor:
           password: "pgpass"
 ```
 
-**Note:** The old `conductor.worker.jdbc.*` format is still supported for backwards compatibility. If no `conductor.jdbc.instances` are configured, the system automatically falls back to reading the legacy format. The old and new formats are mutually exclusive -- if new-format instances are found, the legacy format is ignored.
+**Note:** The old `agentmesh.worker.jdbc.*` format is still supported for backwards compatibility. If no `agentmesh.jdbc.instances` are configured, the system automatically falls back to reading the legacy format. The old and new formats are mutually exclusive -- if new-format instances are found, the legacy format is ignored.
 
 ### Property Name Mapping
 

@@ -1,118 +1,118 @@
 ---
-description: "OpenSearch Integration — configure OpenSearch as the indexing backend for searching Conductor workflows and tasks."
+description: "OpenSearch Integration — configure OpenSearch as the indexing backend for searching AgentMesh workflows and tasks."
 ---
 # OpenSearch
 
-Conductor supports OpenSearch as an indexing backend for searching workflows and tasks via the UI.
+AgentMesh supports OpenSearch as an indexing backend for searching workflows and tasks via the UI.
 Version-specific modules are provided for OpenSearch 2.x and 3.x.
 
 ## Quick Start
 
-Choose the module that matches your OpenSearch cluster version and set `conductor.indexing.type`:
+Choose the module that matches your OpenSearch cluster version and set `agentmesh.indexing.type`:
 
 ```properties
 # For OpenSearch 2.x
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch2
-conductor.opensearch.url=http://localhost:9200
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch2
+agentmesh.opensearch.url=http://localhost:9200
 
 # For OpenSearch 3.x
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch3
-conductor.opensearch.url=http://localhost:9200
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch3
+agentmesh.opensearch.url=http://localhost:9200
 ```
 
-Conductor will create its indices on first startup and begin indexing workflows and tasks.
+AgentMesh will create its indices on first startup and begin indexing workflows and tasks.
 
 ## Supported Versions
 
-| Module | `conductor.indexing.type` | OpenSearch Version | Client Library |
+| Module | `agentmesh.indexing.type` | OpenSearch Version | Client Library |
 |---|---|---|---|
 | `os-persistence-v2` | `opensearch2` | 2.x (2.0 – 2.18+) | opensearch-java 2.18.0 |
 | `os-persistence-v3` | `opensearch3` | 3.x (3.0+) | opensearch-java 3.0.0 |
 
 OpenSearch 1.x is no longer supported. If you need 1.x support, see the
-[archived os-persistence-v1 module](https://github.com/conductor-oss/conductor-os-persistence-v1).
+[archived os-persistence-v1 module](https://github.com/agentmesh-oss/agentmesh-os-persistence-v1).
 
 ## Configuration Reference
 
-All OpenSearch configuration uses the `conductor.opensearch.*` namespace. Both the v2 and v3
-modules share the same property names — only `conductor.indexing.type` differs.
+All OpenSearch configuration uses the `agentmesh.opensearch.*` namespace. Both the v2 and v3
+modules share the same property names — only `agentmesh.indexing.type` differs.
 
 ### Connection
 
 | Property | Default | Description |
 |---|---|---|
-| `conductor.opensearch.url` | `localhost:9201` | Comma-separated OpenSearch node URLs. HTTP and HTTPS are both supported. |
-| `conductor.opensearch.username` | _(none)_ | Username for basic authentication. |
-| `conductor.opensearch.password` | _(none)_ | Password for basic authentication. |
+| `agentmesh.opensearch.url` | `localhost:9201` | Comma-separated OpenSearch node URLs. HTTP and HTTPS are both supported. |
+| `agentmesh.opensearch.username` | _(none)_ | Username for basic authentication. |
+| `agentmesh.opensearch.password` | _(none)_ | Password for basic authentication. |
 
 Multi-node example:
 
 ```properties
-conductor.opensearch.url=http://os-node1:9200,http://os-node2:9200,http://os-node3:9200
+agentmesh.opensearch.url=http://os-node1:9200,http://os-node2:9200,http://os-node3:9200
 ```
 
 ### Index Management
 
 | Property | Default | Description |
 |---|---|---|
-| `conductor.opensearch.indexPrefix` | `conductor` | Prefix for all Conductor-managed indices. |
-| `conductor.opensearch.indexShardCount` | `5` | Primary shards per index. |
-| `conductor.opensearch.indexReplicasCount` | `0` | Replica shards per index. |
-| `conductor.opensearch.autoIndexManagementEnabled` | `true` | Whether Conductor creates and manages indices automatically. Set to `false` to manage indices externally. |
-| `conductor.opensearch.clusterHealthColor` | `green` | Cluster health color Conductor waits for before starting. Use `yellow` for single-node clusters. |
+| `agentmesh.opensearch.indexPrefix` | `agentmesh` | Prefix for all AgentMesh-managed indices. |
+| `agentmesh.opensearch.indexShardCount` | `5` | Primary shards per index. |
+| `agentmesh.opensearch.indexReplicasCount` | `0` | Replica shards per index. |
+| `agentmesh.opensearch.autoIndexManagementEnabled` | `true` | Whether AgentMesh creates and manages indices automatically. Set to `false` to manage indices externally. |
+| `agentmesh.opensearch.clusterHealthColor` | `green` | Cluster health color AgentMesh waits for before starting. Use `yellow` for single-node clusters. |
 
 ### Performance Tuning
 
 | Property | Default | Description |
 |---|---|---|
-| `conductor.opensearch.indexBatchSize` | `1` | Documents per batch in async mode. |
-| `conductor.opensearch.asyncWorkerQueueSize` | `100` | Async indexing task queue depth. |
-| `conductor.opensearch.asyncMaxPoolSize` | `12` | Maximum async indexing threads. |
-| `conductor.opensearch.asyncBufferFlushTimeout` | `10s` | Maximum time an async buffer is held before flushing. |
-| `conductor.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per search. |
-| `conductor.opensearch.restClientConnectionRequestTimeout` | `-1` | REST client connection request timeout in ms. `-1` means unlimited. |
+| `agentmesh.opensearch.indexBatchSize` | `1` | Documents per batch in async mode. |
+| `agentmesh.opensearch.asyncWorkerQueueSize` | `100` | Async indexing task queue depth. |
+| `agentmesh.opensearch.asyncMaxPoolSize` | `12` | Maximum async indexing threads. |
+| `agentmesh.opensearch.asyncBufferFlushTimeout` | `10s` | Maximum time an async buffer is held before flushing. |
+| `agentmesh.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per search. |
+| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1` | REST client connection request timeout in ms. `-1` means unlimited. |
 
 ## Example Configurations
 
 ### Development (single-node, no auth)
 
 ```properties
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch2
-conductor.opensearch.url=http://localhost:9200
-conductor.opensearch.indexPrefix=conductor
-conductor.opensearch.indexReplicasCount=0
-conductor.opensearch.clusterHealthColor=yellow
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch2
+agentmesh.opensearch.url=http://localhost:9200
+agentmesh.opensearch.indexPrefix=agentmesh
+agentmesh.opensearch.indexReplicasCount=0
+agentmesh.opensearch.clusterHealthColor=yellow
 ```
 
 ### Production (multi-node, auth, OpenSearch 2.x)
 
 ```properties
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch2
-conductor.opensearch.url=https://os-node1:9200,https://os-node2:9200,https://os-node3:9200
-conductor.opensearch.username=conductor_user
-conductor.opensearch.password=secure_password
-conductor.opensearch.indexPrefix=conductor
-conductor.opensearch.indexShardCount=5
-conductor.opensearch.indexReplicasCount=1
-conductor.opensearch.clusterHealthColor=green
-conductor.opensearch.asyncWorkerQueueSize=500
-conductor.opensearch.asyncMaxPoolSize=24
-conductor.opensearch.indexBatchSize=10
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch2
+agentmesh.opensearch.url=https://os-node1:9200,https://os-node2:9200,https://os-node3:9200
+agentmesh.opensearch.username=agentmesh_user
+agentmesh.opensearch.password=secure_password
+agentmesh.opensearch.indexPrefix=agentmesh
+agentmesh.opensearch.indexShardCount=5
+agentmesh.opensearch.indexReplicasCount=1
+agentmesh.opensearch.clusterHealthColor=green
+agentmesh.opensearch.asyncWorkerQueueSize=500
+agentmesh.opensearch.asyncMaxPoolSize=24
+agentmesh.opensearch.indexBatchSize=10
 ```
 
 ### OpenSearch 3.x
 
 ```properties
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch3
-conductor.opensearch.url=http://localhost:9200
-conductor.opensearch.indexPrefix=conductor
-conductor.opensearch.indexReplicasCount=0
-conductor.opensearch.clusterHealthColor=yellow
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch3
+agentmesh.opensearch.url=http://localhost:9200
+agentmesh.opensearch.indexPrefix=agentmesh
+agentmesh.opensearch.indexReplicasCount=0
+agentmesh.opensearch.clusterHealthColor=yellow
 ```
 
 ## Running with Docker Compose
@@ -127,36 +127,36 @@ docker compose -f docker/docker-compose-redis-os2.yaml up
 docker compose -f docker/docker-compose-redis-os3.yaml up
 ```
 
-Both start Conductor, Redis, and the appropriate OpenSearch version.
+Both start AgentMesh, Redis, and the appropriate OpenSearch version.
 
 ## Migrating from the Legacy `opensearch` Type
 
-The generic `conductor.indexing.type=opensearch` is deprecated. Starting the server with this
+The generic `agentmesh.indexing.type=opensearch` is deprecated. Starting the server with this
 value will display an error message directing you to the new configuration.
 
 **Before:**
 
 ```properties
-conductor.indexing.type=opensearch
-conductor.elasticsearch.url=http://localhost:9200
-conductor.elasticsearch.indexName=conductor
+agentmesh.indexing.type=opensearch
+agentmesh.elasticsearch.url=http://localhost:9200
+agentmesh.elasticsearch.indexName=agentmesh
 ```
 
 **After:**
 
 ```properties
-conductor.indexing.type=opensearch2   # or opensearch3
-conductor.opensearch.url=http://localhost:9200
-conductor.opensearch.indexPrefix=conductor
+agentmesh.indexing.type=opensearch2   # or opensearch3
+agentmesh.opensearch.url=http://localhost:9200
+agentmesh.opensearch.indexPrefix=agentmesh
 ```
 
-The `conductor.elasticsearch.*` namespace is still accepted for backward compatibility. When
+The `agentmesh.elasticsearch.*` namespace is still accepted for backward compatibility. When
 detected, those values are used and a deprecation warning is logged at startup. Migrate to
-`conductor.opensearch.*` before the next major release.
+`agentmesh.opensearch.*` before the next major release.
 
 ### Legacy property mapping
 
-| Legacy (`conductor.elasticsearch.*`) | New (`conductor.opensearch.*`) |
+| Legacy (`agentmesh.elasticsearch.*`) | New (`agentmesh.opensearch.*`) |
 |---|---|
 | `url` | `url` |
 | `indexName` | `indexPrefix` |
@@ -172,28 +172,28 @@ detected, those values are used and a deprecation warning is logged at startup. 
 
 ## Disabling Indexing
 
-To run Conductor without search indexing (disables workflow search in the UI):
+To run AgentMesh without search indexing (disables workflow search in the UI):
 
 ```properties
-conductor.indexing.enabled=false
+agentmesh.indexing.enabled=false
 ```
 
 ## Troubleshooting
 
-### Conductor fails to start: cluster health timeout
+### AgentMesh fails to start: cluster health timeout
 
 For single-node development clusters, set:
 
 ```properties
-conductor.opensearch.clusterHealthColor=yellow
+agentmesh.opensearch.clusterHealthColor=yellow
 ```
 
 A single-node cluster cannot achieve `green` health because replica shards cannot be assigned.
 
-### Conductor fails to start: `NoClassDefFoundError: org.opensearch.Version`
+### AgentMesh fails to start: `NoClassDefFoundError: org.opensearch.Version`
 
 This error occurred with older `os-persistence` module versions and is resolved in the current
-versioned modules. Ensure `conductor.indexing.type` is set to `opensearch2` or `opensearch3`.
+versioned modules. Ensure `agentmesh.indexing.type` is set to `opensearch2` or `opensearch3`.
 
 ### Configuration changes not taking effect in Docker
 
@@ -208,7 +208,7 @@ Alternatively, mount the config file as a Docker volume to pick up changes witho
 
 ## See Also
 
-- [os-persistence-v2 README](https://github.com/conductor-oss/conductor/blob/main/os-persistence-v2/README.md)
-- [os-persistence-v3 README](https://github.com/conductor-oss/conductor/blob/main/os-persistence-v3/README.md)
-- [Issue #678](https://github.com/conductor-oss/conductor/issues/678) — OpenSearch improvement epic
+- [os-persistence-v2 README](https://github.com/agentmesh-oss/agentmesh/blob/main/os-persistence-v2/README.md)
+- [os-persistence-v3 README](https://github.com/agentmesh-oss/agentmesh/blob/main/os-persistence-v3/README.md)
+- [Issue #678](https://github.com/agentmesh-oss/agentmesh/issues/678) — OpenSearch improvement epic
 - [OpenSearch documentation](https://opensearch.org/docs/latest/)

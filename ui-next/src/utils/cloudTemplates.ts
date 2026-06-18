@@ -35,7 +35,7 @@ const WF_TEMPLATE_URL_PREFIX = "ct-wf-";
 
 const TASK_TEMPLATE_URL_PREFIX = "ct-task-";
 
-// https://beta-saas.orkesconductor.com/api/templates
+// https://beta-saas.orkesagentmesh.com/api/templates
 // https://cloud.orkes.io/api/templates
 
 // removing quotes from the string
@@ -45,7 +45,7 @@ const cloudTemplatesSourceFlagValue = featureFlags
 
 const CLOUD_URL =
   cloudTemplatesSourceFlagValue ??
-  "https://raw.githubusercontent.com/conductor-oss/awesome-conductor-apps/refs/heads/main/templates.json";
+  "https://raw.githubusercontent.com/agentmesh-oss/awesome-agentmesh-apps/refs/heads/main/templates.json";
 
 export const justName = ({ name }: { name: string }) => name;
 

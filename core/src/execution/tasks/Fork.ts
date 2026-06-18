@@ -1,5 +1,5 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
-import { TaskType } from '@conductor/common';
+import { TaskType } from '@agentmesh/common';
 
 export class Fork extends WorkflowSystemTask {
   constructor() {

@@ -1,3 +1,3 @@
-import { hello } from '@conductor/hello';
+import { hello } from '@agentmesh/hello';
 
 console.log(hello());

@@ -1,5 +1,5 @@
 ---
-description: "Switch Task — conditional branching in Conductor workflows based on task output or workflow input values."
+description: "Switch Task — conditional branching in AgentMesh workflows based on task output or workflow input values."
 ---
 # Switch
 ```json

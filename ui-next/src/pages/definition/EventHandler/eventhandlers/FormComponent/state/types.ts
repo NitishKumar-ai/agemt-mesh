@@ -1,4 +1,4 @@
-import { ConductorEvent } from "types/Events";
+import { AgentMeshEvent } from "types/Events";
 export enum EventFormMachineTypes {
   CHANGE_NAME_EVT = "CHANGE_NAME_EVT",
   CHANGE_EVENT_EVT = "CHANGE_EVENT_EVT",
@@ -105,6 +105,6 @@ export const actionLabel = {
 } as { [key: string]: string };
 
 export interface EventFormMachineContext {
-  eventAsJson: Partial<ConductorEvent>;
-  originalSource: Partial<ConductorEvent>;
+  eventAsJson: Partial<AgentMeshEvent>;
+  originalSource: Partial<AgentMeshEvent>;
 }

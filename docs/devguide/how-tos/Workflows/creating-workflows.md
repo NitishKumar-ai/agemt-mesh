@@ -1,14 +1,14 @@
 ---
-description: "Create and update workflow definitions in Conductor using the UI, CLI, REST APIs, or client SDKs. Supports versioning and JSON configuration."
+description: "Create and update workflow definitions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Supports versioning and JSON configuration."
 ---
 
 # Creating / Updating Workflows
 
-You can create and update workflows using the Conductor UI, APIs, or SDKs. These workflows can be versioned, which is useful for [a variety of cases](versioning-workflows.md#when-to-version-workflows).
+You can create and update workflows using the AgentMesh UI, APIs, or SDKs. These workflows can be versioned, which is useful for [a variety of cases](versioning-workflows.md#when-to-version-workflows).
 
-If your workflow definition contains any new tasks, you must also register the task definitions to Conductor before running the workflow.
+If your workflow definition contains any new tasks, you must also register the task definitions to AgentMesh before running the workflow.
 
-## Using Conductor UI
+## Using AgentMesh UI
 
 With the UI, you can create or update workflow definitions visually.
 
@@ -33,10 +33,10 @@ With the UI, you can create or update workflow definitions visually.
 
 ## Using the CLI
 
-You can create or update workflow definitions using the Conductor CLI. Save your workflow definition to a JSON file and run:
+You can create or update workflow definitions using the AgentMesh CLI. Save your workflow definition to a JSON file and run:
 
 ```bash
-conductor workflow create workflow.json
+agentmesh workflow create workflow.json
 ```
 
 Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/index.md) for the reference guide on the full parameters.
@@ -58,7 +58,7 @@ Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/
 
 ## Using SDKs
 
-Conductor offers client SDKs for popular languages which have library methods for making the API call. Refer to the SDK documentation to configure a client in your selected language to invoke workflow executions.
+AgentMesh offers client SDKs for popular languages which have library methods for making the API call. Refer to the SDK documentation to configure a client in your selected language to invoke workflow executions.
 
 Refer to [Workflow Definition](../../../documentation/configuration/workflowdef/index.md) for the reference guide on the full parameters.
 

@@ -1,11 +1,11 @@
 ---
-description: "Build Conductor workers in Ruby with idiomatic task definitions and workflow management."
+description: "Build AgentMesh workers in Ruby with idiomatic task definitions and workflow management."
 ---
 
 # Ruby SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/ruby-sdk](https://github.com/conductor-oss/ruby-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/ruby-sdk](https://github.com/agentmesh-oss/ruby-sdk) | Report issues and contribute on GitHub.
 
 ## Features
 
@@ -21,13 +21,13 @@ description: "Build Conductor workers in Ruby with idiomatic task definitions an
 Add to your Gemfile:
 
 ```ruby
-gem 'conductor_ruby'
+gem 'agentmesh_ruby'
 ```
 
 Or install directly:
 
 ```bash
-gem install conductor_ruby
+gem install agentmesh_ruby
 ```
 
 ## Quick Start
@@ -35,18 +35,18 @@ gem install conductor_ruby
 ### Hello World
 
 ```ruby
-require 'conductor'
+require 'agentmesh'
 
-# Configuration (reads CONDUCTOR_SERVER_URL from environment)
-config = Conductor::Configuration.new
+# Configuration (reads AGENTMESH_SERVER_URL from environment)
+config = AgentMesh::Configuration.new
 
 # Create clients
-clients = Conductor::Orkes::OrkesClients.new(config)
+clients = AgentMesh::Orkes::OrkesClients.new(config)
 executor = clients.get_workflow_executor
 
 # Define a worker
 class GreetWorker
-  include Conductor::Worker::WorkerModule
+  include AgentMesh::Worker::WorkerModule
   worker_task 'greet'
 
   def execute(task)
@@ -56,7 +56,7 @@ class GreetWorker
 end
 
 # Build workflow using new DSL
-workflow = Conductor.workflow :greetings, version: 1, executor: executor do
+workflow = AgentMesh.workflow :greetings, version: 1, executor: executor do
   greet = simple :greet, name: wf[:name]
   output result: greet[:result]
 end
@@ -65,7 +65,7 @@ end
 workflow.register(overwrite: true)
 
 # Start workers
-runner = Conductor::Worker::TaskRunner.new(config)
+runner = AgentMesh::Worker::TaskRunner.new(config)
 runner.register_worker(GreetWorker.new)
 runner.start
 
@@ -81,7 +81,7 @@ runner.stop
 The SDK provides a clean, Ruby-idiomatic DSL for building workflows:
 
 ```ruby
-workflow = Conductor.workflow :order_processing, version: 1, executor: executor do
+workflow = AgentMesh.workflow :order_processing, version: 1, executor: executor do
   # Access workflow inputs with wf[:param]
   user = simple :get_user, user_id: wf[:user_id]
   
@@ -235,7 +235,7 @@ wait_for_webhook :external_callback,
   matches: { 'type' => 'payment', 'order_id' => '${workflow.input.order_id}' }
 
 # Publish event
-event :notify, sink: 'conductor:workflow_events', payload: { status: 'completed' }
+event :notify, sink: 'agentmesh:workflow_events', payload: { status: 'completed' }
 ```
 
 #### Termination
@@ -263,7 +263,7 @@ dynamic_fork :process_all,
 ### LLM/AI Tasks
 
 ```ruby
-workflow = Conductor.workflow :ai_assistant, executor: executor do
+workflow = AgentMesh.workflow :ai_assistant, executor: executor do
   # Chat completion (messages auto-converted from simple format)
   response = llm_chat :chat,
     provider: 'openai',
@@ -350,22 +350,22 @@ The `examples/` directory contains comprehensive examples:
 
 | Example | Description |
 |---------|-------------|
-| [`helloworld/`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/helloworld/) | Simplest complete example - worker + workflow + execution |
-| [`workflow_dsl.rb`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | Comprehensive new DSL showcase |
-| [`simple_worker.rb`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | Worker patterns: class-based, block-based, error handling |
-| [`kitchensink.rb`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | All major task types using new DSL |
-| [`dynamic_workflow.rb`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | Create and execute workflows at runtime |
-| [`workflow_ops.rb`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | Lifecycle operations: pause, resume, restart, retry |
-| [`agentic_workflows/`](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/agentic_workflows/) | LLM chat and AI workflow examples |
+| [`helloworld/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/helloworld/) | Simplest complete example - worker + workflow + execution |
+| [`workflow_dsl.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | Comprehensive new DSL showcase |
+| [`simple_worker.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | Worker patterns: class-based, block-based, error handling |
+| [`kitchensink.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | All major task types using new DSL |
+| [`dynamic_workflow.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | Create and execute workflows at runtime |
+| [`workflow_ops.rb`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | Lifecycle operations: pause, resume, restart, retry |
+| [`agentic_workflows/`](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/agentic_workflows/) | LLM chat and AI workflow examples |
 
 Run examples:
 
 ```bash
 # Set environment variables
-export CONDUCTOR_SERVER_URL=http://localhost:8080/api
+export AGENTMESH_SERVER_URL=http://localhost:8080/api
 # For Orkes Cloud:
-# export CONDUCTOR_AUTH_KEY=your_key
-# export CONDUCTOR_AUTH_SECRET=your_secret
+# export AGENTMESH_AUTH_KEY=your_key
+# export AGENTMESH_AUTH_SECRET=your_secret
 
 # Run hello world
 cd examples/helloworld && bundle exec ruby helloworld.rb
@@ -383,7 +383,7 @@ bundle exec ruby examples/kitchensink.rb
 
 ```ruby
 class ImageProcessor
-  include Conductor::Worker::WorkerModule
+  include AgentMesh::Worker::WorkerModule
 
   worker_task 'process_image', poll_interval: 1, thread_count: 4
 
@@ -391,7 +391,7 @@ class ImageProcessor
     url = get_input(task, 'image_url')
     # Process image...
     
-    result = Conductor::Http::Models::TaskResult.complete
+    result = AgentMesh::Http::Models::TaskResult.complete
     result.add_output_data('processed_url', processed_url)
     result.log('Image processed successfully')
     result
@@ -402,7 +402,7 @@ end
 ### Block-Based Workers
 
 ```ruby
-worker = Conductor::Worker.define('simple_task') do |task|
+worker = AgentMesh::Worker.define('simple_task') do |task|
   input = task.input_data['value']
   { result: input * 2 }  # Return hash for automatic TaskResult
 end
@@ -411,7 +411,7 @@ end
 ### Running Workers
 
 ```ruby
-runner = Conductor::Worker::TaskRunner.new(config)
+runner = AgentMesh::Worker::TaskRunner.new(config)
 runner.register_worker(ImageProcessor.new)
 runner.register_worker(worker)
 runner.start(threads: 4)
@@ -426,15 +426,15 @@ sleep while runner.running?
 ### Environment Variables
 
 ```bash
-export CONDUCTOR_SERVER_URL=http://localhost:8080/api
-export CONDUCTOR_AUTH_KEY=your_key        # For Orkes Cloud
-export CONDUCTOR_AUTH_SECRET=your_secret  # For Orkes Cloud
+export AGENTMESH_SERVER_URL=http://localhost:8080/api
+export AGENTMESH_AUTH_KEY=your_key        # For Orkes Cloud
+export AGENTMESH_AUTH_SECRET=your_secret  # For Orkes Cloud
 ```
 
 ### Programmatic
 
 ```ruby
-config = Conductor::Configuration.new(
+config = AgentMesh::Configuration.new(
   server_api_url: 'https://play.orkes.io/api',
   auth_key: 'your_key',
   auth_secret: 'your_secret',
@@ -463,7 +463,7 @@ config = Conductor::Configuration.new(
 ### High-Level Clients (9 classes)
 
 ```ruby
-clients = Conductor::Orkes::OrkesClients.new(config)
+clients = AgentMesh::Orkes::OrkesClients.new(config)
 
 workflow_client = clients.get_workflow_client
 task_client = clients.get_task_client
@@ -479,16 +479,16 @@ workflow_executor = clients.get_workflow_executor
 
 ```bash
 # Unit tests
-bundle exec rspec spec/conductor/
+bundle exec rspec spec/agentmesh/
 
-# Integration tests (requires Conductor server)
-CONDUCTOR_SERVER_URL=http://localhost:8080/api bundle exec rspec spec/integration/
+# Integration tests (requires AgentMesh server)
+AGENTMESH_SERVER_URL=http://localhost:8080/api bundle exec rspec spec/integration/
 ```
 
 ## Requirements
 
 - Ruby 2.6+ (Ruby 3+ recommended)
-- Conductor OSS 3.x or Orkes Cloud
+- AgentMesh OSS 3.x or Orkes Cloud
 
 ## Dependencies
 
@@ -508,40 +508,40 @@ CONDUCTOR_SERVER_URL=http://localhost:8080/api bundle exec rspec spec/integratio
 
 ## License
 
-Apache 2.0 - see [LICENSE](https://github.com/conductor-oss/ruby-sdk/blob/main/LICENSE) for details.
+Apache 2.0 - see [LICENSE](https://github.com/agentmesh-oss/ruby-sdk/blob/main/LICENSE) for details.
 
 ## Links
 
-- [Conductor OSS](https://github.com/conductor-oss/conductor)
+- [AgentMesh OSS](https://github.com/agentmesh-oss/agentmesh)
 - [Orkes Cloud](https://orkes.io)
-- [Documentation](https://conductor-oss.org)
-- [Python SDK](https://github.com/conductor-sdk/conductor-python)
-- [Community Slack](https://join.slack.com/t/orkes-conductor/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA)
+- [Documentation](https://agentmesh-oss.org)
+- [Python SDK](https://github.com/agentmesh-sdk/agentmesh-python)
+- [Community Slack](https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA)
 
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/ruby-sdk/examples](https://github.com/conductor-oss/ruby-sdk/tree/main/examples)
+Browse all examples on GitHub: [agentmesh-oss/ruby-sdk/examples](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples)
 
 | Example | Type |
 |---|---|
-| [Agentic Workflows](https://github.com/conductor-oss/ruby-sdk/tree/main/examples/agentic_workflows) | directory |
-| [Dynamic Workflow](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | file |
-| [Event Handler](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/event_handler.rb) | file |
-| [Event Listener Examples](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/event_listener_examples.rb) | file |
-| [Helloworld](https://github.com/conductor-oss/ruby-sdk/tree/main/examples/helloworld) | directory |
-| [Kitchensink](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | file |
-| [Metadata Journey](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/metadata_journey.rb) | file |
-| [Metrics Example](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/metrics_example.rb) | file |
-| [New Dsl Demo](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/new_dsl_demo.rb) | file |
-| [Orkes](https://github.com/conductor-oss/ruby-sdk/tree/main/examples/orkes) | directory |
-| [Prompt Journey](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/prompt_journey.rb) | file |
-| [Rag Workflow](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/rag_workflow.rb) | file |
-| [Schedule Journey](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/schedule_journey.rb) | file |
-| [Simple Worker](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | file |
-| [Simple Workflow](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/simple_workflow.rb) | file |
-| [Task Context Example](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/task_context_example.rb) | file |
-| [Task Listener Example](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/task_listener_example.rb) | file |
-| [Worker Configuration Example](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/worker_configuration_example.rb) | file |
-| [Workflow Dsl](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | file |
-| [Workflow Ops](https://github.com/conductor-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | file |
+| [Agentic Workflows](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/agentic_workflows) | directory |
+| [Dynamic Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/dynamic_workflow.rb) | file |
+| [Event Handler](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_handler.rb) | file |
+| [Event Listener Examples](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/event_listener_examples.rb) | file |
+| [Helloworld](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/helloworld) | directory |
+| [Kitchensink](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/kitchensink.rb) | file |
+| [Metadata Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metadata_journey.rb) | file |
+| [Metrics Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/metrics_example.rb) | file |
+| [New Dsl Demo](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/new_dsl_demo.rb) | file |
+| [Orkes](https://github.com/agentmesh-oss/ruby-sdk/tree/main/examples/orkes) | directory |
+| [Prompt Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/prompt_journey.rb) | file |
+| [Rag Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/rag_workflow.rb) | file |
+| [Schedule Journey](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/schedule_journey.rb) | file |
+| [Simple Worker](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_worker.rb) | file |
+| [Simple Workflow](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/simple_workflow.rb) | file |
+| [Task Context Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_context_example.rb) | file |
+| [Task Listener Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/task_listener_example.rb) | file |
+| [Worker Configuration Example](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/worker_configuration_example.rb) | file |
+| [Workflow Dsl](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_dsl.rb) | file |
+| [Workflow Ops](https://github.com/agentmesh-oss/ruby-sdk/blob/main/examples/workflow_ops.rb) | file |

@@ -1,5 +1,5 @@
 ---
-description: "No-Op Task — a pass-through task in Conductor workflows useful for routing, placeholder steps, and workflow testing."
+description: "No-Op Task — a pass-through task in AgentMesh workflows useful for routing, placeholder steps, and workflow testing."
 ---
 # No Op Task
 ```json

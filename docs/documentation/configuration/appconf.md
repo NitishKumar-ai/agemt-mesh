@@ -1,22 +1,22 @@
 ---
-description: "Conductor application server configuration — tuning durable execution, workflow engine scalability, system task workers, and production deployment settings."
+description: "AgentMesh application server configuration — tuning durable execution, workflow engine scalability, system task workers, and production deployment settings."
 ---
 
 # App Configuration
 
-The Conductor application server offers extensive customization options to optimize its operation for specific
+The AgentMesh application server offers extensive customization options to optimize its operation for specific
 environments.
 
 These configuration parameters allow fine-tuning of various aspects of the server's behavior, performance, and
 integration capabilities.
-All of these parameters are grouped under the `conductor.app` namespace.
+All of these parameters are grouped under the `agentmesh.app` namespace.
 
 ### Configuration
 
 | Field                                       | Type     | Description                                                                                                                                                                     | Notes                                                   |
 |:--------------------------------------------|:---------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------|
 | stack                                       | String   | Name of the stack within which the app is running. e.g. `devint`, `testintg`, `staging`, `prod` etc.                                                                            | Default is "test"                                       |
-| appId                                       | String   | The ID with which the app has been registered. e.g. `conductor`, `myApp`                                                                                                        | Default is "conductor"                                  |
+| appId                                       | String   | The ID with which the app has been registered. e.g. `agentmesh`, `myApp`                                                                                                        | Default is "agentmesh"                                  |
 | executorServiceMaxThreadCount               | int      | The maximum number of threads to be allocated to the executor service threadpool. e.g. `50`                                                                                     | Default is 50                                           |
 | workflowOffsetTimeout                       | Duration | The timeout duration to set when a workflow is pushed to the decider queue. Example: `30s` or `1m`                                                                              | Default is 30 seconds                                   |
 | maxPostponeDurationSeconds                  | Duration | The maximum timeout duration to set when a workflow with running task is pushed to the decider queue. Example: `30m` or `1h`                                                    | Default is 3600 seconds                                 |
@@ -62,125 +62,125 @@ All of these parameters are grouped under the `conductor.app` namespace.
 In your configuration file add the configuration as you need
 
 ```properties
-# Conductor App Configuration
+# AgentMesh App Configuration
 
 # Name of the stack within which the app is running. e.g. devint, testintg, staging, prod etc.
-conductor.app.stack=test
+agentmesh.app.stack=test
 
-# The ID with which the app has been registered. e.g. conductor, myApp
-conductor.app.appId=conductor
+# The ID with which the app has been registered. e.g. agentmesh, myApp
+agentmesh.app.appId=agentmesh
 
 # The maximum number of threads to be allocated to the executor service threadpool. e.g. 50
-conductor.app.executorServiceMaxThreadCount=50
+agentmesh.app.executorServiceMaxThreadCount=50
 
 # The timeout duration to set when a workflow is pushed to the decider queue. Example: 30s or 1m
-conductor.app.workflowOffsetTimeout=30s
+agentmesh.app.workflowOffsetTimeout=30s
 
 # The number of threads to use for background sweeping on active workflows. Example: 8 if there are 4 processors (2x4)
-conductor.app.sweeperThreadCount=8
+agentmesh.app.sweeperThreadCount=8
 
 # The timeout for polling workflows to be swept. Example: 2000ms or 2s
-conductor.app.sweeperWorkflowPollTimeout=2000ms
+agentmesh.app.sweeperWorkflowPollTimeout=2000ms
 
 # The number of threads to configure the threadpool in the event processor. Example: 4
-conductor.app.eventProcessorThreadCount=4
+agentmesh.app.eventProcessorThreadCount=4
 
 # Whether to enable indexing of messages within event payloads. Example: true or false
-conductor.app.eventMessageIndexingEnabled=true
+agentmesh.app.eventMessageIndexingEnabled=true
 
 # Whether to enable indexing of event execution results. Example: true or false
-conductor.app.eventExecutionIndexingEnabled=true
+agentmesh.app.eventExecutionIndexingEnabled=true
 
 # Whether to enable the workflow execution lock. Example: true or false
-conductor.app.workflowExecutionLockEnabled=false
+agentmesh.app.workflowExecutionLockEnabled=false
 
 # The time for which the lock is leased. Example: 60000ms or 1m
-conductor.app.lockLeaseTime=60000ms
+agentmesh.app.lockLeaseTime=60000ms
 
 # The time for which the thread will block in an attempt to acquire the lock. Example: 500ms or 1s
-conductor.app.lockTimeToTry=500ms
+agentmesh.app.lockTimeToTry=500ms
 
 # The time to consider if a worker is actively polling for a task. Example: 10s
-conductor.app.activeWorkerLastPollTimeout=10s
+agentmesh.app.activeWorkerLastPollTimeout=10s
 
 # The time for which a task execution will be postponed if rate-limited or concurrent execution limited. Example: 60s
-conductor.app.taskExecutionPostponeDuration=60s
+agentmesh.app.taskExecutionPostponeDuration=60s
 
 # Whether to enable indexing of tasks. Example: true or false
-conductor.app.taskIndexingEnabled=true
+agentmesh.app.taskIndexingEnabled=true
 
 # Whether to enable indexing of task execution logs. Example: true or false
-conductor.app.taskExecLogIndexingEnabled=true
+agentmesh.app.taskExecLogIndexingEnabled=true
 
 # Whether to enable asynchronous indexing to Elasticsearch. Example: true or false
-conductor.app.asyncIndexingEnabled=false
+agentmesh.app.asyncIndexingEnabled=false
 
 # The number of threads in the threadpool for system task workers. Example: 8 if there are 4 processors (2x4)
-conductor.app.systemTaskWorkerThreadCount=8
+agentmesh.app.systemTaskWorkerThreadCount=8
 
 # The maximum number of threads to be polled within the threadpool for system task workers. Example: 8
-conductor.app.systemTaskMaxPollCount=8
+agentmesh.app.systemTaskMaxPollCount=8
 
 # The interval after which a system task will be checked by the system task worker for completion. Example: 30s
-conductor.app.systemTaskWorkerCallbackDuration=30s
+agentmesh.app.systemTaskWorkerCallbackDuration=30s
 
 # The interval at which system task queues will be polled by system task workers. Example: 50ms
-conductor.app.systemTaskWorkerPollInterval=50ms
+agentmesh.app.systemTaskWorkerPollInterval=50ms
 
 # The namespace for the system task workers to provide instance-level isolation. Example: namespace1, namespace2
-conductor.app.systemTaskWorkerExecutionNamespace=
+agentmesh.app.systemTaskWorkerExecutionNamespace=
 
 # The number of threads to be used within the threadpool for system task workers in each isolation group. Example: 4
-conductor.app.isolatedSystemTaskWorkerThreadCount=4
+agentmesh.app.isolatedSystemTaskWorkerThreadCount=4
 
 # The duration of workflow execution qualifying as short-running when async indexing to Elasticsearch is enabled. Example: 30s
-conductor.app.asyncUpdateShortRunningWorkflowDuration=30s
+agentmesh.app.asyncUpdateShortRunningWorkflowDuration=30s
 
 # The delay with which short-running workflows will be updated in Elasticsearch when async indexing is enabled. Example: 60s
-conductor.app.asyncUpdateDelay=60s
+agentmesh.app.asyncUpdateDelay=60s
 
 # Whether to validate the owner email field as mandatory within workflow and task definitions. Example: true or false
-conductor.app.ownerEmailMandatory=true
+agentmesh.app.ownerEmailMandatory=true
 
 # The number of threads used in the Scheduler for polling events from multiple event queues. Example: 8 if there are 4 processors (2x4)
-conductor.app.eventQueueSchedulerPollThreadCount=8
+agentmesh.app.eventQueueSchedulerPollThreadCount=8
 
 # The time interval at which the default event queues will be polled. Example: 100ms
-conductor.app.eventQueuePollInterval=100ms
+agentmesh.app.eventQueuePollInterval=100ms
 
 # The number of messages to be polled from a default event queue in a single operation. Example: 10
-conductor.app.eventQueuePollCount=10
+agentmesh.app.eventQueuePollCount=10
 
 # The timeout for the poll operation on the default event queue. Example: 1000ms
-conductor.app.eventQueueLongPollTimeout=1000ms
+agentmesh.app.eventQueueLongPollTimeout=1000ms
 
 # The threshold of the workflow input payload size beyond which the payload will be stored in ExternalPayloadStorage. Example: 5120KB
-conductor.app.workflowInputPayloadSizeThreshold=5120KB
+agentmesh.app.workflowInputPayloadSizeThreshold=5120KB
 
 # The maximum threshold of the workflow input payload size beyond which input will be rejected and the workflow marked as FAILED. Example: 10240KB
-conductor.app.maxWorkflowInputPayloadSizeThreshold=10240KB
+agentmesh.app.maxWorkflowInputPayloadSizeThreshold=10240KB
 
 # The threshold of the workflow output payload size beyond which the payload will be stored in ExternalPayloadStorage. Example: 5120KB
-conductor.app.workflowOutputPayloadSizeThreshold=5120KB
+agentmesh.app.workflowOutputPayloadSizeThreshold=5120KB
 
 # The maximum threshold of the workflow output payload size beyond which output will be rejected and the workflow marked as FAILED. Example: 10240KB
-conductor.app.maxWorkflowOutputPayloadSizeThreshold=10240KB
+agentmesh.app.maxWorkflowOutputPayloadSizeThreshold=10240KB
 
 # The threshold of the task input payload size beyond which the payload will be stored in ExternalPayloadStorage. Example: 3072KB
-conductor.app.taskInputPayloadSizeThreshold=3072KB
+agentmesh.app.taskInputPayloadSizeThreshold=3072KB
 
 # The maximum threshold of the task input payload size beyond which the task input will be rejected and the task marked as FAILED_WITH_TERMINAL_ERROR. Example: 10240KB
-conductor.app.maxTaskInputPayloadSizeThreshold=10240KB
+agentmesh.app.maxTaskInputPayloadSizeThreshold=10240KB
 
 # The threshold of the task output payload size beyond which the payload will be stored in ExternalPayloadStorage. Example: 3072KB
-conductor.app.taskOutputPayloadSizeThreshold=3072KB
+agentmesh.app.taskOutputPayloadSizeThreshold=3072KB
 
 # The maximum threshold of the task output payload size beyond which the task output will be rejected and the task marked as FAILED_WITH_TERMINAL_ERROR. Example: 10240KB
-conductor.app.maxTaskOutputPayloadSizeThreshold=10240KB
+agentmesh.app.maxTaskOutputPayloadSizeThreshold=10240KB
 
 # The maximum threshold of the workflow variables payload size beyond which the task changes will be rejected and the task marked as FAILED_WITH_TERMINAL_ERROR. Example: 256KB
-conductor.app.maxWorkflowVariablesPayloadSizeThreshold=256KB
+agentmesh.app.maxWorkflowVariablesPayloadSizeThreshold=256KB
 
 # The maximum size of task execution logs. Example: 10000
-conductor.app.taskExecLogSizeLimit=10000
+agentmesh.app.taskExecLogSizeLimit=10000
 ```

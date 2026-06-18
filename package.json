@@ -1,9 +1,9 @@
 {
-  "name": "conductor-ts",
-  "version": "0.0.0",
+  "name": "agentmesh-ts",
+  "version": "0.1.0.0",
   "private": true,
   "type": "module",
-  "description": "TypeScript transformation of Conductor — durable engine for the 24/7 Agent Mesh OS",
+  "description": "TypeScript transformation of AgentMesh — durable engine for the 24/7 Agent Mesh OS",
   "engines": {
     "node": ">=20"
   },

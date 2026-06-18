@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
-import { SqliteMetadataDAO } from '@conductor/sqlite-persistence';
+import type { Database } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration } from '@agentmesh/common-persistence';
+import { SqliteMetadataDAO } from '@agentmesh/sqlite-persistence';
 import { EventService } from '../../src/services/EventService.js';
-import { EventActionType, ConflictException, NotFoundException } from '@conductor/common';
+import { EventActionType, ConflictException, NotFoundException } from '@agentmesh/common';
 
 const sampleHandler = {
   name: 'es_test_handler',

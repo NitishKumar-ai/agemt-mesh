@@ -1,13 +1,13 @@
 {
   "properties": [
     {
-      "name": "conductor.redis-lock.server-type",
+      "name": "agentmesh.redis-lock.server-type",
       "defaultValue": "SINGLE"
     }
   ],
   "hints": [
     {
-      "name": "conductor.workflow-execution-lock.type",
+      "name": "agentmesh.workflow-execution-lock.type",
       "values": [
         {
           "value": "redis",
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "name": "conductor.redis-lock.server-type",
+      "name": "agentmesh.redis-lock.server-type",
       "providers": [
         {
           "name": "handle-as",

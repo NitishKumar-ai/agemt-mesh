@@ -1,7 +1,7 @@
 /**
- * Jackson (the Java JSON serializer Conductor uses) emits `null` for unset
+ * Jackson (the Java JSON serializer AgentMesh uses) emits `null` for unset
  * optional fields. zod's `.optional()` accepts only `undefined`, so when parsing
- * real Conductor JSON we first treat `null` as "absent" by recursively dropping
+ * real AgentMesh JSON we first treat `null` as "absent" by recursively dropping
  * null-valued properties. Applied via `z.preprocess` on the top-level schemas.
  */
 export function stripNullsDeep(value: unknown): unknown {

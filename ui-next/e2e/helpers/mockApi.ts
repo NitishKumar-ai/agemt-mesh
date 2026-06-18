@@ -1,9 +1,9 @@
 /**
  * API mocking helpers for Playwright E2E tests.
  *
- * The Conductor UI proxies /api/* to a backend server. Tests call these
+ * The AgentMesh UI proxies /api/* to a backend server. Tests call these
  * helpers via page.route() to intercept those requests so the suite can
- * run without a live Conductor backend.
+ * run without a live AgentMesh backend.
  */
 
 import type { Page } from "@playwright/test";
@@ -236,7 +236,7 @@ export async function mockCommonApis(page: Page): Promise<void> {
   );
 
   // Fall-through: return an empty array for any remaining /api calls.
-  // Most Conductor list endpoints return arrays; returning [] is safer than {}
+  // Most AgentMesh list endpoints return arrays; returning [] is safer than {}
   // because components that call .map() on the result won't crash.
   await page.route("**/api/**", (route) => route.fulfill({ json: [] }));
 }

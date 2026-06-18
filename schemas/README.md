@@ -1,12 +1,12 @@
-# Conductor Schemas
+# AgentMesh Schemas
 
-This directory contains JSON Schema definitions for the core data models used in Conductor workflow orchestration.
+This directory contains JSON Schema definitions for the core data models used in AgentMesh workflow orchestration.
 
 ## Overview
 
-JSON Schemas provide a standardized way to describe the structure, validation rules, and documentation for Conductor's data models. These schemas can be used for:
+JSON Schemas provide a standardized way to describe the structure, validation rules, and documentation for AgentMesh's data models. These schemas can be used for:
 
-- **Validation**: Validate workflow and task definitions before submitting them to Conductor
+- **Validation**: Validate workflow and task definitions before submitting them to AgentMesh
 - **Documentation**: Auto-generate API documentation and client libraries
 - **IDE Support**: Enable autocomplete and validation in editors that support JSON Schema
 - **Code Generation**: Generate strongly-typed client code in various programming languages
@@ -34,7 +34,7 @@ JSON Schemas provide a standardized way to describe the structure, validation ru
   - **Sub-workflow tasks**: Embed entire workflows (`subWorkflowParam`)
 - The recursive nature allows unlimited nesting depth for complex workflow patterns
 
-**Use Case**: Use this schema when creating or validating workflow definitions before registering them with Conductor.
+**Use Case**: Use this schema when creating or validating workflow definitions before registering them with AgentMesh.
 
 ---
 
@@ -124,7 +124,7 @@ Additionally, definitions implement the `Metadata` interface requiring:
 
 ### Recursive Structures
 
-The schemas correctly model two important recursive relationships in Conductor:
+The schemas correctly model two important recursive relationships in AgentMesh:
 
 **WorkflowTask recursion**: Tasks can contain nested tasks for control flow
    ```
@@ -205,14 +205,14 @@ Key validation features used:
 
 ## Relationship to Java Models
 
-These schemas are derived from the Java model classes in the Conductor codebase:
+These schemas are derived from the Java model classes in the AgentMesh codebase:
 
 | Schema File | Java Class | Package |
 |-------------|------------|---------|
-| WorkflowDef.json | `WorkflowDef` | `com.netflix.conductor.common.metadata.workflow` |
-| TaskDef.json | `TaskDef` | `com.netflix.conductor.common.metadata.tasks` |
-| Workflow.json | `Workflow` | `com.netflix.conductor.common.run` |
-| Task.json | `Task` | `com.netflix.conductor.common.metadata.tasks` |
+| WorkflowDef.json | `WorkflowDef` | `com.agentmesh.agentmesh.common.metadata.workflow` |
+| TaskDef.json | `TaskDef` | `com.agentmesh.agentmesh.common.metadata.tasks` |
+| Workflow.json | `Workflow` | `com.agentmesh.agentmesh.common.run` |
+| Task.json | `Task` | `com.agentmesh.agentmesh.common.metadata.tasks` |
 
 The schemas accurately reflect:
 - All fields including inherited fields from `Auditable` and `Metadata`
@@ -223,5 +223,5 @@ The schemas accurately reflect:
 ## Version
 
 Current schema version: 1.0
-Based on Conductor version: 3.x
+Based on AgentMesh version: 3.x
 Last updated: October 2025

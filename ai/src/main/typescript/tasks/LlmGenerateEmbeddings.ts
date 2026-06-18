@@ -1,10 +1,10 @@
-import { WorkflowSystemTask } from '@conductor/core';
-import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@conductor/core';
+import { WorkflowSystemTask } from '@agentmesh/core';
+import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@agentmesh/core';
 import { LLMs } from '../LLMs.js';
 import { EmbeddingGenRequest } from '../models/index.js';
-import { TaskStatus } from '@conductor/common';
+import { TaskStatus } from '@agentmesh/common';
 import { ModelClient } from '../routing/ModelClient.js';
-import { TelemetryService, Span } from '@conductor/telemetry';
+import { TelemetryService, Span } from '@agentmesh/telemetry';
 
 export class LlmGenerateEmbeddings extends WorkflowSystemTask {
   public static readonly NAME = 'LLM_GENERATE_EMBEDDINGS';

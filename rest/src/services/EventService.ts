@@ -1,5 +1,5 @@
-import type { EventHandler } from '@conductor/common';
-import type { MetadataDAO } from '@conductor/common-persistence';
+import type { EventHandler } from '@agentmesh/common';
+import type { MetadataDAO } from '@agentmesh/common-persistence';
 
 export class EventService {
   constructor(private readonly metadataDAO: MetadataDAO) {}

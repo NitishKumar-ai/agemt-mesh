@@ -1,5 +1,5 @@
 ---
-description: "Use Sub Workflow tasks in Conductor to nest and reuse workflows. Enables modular workflow design with synchronous execution and parent references."
+description: "Use Sub Workflow tasks in AgentMesh to nest and reuse workflows. Enables modular workflow design with synchronous execution and parent references."
 ---
 
 # Sub Workflow
@@ -55,7 +55,7 @@ Here is the task configuration for a Sub Workflow task.
 
 ### Static inline definition
 
-Embed a complete `WorkflowDef` object directly inside the task definition. Conductor passes it straight through to the sub-workflow executor.
+Embed a complete `WorkflowDef` object directly inside the task definition. AgentMesh passes it straight through to the sub-workflow executor.
 
 ```json
 {
@@ -92,7 +92,7 @@ Embed a complete `WorkflowDef` object directly inside the task definition. Condu
 
 ### Dynamic inline definition (String expression)
 
-Set `workflowDefinition` to a `${ref.output.field}` expression. Conductor resolves the expression at task-scheduling time and uses the resulting `WorkflowDef`-shaped Map as the sub-workflow definition. No HTTP registration is required — the workflow is started directly from the Map.
+Set `workflowDefinition` to a `${ref.output.field}` expression. AgentMesh resolves the expression at task-scheduling time and uses the resulting `WorkflowDef`-shaped Map as the sub-workflow definition. No HTTP registration is required — the workflow is started directly from the Map.
 
 This pattern is useful when an earlier task (such as a planner agent or an LLM step) generates the execution plan at runtime:
 
@@ -113,7 +113,7 @@ This pattern is useful when an earlier task (such as a planner agent or an LLM s
 }
 ```
 
-The task referenced by the expression (`planner` in this example) must output a Map that matches the `WorkflowDef` schema — the same JSON structure you would `POST` to `/api/metadata/workflow`. Conductor converts the Map to a `WorkflowDef` via its internal ObjectMapper and starts it as a sub-workflow.
+The task referenced by the expression (`planner` in this example) must output a Map that matches the `WorkflowDef` schema — the same JSON structure you would `POST` to `/api/metadata/workflow`. AgentMesh converts the Map to a `WorkflowDef` via its internal ObjectMapper and starts it as a sub-workflow.
 
 A typical parent workflow using this pattern:
 
@@ -268,7 +268,7 @@ The left fork will create a JPG file, and the right fork a WEBP file. Maintainin
 	"schemaVersion": 2,
 	"restartable": true,
 	"workflowStatusListenerEnabled": true,
-	"ownerEmail": "conductor@example.com",
+	"ownerEmail": "agentmesh@example.com",
 	"timeoutPolicy": "ALERT_ONLY",
 	"timeoutSeconds": 0,
 	"variables": {},

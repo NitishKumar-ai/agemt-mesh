@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, WorkflowStatus } from '@conductor/common';
+import { TaskType, WorkflowStatus } from '@agentmesh/common';
 
 export const TERMINATION_STATUS_PARAMETER = 'terminationStatus';
 export const TERMINATION_REASON_PARAMETER = 'terminationReason';

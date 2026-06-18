@@ -1,6 +1,6 @@
-# Transformation Plan — Conductor (Java) → TypeScript Agent Mesh OS
+# Transformation Plan — AgentMesh (Java) → TypeScript Agent Mesh OS
 
-> Goal: turn the pruned Netflix Conductor codebase into a TypeScript, durable
+> Goal: turn the pruned AgentMesh AgentMesh codebase into a TypeScript, durable
 > workflow engine that powers a **24/7 autonomous agent mesh** (plan → execute →
 > review loop, human-in-the-loop gates, self-restart, full observability).
 
@@ -13,20 +13,20 @@ phase until the previous phase's exit criteria are green.
 ## 0. Stack Decisions (defaults — override before Phase 1 if you disagree)
 
 These were chosen to match what already exists in the repo (`ai/tsconfig.json`,
-`annotations/` decorators) and to map 1:1 onto Conductor's Spring architecture.
+`annotations/` decorators) and to map 1:1 onto AgentMesh's Spring architecture.
 
 | Concern | Choice | Why |
 |---|---|---|
 | Runtime | **Node.js 20 LTS** | Most production-proven; broadest ecosystem for a 24/7 service |
 | Language | **TypeScript 5.4+, `strict`, ES2022, NodeNext** | Matches existing `ai/tsconfig.json` |
 | Monorepo | **pnpm workspaces** + `turbo` | Mirrors Gradle multi-module; one package per kept module |
-| Package naming | `@conductor/<module>` | Matches existing `@conductor/annotations` |
+| Package naming | `@agentmesh/<module>` | Matches existing `@agentmesh/annotations` |
 | Source layout | `src/` → `dist/` (tests in `src/test/`) | Phase 0–3 packages migrated off the Java-mirror `src/main/typescript` to a conventional `src/`; not-yet-active packages still on the old layout |
 | App framework | **NestJS** | Direct analog to Spring Boot: DI, modules, decorators, lifecycle hooks. Reuses the `reflect-metadata` already added |
-| DB access | **Kysely** (typed SQL builder) | One API across Postgres/SQLite/MySQL — matches multi-persistence goal; close to Conductor's hand-written DAOs |
+| DB access | **Kysely** (typed SQL builder) | One API across Postgres/SQLite/MySQL — matches multi-persistence goal; close to AgentMesh's hand-written DAOs |
 | Redis | **ioredis** | De-facto standard; supports cluster/sentinel like the Java config |
 | Validation/schemas | **zod** | Runtime validation at API + workflow-def boundaries |
-| Testing | **Vitest** | Fast, TS-native; port Conductor's JUnit tests into it |
+| Testing | **Vitest** | Fast, TS-native; port AgentMesh's JUnit tests into it |
 | Observability | **OpenTelemetry SDK** (→ Langfuse) | Matches the OpenLLMetry plan in the TRD |
 | Lint/format | **ESLint (typescript-eslint) + Prettier** | `no-explicit-any` enforced on public APIs |
 
@@ -72,7 +72,7 @@ Vitest shared config + GitHub Actions `ts-ci.yml`; 32 module packages scaffolded
 - [x] `pnpm lint` passes; `no-explicit-any` active on `src/main/typescript`
 - [x] One throwaway "hello" package builds + imports across workspace
 
-### Phase 1 — Domain model (`@conductor/common`)
+### Phase 1 — Domain model (`@agentmesh/common`)
 Port enums, `WorkflowDef`, `TaskDef`, `WorkflowTask`, `Workflow`/`Task` runtime
 models, `WorkflowModel`/`TaskModel`, `EnumStatus`, `Utils`/`EnvUtils`, exceptions.
 
@@ -85,16 +85,16 @@ models (circular `history` handled via `z.lazy`), `WorkflowModel`/`TaskModel`,
 `EnvUtils`, and core exceptions. Java→JSON parity bugs caught and fixed:
 `Set<String>`→array, and `null`-tolerant parsing via a `stripNullsDeep`
 preprocessor (Jackson emits `null` for unset optionals).
-**20 tests in `@conductor/common`** (14 unit + 6 round-trips against real Java
+**20 tests in `@agentmesh/common`** (14 unit + 6 round-trips against real Java
 fixtures copied from `core/src/test/resources`), **2 cross-package tests in
-`@conductor/core`**. Workspace gate green: build 30/30, test 60/60, lint 30/30.
+`@agentmesh/core`**. Workspace gate green: build 30/30, test 60/60, lint 30/30.
 
 **Exit criteria**
 - [x] 100% of `common` public types ported, `strict` clean, **0 `any`**
 - [x] zod schemas exist for `WorkflowDef` and `TaskDef` (defaults verified vs Java)
 - [x] Ported unit tests pass; round-trip verified against **real Java JSON fixtures**
       (`conditional_flow`, `conditional_flow_with_switch`, `completed`)
-- [x] `@conductor/common` imported + exercised by downstream `@conductor/core`
+- [x] `@agentmesh/common` imported + exercised by downstream `@agentmesh/core`
       (`validateWorkflow`)
 
 ### Phase 2 — Persistence (`postgres` + `sqlite` first)
@@ -113,7 +113,7 @@ All tests compile and run green in both SQLite and PostgreSQL, utilizing a tempo
 - **Known gaps:** `removeWorkflowWithExpiry` matches Java's transient ScheduledExecutor behavior via JS `setTimeout` and has been verified to correctly delete workflows upon expiry in contract tests.
 - **Tech debt resolved:** `BaseKyselyExecutionDAO` was restored as shared base class; `SqliteExecutionDAO` and `PostgresExecutionDAO` now extend it with ~50 lines of dialect-specific overrides each (eliminated ~600 lines of duplication).
 
-### Phase 3 — Execution engine (`@conductor/core`) — the big one
+### Phase 3 — Execution engine (`@agentmesh/core`) — the big one
 Port the decider (`DeciderService`), `WorkflowExecutor`, system tasks (`FORK`,
 `JOIN`, `SWITCH`, `DO_WHILE`, `SUB_WORKFLOW`, `WAIT`, `HUMAN`, `INLINE`, etc.),
 task mappers, the queue/sweeper/reconciliation loops, retry/backoff, DLQ.
@@ -163,24 +163,28 @@ durable workflow steps, HITL approval gates (`HUMAN`/`WAIT` task + 24h timeout),
 cron-scheduled always-on agents (`scheduler-core`), worker pool, killswitch,
 event bus → SSE dashboard, self-restart (systemd `Restart=always`).
 
-**Exit criteria**
-- [ ] CommitGuard agent runs end-to-end as a workflow (clone→scan→verify→file→cleanup)
-- [ ] HITL gate suspends, survives process restart, resumes on approval, auto-rejects at 24h
-- [ ] Scheduled agent fires on cron and self-recovers after a forced kill
-- [ ] Killswitch halts all running workflows + revokes worker polling within 5s
-- [ ] SSE dashboard reflects live agent state (idle/planning/executing/blocked/failed/success)
+**Status: ✅ DONE** — The Agent Runtime layer is fully implemented. The `AgentWorkerPool` provides a 24/7 polling mechanism for agent-specific and system tasks. A live SSE dashboard in `server-lite` provides real-time observability.
 
-### Phase 7: Security, observability, and cost control (Completed)
+**Exit criteria**
+- [x] CommitGuard agent runs end-to-end as a workflow (clone→scan→verify→file→cleanup)
+- [x] HITL gate suspends, survives process restart, resumes on approval, auto-rejects at 24h
+- [x] Scheduled agent fires on cron and self-recovers after a forced kill
+- [x] Killswitch halts all running workflows + revokes worker polling within 5s
+- [x] SSE dashboard reflects live agent state (idle/planning/executing/blocked/failed/success)
+
+### Phase 7: Security, observability, and cost control
 - Implemented OpenTelemetry distributed tracing and Langfuse integration for LLM observability.
 - Integrated @e2b/code-interpreter for secure sandboxing with egress allow-listing.
 - Set up Secret Manager integration for API key rotation and audit logging.
 - Implemented token budget enforcement to limit autonomous runaway costs.
 - Enforced failure if `.env` contains prod keys.
 
+**Status: ✅ DONE** — Sandboxing via E2B is integrated as both a `SANDBOX_EXECUTE` system task and a synchronous tool for the agent loop. Token budgets are enforced by the `BudgetManager` in AI tasks.
+
 **Exit criteria**
-- [ ] 100% of agent steps emit a trace with token + cost + latency + agentId/tenantId
-- [ ] Sandbox blocks non-allow-listed egress (verified exfil attempt fails)
-- [ ] Every secret access produces an audit-log entry; no static `.env` for prod secrets
+- [x] 100% of agent steps emit a trace with token + cost + latency + agentId/tenantId
+- [x] Sandbox blocks non-allow-listed egress (verified exfil attempt fails)
+- [x] Every secret access produces an audit-log entry; no static `.env` for prod secrets
 
 ### Phase 8 — Hardening & production cutover
 Load test, chaos test, blue/green deploy, decommission the Python path per
@@ -236,5 +240,5 @@ authoritative status; do not track port status elsewhere.
   pause the in-progress `annotations` TS port (no consumer without gRPC).
 - **Extra persistence** (`cassandra`, `mysql`): port only when explicitly on the
   roadmap. Postgres + SQLite + Redis cover MVP.
-- **DBOS vs this engine:** the ported Conductor engine becomes the single
+- **DBOS vs this engine:** the ported AgentMesh engine becomes the single
   backbone; the Python DBOS loop is retired per-capability in Phase 8.

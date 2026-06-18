@@ -13,7 +13,7 @@ export interface AuthState {
   trialExpiryDate: number | Date | undefined;
   isAnnouncementBannerDismissed: boolean;
   provider: SupportedProviders;
-  conductorUser: User | undefined;
+  agentmeshUser: User | undefined;
   oidcConfig: unknown;
   authService: unknown;
   fetchingUserInformation: boolean;
@@ -38,7 +38,7 @@ export const defaultAuthState: AuthState = {
   trialExpiryDate: undefined,
   isAnnouncementBannerDismissed: false,
   provider: SupportedProviders.NO_USER,
-  conductorUser: undefined,
+  agentmeshUser: undefined,
   oidcConfig: undefined,
   authService: undefined,
   fetchingUserInformation: false,

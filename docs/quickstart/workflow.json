@@ -8,7 +8,7 @@
       "type": "HTTP",
       "inputParameters": {
         "http_request": {
-          "uri": "https://orkes-api-tester.orkesconductor.com/api",
+          "uri": "https://orkes-api-tester.orkesagentmesh.com/api",
           "method": "GET"
         }
       }

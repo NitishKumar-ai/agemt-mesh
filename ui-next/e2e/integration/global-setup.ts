@@ -2,9 +2,9 @@
  * Playwright global setup for integration tests.
  *
  * Responsibilities:
- *  1. Check whether the Conductor backend is already running.
+ *  1. Check whether the AgentMesh backend is already running.
  *  2. If not, start it via docker-compose-ui-e2e.yaml (requires the
- *     conductor:server image to be built locally first).
+ *     agentmesh:server image to be built locally first).
  *  3. Wait until the /health endpoint returns 200.
  *  4. Write a sentinel file so global-teardown knows whether to stop Docker.
  */
@@ -17,7 +17,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const BACKEND_URL = process.env.CONDUCTOR_SERVER_URL ?? "http://localhost:8000";
+const BACKEND_URL = process.env.AGENTMESH_SERVER_URL ?? "http://localhost:8000";
 const HEALTH_URL = `${BACKEND_URL}/health`;
 const SKIP_DOCKER = process.env.SKIP_DOCKER === "true";
 
@@ -31,10 +31,10 @@ const COMPOSE_FILE = resolve(
 // Explicit project name so this stack is fully isolated from any other
 // docker-compose stacks in the docker/ directory (which share the same
 // default project name and would otherwise collide on port 8000).
-const COMPOSE_PROJECT = "conductor-ui-e2e";
+const COMPOSE_PROJECT = "agentmesh-ui-e2e";
 
 // Sentinel file written by setup and read by teardown.
-const SENTINEL = resolve(tmpdir(), "conductor-ui-e2e-docker-started");
+const SENTINEL = resolve(tmpdir(), "agentmesh-ui-e2e-docker-started");
 
 const POLL_MS = 3_000;
 // 8 minutes: first-run cold JVM start + Liquibase migrations can be slow.
@@ -51,7 +51,7 @@ async function isHealthy(): Promise<boolean> {
 
 async function waitForBackend(): Promise<void> {
   const deadline = Date.now() + TIMEOUT_MS;
-  process.stdout.write("Waiting for Conductor backend");
+  process.stdout.write("Waiting for AgentMesh backend");
   while (Date.now() < deadline) {
     if (await isHealthy()) {
       process.stdout.write(" ready\n");
@@ -62,14 +62,14 @@ async function waitForBackend(): Promise<void> {
   }
   process.stdout.write(" timed out\n");
   throw new Error(
-    `Conductor backend did not become healthy within ${TIMEOUT_MS / 1000}s.\n` +
-      `Check docker logs: ${compose("logs conductor-server")}`,
+    `AgentMesh backend did not become healthy within ${TIMEOUT_MS / 1000}s.\n` +
+      `Check docker logs: ${compose("logs agentmesh-server")}`,
   );
 }
 
 function dockerImageExists(): boolean {
   try {
-    execSync("docker image inspect conductor:server", { stdio: "ignore" });
+    execSync("docker image inspect agentmesh:server", { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -79,14 +79,14 @@ function dockerImageExists(): boolean {
 const compose = (args: string) =>
   `docker compose -p ${COMPOSE_PROJECT} -f "${COMPOSE_FILE}" ${args}`;
 
-/** Build the conductor:server image via docker compose.
+/** Build the agentmesh:server image via docker compose.
  *  Docker's layer cache makes this fast (~30s) after the first run. */
 function buildDockerImage(): void {
   console.log(
-    "Building conductor:server image — first run takes ~5–10 min, " +
+    "Building agentmesh:server image — first run takes ~5–10 min, " +
       "subsequent runs use Docker layer cache and finish in ~30s ...",
   );
-  execSync(compose("build conductor-server"), { stdio: "inherit" });
+  execSync(compose("build agentmesh-server"), { stdio: "inherit" });
 }
 
 export default async function globalSetup(): Promise<void> {
@@ -103,7 +103,7 @@ export default async function globalSetup(): Promise<void> {
 
   // If someone already has a backend running locally, reuse it.
   if (await isHealthy()) {
-    console.log(`Conductor backend already running at ${BACKEND_URL}`);
+    console.log(`AgentMesh backend already running at ${BACKEND_URL}`);
     return;
   }
 
@@ -112,7 +112,7 @@ export default async function globalSetup(): Promise<void> {
     buildDockerImage();
   }
 
-  console.log(`Starting Conductor backend (project: ${COMPOSE_PROJECT}) ...`);
+  console.log(`Starting AgentMesh backend (project: ${COMPOSE_PROJECT}) ...`);
   execSync(compose("up -d"), { stdio: "inherit" });
 
   // Record that we started Docker so teardown can shut it down.
@@ -120,5 +120,5 @@ export default async function globalSetup(): Promise<void> {
   writeFileSync(SENTINEL, "1", "utf8");
 
   await waitForBackend();
-  console.log(`Conductor backend healthy at ${BACKEND_URL}`);
+  console.log(`AgentMesh backend healthy at ${BACKEND_URL}`);
 }

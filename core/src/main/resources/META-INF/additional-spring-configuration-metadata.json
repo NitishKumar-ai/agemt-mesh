@@ -1,126 +1,126 @@
 {
   "properties": [
     {
-      "name": "conductor.workflow-reconciler.enabled",
+      "name": "agentmesh.workflow-reconciler.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables the workflow reconciliation mechanism.",
-      "sourceType": "com.netflix.conductor.core.reconciliation.WorkflowReconciler",
+      "sourceType": "com.agentmesh.agentmesh.core.reconciliation.WorkflowReconciler",
       "defaultValue": true
     },
     {
-      "name": "conductor.sweep-frequency.millis",
+      "name": "agentmesh.sweep-frequency.millis",
       "type": "java.lang.Integer",
       "description": "The frequency in milliseconds, at which the workflow sweeper should evaluate active workflows.",
-      "sourceType": "com.netflix.conductor.core.reconciliation.WorkflowReconciler",
+      "sourceType": "com.agentmesh.agentmesh.core.reconciliation.WorkflowReconciler",
       "defaultValue": 500
     },
     {
-      "name": "conductor.workflow-repair-service.enabled",
+      "name": "agentmesh.workflow-repair-service.enabled",
       "type": "java.lang.Boolean",
       "description": "Configuration to enable WorkflowRepairService, that tries to keep ExecutionDAO and QueueDAO in sync, based on the task or workflow state. This is disabled by default; To enable, the Queueing layer must implement QueueDAO.containsMessage method.",
-      "sourceType": "com.netflix.conductor.core.reconciliation.WorkflowRepairService"
+      "sourceType": "com.agentmesh.agentmesh.core.reconciliation.WorkflowRepairService"
     },
     {
-      "name": "conductor.system-task-workers.enabled",
+      "name": "agentmesh.system-task-workers.enabled",
       "type": "java.lang.Boolean",
       "description": "Configuration to enable SystemTaskWorkerCoordinator, that polls and executes the asynchronous system tasks.",
-      "sourceType": "com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator",
+      "sourceType": "com.agentmesh.agentmesh.core.execution.tasks.SystemTaskWorkerCoordinator",
       "defaultValue": true
     },
     {
-      "name": "conductor.app.isolated-system-task-enabled",
+      "name": "agentmesh.app.isolated-system-task-enabled",
       "type": "java.lang.Boolean",
       "description": "Used to enable/disable use of isolation groups for system task workers."
     },
     {
-      "name": "conductor.app.isolatedSystemTaskPollIntervalSecs",
+      "name": "agentmesh.app.isolatedSystemTaskPollIntervalSecs",
       "type": "java.lang.Integer",
       "description": "The time interval (in seconds) at which new isolated task queues will be polled and added to the system task queue repository."
     },
     {
-      "name": "conductor.app.taskPendingTimeThresholdMins",
+      "name": "agentmesh.app.taskPendingTimeThresholdMins",
       "type": "java.lang.Long",
       "description": "The time threshold (in minutes) beyond which a warning log will be emitted for a task if it stays in the same state for this duration."
     },
     {
-      "name": "conductor.workflow-monitor.enabled",
+      "name": "agentmesh.workflow-monitor.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables the workflow monitor that publishes workflow and task metrics.",
       "defaultValue": "true",
-      "sourceType": "com.netflix.conductor.metrics.WorkflowMonitor"
+      "sourceType": "com.agentmesh.agentmesh.metrics.WorkflowMonitor"
     },
     {
-      "name": "conductor.workflow-monitor.stats.initial-delay",
+      "name": "agentmesh.workflow-monitor.stats.initial-delay",
       "type": "java.lang.Integer",
       "description": "The initial delay (in milliseconds) at which the workflow monitor publishes workflow and task metrics."
     },
     {
-      "name": "conductor.workflow-monitor.metadata-refresh-interval",
+      "name": "agentmesh.workflow-monitor.metadata-refresh-interval",
       "type": "java.lang.Integer",
       "description": "The interval (counter) after which the workflow monitor refreshes the metadata definitions from the datastore.",
       "defaultValue": "10"
     },
     {
-      "name": "conductor.workflow-monitor.stats.delay",
+      "name": "agentmesh.workflow-monitor.stats.delay",
       "type": "java.lang.Integer",
       "description": "The delay (in milliseconds) at which the workflow monitor publishes workflow and task metrics."
     },
     {
-      "name": "conductor.external-payload-storage.type",
+      "name": "agentmesh.external-payload-storage.type",
       "type": "java.lang.String",
       "description": "The type of payload storage to be used for externalizing large payloads."
     },
     {
-      "name": "conductor.default-event-processor.enabled",
+      "name": "agentmesh.default-event-processor.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables the default event processor for handling events.",
-      "sourceType": "com.netflix.conductor.core.events.DefaultEventProcessor",
+      "sourceType": "com.agentmesh.agentmesh.core.events.DefaultEventProcessor",
       "defaultValue": "true"
     },
     {
-      "name": "conductor.event-queues.default.enabled",
+      "name": "agentmesh.event-queues.default.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables the use of the underlying queue implementation to provide queues for consuming events.",
-      "sourceType": "com.netflix.conductor.core.events.queue.ConductorEventQueueProvider",
+      "sourceType": "com.agentmesh.agentmesh.core.events.queue.AgentMeshEventQueueProvider",
       "defaultValue": "true"
     },
     {
-      "name": "conductor.default-event-queue-processor.enabled",
+      "name": "agentmesh.default-event-queue-processor.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the processor for the default event queues that conductor is configured to listen on.",
-      "sourceType": "com.netflix.conductor.core.events.queue.DefaultEventQueueProcessor",
+      "description": "Enables the processor for the default event queues that agentmesh is configured to listen on.",
+      "sourceType": "com.agentmesh.agentmesh.core.events.queue.DefaultEventQueueProcessor",
       "defaultValue": "true"
     },
     {
-      "name": "conductor.workflow-status-listener.type",
+      "name": "agentmesh.workflow-status-listener.type",
       "type": "java.lang.String",
       "description": "The implementation of the workflow status listener to be used."
     },
     {
-      "name": "conductor.task-status-listener.type",
+      "name": "agentmesh.task-status-listener.type",
       "type": "java.lang.String",
       "description": "The implementation of the task status listener to be used."
     },
     {
-      "name": "conductor.workflow-execution-lock.type",
+      "name": "agentmesh.workflow-execution-lock.type",
       "type": "java.lang.String",
       "description": "The implementation of the workflow execution lock to be used.",
       "defaultValue": "noop_lock"
     },
     {
-      "name": "conductor.file-storage.enabled",
+      "name": "agentmesh.file-storage.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the file-storage feature. When false, no file-storage beans are created and /api/files returns 404.",
       "defaultValue": false
     },
     {
-      "name": "conductor.file-storage.type",
+      "name": "agentmesh.file-storage.type",
       "type": "java.lang.String",
       "description": "Storage backend: local, s3, gcs, or azure-blob.",
       "defaultValue": "local"
     },
     {
-      "name": "conductor.file-storage.signed-url-expiration",
+      "name": "agentmesh.file-storage.signed-url-expiration",
       "type": "java.time.Duration",
       "description": "TTL for presigned upload/download URLs.",
       "defaultValue": "60s"
@@ -128,7 +128,7 @@
   ],
   "hints": [
     {
-      "name": "conductor.external-payload-storage.type",
+      "name": "agentmesh.external-payload-storage.type",
       "values": [
         {
           "value": "dummy",
@@ -137,7 +137,7 @@
       ]
     },
     {
-      "name": "conductor.workflow-status-listener.type",
+      "name": "agentmesh.workflow-status-listener.type",
       "values": [
         {
           "value": "stub",
@@ -146,7 +146,7 @@
       ]
     },
     {
-      "name": "conductor.workflow-execution-lock.type",
+      "name": "agentmesh.workflow-execution-lock.type",
       "values": [
         {
           "value": "noop_lock",
@@ -159,7 +159,7 @@
       ]
     },
     {
-      "name": "conductor.file-storage.type",
+      "name": "agentmesh.file-storage.type",
       "values": [
         { "value": "local",      "description": "Local filesystem storage." },
         { "value": "s3",         "description": "AWS S3 (or S3-compatible) storage." },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://conductoross.org/schemas/Workflow.json",
+  "$id": "https://agentmeshoss.org/schemas/Workflow.json",
   "title": "Workflow",
   "description": "Workflow runtime instance schema",
   "type": "object",

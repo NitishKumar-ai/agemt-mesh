@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
-import { PollDataDAO, Database } from '@conductor/common-persistence';
-import { PollData } from '@conductor/common';
+import { PollDataDAO, Database } from '@agentmesh/common-persistence';
+import { PollData } from '@agentmesh/common';
 
 export class SqlitePollDataDAO implements PollDataDAO {
   constructor(private readonly db: Kysely<Database>) {}

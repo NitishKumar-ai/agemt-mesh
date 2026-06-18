@@ -12,7 +12,7 @@ import { BaseTaskMenuItem, RichAddMenuTabs } from "./state/types";
 
 /**
  * Core OSS System Tasks
- * These are fundamental system tasks available in open source Conductor.
+ * These are fundamental system tasks available in open source AgentMesh.
  */
 export const SYSTEM_TASKS: BaseTaskMenuItem[] = [
   {
@@ -88,7 +88,7 @@ export const SYSTEM_TASKS: BaseTaskMenuItem[] = [
 
 /**
  * Core OSS Operator Tasks
- * These are control flow operators available in open source Conductor.
+ * These are control flow operators available in open source AgentMesh.
  */
 export const OPERATOR_TASKS: BaseTaskMenuItem[] = [
   {

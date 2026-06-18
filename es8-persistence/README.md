@@ -22,7 +22,7 @@ This module uses composable index templates, write aliases, and an ILM policy:
 When building the server, select the ES8 persistence module to avoid Lucene conflicts:
 
 ```sh
-./gradlew :conductor-server:bootJar -PindexingBackend=elasticsearch8
+./gradlew :agentmesh-server:bootJar -PindexingBackend=elasticsearch8
 ```
 
 `-PindexingBackend=es8` is also accepted.
@@ -32,7 +32,7 @@ When building the server, select the ES8 persistence module to avoid Lucene conf
 Select the Elasticsearch 8 backend in your configuration:
 
 ```properties
-conductor.indexing.type=elasticsearch8
+agentmesh.indexing.type=elasticsearch8
 ```
 
 ### Elasticsearch version compatibility
@@ -41,7 +41,7 @@ The ES8 module uses `elasticsearch-java` client version `8.19.11`.
 For local Docker-based setups, use Elasticsearch `8.19.x` (the provided compose file pins
 `8.19.11`).
 
-All other `conductor.elasticsearch.*` properties are shared with the ES7 module.
+All other `agentmesh.elasticsearch.*` properties are shared with the ES7 module.
 
 ### Configuration
 
@@ -50,25 +50,25 @@ All other `conductor.elasticsearch.*` properties are shared with the ES7 module.
 ```properties
 # A comma separated list of scheme/host/port of the ES nodes to communicate with.
 # Scheme can be `http` or `https`. If scheme is omitted then `http` will be used.
-conductor.elasticsearch.url=localhost:9200
+agentmesh.elasticsearch.url=localhost:9200
 
 # The name of the workflow and task index.
-conductor.elasticsearch.indexPrefix=conductor
+agentmesh.elasticsearch.indexPrefix=agentmesh
 
 # Default refresh interval applied via the component template.
-conductor.elasticsearch.indexRefreshInterval=30s
+agentmesh.elasticsearch.indexRefreshInterval=30s
 
 # Path to a PEM-encoded certificate to trust for HTTPS connections.
-conductor.elasticsearch.trustCertPath=
+agentmesh.elasticsearch.trustCertPath=
 
 # Worker queue size used in executor service for async methods in IndexDao.
-conductor.elasticsearch.asyncWorkerQueueSize=100
+agentmesh.elasticsearch.asyncWorkerQueueSize=100
 
 # Maximum thread pool size in executor service for async methods in IndexDao
-conductor.elasticsearch.asyncMaxPoolSize=12
+agentmesh.elasticsearch.asyncMaxPoolSize=12
 
 # Timeout (in seconds) for the in-memory to be flushed if not explicitly indexed
-conductor.elasticsearch.asyncBufferFlushTimeout=10
+agentmesh.elasticsearch.asyncBufferFlushTimeout=10
 ```
 
 ### BASIC Authentication
@@ -77,6 +77,6 @@ If you need to pass user/password to connect to ES, add the following properties
 config file:
 
 ```
-conductor.elasticsearch.username=someusername
-conductor.elasticsearch.password=somepassword
+agentmesh.elasticsearch.username=someusername
+agentmesh.elasticsearch.password=somepassword
 ```

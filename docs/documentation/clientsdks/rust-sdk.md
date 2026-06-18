@@ -1,36 +1,36 @@
 ---
-description: "Build Conductor workers in Rust with type-safe task definitions and async workflow management."
+description: "Build AgentMesh workers in Rust with type-safe task definitions and async workflow management."
 ---
 
 # Rust SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/rust-sdk](https://github.com/conductor-oss/rust-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/rust-sdk](https://github.com/agentmesh-oss/rust-sdk) | Report issues and contribute on GitHub.
 
-## Start Conductor server
+## Start AgentMesh server
 
-If you don't already have a Conductor server running, pick one:
+If you don't already have a AgentMesh server running, pick one:
 
 **Docker Compose (recommended, includes UI):**
 
 ```shell
-docker run -p 8080:8080 conductoross/conductor:latest
+docker run -p 8080:8080 agentmeshoss/agentmesh:latest
 ```
 The UI will be available at `http://localhost:8080` and the API at `http://localhost:8080/api`
 
 **MacOS / Linux (one-liner):** (If you don't want to use docker, you can install and run the binary directly)
 ```shell
-curl -sSL https://raw.githubusercontent.com/conductor-oss/conductor/main/conductor_server.sh | sh
+curl -sSL https://raw.githubusercontent.com/agentmesh-oss/agentmesh/main/agentmesh_server.sh | sh
 ```
 
-**Conductor CLI**
+**AgentMesh CLI**
 ```shell
-# Installs conductor cli
-npm install -g @conductor-oss/conductor-cli
+# Installs agentmesh cli
+npm install -g @agentmesh-oss/agentmesh-cli
 
-# Start the open source conductor server
-conductor server start
-# see conductor server --help for all the available commands
+# Start the open source agentmesh server
+agentmesh server start
+# see agentmesh server --help for all the available commands
 ```
 
 ## Install the SDK
@@ -39,7 +39,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-conductor = "0.1"
+agentmesh = "0.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -47,8 +47,8 @@ For the `#[worker]` macro (similar to Python's `@worker_task` decorator):
 
 ```toml
 [dependencies]
-conductor = { version = "0.1", features = ["macros"] }
-conductor-macros = "0.1"
+agentmesh = { version = "0.1", features = ["macros"] }
+agentmesh-macros = "0.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -60,7 +60,7 @@ Workflows are definitions that reference task types (e.g. a SIMPLE task called `
 `greetings` that runs one task and returns its output.
 
 ```rust
-use conductor::models::{WorkflowDef, WorkflowTask};
+use agentmesh::models::{WorkflowDef, WorkflowTask};
 
 fn greetings_workflow() -> WorkflowDef {
     WorkflowDef::new("greetings")
@@ -75,10 +75,10 @@ fn greetings_workflow() -> WorkflowDef {
 
 **Step 2: Write worker**
 
-Workers are Rust functions decorated with `#[worker]` that poll Conductor for tasks and execute them.
+Workers are Rust functions decorated with `#[worker]` that poll AgentMesh for tasks and execute them.
 
 ```rust
-use conductor_macros::worker;
+use agentmesh_macros::worker;
 
 #[worker(name = "greet")]
 async fn greet(name: String) -> String {
@@ -91,13 +91,13 @@ async fn greet(name: String) -> String {
 Create a `main.rs` with the following:
 
 ```rust
-use conductor::{
-    client::ConductorClient,
+use agentmesh::{
+    client::AgentMeshClient,
     configuration::Configuration,
     models::{StartWorkflowRequest, WorkflowDef, WorkflowTask},
     worker::TaskHandler,
 };
-use conductor_macros::worker;
+use agentmesh_macros::worker;
 
 // A worker is any Rust function with the #[worker] macro.
 #[worker(name = "greet")]
@@ -117,9 +117,9 @@ fn greetings_workflow() -> WorkflowDef {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Configure the SDK (reads CONDUCTOR_SERVER_URL / CONDUCTOR_AUTH_* from env).
+    // Configure the SDK (reads AGENTMESH_SERVER_URL / AGENTMESH_AUTH_* from env).
     let config = Configuration::default();
-    let client = ConductorClient::new(config.clone())?;
+    let client = AgentMeshClient::new(config.clone())?;
 
     // Register the workflow
     let workflow = greetings_workflow();
@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .execute_workflow(
             &StartWorkflowRequest::new("greetings")
                 .with_version(1)
-                .with_input_value("name", "Conductor"),
+                .with_input_value("name", "AgentMesh"),
             std::time::Duration::from_secs(10),
         )
         .await?;
@@ -156,32 +156,32 @@ Run it:
 cargo run
 ```
 
-> ### Using Orkes Conductor / Remote Server?
+> ### Using Orkes AgentMesh / Remote Server?
 > Export your authentication credentials as well:
 >
 > ```shell
-> export CONDUCTOR_SERVER_URL="https://your-cluster.orkesconductor.io/api"
+> export AGENTMESH_SERVER_URL="https://your-cluster.orkesagentmesh.io/api"
 >
-> # If using Orkes Conductor that requires auth key/secret
-> export CONDUCTOR_AUTH_KEY="your-key"
-> export CONDUCTOR_AUTH_SECRET="your-secret"
+> # If using Orkes AgentMesh that requires auth key/secret
+> export AGENTMESH_AUTH_KEY="your-key"
+> export AGENTMESH_AUTH_SECRET="your-secret"
 > ```
-> See the [rust-sdk README](https://github.com/conductor-oss/rust-sdk) for details.
+> See the [rust-sdk README](https://github.com/agentmesh-oss/rust-sdk) for details.
 
-That's it -- you just defined a worker, built a workflow, and executed it. Open the Conductor UI (default:
+That's it -- you just defined a worker, built a workflow, and executed it. Open the AgentMesh UI (default:
 [http://localhost:8080](http://localhost:8080)) to see the execution.
 
 ## Comprehensive worker example
 
 The example includes sync + async workers, metrics, and long-running tasks.
 
-See [examples/worker_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/worker_example.rs)
+See [examples/worker_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs)
 
 ---
 
 ## Workers
 
-Workers are Rust functions that execute Conductor tasks. Use the `#[worker]` macro or `FnWorker` to:
+Workers are Rust functions that execute AgentMesh tasks. Use the `#[worker]` macro or `FnWorker` to:
 
 - register it as a worker (auto-discovered by `TaskHandler`)
 - use it as a workflow task (call it with `task_ref_name=...`)
@@ -189,7 +189,7 @@ Workers are Rust functions that execute Conductor tasks. Use the `#[worker]` mac
 Note: Workers can also be used by LLMs for tool calling (see [AI & LLM Workflows](#ai-llm-workflows)).
 
 ```rust
-use conductor_macros::worker;
+use agentmesh_macros::worker;
 
 #[worker(name = "greet")]
 async fn greet(name: String) -> String {
@@ -200,7 +200,7 @@ async fn greet(name: String) -> String {
 **Using FnWorker (closure-based):**
 
 ```rust
-use conductor::worker::{FnWorker, WorkerOutput};
+use agentmesh::worker::{FnWorker, WorkerOutput};
 
 let greetings_worker = FnWorker::new("greetings", |task| async move {
     let name = task.get_input_string("name").unwrap_or_default();
@@ -213,7 +213,7 @@ let greetings_worker = FnWorker::new("greetings", |task| async move {
 **Start workers** with `TaskHandler`:
 
 ```rust
-use conductor::{
+use agentmesh::{
     configuration::Configuration,
     worker::TaskHandler,
 };
@@ -236,23 +236,23 @@ Workers support hierarchical environment variable configuration — global setti
 
 ```shell
 # Global (all workers)
-export CONDUCTOR_WORKER_ALL_POLL_INTERVAL_MILLIS=250
-export CONDUCTOR_WORKER_ALL_THREAD_COUNT=20
-export CONDUCTOR_WORKER_ALL_DOMAIN=production
+export AGENTMESH_WORKER_ALL_POLL_INTERVAL_MILLIS=250
+export AGENTMESH_WORKER_ALL_THREAD_COUNT=20
+export AGENTMESH_WORKER_ALL_DOMAIN=production
 
 # Per-worker override
-export CONDUCTOR_WORKER_GREETINGS_THREAD_COUNT=50
+export AGENTMESH_WORKER_GREETINGS_THREAD_COUNT=50
 ```
 
-See [WORKER_CONFIGURATION.md](https://github.com/conductor-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) for all options.
+See [WORKER_CONFIGURATION.md](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) for all options.
 
 ## Monitoring Workers
 
 Enable Prometheus metrics:
 
 ```rust
-use conductor::metrics::MetricsSettings;
-use conductor::worker::TaskHandler;
+use agentmesh::metrics::MetricsSettings;
+use agentmesh::worker::TaskHandler;
 
 let mut task_handler = TaskHandler::new(config)?;
 task_handler.enable_metrics(
@@ -264,25 +264,25 @@ task_handler.start().await?;
 // Metrics at http://localhost:9090/metrics
 ```
 
-See the [rust-sdk README](https://github.com/conductor-oss/rust-sdk) for details.
+See the [rust-sdk README](https://github.com/agentmesh-oss/rust-sdk) for details.
 
 **Learn more:**
-- [Worker Guide](https://github.com/conductor-oss/rust-sdk/blob/main/docs/WORKER.md) — All worker patterns (function, closure, macro, async)
-- [Worker Configuration](https://github.com/conductor-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) — Environment variable configuration system
+- [Worker Guide](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKER.md) — All worker patterns (function, closure, macro, async)
+- [Worker Configuration](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) — Environment variable configuration system
 
 ## Workflows
 
 Define workflows in Rust using the builder pattern to chain tasks:
 
 ```rust
-use conductor::{
-    client::ConductorClient,
+use agentmesh::{
+    client::AgentMeshClient,
     configuration::Configuration,
     models::{WorkflowDef, WorkflowTask},
 };
 
 let config = Configuration::default();
-let client = ConductorClient::new(config)?;
+let client = AgentMeshClient::new(config)?;
 let metadata_client = client.metadata_client();
 
 let workflow = WorkflowDef::new("greetings")
@@ -300,7 +300,7 @@ metadata_client.register_or_update_workflow_def(&workflow, true).await?;
 **Execute workflows:**
 
 ```rust
-use conductor::models::StartWorkflowRequest;
+use agentmesh::models::StartWorkflowRequest;
 use std::time::Duration;
 
 // Asynchronous (returns workflow ID immediately)
@@ -327,39 +327,39 @@ workflow_client.restart_workflow(&workflow_id, false).await?;
 ```
 
 **Learn more:**
-- [Workflow Management](https://github.com/conductor-oss/rust-sdk/blob/main/docs/WORKFLOW.md) — Start, pause, resume, terminate, retry, search
-- [Metadata Management](https://github.com/conductor-oss/rust-sdk/blob/main/docs/METADATA.md) — Task & workflow definitions
+- [Workflow Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKFLOW.md) — Start, pause, resume, terminate, retry, search
+- [Metadata Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/METADATA.md) — Task & workflow definitions
 
 ## Troubleshooting
 
 - **Worker stops polling**: `TaskHandler` monitors workers. Use `task_handler.is_healthy()` for health checks.
-- **Connection issues**: Verify `CONDUCTOR_SERVER_URL` is correct and server is running.
-- **Authentication failures**: For Orkes Conductor, ensure `CONDUCTOR_AUTH_KEY` and `CONDUCTOR_AUTH_SECRET` are valid.
+- **Connection issues**: Verify `AGENTMESH_SERVER_URL` is correct and server is running.
+- **Authentication failures**: For Orkes AgentMesh, ensure `AGENTMESH_AUTH_KEY` and `AGENTMESH_AUTH_SECRET` are valid.
 
 ---
 
 ## AI & LLM Workflows
 
-Conductor supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration.
+AgentMesh supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration.
 
 **Agentic Workflows**
 
-Build AI agents where LLMs dynamically select and call Rust workers as tools. See [examples/](https://github.com/conductor-oss/rust-sdk/blob/main/examples/) for all examples.
+Build AI agents where LLMs dynamically select and call Rust workers as tools. See [examples/](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/) for all examples.
 
 | Example | Description |
 |---------|-------------|
-| [llm_chat_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | Automated multi-turn science Q&A between two LLMs |
-| [llm_chat_human_in_loop.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | Interactive chat with WAIT task pauses for user input |
-| [multiagent_chat.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | Multi-agent discussion with expert, critic, and synthesizer |
-| [function_calling_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | LLM picks which function to call based on user queries |
-| [agentic_workflow.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | AI agent with tool calling and switch-based routing |
+| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | Automated multi-turn science Q&A between two LLMs |
+| [llm_chat_human_in_loop.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | Interactive chat with WAIT task pauses for user input |
+| [multiagent_chat.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | Multi-agent discussion with expert, critic, and synthesizer |
+| [function_calling_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | LLM picks which function to call based on user queries |
+| [agentic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | AI agent with tool calling and switch-based routing |
 
 **LLM and RAG Workflows**
 
 | Example | Description |
 |---------|-------------|
-| [rag_workflow.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | End-to-end RAG: text indexing, semantic search, answer generation |
-| [vector_db_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | Vector database operations with embedding generation |
+| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | End-to-end RAG: text indexing, semantic search, answer generation |
+| [vector_db_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | Vector database operations with embedding generation |
 
 ```shell
 # Automated multi-turn chat
@@ -378,15 +378,15 @@ See the examples directory for the full catalog. Key examples:
 
 | Example | Description | Run |
 |---------|-------------|-----|
-| [worker_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/worker_example.rs) | End-to-end: sync + async workers, metrics | `cargo run --example worker_example` |
-| [hello_world.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/hello_world.rs) | Minimal hello world | `cargo run --example hello_world` |
-| [dynamic_workflow.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | Build workflows programmatically | `cargo run --example dynamic_workflow` |
-| [llm_chat_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | AI multi-turn chat | `cargo run --example llm_chat_example` |
-| [rag_workflow.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | RAG pipeline | `cargo run --example rag_workflow` |
-| [task_context_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/task_context_example.rs) | Long-running tasks with TaskContext | `cargo run --example task_context_example` |
-| [workflow_ops.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | Pause, resume, terminate workflows | `cargo run --example workflow_ops` |
-| [test_workflows.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/test_workflows.rs) | Unit testing workflows | `cargo run --example test_workflows` |
-| [kitchensink.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/kitchensink.rs) | All task types (HTTP, JS, JQ, Switch) | `cargo run --example kitchensink` |
+| [worker_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs) | End-to-end: sync + async workers, metrics | `cargo run --example worker_example` |
+| [hello_world.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs) | Minimal hello world | `cargo run --example hello_world` |
+| [dynamic_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | Build workflows programmatically | `cargo run --example dynamic_workflow` |
+| [llm_chat_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | AI multi-turn chat | `cargo run --example llm_chat_example` |
+| [rag_workflow.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | RAG pipeline | `cargo run --example rag_workflow` |
+| [task_context_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs) | Long-running tasks with TaskContext | `cargo run --example task_context_example` |
+| [workflow_ops.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | Pause, resume, terminate workflows | `cargo run --example workflow_ops` |
+| [test_workflows.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs) | Unit testing workflows | `cargo run --example test_workflows` |
+| [kitchensink.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs) | All task types (HTTP, JS, JQ, Switch) | `cargo run --example kitchensink` |
 
 ## API Journey Examples
 
@@ -394,63 +394,63 @@ End-to-end examples covering all APIs for each domain:
 
 | Example | APIs | Run |
 |---------|------|-----|
-| [authorization_example.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/authorization_example.rs) | Authorization APIs | `cargo run --example authorization_example` |
-| [metadata_journey.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | Metadata APIs | `cargo run --example metadata_journey` |
-| [schedule_journey.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | Schedule APIs | `cargo run --example schedule_journey` |
-| [prompt_journey.rs](https://github.com/conductor-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | Prompt APIs | `cargo run --example prompt_journey` |
+| [authorization_example.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/authorization_example.rs) | Authorization APIs | `cargo run --example authorization_example` |
+| [metadata_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | Metadata APIs | `cargo run --example metadata_journey` |
+| [schedule_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | Schedule APIs | `cargo run --example schedule_journey` |
+| [prompt_journey.rs](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | Prompt APIs | `cargo run --example prompt_journey` |
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Worker Guide](https://github.com/conductor-oss/rust-sdk/blob/main/docs/WORKER.md) | All worker patterns (function, closure, macro, async) |
-| [Worker Configuration](https://github.com/conductor-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) | Hierarchical environment variable configuration |
-| [Workflow Management](https://github.com/conductor-oss/rust-sdk/blob/main/docs/WORKFLOW.md) | Start, pause, resume, terminate, retry, search |
-| [Task Management](https://github.com/conductor-oss/rust-sdk/blob/main/docs/TASK_MANAGEMENT.md) | Task operations |
-| [Metadata](https://github.com/conductor-oss/rust-sdk/blob/main/docs/METADATA.md) | Task & workflow definitions |
-| [Authorization](https://github.com/conductor-oss/rust-sdk/blob/main/docs/AUTHORIZATION.md) | Users, groups, applications, permissions |
-| [Schedules](https://github.com/conductor-oss/rust-sdk/blob/main/docs/SCHEDULE.md) | Workflow scheduling |
-| [Secrets](https://github.com/conductor-oss/rust-sdk/blob/main/docs/SECRET_MANAGEMENT.md) | Secret storage |
-| [Prompts](https://github.com/conductor-oss/rust-sdk/blob/main/docs/PROMPT.md) | AI/LLM prompt templates |
-| [Integrations](https://github.com/conductor-oss/rust-sdk/blob/main/docs/INTEGRATION.md) | AI/LLM provider integrations |
-| [Metrics](https://github.com/conductor-oss/rust-sdk) | Prometheus metrics collection |
+| [Worker Guide](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKER.md) | All worker patterns (function, closure, macro, async) |
+| [Worker Configuration](https://github.com/agentmesh-oss/rust-sdk/blob/main/WORKER_CONFIGURATION.md) | Hierarchical environment variable configuration |
+| [Workflow Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/WORKFLOW.md) | Start, pause, resume, terminate, retry, search |
+| [Task Management](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/TASK_MANAGEMENT.md) | Task operations |
+| [Metadata](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/METADATA.md) | Task & workflow definitions |
+| [Authorization](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/AUTHORIZATION.md) | Users, groups, applications, permissions |
+| [Schedules](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SCHEDULE.md) | Workflow scheduling |
+| [Secrets](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/SECRET_MANAGEMENT.md) | Secret storage |
+| [Prompts](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/PROMPT.md) | AI/LLM prompt templates |
+| [Integrations](https://github.com/agentmesh-oss/rust-sdk/blob/main/docs/INTEGRATION.md) | AI/LLM provider integrations |
+| [Metrics](https://github.com/agentmesh-oss/rust-sdk) | Prometheus metrics collection |
 
 ## Support
 
-- [Open an issue (SDK)](https://github.com/conductor-oss/rust-sdk/issues) for SDK bugs, questions, and feature requests
-- [Open an issue (Conductor server)](https://github.com/conductor-oss/conductor/issues) for Conductor OSS server issues
-- [Join the Conductor Slack](https://join.slack.com/t/orkes-conductor/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
+- [Open an issue (SDK)](https://github.com/agentmesh-oss/rust-sdk/issues) for SDK bugs, questions, and feature requests
+- [Open an issue (AgentMesh server)](https://github.com/agentmesh-oss/agentmesh/issues) for AgentMesh OSS server issues
+- [Join the AgentMesh Slack](https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
 - [Orkes Community Forum](https://community.orkes.io/) for Q&A
 
 ## Frequently Asked Questions
 
-**Is this the same as Netflix Conductor?**
+**Is this the same as AgentMesh AgentMesh?**
 
-Yes. Conductor OSS is the continuation of the original [Netflix Conductor](https://github.com/Netflix/conductor) repository after Netflix contributed the project to the open-source foundation.
+Yes. AgentMesh OSS is the continuation of the original [AgentMesh AgentMesh](https://github.com/AgentMesh/agentmesh) repository after AgentMesh contributed the project to the open-source foundation.
 
 **Is this project actively maintained?**
 
-Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for Conductor across all major cloud providers.
+Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.
 
-**Can Conductor scale to handle my workload?**
+**Can AgentMesh scale to handle my workload?**
 
-Conductor was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
+AgentMesh was built at AgentMesh to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
 
-**Does Conductor support durable code execution?**
+**Does AgentMesh support durable code execution?**
 
-Yes. Conductor ensures workflows complete reliably even in the face of infrastructure failures, process crashes, or network issues.
+Yes. AgentMesh ensures workflows complete reliably even in the face of infrastructure failures, process crashes, or network issues.
 
 **Are workflows always asynchronous?**
 
-No. While Conductor excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.
+No. While AgentMesh excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.
 
-**Do I need to use a Conductor-specific framework?**
+**Do I need to use a AgentMesh-specific framework?**
 
-No. Conductor is language and framework agnostic. Use your preferred language and framework -- the [SDKs](https://github.com/conductor-oss/conductor#conductor-sdks) provide native integration for Python, Java, JavaScript, Go, C#, Rust, and more.
+No. AgentMesh is language and framework agnostic. Use your preferred language and framework -- the [SDKs](https://github.com/agentmesh-oss/agentmesh#agentmesh-sdks) provide native integration for Python, Java, JavaScript, Go, C#, Rust, and more.
 
 **Can I mix workers written in different languages?**
 
-Yes. A single workflow can have workers written in Rust, Python, Java, Go, or any other supported language. Workers communicate through the Conductor server, not directly with each other.
+Yes. A single workflow can have workers written in Rust, Python, Java, Go, or any other supported language. Workers communicate through the AgentMesh server, not directly with each other.
 
 **What Rust versions are supported?**
 
@@ -462,11 +462,11 @@ Use `async fn` for I/O-bound tasks (API calls, database queries) — the SDK use
 
 **How do I run workers in production?**
 
-Workers are standard Rust applications. Deploy them as you would any Rust application -- in containers, VMs, or bare metal. Workers poll the Conductor server for tasks, so no inbound ports need to be opened.
+Workers are standard Rust applications. Deploy them as you would any Rust application -- in containers, VMs, or bare metal. Workers poll the AgentMesh server for tasks, so no inbound ports need to be opened.
 
-**How do I test workflows without running a full Conductor server?**
+**How do I test workflows without running a full AgentMesh server?**
 
-The SDK provides a test framework that uses Conductor's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs. See the [rust-sdk examples](https://github.com/conductor-oss/rust-sdk/blob/main/examples/test_workflows.rs) for details.
+The SDK provides a test framework that uses AgentMesh's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs. See the [rust-sdk examples](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs) for details.
 
 ## License
 
@@ -475,43 +475,43 @@ Apache 2.0
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/rust-sdk/examples](https://github.com/conductor-oss/rust-sdk/tree/main/examples)
+Browse all examples on GitHub: [agentmesh-oss/rust-sdk/examples](https://github.com/agentmesh-oss/rust-sdk/tree/main/examples)
 
 | Example | Type |
 |---|---|
-| [Agentic Workflow](https://github.com/conductor-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | file |
-| [Async Workers](https://github.com/conductor-oss/rust-sdk/blob/main/examples/async_workers.rs) | file |
-| [Authorization Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/authorization_example.rs) | file |
-| [Connection Config Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/connection_config_example.rs) | file |
-| [Dynamic Workflow](https://github.com/conductor-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | file |
-| [Event Listener Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/event_listener_example.rs) | file |
-| [Fork Join Script Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/fork_join_script_example.rs) | file |
-| [Function Calling Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | file |
-| [Hello World](https://github.com/conductor-oss/rust-sdk/blob/main/examples/hello_world.rs) | file |
-| [Http Poll Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/http_poll_example.rs) | file |
-| [Kitchensink](https://github.com/conductor-oss/rust-sdk/blob/main/examples/kitchensink.rs) | file |
-| [Kitchensink Workers](https://github.com/conductor-oss/rust-sdk/blob/main/examples/kitchensink_workers.rs) | file |
-| [Llm Chat Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | file |
-| [Llm Chat Human In Loop](https://github.com/conductor-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | file |
-| [Metadata Journey](https://github.com/conductor-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | file |
-| [Metrics Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/metrics_example.rs) | file |
-| [Multiagent Chat](https://github.com/conductor-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | file |
-| [Openai Helloworld](https://github.com/conductor-oss/rust-sdk/blob/main/examples/openai_helloworld.rs) | file |
-| [Prompt Journey](https://github.com/conductor-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | file |
-| [Rag Workflow](https://github.com/conductor-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | file |
-| [Schedule Journey](https://github.com/conductor-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | file |
-| [Secret Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/secret_example.rs) | file |
-| [Sync State Update Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/sync_state_update_example.rs) | file |
-| [Task Configure](https://github.com/conductor-oss/rust-sdk/blob/main/examples/task_configure.rs) | file |
-| [Task Context Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/task_context_example.rs) | file |
-| [Task Status Audit Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/task_status_audit_example.rs) | file |
-| [Task Workers](https://github.com/conductor-oss/rust-sdk/blob/main/examples/task_workers.rs) | file |
-| [Test Workflows](https://github.com/conductor-oss/rust-sdk/blob/main/examples/test_workflows.rs) | file |
-| [Vector Db Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | file |
-| [Wait For Webhook Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/wait_for_webhook_example.rs) | file |
-| [Worker Config Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/worker_config_example.rs) | file |
-| [Worker Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/worker_example.rs) | file |
-| [Worker Macro Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/worker_macro_example.rs) | file |
-| [Workflow Ops](https://github.com/conductor-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | file |
-| [Workflow Rerun Example](https://github.com/conductor-oss/rust-sdk/blob/main/examples/workflow_rerun_example.rs) | file |
-| [Workflow Status Listener](https://github.com/conductor-oss/rust-sdk/blob/main/examples/workflow_status_listener.rs) | file |
+| [Agentic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/agentic_workflow.rs) | file |
+| [Async Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/async_workers.rs) | file |
+| [Authorization Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/authorization_example.rs) | file |
+| [Connection Config Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/connection_config_example.rs) | file |
+| [Dynamic Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/dynamic_workflow.rs) | file |
+| [Event Listener Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/event_listener_example.rs) | file |
+| [Fork Join Script Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/fork_join_script_example.rs) | file |
+| [Function Calling Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/function_calling_example.rs) | file |
+| [Hello World](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/hello_world.rs) | file |
+| [Http Poll Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/http_poll_example.rs) | file |
+| [Kitchensink](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink.rs) | file |
+| [Kitchensink Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/kitchensink_workers.rs) | file |
+| [Llm Chat Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_example.rs) | file |
+| [Llm Chat Human In Loop](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/llm_chat_human_in_loop.rs) | file |
+| [Metadata Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metadata_journey.rs) | file |
+| [Metrics Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/metrics_example.rs) | file |
+| [Multiagent Chat](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/multiagent_chat.rs) | file |
+| [Openai Helloworld](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/openai_helloworld.rs) | file |
+| [Prompt Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/prompt_journey.rs) | file |
+| [Rag Workflow](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/rag_workflow.rs) | file |
+| [Schedule Journey](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/schedule_journey.rs) | file |
+| [Secret Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/secret_example.rs) | file |
+| [Sync State Update Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/sync_state_update_example.rs) | file |
+| [Task Configure](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_configure.rs) | file |
+| [Task Context Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_context_example.rs) | file |
+| [Task Status Audit Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_status_audit_example.rs) | file |
+| [Task Workers](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/task_workers.rs) | file |
+| [Test Workflows](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/test_workflows.rs) | file |
+| [Vector Db Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/vector_db_example.rs) | file |
+| [Wait For Webhook Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/wait_for_webhook_example.rs) | file |
+| [Worker Config Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_config_example.rs) | file |
+| [Worker Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_example.rs) | file |
+| [Worker Macro Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/worker_macro_example.rs) | file |
+| [Workflow Ops](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_ops.rs) | file |
+| [Workflow Rerun Example](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_rerun_example.rs) | file |
+| [Workflow Status Listener](https://github.com/agentmesh-oss/rust-sdk/blob/main/examples/workflow_status_listener.rs) | file |

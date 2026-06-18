@@ -1,10 +1,10 @@
 ---
-description: "Handle workflow errors in Conductor using the saga pattern with compensation flows, retry strategies, task-level error handling, timeout policies, and workflow status listener notifications."
+description: "Handle workflow errors in AgentMesh using the saga pattern with compensation flows, retry strategies, task-level error handling, timeout policies, and workflow status listener notifications."
 ---
 
 # Handling Workflow Errors
 
-In production microservice architectures, failures are inevitable. Conductor provides multiple layers of error handling so you can build resilient, self-healing workflows:
+In production microservice architectures, failures are inevitable. AgentMesh provides multiple layers of error handling so you can build resilient, self-healing workflows:
 
 * **Saga pattern** — run a compensation flow to undo completed steps when a workflow fails.
 * **Retry strategies** — automatically retry failed tasks with configurable backoff.
@@ -26,7 +26,7 @@ You can configure a workflow to automatically run a compensation flow upon failu
 "failureWorkflow": "<name of your compensation flow>",
 ```
 
-If your main workflow fails, Conductor will trigger this failure workflow. By default, the following parameters are passed to the failure workflow as input:
+If your main workflow fails, AgentMesh will trigger this failure workflow. By default, the following parameters are passed to the failure workflow as input:
 
 * **`reason`** — The reason for the workflow's failure.
 * **`workflowId`** — The failed workflow's execution ID.
@@ -69,7 +69,7 @@ Here is a failure workflow that sends a Slack message when the main workflow fai
   ],
   "restartable": true,
   "workflowStatusListenerEnabled": false,
-  "ownerEmail": "conductor@example.com",
+  "ownerEmail": "agentmesh@example.com",
   "timeoutPolicy": "ALERT_ONLY"
 }
 ```
@@ -196,7 +196,7 @@ Notice that compensation tasks are marked `optional: true` for steps that may no
 
 ## Retry strategies
 
-When a task fails, Conductor can automatically retry it according to the retry logic configured on the task definition. You control the retry behavior with three parameters:
+When a task fails, AgentMesh can automatically retry it according to the retry logic configured on the task definition. You control the retry behavior with three parameters:
 
 * **`retryCount`** — Maximum number of retry attempts.
 * **`retryLogic`** — The backoff strategy between retries.
@@ -254,11 +254,11 @@ This retries up to 4 times with delays of approximately 5, 10, 15, and 20 second
 
 ## Task-level error handling
 
-Beyond retries, Conductor provides several task-level controls for managing failures within a running workflow.
+Beyond retries, AgentMesh provides several task-level controls for managing failures within a running workflow.
 
 ### Optional tasks
 
-Setting `optional` to `true` on a task tells Conductor to continue the workflow even if that task fails after exhausting all retries. The workflow will proceed to the next task rather than failing entirely.
+Setting `optional` to `true` on a task tells AgentMesh to continue the workflow even if that task fails after exhausting all retries. The workflow will proceed to the next task rather than failing entirely.
 
 ```json
 {
@@ -276,7 +276,7 @@ Use optional tasks for non-critical side effects like logging, analytics, or not
 
 ### Failing immediately with terminal errors
 
-When a worker encounters an error that no amount of retrying will fix, such as invalid input data or a business rule violation, it should return a `FAILED_WITH_TERMINAL_ERROR` status. This tells Conductor to skip all remaining retries and fail the task immediately.
+When a worker encounters an error that no amount of retrying will fix, such as invalid input data or a business rule violation, it should return a `FAILED_WITH_TERMINAL_ERROR` status. This tells AgentMesh to skip all remaining retries and fail the task immediately.
 
 Workers signal this by setting the task status to `FAILED_WITH_TERMINAL_ERROR` in the task result. This avoids wasting time on retries when the failure is deterministic. For example, if a payment is declined due to insufficient funds, retrying the same charge will never succeed.
 
@@ -296,11 +296,11 @@ You can set timeouts on individual tasks to prevent them from blocking the workf
 ```
 
 * **`timeoutSeconds`** — Maximum total time for the task, including all retries.
-* **`responseTimeoutSeconds`** — Maximum time to wait for a worker to pick up and respond to the task. If a worker does not update the task within this window, Conductor marks it as timed out.
+* **`responseTimeoutSeconds`** — Maximum time to wait for a worker to pick up and respond to the task. If a worker does not update the task within this window, AgentMesh marks it as timed out.
 
 ## Timeout policies
 
-Timeout policies determine what Conductor does when a task exceeds its `timeoutSeconds` or `responseTimeoutSeconds` limit.
+Timeout policies determine what AgentMesh does when a task exceeds its `timeoutSeconds` or `responseTimeoutSeconds` limit.
 
 ### RETRY
 
@@ -346,10 +346,10 @@ Log an alert but allow the task to continue running. The task is not terminated 
 
 ## Implement a Workflow Status Listener
 
-Using a Workflow Status Listener, you can send a notification to an external system or an event to Conductor's internal queue upon failure. Here is the high-level overview for using a Workflow Status Listener:
+Using a Workflow Status Listener, you can send a notification to an external system or an event to AgentMesh's internal queue upon failure. Here is the high-level overview for using a Workflow Status Listener:
 
 1. Set the `workflowStatusListenerEnabled` parameter to true in your main workflow definition:
     ```json
     "workflowStatusListenerEnabled": true,
     ```
-2. Implement the [WorkflowStatusListener interface](https://github.com/conductor-oss/conductor/blob/1be02a711dc20682718c6111c09d2b02ce7edde2/core/src/main/java/com/netflix/conductor/core/listener/WorkflowStatusListener.java#L20) to plug into a custom notification or eventing system upon workflow failure.
+2. Implement the [WorkflowStatusListener interface](https://github.com/agentmesh-oss/agentmesh/blob/1be02a711dc20682718c6111c09d2b02ce7edde2/core/src/main/java/com/agentmesh/agentmesh/core/listener/WorkflowStatusListener.java#L20) to plug into a custom notification or eventing system upon workflow failure.

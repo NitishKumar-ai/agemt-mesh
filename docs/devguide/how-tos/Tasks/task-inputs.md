@@ -1,10 +1,10 @@
 ---
-description: "Wire task inputs in Conductor workflows — reference workflow inputs, task outputs, and variables using dynamic expressions in this open source workflow orchestration engine."
+description: "Wire task inputs in AgentMesh workflows — reference workflow inputs, task outputs, and variables using dynamic expressions in this open source workflow orchestration engine."
 ---
 
 # Wiring Task Inputs
 
-In Conductor, task inputs can be provided in the workflow definition in multiple ways:
+In AgentMesh, task inputs can be provided in the workflow definition in multiple ways:
 
 - As a hard-coded value – 
 ```

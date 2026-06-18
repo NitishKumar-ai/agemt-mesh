@@ -1,10 +1,10 @@
 ---
-description: Native LLM orchestration with Conductor — supported LLM providers, vector database integration for RAG pipelines, and multimodal content generation tasks.
+description: Native LLM orchestration with AgentMesh — supported LLM providers, vector database integration for RAG pipelines, and multimodal content generation tasks.
 ---
 
 # LLM orchestration
 
-Conductor provides native system tasks for LLM orchestration and integration. No external frameworks or custom workers required — configure a provider and use it in any workflow. Each provider supports function calling via MCP tool integration.
+AgentMesh provides native system tasks for LLM orchestration and integration. No external frameworks or custom workers required — configure a provider and use it in any workflow. Each provider supports function calling via MCP tool integration.
 
 ## Supported LLM providers
 
@@ -28,7 +28,7 @@ No other open source workflow engine provides native LLM orchestration at this b
 
 ## Built-in tools & advanced capabilities
 
-Conductor supports provider-native tools that run on the provider's infrastructure — no MCP server or custom worker needed. Enable them with a single parameter in the `LLM_CHAT_COMPLETE` task.
+AgentMesh supports provider-native tools that run on the provider's infrastructure — no MCP server or custom worker needed. Enable them with a single parameter in the `LLM_CHAT_COMPLETE` task.
 
 | Capability | Parameter | OpenAI | Anthropic | Google Gemini |
 |---|---|---|---|---|
@@ -177,7 +177,7 @@ A complete RAG workflow using native system tasks — index documents, search, a
 }
 ```
 
-Every task type — `LLM_INDEX_TEXT`, `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` — is a native Conductor system task. The vector database, embedding model, and LLM provider are all configuration parameters. Switch from pgvector to Pinecone or from OpenAI to Anthropic by changing a parameter value.
+Every task type — `LLM_INDEX_TEXT`, `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` — is a native AgentMesh system task. The vector database, embedding model, and LLM provider are all configuration parameters. Switch from pgvector to Pinecone or from OpenAI to Anthropic by changing a parameter value.
 
 
 ## Content generation
@@ -198,30 +198,30 @@ Ready-to-use workflow definitions for every AI task type. Each example is a comp
 
 | Example | Task types used |
 |---|---|
-| [Chat Completion](https://github.com/conductor-oss/conductor/blob/main/ai/examples/01-chat-completion.json) | `LLM_CHAT_COMPLETE` |
-| [Generate Embeddings](https://github.com/conductor-oss/conductor/blob/main/ai/examples/02-generate-embeddings.json) | `LLM_GENERATE_EMBEDDINGS` |
-| [Image Generation](https://github.com/conductor-oss/conductor/blob/main/ai/examples/03-image-generation.json) | `GENERATE_IMAGE` |
-| [Audio Generation](https://github.com/conductor-oss/conductor/blob/main/ai/examples/04-audio-generation.json) | `GENERATE_AUDIO` |
-| [Semantic Search](https://github.com/conductor-oss/conductor/blob/main/ai/examples/05-semantic-search.json) | `LLM_SEARCH_INDEX` |
-| [RAG Basic](https://github.com/conductor-oss/conductor/blob/main/ai/examples/06-rag-basic.json) | `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` |
-| [RAG Complete](https://github.com/conductor-oss/conductor/blob/main/ai/examples/07-rag-complete.json) | `LLM_INDEX_TEXT`, `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` |
-| [MCP List Tools](https://github.com/conductor-oss/conductor/blob/main/ai/examples/08-mcp-list-tools.json) | `LIST_MCP_TOOLS` |
-| [MCP Call Tool](https://github.com/conductor-oss/conductor/blob/main/ai/examples/09-mcp-call-tool.json) | `CALL_MCP_TOOL` |
-| [MCP AI Agent](https://github.com/conductor-oss/conductor/blob/main/ai/examples/10-mcp-ai-agent.json) | `LIST_MCP_TOOLS`, `LLM_CHAT_COMPLETE`, `CALL_MCP_TOOL` |
-| [Video — OpenAI Sora](https://github.com/conductor-oss/conductor/blob/main/ai/examples/11-video-openai-sora.json) | `GENERATE_VIDEO` |
-| [Video — Gemini Veo](https://github.com/conductor-oss/conductor/blob/main/ai/examples/12-video-gemini-veo.json) | `GENERATE_VIDEO` |
-| [Image-to-Video Pipeline](https://github.com/conductor-oss/conductor/blob/main/ai/examples/13-image-to-video-pipeline.json) | `GENERATE_IMAGE`, `GENERATE_VIDEO` |
-| [StabilityAI Image](https://github.com/conductor-oss/conductor/blob/main/ai/examples/14-stabilityai-image.json) | `GENERATE_IMAGE` |
-| [PDF Generation](https://github.com/conductor-oss/conductor/blob/main/ai/examples/15-pdf-generation.json) | `GENERATE_PDF` |
-| [LLM-to-PDF Pipeline](https://github.com/conductor-oss/conductor/blob/main/ai/examples/16-llm-to-pdf-pipeline.json) | `LLM_CHAT_COMPLETE`, `GENERATE_PDF` |
-| [Web Search](https://github.com/conductor-oss/conductor/blob/main/ai/examples/17-web-search.json) | `LLM_CHAT_COMPLETE` (web search) |
-| [Code Execution](https://github.com/conductor-oss/conductor/blob/main/ai/examples/18-code-execution.json) | `LLM_CHAT_COMPLETE` (code execution) |
-| [Coding Agent](https://github.com/conductor-oss/conductor/blob/main/ai/examples/19-coding-agent.json) | `LLM_CHAT_COMPLETE` (code_interpreter) |
-| [Extended Thinking](https://github.com/conductor-oss/conductor/blob/main/ai/examples/20-extended-thinking.json) | `LLM_CHAT_COMPLETE` (thinking) |
-| [Web Research Agent](https://github.com/conductor-oss/conductor/blob/main/ai/examples/21-web-search-research-agent.json) | `LLM_CHAT_COMPLETE` (web search + thinking), `GENERATE_PDF` |
-| [Multi-Turn Chain](https://github.com/conductor-oss/conductor/blob/main/ai/examples/22-multi-turn-chain.json) | `LLM_CHAT_COMPLETE` (previousResponseId) |
+| [Chat Completion](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/01-chat-completion.json) | `LLM_CHAT_COMPLETE` |
+| [Generate Embeddings](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/02-generate-embeddings.json) | `LLM_GENERATE_EMBEDDINGS` |
+| [Image Generation](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/03-image-generation.json) | `GENERATE_IMAGE` |
+| [Audio Generation](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/04-audio-generation.json) | `GENERATE_AUDIO` |
+| [Semantic Search](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/05-semantic-search.json) | `LLM_SEARCH_INDEX` |
+| [RAG Basic](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/06-rag-basic.json) | `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` |
+| [RAG Complete](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/07-rag-complete.json) | `LLM_INDEX_TEXT`, `LLM_SEARCH_INDEX`, `LLM_CHAT_COMPLETE` |
+| [MCP List Tools](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/08-mcp-list-tools.json) | `LIST_MCP_TOOLS` |
+| [MCP Call Tool](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/09-mcp-call-tool.json) | `CALL_MCP_TOOL` |
+| [MCP AI Agent](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/10-mcp-ai-agent.json) | `LIST_MCP_TOOLS`, `LLM_CHAT_COMPLETE`, `CALL_MCP_TOOL` |
+| [Video — OpenAI Sora](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/11-video-openai-sora.json) | `GENERATE_VIDEO` |
+| [Video — Gemini Veo](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/12-video-gemini-veo.json) | `GENERATE_VIDEO` |
+| [Image-to-Video Pipeline](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/13-image-to-video-pipeline.json) | `GENERATE_IMAGE`, `GENERATE_VIDEO` |
+| [StabilityAI Image](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/14-stabilityai-image.json) | `GENERATE_IMAGE` |
+| [PDF Generation](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/15-pdf-generation.json) | `GENERATE_PDF` |
+| [LLM-to-PDF Pipeline](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/16-llm-to-pdf-pipeline.json) | `LLM_CHAT_COMPLETE`, `GENERATE_PDF` |
+| [Web Search](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/17-web-search.json) | `LLM_CHAT_COMPLETE` (web search) |
+| [Code Execution](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/18-code-execution.json) | `LLM_CHAT_COMPLETE` (code execution) |
+| [Coding Agent](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/19-coding-agent.json) | `LLM_CHAT_COMPLETE` (code_interpreter) |
+| [Extended Thinking](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/20-extended-thinking.json) | `LLM_CHAT_COMPLETE` (thinking) |
+| [Web Research Agent](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/21-web-search-research-agent.json) | `LLM_CHAT_COMPLETE` (web search + thinking), `GENERATE_PDF` |
+| [Multi-Turn Chain](https://github.com/agentmesh-oss/agentmesh/blob/main/ai/examples/22-multi-turn-chain.json) | `LLM_CHAT_COMPLETE` (previousResponseId) |
 
-Browse all examples: [`ai/examples/`](https://github.com/conductor-oss/conductor/tree/main/ai/examples)
+Browse all examples: [`ai/examples/`](https://github.com/agentmesh-oss/agentmesh/tree/main/ai/examples)
 
 
 ## Next steps

@@ -1,10 +1,10 @@
 # Security Policy
 - [Reporting a vulnerability](#reporting-a-vulnerability)
-- [Supported Conductor versions](#supported-versions)
+- [Supported AgentMesh versions](#supported-versions)
 
 ## Reporting a vulnerability
 
-Please report security issues for Conductor using https://github.com/conductor-oss/conductor/security/advisories/new
+Please report security issues for AgentMesh using https://github.com/agentmesh-oss/agentmesh/security/advisories/new
 
 ## Supported Versions
 

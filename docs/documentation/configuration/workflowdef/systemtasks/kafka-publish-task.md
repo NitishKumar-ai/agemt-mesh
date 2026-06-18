@@ -1,5 +1,5 @@
 ---
-description: "Kafka Publish Task — send messages to Kafka topics from Conductor workflows with configurable serialization."
+description: "Kafka Publish Task — send messages to Kafka topics from AgentMesh workflows with configurable serialization."
 ---
 # Kafka Publish Task
 ```json

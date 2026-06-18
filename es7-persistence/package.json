@@ -1,9 +1,16 @@
 {
-  "name": "@conductor/es7-persistence",
+  "name": "@agentmesh/es7-persistence",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "dependencies": {
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
+    "@elastic/elasticsearch": "7.17.13"
+  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/",

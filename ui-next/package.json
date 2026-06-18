@@ -1,14 +1,14 @@
 {
-  "name": "conductor-ui",
+  "name": "agentmesh-ui",
   "version": "0.0.0",
-  "description": "Open Source Conductor UI - Core components, pages, and plugin infrastructure",
+  "description": "Open Source AgentMesh UI - Core components, pages, and plugin infrastructure",
   "type": "module",
-  "main": "./dist/conductor-ui.js",
-  "module": "./dist/conductor-ui.js",
+  "main": "./dist/agentmesh-ui.js",
+  "module": "./dist/agentmesh-ui.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/conductor-ui.js",
+      "import": "./dist/agentmesh-ui.js",
       "types": "./dist/index.d.ts"
     },
     "./styles.css": "./dist/style.css",

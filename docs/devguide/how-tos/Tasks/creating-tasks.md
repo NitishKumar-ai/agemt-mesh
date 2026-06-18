@@ -1,5 +1,5 @@
 ---
-description: "Create and update task definitions in Conductor to configure timeouts, retries, rate limits, and input templates for worker and system tasks."
+description: "Create and update task definitions in AgentMesh to configure timeouts, retries, rate limits, and input templates for worker and system tasks."
 ---
 
 # Creating / Updating Task Definitions
@@ -14,12 +14,12 @@ A [task definition](../../../documentation/configuration/taskdef.md) specifies a
 
 This definition applies to all instances of the task across workflows.
 
-You can create task definitions using the Conductor UI or APIs for the following scenarios:
+You can create task definitions using the AgentMesh UI or APIs for the following scenarios:
 
-- **Worker tasks**—All Worker tasks (`SIMPLE`) must be registered to the Conductor server as a task definition before it can execute in a workflow.
+- **Worker tasks**—All Worker tasks (`SIMPLE`) must be registered to the AgentMesh server as a task definition before it can execute in a workflow.
 - **System tasks**—System tasks don't require a task definition, but you can create one with the same name to customize retry, timeout, and rate limit behavior.
 
-## Using Conductor UI
+## Using AgentMesh UI
 
 With the UI, you can create or update task definitions visually.
 
@@ -41,10 +41,10 @@ With the UI, you can create or update task definitions visually.
 
 ## Using the CLI
 
-You can create task definitions using the Conductor CLI. Save your task definitions to a JSON file and run:
+You can create task definitions using the AgentMesh CLI. Save your task definitions to a JSON file and run:
 
 ```bash
-conductor task create tasks.json
+agentmesh task create tasks.json
 ```
 
 The file should contain an array of task definitions. Refer to [Task Definitions](../../../documentation/configuration/taskdef.md) for a reference guide on the full parameters.
@@ -82,7 +82,7 @@ You can update task definitions using the Update Task Definition API (`PUT api/m
 
 ## Using SDKs
 
-Conductor offers client SDKs for popular languages which have library methods for making the API call. Refer to the SDK documentation to configure a client in your selected language to create or update task definitions.
+AgentMesh offers client SDKs for popular languages which have library methods for making the API call. Refer to the SDK documentation to configure a client in your selected language to create or update task definitions.
 
 Refer to [Task Definitions](../../../documentation/configuration/taskdef.md) for a reference guide on the full parameters.
 
@@ -120,7 +120,7 @@ fetch("{{ server_host }}/api/metadata/taskdefs", {
 
 ## Reusing tasks
 
-Once a task is defined in Conductor, it can be reused numerous times:
+Once a task is defined in AgentMesh, it can be reused numerous times:
 
 - **In the same workflow** — use the same task with different task reference names.
 - **Across workflows** — any workflow can reference any registered task definition.

@@ -9,7 +9,7 @@ export const DOC_LINK_URL = {
   AI_PROMPTS:
     "https://orkes.io/content/developer-guides/creating-and-managing-gen-ai-prompt-templates",
   EVENT_HANDLER: "https://orkes.io/content/developer-guides/event-handler",
-  SECRETS: "https://orkes.io/content/developer-guides/secrets-in-conductor",
+  SECRETS: "https://orkes.io/content/developer-guides/secrets-in-agentmesh",
   SCHEDULER: "https://orkes.io/content/developer-guides/scheduling-workflows",
   ENV_VARIABLES:
     "https://orkes.io/content/developer-guides/using-environment-variables",

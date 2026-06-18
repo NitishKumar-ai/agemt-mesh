@@ -1,12 +1,12 @@
 ---
-description: "Inline Task — execute JavaScript expressions inside Conductor workflows for data transformation and conditional logic."
+description: "Inline Task — execute JavaScript expressions inside AgentMesh workflows for data transformation and conditional logic."
 ---
 # Inline Task
 ```json
 "type": "INLINE"
 ```
 
-The Inline task (`INLINE`) executes lightweight scripting logic inside the Conductor server JVM and immediately returns a result that can be wired into downstream tasks.
+The Inline task (`INLINE`) executes lightweight scripting logic inside the AgentMesh server JVM and immediately returns a result that can be wired into downstream tasks.
 
 The Inline task is best for small, deterministic logic like simple validation or calculation. For heavy, custom logic, it is best to use a Worker task (`SIMPLE`) instead.
 

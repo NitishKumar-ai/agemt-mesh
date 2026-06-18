@@ -1,5 +1,5 @@
 ---
-description: "Conductor Task API — poll, update, search, and manage tasks. Includes batch polling, task logs, queue management, and poll data."
+description: "AgentMesh Task API — poll, update, search, and manage tasks. Includes batch polling, task logs, queue management, and poll data."
 ---
 
 # Task API
@@ -464,7 +464,7 @@ curl 'http://localhost:8080/api/tasks/externalstoragelocation?path=task/output&o
 
 ```json
 {
-  "uri": "s3://conductor-payloads/task/output/...",
+  "uri": "s3://agentmesh-payloads/task/output/...",
   "path": "task/output/..."
 }
 ```

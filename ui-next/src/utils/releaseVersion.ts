@@ -1,4 +1,4 @@
 export const releaseVersion =
-  process.env?.VITE_CONDUCTOR_UI_VERSION == null
+  process.env?.VITE_AGENTMESH_UI_VERSION == null
     ? "latest"
-    : process.env.VITE_CONDUCTOR_UI_VERSION;
+    : process.env.VITE_AGENTMESH_UI_VERSION;

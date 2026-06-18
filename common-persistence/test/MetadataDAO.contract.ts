@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import type { MetadataDAO } from '../src/MetadataDAO.js';
-import type { TaskDef, WorkflowDef, EventHandler } from '@conductor/common';
+import type { TaskDef, WorkflowDef, EventHandler } from '@agentmesh/common';
 
 export function runMetadataDAOContractTests(
   daoProvider: () => Promise<MetadataDAO>,

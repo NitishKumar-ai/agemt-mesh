@@ -1,12 +1,12 @@
 # Redis Configuration Module
 
-Redis connection and configuration layer for Conductor. Provides the `JedisCommands` abstraction, connection pooling, Spring auto-configuration, and pool monitoring. Supports three deployment topologies: standalone, cluster, and sentinel.
+Redis connection and configuration layer for AgentMesh. Provides the `JedisCommands` abstraction, connection pooling, Spring auto-configuration, and pool monitoring. Supports three deployment topologies: standalone, cluster, and sentinel.
 
 This module is a dependency of `redis-persistence` (DAOs) and `queues`. If you only need a Redis connection without the DAO layer, depend on this module directly.
 
 ## Deployment Modes
 
-Set `conductor.db.type` to activate a Redis mode:
+Set `agentmesh.db.type` to activate a Redis mode:
 
 | Value | Mode | Configuration Class | Jedis Client |
 |---|---|---|---|
@@ -19,28 +19,28 @@ Set `conductor.db.type` to activate a Redis mode:
 ### Standalone
 
 ```properties
-conductor.db.type=redis_standalone
-conductor.redis.hosts=localhost:6379:us-east-1c
+agentmesh.db.type=redis_standalone
+agentmesh.redis.hosts=localhost:6379:us-east-1c
 ```
 
 ### Cluster
 
 ```properties
-conductor.db.type=redis_cluster
-conductor.redis.hosts=node1:6379:us-east-1a;node2:6379:us-east-1b;node3:6379:us-east-1c
+agentmesh.db.type=redis_cluster
+agentmesh.redis.hosts=node1:6379:us-east-1a;node2:6379:us-east-1b;node3:6379:us-east-1c
 ```
 
 ### Sentinel
 
 ```properties
-conductor.db.type=redis_sentinel
-conductor.redis.hosts=sentinel1:26379:us-east-1a;sentinel2:26379:us-east-1b;sentinel3:26379:us-east-1c
-conductor.redis.sentinel-master-name=mymaster
+agentmesh.db.type=redis_sentinel
+agentmesh.redis.hosts=sentinel1:26379:us-east-1a;sentinel2:26379:us-east-1b;sentinel3:26379:us-east-1c
+agentmesh.redis.sentinel-master-name=mymaster
 ```
 
 ## Host Format
 
-The `conductor.redis.hosts` property uses a semicolon-separated format:
+The `agentmesh.redis.hosts` property uses a semicolon-separated format:
 
 ```
 host:port:rack[:password]
@@ -54,12 +54,12 @@ host:port:rack[:password]
 Multiple hosts are separated by `;`:
 
 ```properties
-conductor.redis.hosts=host1:6379:rack1:secret;host2:6379:rack2:secret
+agentmesh.redis.hosts=host1:6379:rack1:secret;host2:6379:rack2:secret
 ```
 
 ## Configuration Properties
 
-All properties are prefixed with `conductor.redis.`.
+All properties are prefixed with `agentmesh.redis.`.
 
 ### Connection
 
@@ -99,10 +99,10 @@ All properties are prefixed with `conductor.redis.`.
 - **`RedisStandaloneConfiguration`** - Creates a `JedisPooled` instance.
 - **`RedisClusterConfiguration`** - Creates a `JedisCluster` instance. Supports `ignore-ssl` for trust-all TLS in dev environments.
 - **`RedisSentinelConfiguration`** - Creates a `JedisSentineled` instance. Sentinel nodes reuse the configured auth and SSL settings so existing secured Sentinel deployments continue to work.
-- **`RedisProperties`** - Spring Boot `@ConfigurationProperties` binding for all `conductor.redis.*` properties.
+- **`RedisProperties`** - Spring Boot `@ConfigurationProperties` binding for all `agentmesh.redis.*` properties.
 - **`ConfigurationHostSupplier`** - Parses the `hosts` string into `Host` objects.
-- **`AnyRedisCondition`** - Spring condition that matches when `conductor.db.type` is any Redis variant.
-- **`AnyRedisConnectionCondition`** - Matches when Redis is used for either `conductor.db.type` or `conductor.queue.type`.
+- **`AnyRedisCondition`** - Spring condition that matches when `agentmesh.db.type` is any Redis variant.
+- **`AnyRedisConnectionCondition`** - Matches when Redis is used for either `agentmesh.db.type` or `agentmesh.queue.type`.
 
 ### `jedis` package
 
@@ -116,9 +116,9 @@ All properties are prefixed with `conductor.redis.`.
 
 All modes publish Redis connection pool metrics every 10 seconds via a daemon thread:
 
-- `conductor_redis_connection_active` - active connections
-- `conductor_redis_connection_waiting` - threads waiting for a connection
-- `conductor_redis_connection_mean_borrow_wait_time` - average time to acquire a connection
-- `conductor_redis_connection_max_borrow_wait_time` - worst-case connection acquisition time
+- `agentmesh_redis_connection_active` - active connections
+- `agentmesh_redis_connection_waiting` - threads waiting for a connection
+- `agentmesh_redis_connection_mean_borrow_wait_time` - average time to acquire a connection
+- `agentmesh_redis_connection_max_borrow_wait_time` - worst-case connection acquisition time
 
 The monitor is automatically shut down on Spring context close.

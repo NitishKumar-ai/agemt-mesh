@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@conductor/sqlite-persistence';
+import type { Database } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration } from '@agentmesh/common-persistence';
+import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
 import { WorkflowService } from '../../src/services/WorkflowService.js';
 import { AdminService } from '../../src/services/AdminService.js';
 

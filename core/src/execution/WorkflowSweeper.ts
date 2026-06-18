@@ -1,10 +1,10 @@
-import { isTaskTerminal, isWorkflowTerminal } from '@conductor/common';
+import { isTaskTerminal, isWorkflowTerminal } from '@agentmesh/common';
 import type { TaskModel, WorkflowModel } from './types.js';
 import type {
   QueueDAO,
   ExecutionDAOFacade,
   ExecutionLockService,
-  ConductorProperties,
+  AgentMeshProperties,
 } from './WorkflowExecutorOps.js';
 import type { WorkflowExecutor } from './WorkflowExecutor.js';
 import type { SystemTaskRegistry } from './SystemTaskRegistry.js';
@@ -22,13 +22,13 @@ export class WorkflowSweeper {
   private readonly executionDAO: ExecutionDAOFacade;
   private readonly systemTaskRegistry: SystemTaskRegistry;
   private readonly executionLockService: ExecutionLockService;
-  private readonly properties: ConductorProperties;
+  private readonly properties: AgentMeshProperties;
 
   constructor(params: {
     queueDAO: QueueDAO;
     workflowExecutor: WorkflowExecutor;
     executionDAO: ExecutionDAOFacade;
-    properties: ConductorProperties;
+    properties: AgentMeshProperties;
     sweeperProperties: SweeperProperties;
     systemTaskRegistry: SystemTaskRegistry;
     executionLockService: ExecutionLockService;

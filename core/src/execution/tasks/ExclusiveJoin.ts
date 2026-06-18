@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, isTaskTerminal } from '@conductor/common';
+import { TaskType, isTaskTerminal } from '@agentmesh/common';
 
 export class ExclusiveJoin extends WorkflowSystemTask {
   constructor() {

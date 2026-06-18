@@ -41,7 +41,7 @@ const getWorkflowDefinitionByNameAndVersionFn: any = (_params: any) => {
         name: "http",
         taskReferenceName: "http_ref",
         inputParameters: {
-          uri: "https://orkes-api-tester.orkesconductor.com/api",
+          uri: "https://orkes-api-tester.orkesagentmesh.com/api",
           method: "GET",
           connectionTimeOut: 3000,
           readTimeOut: "3000",

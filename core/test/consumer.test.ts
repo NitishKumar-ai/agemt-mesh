@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { validateWorkflow } from '../src/index.js';
 
-describe('@conductor/core consumes @conductor/common across the package boundary', () => {
+describe('@agentmesh/core consumes @agentmesh/common across the package boundary', () => {
   it('validateWorkflow normalizes a minimal def using common defaults', () => {
     const wf = validateWorkflow({ name: 'cross_pkg_wf' });
     expect(wf.name).toBe('cross_pkg_wf');

@@ -9,7 +9,7 @@ import { ComponentType, ReactNode } from "react";
 import { RouteObject } from "react-router-dom";
 import {
   AuthProviderProps,
-  ConductorPlugin,
+  AgentMeshPlugin,
   DependencySectionRegistration,
   GeneratedKeyDialogProps,
   NewIntegrationModalProps,
@@ -28,7 +28,7 @@ import {
  */
 function createPluginRegistry(): PluginRegistry {
   // Storage for registered plugins
-  const plugins: ConductorPlugin[] = [];
+  const plugins: AgentMeshPlugin[] = [];
 
   // Cached lookups for performance
   const taskFormCache = new Map<string, ComponentType<PluginTaskFormProps>>();
@@ -78,7 +78,7 @@ function createPluginRegistry(): PluginRegistry {
     /**
      * Register a plugin with the registry
      */
-    register(plugin: ConductorPlugin): void {
+    register(plugin: AgentMeshPlugin): void {
       // Check for duplicate plugin IDs
       const existing = plugins.find((p) => p.id === plugin.id);
       if (existing) {
@@ -107,7 +107,7 @@ function createPluginRegistry(): PluginRegistry {
     /**
      * Get all registered plugins
      */
-    getPlugins(): ConductorPlugin[] {
+    getPlugins(): AgentMeshPlugin[] {
       return [...plugins];
     },
 
@@ -390,6 +390,6 @@ export const pluginRegistry = createPluginRegistry();
 /**
  * Convenience function to register a plugin
  */
-export function registerPlugin(plugin: ConductorPlugin): void {
+export function registerPlugin(plugin: AgentMeshPlugin): void {
   pluginRegistry.register(plugin);
 }

@@ -5,9 +5,9 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { unlinkSync, existsSync } from 'fs';
 
-import type { Database, ExecutionDAO } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
-import { TaskModel, WorkflowModel } from '@conductor/common';
+import type { Database, ExecutionDAO } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration } from '@agentmesh/common-persistence';
+import { TaskModel, WorkflowModel } from '@agentmesh/common';
 import { runQueueDAOContractTests } from '../../common-persistence/test/QueueDAO.contract.js';
 import { runMetadataDAOContractTests } from '../../common-persistence/test/MetadataDAO.contract.js';
 import { runExecutionDAOContractTests } from '../../common-persistence/test/ExecutionDAO.contract.js';

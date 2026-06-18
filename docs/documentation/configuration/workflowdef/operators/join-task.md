@@ -1,5 +1,5 @@
 ---
-description: "Join Task — synchronize parallel branches in a Conductor workflow, waiting for all forked tasks to complete."
+description: "Join Task — synchronize parallel branches in a AgentMesh workflow, waiting for all forked tasks to complete."
 ---
 
 # Join

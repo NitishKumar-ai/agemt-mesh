@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
-import { ConcurrentExecutionLimitDAO, Database } from '@conductor/common-persistence';
-import { TaskModel } from '@conductor/common';
+import { ConcurrentExecutionLimitDAO, Database } from '@agentmesh/common-persistence';
+import { TaskModel } from '@agentmesh/common';
 
 export class PostgresConcurrentExecutionLimitDAO implements ConcurrentExecutionLimitDAO {
   constructor(private readonly db: Kysely<Database>) {}

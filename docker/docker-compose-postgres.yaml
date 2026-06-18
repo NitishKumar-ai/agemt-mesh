@@ -1,15 +1,15 @@
 version: '2.3'
 
 services:
-  conductor-server:
+  agentmesh-server:
     environment:
       - CONFIG_PROP=config-postgres.properties
       # Forwarded from the host shell when set. Empty/absent ⇒ the matching AI provider
       # stays unconfigured and the LLM e2e tests that depend on it self-skip.
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-    image: conductor:server
-    container_name: conductor-server
+    image: agentmesh:server
+    container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
@@ -26,9 +26,9 @@ services:
       timeout: 30s
       retries: 12
     links:
-      - conductor-postgres:postgresdb
+      - agentmesh-postgres:postgresdb
     depends_on:
-      conductor-postgres:
+      agentmesh-postgres:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -36,13 +36,13 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-postgres:
+  agentmesh-postgres:
     image: postgres:16
     environment:
-      - POSTGRES_USER=conductor
-      - POSTGRES_PASSWORD=conductor
+      - POSTGRES_USER=agentmesh
+      - POSTGRES_PASSWORD=agentmesh
     volumes:
-      - pgdata-conductor:/var/lib/postgresql/data
+      - pgdata-agentmesh:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
@@ -57,7 +57,7 @@ services:
         max-file: "3"
 
 volumes:
-  pgdata-conductor:
+  pgdata-agentmesh:
     driver: local
 
 networks:

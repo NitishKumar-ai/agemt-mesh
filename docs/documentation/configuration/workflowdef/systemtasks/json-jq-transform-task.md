@@ -1,5 +1,5 @@
 ---
-description: "JSON JQ Transform Task — transform and filter JSON data inside Conductor workflows using JQ expressions."
+description: "JSON JQ Transform Task — transform and filter JSON data inside AgentMesh workflows using JQ expressions."
 ---
 # JSON JQ Transform Task
 ```json

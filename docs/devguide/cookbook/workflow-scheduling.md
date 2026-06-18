@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — scheduled workflow recipes for cron-triggered execution, catchup after downtime, bounded time windows, parallel scheduled tasks, input parameterization, and concurrent execution handling."
+description: "AgentMesh cookbook — scheduled workflow recipes for cron-triggered execution, catchup after downtime, bounded time windows, parallel scheduled tasks, input parameterization, and concurrent execution handling."
 ---
 
 # Scheduled workflow recipes
@@ -208,7 +208,7 @@ Workflow that uses the injected timestamps to compute a 24-hour report window:
 
 ### Schedule a parallel (FORK/JOIN) workflow
 
-A scheduled workflow can use any Conductor construct. This example fetches two timezones in parallel using FORK_JOIN:
+A scheduled workflow can use any AgentMesh construct. This example fetches two timezones in parallel using FORK_JOIN:
 
 ```json
 {

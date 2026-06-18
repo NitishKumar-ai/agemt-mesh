@@ -1,4 +1,4 @@
-/** Minimal Task contract (mirrors Conductor Task metadata). */
+/** Minimal Task contract (mirrors AgentMesh Task metadata). */
 export interface Task {
   taskId: string;
   workflowInstanceId: string;

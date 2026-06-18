@@ -1,28 +1,28 @@
 ---
-description: "Build Conductor workers in C#/.NET with dependency injection, workflow management, and task polling."
+description: "Build AgentMesh workers in C#/.NET with dependency injection, workflow management, and task polling."
 ---
 
 # C# SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/csharp-sdk](https://github.com/conductor-oss/csharp-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/csharp-sdk](https://github.com/agentmesh-oss/csharp-sdk) | Report issues and contribute on GitHub.
 
-## ⭐ Conductor OSS
-Show support for the Conductor OSS.  Please help spread the awareness by starring Conductor repo.
+## ⭐ AgentMesh OSS
+Show support for the AgentMesh OSS.  Please help spread the awareness by starring AgentMesh repo.
 
-[![GitHub stars](https://img.shields.io/github/stars/conductor-oss/conductor.svg?style=social&label=Star&maxAge=)](https://GitHub.com/conductor-oss/conductor/)
+[![GitHub stars](https://img.shields.io/github/stars/agentmesh-oss/agentmesh.svg?style=social&label=Star&maxAge=)](https://GitHub.com/agentmesh-oss/agentmesh/)
 
    
-### Setup Conductor C# Package​
+### Setup AgentMesh C# Package​
 
 ```shell
-dotnet add package conductor-csharp
+dotnet add package agentmesh-csharp
 ```
 
 ## Configurations
 
 ### Authentication Settings (Optional)
-Configure the authentication settings if your Conductor server requires authentication.
+Configure the authentication settings if your AgentMesh server requires authentication.
 * keyId: Key for authentication.
 * keySecret: Secret for the key.
 
@@ -34,13 +34,13 @@ authenticationSettings: new OrkesAuthenticationSettings(
 ```
 
 ### Access Control Setup
-See [Access Control](https://orkes.io/content/docs/getting-started/concepts/access-control) for more details on role-based access control with Conductor and generating API keys for your environment.
+See [Access Control](https://orkes.io/content/docs/getting-started/concepts/access-control) for more details on role-based access control with AgentMesh and generating API keys for your environment.
 
 ### Configure API Client
 ```csharp
-using Conductor.Api;
-using Conductor.Client;
-using Conductor.Client.Authentication;
+using AgentMesh.Api;
+using AgentMesh.Client;
+using AgentMesh.Client.Authentication;
 
 var configuration = new Configuration() {
     BasePath = basePath,
@@ -56,19 +56,19 @@ workflowClient.StartWorkflow(
 )
 ```
 
-### Next: [Create and run task workers](https://github.com/conductor-sdk/conductor-csharp/blob/main/docs/readme/workers.md)
+### Next: [Create and run task workers](https://github.com/agentmesh-sdk/agentmesh-csharp/blob/main/docs/readme/workers.md)
 
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/csharp-sdk/csharp-examples](https://github.com/conductor-oss/csharp-sdk/tree/main/csharp-examples)
+Browse all examples on GitHub: [agentmesh-oss/csharp-sdk/csharp-examples](https://github.com/agentmesh-oss/csharp-sdk/tree/main/csharp-examples)
 
 | Example | Type |
 |---|---|
-| [Examples](https://github.com/conductor-oss/csharp-sdk/tree/main/csharp-examples/Examples) | directory |
-| [Humantaskexamples](https://github.com/conductor-oss/csharp-sdk/blob/main/csharp-examples/HumanTaskExamples.cs) | file |
-| [Program](https://github.com/conductor-oss/csharp-sdk/blob/main/csharp-examples/Program.cs) | file |
-| [Runner](https://github.com/conductor-oss/csharp-sdk/blob/main/csharp-examples/Runner.cs) | file |
-| [Testworker](https://github.com/conductor-oss/csharp-sdk/blob/main/csharp-examples/TestWorker.cs) | file |
-| [Utils](https://github.com/conductor-oss/csharp-sdk/tree/main/csharp-examples/Utils) | directory |
-| [Workflowexamples](https://github.com/conductor-oss/csharp-sdk/blob/main/csharp-examples/WorkFlowExamples.cs) | file |
+| [Examples](https://github.com/agentmesh-oss/csharp-sdk/tree/main/csharp-examples/Examples) | directory |
+| [Humantaskexamples](https://github.com/agentmesh-oss/csharp-sdk/blob/main/csharp-examples/HumanTaskExamples.cs) | file |
+| [Program](https://github.com/agentmesh-oss/csharp-sdk/blob/main/csharp-examples/Program.cs) | file |
+| [Runner](https://github.com/agentmesh-oss/csharp-sdk/blob/main/csharp-examples/Runner.cs) | file |
+| [Testworker](https://github.com/agentmesh-oss/csharp-sdk/blob/main/csharp-examples/TestWorker.cs) | file |
+| [Utils](https://github.com/agentmesh-oss/csharp-sdk/tree/main/csharp-examples/Utils) | directory |
+| [Workflowexamples](https://github.com/agentmesh-oss/csharp-sdk/blob/main/csharp-examples/WorkFlowExamples.cs) | file |

@@ -1,4 +1,4 @@
-import type { TaskDef, WorkflowTask } from '@conductor/common';
+import type { TaskDef, WorkflowTask } from '@agentmesh/common';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { DeciderService } from '../DeciderService.js';
 

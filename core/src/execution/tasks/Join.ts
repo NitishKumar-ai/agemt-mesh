@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType, isTaskTerminal, isTaskSuccessful } from '@conductor/common';
+import { TaskType, isTaskTerminal, isTaskSuccessful } from '@agentmesh/common';
 
 const EVALUATION_OFFSET_BASE = 1.2;
 

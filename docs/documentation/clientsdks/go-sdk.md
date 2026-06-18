@@ -1,11 +1,11 @@
 ---
-description: "Build Conductor workers in Go with type-safe task definitions and workflow management."
+description: "Build AgentMesh workers in Go with type-safe task definitions and workflow management."
 ---
 
 # Go SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/go-sdk](https://github.com/conductor-oss/go-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/go-sdk](https://github.com/agentmesh-oss/go-sdk) | Report issues and contribute on GitHub.
 
 ## Installation
 
@@ -20,33 +20,33 @@ go mod init hello_world
 2. Get the SDK:
 
 ```shell
-go get github.com/conductor-sdk/conductor-go
+go get github.com/agentmesh-sdk/agentmesh-go
 ```
 
 ## Hello World
 
-In this repo you will find a basic "Hello World" under [examples/hello_world](https://github.com/conductor-oss/go-sdk/blob/main/examples/hello_world/). 
+In this repo you will find a basic "Hello World" under [examples/hello_world](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/). 
 
 Let's analyze the app in 3 steps.
 
 
 > [!note]
-> You will need an up & running Conductor Server. 
+> You will need an up & running AgentMesh Server. 
 >
-> For details on how to run Conductor take a look at [our guide](https://conductor-oss.github.io/conductor/devguide/running/deploy.html).
+> For details on how to run AgentMesh take a look at [our guide](https://agentmesh-oss.github.io/agentmesh/devguide/running/deploy.html).
 >
 > The examples expect the server to be listening on http://localhost:8080.
 
 
 ### Step 1: Creating the workflow by code
 
-The "greetings" workflow is going to be created by code and registered in Conductor. 
+The "greetings" workflow is going to be created by code and registered in AgentMesh. 
 
-Check the `CreateWorkflow` function in [examples/hello_world/src/workflow.go](https://github.com/conductor-oss/go-sdk/blob/main/examples/hello_world/src/workflow.go).
+Check the `CreateWorkflow` function in [examples/hello_world/src/workflow.go](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/src/workflow.go).
 
 ```go
-func CreateWorkflow(executor *executor.WorkflowExecutor) *workflow.ConductorWorkflow {
-	wf := workflow.NewConductorWorkflow(executor).
+func CreateWorkflow(executor *executor.WorkflowExecutor) *workflow.AgentMeshWorkflow {
+	wf := workflow.NewAgentMeshWorkflow(executor).
 		Name("greetings").
 		Version(1).
 		Description("Greetings workflow - Greets a user by their name").
@@ -65,7 +65,7 @@ func CreateWorkflow(executor *executor.WorkflowExecutor) *workflow.ConductorWork
 }
 ```
 
-In the above code first we create a workflow by calling `workflow.NewConductorWorkflow(..)` and set its properties `Name`, `Version`, `Description` and `TimeoutPolicy`. 
+In the above code first we create a workflow by calling `workflow.NewAgentMeshWorkflow(..)` and set its properties `Name`, `Version`, `Description` and `TimeoutPolicy`. 
 
 Then we create a [Simple Task](https://orkes.io/content/reference-docs/worker-task) of type `"greet"` with reference name `"greet_ref"` and add it to the workflow. That task gets the workflow input `"name"` as an input with key `"person_to_be_greated"`.
 
@@ -94,7 +94,7 @@ The expected workflow output will be:
 }
 ```
 
-The Go code translates to this JSON defininition. You can view this in your Conductor server after registering the workflow.
+The Go code translates to this JSON defininition. You can view this in your AgentMesh server after registering the workflow.
 
 ```json
 {
@@ -134,7 +134,7 @@ In [Step 3](#step-3-running-the-application) you will see how to create an insta
 
 A worker is a function with a specific task to perform.
 
-In this example the worker just uses the input `person_to_be_greated` to say hello, as you can see in [examples/hello_world/src/worker.go](https://github.com/conductor-oss/go-sdk/blob/main/examples/hello_world/src/worker.go).
+In this example the worker just uses the input `person_to_be_greated` to say hello, as you can see in [examples/hello_world/src/worker.go](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/src/worker.go).
 
 ```go
 func Greet(task *model.Task) (interface{}, error) {
@@ -144,7 +144,7 @@ func Greet(task *model.Task) (interface{}, error) {
 }
 ```
 
-To learn more about workers take a look at [Writing Workers with the Go SDK](https://github.com/conductor-oss/go-sdk/blob/main/docs/workers_sdk.md).
+To learn more about workers take a look at [Writing Workers with the Go SDK](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/workers_sdk.md).
 
 > [!note]
 > A single workflow can have task workers written in different languages and deployed anywhere, making your workflow polyglot and distributed!
@@ -153,7 +153,7 @@ To learn more about workers take a look at [Writing Workers with the Go SDK](htt
 
 The application is going to start the Greet worker (to execute tasks of type "greet") and it will register the workflow created in [step 1](#step-1-creating-the-workflow-by-code).
 
-To begin with, let's take a look at the variable declaration in [examples/hello_world/main.go](https://github.com/conductor-oss/go-sdk/blob/main/examples/hello_world/main.go).
+To begin with, let's take a look at the variable declaration in [examples/hello_world/main.go](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/hello_world/main.go).
 
 ```go
 
@@ -167,11 +167,11 @@ var (
 
 First we create an `APIClient` instance. This is a REST client. 
 
-We need to provide the correct settings to our client. In this example, `client.NewAPIClientFromEnv()` is used, which initializes a new client by reading the settings from the following environment variables: `CONDUCTOR_SERVER_URL`, `CONDUCTOR_AUTH_KEY`, and `CONDUCTOR_AUTH_SECRET`.
-`CONDUCTOR_CLIENT_HTTP_TIMEOUT` lets you configure the HTTP timeout for our client, in seconds. If not set, defaults to 30 seconds.
+We need to provide the correct settings to our client. In this example, `client.NewAPIClientFromEnv()` is used, which initializes a new client by reading the settings from the following environment variables: `AGENTMESH_SERVER_URL`, `AGENTMESH_AUTH_KEY`, and `AGENTMESH_AUTH_SECRET`.
+`AGENTMESH_CLIENT_HTTP_TIMEOUT` lets you configure the HTTP timeout for our client, in seconds. If not set, defaults to 30 seconds.
 
 > [!tip]
-> For advanced configuration options and detailed examples see the [API Client Configuration Guide](https://github.com/conductor-oss/go-sdk/blob/main/docs/api_client/README.md).
+> For advanced configuration options and detailed examples see the [API Client Configuration Guide](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/api_client/README.md).
 
 Now let's take a look at the `main` function:
 
@@ -219,26 +219,26 @@ The `taskRunner` uses the `apiClient` to poll for work and complete tasks. It al
 
 That simple line `taskRunner.StartWorker("greet", hello_world.Greet, 1, time.Millisecond*100)` is all that's needed to get our Greet worker up & running and processing tasks of type `"greet"`.
 
-The `workflowExecutor` gives us an abstraction on top of the `apiClient` to manage workflows. It is used under the hood by `ConductorWorkflow` to register the workflow and it's also used to start and monitor the execution.
+The `workflowExecutor` gives us an abstraction on top of the `apiClient` to manage workflows. It is used under the hood by `AgentMeshWorkflow` to register the workflow and it's also used to start and monitor the execution.
 
-#### Running the example with a local Conductor OSS server:
+#### Running the example with a local AgentMesh OSS server:
 ```shell
-export CONDUCTOR_SERVER_URL="http://localhost:8080/api"
+export AGENTMESH_SERVER_URL="http://localhost:8080/api"
 cd examples
 go run hello_world/main.go
 ```
 
 #### Running the example with an [Orkes developer account](https://developer.orkescloud.com).
 ```shell
-export CONDUCTOR_SERVER_URL="https://developer.orkescloud.com/api"
-export CONDUCTOR_AUTH_KEY="..."
-export CONDUCTOR_AUTH_SECRET="..."
+export AGENTMESH_SERVER_URL="https://developer.orkescloud.com/api"
+export AGENTMESH_AUTH_KEY="..."
+export AGENTMESH_AUTH_SECRET="..."
 cd examples
 go run hello_world/main.go
 ```
 
 > [!note]
-> Orkes Conductor requires authentication. [Get a key and secret from the server](https://orkes.io/content/how-to-videos/access-key-and-secret) to set those variables.
+> Orkes AgentMesh requires authentication. [Get a key and secret from the server](https://orkes.io/content/how-to-videos/access-key-and-secret) to set those variables.
 
 The above commands should give an output similar to
 ```shell
@@ -249,24 +249,24 @@ INFO[0000] Output of the workflow:map[Greetings:Hello, Gopher]
 ```
 
 ## Deprecated Methods
-Some methods in the SDK client interfaces are now deprecated. They’ve been replaced with newer methods that follow more consistent naming. Please refer to our [Migration Guide](https://github.com/conductor-oss/go-sdk/blob/main/docs/migration_guide.md) for detailed information on how to update your code.
+Some methods in the SDK client interfaces are now deprecated. They’ve been replaced with newer methods that follow more consistent naming. Please refer to our [Migration Guide](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/migration_guide.md) for detailed information on how to update your code.
 # Further Reading
 
-- [Writing Workers with the Go SDK](https://github.com/conductor-oss/go-sdk/blob/main/docs/workers_sdk.md)
-- [Authoring Workflows with the Go SDK](https://github.com/conductor-oss/go-sdk/blob/main/docs/workflow_sdk.md)
-- [Logging Configuration](https://github.com/conductor-oss/go-sdk/blob/main/docs/logger_sdk.md)
-- [Migration Guide: Deprecated Methods](https://github.com/conductor-oss/go-sdk/blob/main/docs/migration_guide.md)
-- [API Client Configuration](https://github.com/conductor-oss/go-sdk/blob/main/docs/api_client/README.md) - Complete guide to API client setup, authentication, and proxy configuration
-- [TLS Configuration Guide](https://github.com/conductor-oss/go-sdk/blob/main/docs/api_client/tls_configuration.md) - TLS/SSL configuration for self-signed certificates and mTLS
+- [Writing Workers with the Go SDK](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/workers_sdk.md)
+- [Authoring Workflows with the Go SDK](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/workflow_sdk.md)
+- [Logging Configuration](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/logger_sdk.md)
+- [Migration Guide: Deprecated Methods](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/migration_guide.md)
+- [API Client Configuration](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/api_client/README.md) - Complete guide to API client setup, authentication, and proxy configuration
+- [TLS Configuration Guide](https://github.com/agentmesh-oss/go-sdk/blob/main/docs/api_client/tls_configuration.md) - TLS/SSL configuration for self-signed certificates and mTLS
 
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/go-sdk/examples](https://github.com/conductor-oss/go-sdk/tree/main/examples)
+Browse all examples on GitHub: [agentmesh-oss/go-sdk/examples](https://github.com/agentmesh-oss/go-sdk/tree/main/examples)
 
 | Example | Type |
 |---|---|
-| [Readme](https://github.com/conductor-oss/go-sdk/blob/main/examples/README.md) | file |
-| [Api Gateway](https://github.com/conductor-oss/go-sdk/tree/main/examples/api_gateway) | directory |
-| [Hello World](https://github.com/conductor-oss/go-sdk/tree/main/examples/hello_world) | directory |
-| [Workflow](https://github.com/conductor-oss/go-sdk/tree/main/examples/workflow) | directory |
+| [Readme](https://github.com/agentmesh-oss/go-sdk/blob/main/examples/README.md) | file |
+| [Api Gateway](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/api_gateway) | directory |
+| [Hello World](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/hello_world) | directory |
+| [Workflow](https://github.com/agentmesh-oss/go-sdk/tree/main/examples/workflow) | directory |

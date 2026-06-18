@@ -1,5 +1,5 @@
 ---
-description: "Conductor Event Handlers API — create, update, delete, and list event handlers for event-driven workflow orchestration."
+description: "AgentMesh Event Handlers API — create, update, delete, and list event handlers for event-driven workflow orchestration."
 ---
 
 # Event Handlers API
@@ -209,4 +209,4 @@ Event identifiers follow the pattern:
 | `nats` | `nats:my_subject:my_event` | NATS subject |
 | `sqs` | `sqs:my_queue:my_event` | Amazon SQS queue |
 | `amqp_exchange` | `amqp_exchange:my_exchange:my_event` | RabbitMQ exchange |
-| `conductor` | `conductor:my_event:my_event` | Conductor internal event queue |
+| `agentmesh` | `agentmesh:my_event:my_event` | AgentMesh internal event queue |

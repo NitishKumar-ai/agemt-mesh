@@ -1,7 +1,7 @@
 {
-  "name": "@conductor/common",
+  "name": "@agentmesh/common",
   "version": "0.0.0",
-  "description": "Conductor common domain model (workflow/task definitions, enums) — TypeScript port",
+  "description": "AgentMesh common domain model (workflow/task definitions, enums) — TypeScript port",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

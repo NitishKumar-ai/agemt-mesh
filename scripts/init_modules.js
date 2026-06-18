@@ -15,7 +15,7 @@ const dirs = [
 dirs.forEach(dir => {
   if (fs.existsSync(dir)) {
     const pkg = {
-      name: `@conductor/${dir}`,
+      name: `@agentmesh/${dir}`,
       version: "0.0.0",
       private: true,
       main: "dist/index.js",

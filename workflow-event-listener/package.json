@@ -1,12 +1,20 @@
 {
-  "name": "@conductor/workflow-event-listener",
+  "name": "@agentmesh/workflow-event-listener",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
   }
 }

@@ -1,5 +1,5 @@
 ---
-description: "Do-While Task — loop over tasks in a Conductor workflow until a condition is met, with configurable iteration limits."
+description: "Do-While Task — loop over tasks in a AgentMesh workflow until a condition is met, with configurable iteration limits."
 ---
 # Do While
 ```json
@@ -99,7 +99,7 @@ For Do While loops with many iterations (e.g., 100+ iterations), storing all ite
 
 **How it works:**
 
-When `keepLastN` is specified in `inputParameters`, Conductor automatically removes old iteration data from both the database and the task output once the number of iterations exceeds the `keepLastN` value. For example, with `keepLastN: 5`:
+When `keepLastN` is specified in `inputParameters`, AgentMesh automatically removes old iteration data from both the database and the task output once the number of iterations exceeds the `keepLastN` value. For example, with `keepLastN: 5`:
 
 - Iterations 1-5: All iterations kept
 - Iteration 6: Iteration 1 is removed, keeping iterations 2-6
@@ -326,7 +326,7 @@ To evaluate the current iteration, the parameter `$.get_all_stars_loop_ref['iter
             "inputParameters": {
                 "counter": "${get_all_stars_loop_ref.output.iteration}",
                 "http_request": {
-                    "uri": "https://api.github.com/repos/ntflix/conductor/stargazers?page=${get_all_stars_loop_ref.output.iteration}&per_page=100",
+                    "uri": "https://api.github.com/repos/ntflix/agentmesh/stargazers?page=${get_all_stars_loop_ref.output.iteration}&per_page=100",
                     "method": "GET",
                     "headers": {
                         "Authorization": "token ${workflow.input.gh_token}",
@@ -341,9 +341,9 @@ To evaluate the current iteration, the parameter `$.get_all_stars_loop_ref['iter
 ```
 
 
-## Orkes Conductor compatibility
+## Orkes AgentMesh compatibility
 
-For compatibility with workflows migrated from Orkes Conductor, the `_items` parameter in `inputParameters` is also supported:
+For compatibility with workflows migrated from Orkes AgentMesh, the `_items` parameter in `inputParameters` is also supported:
 
 ```json
 {

@@ -1,4 +1,4 @@
-# CLAUDE.md — conductor (server repo)
+# CLAUDE.md — agentmesh (server repo)
 
 Instructions for Claude Code working in this repository.
 
@@ -6,18 +6,18 @@ Instructions for Claude Code working in this repository.
 
 Documentation in this project is **derived from source**, not composed from memory or intuition. The workflow is: open the source → read what's there → write the doc from what you find. The source is the spec; the doc is a rendering of it.
 
-Concrete reason this matters: a curl equivalent for `conductor workflow start --sync` was once written as `POST /api/workflow/{name}/run` — an endpoint that does not exist. Opening `WorkflowResource.java` first would have given the correct path (`POST /api/workflow/execute/{name}/{version}`) immediately.
+Concrete reason this matters: a curl equivalent for `agentmesh workflow start --sync` was once written as `POST /api/workflow/{name}/run` — an endpoint that does not exist. Opening `WorkflowResource.java` first would have given the correct path (`POST /api/workflow/execute/{name}/{version}`) immediately.
 
 ### For each content type, start here
 
 **REST endpoint or curl example**
-1. Open the controller: `rest/src/main/java/com/netflix/conductor/rest/controllers/`
+1. Open the controller: `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/`
 2. Find the method by its `@PostMapping`/`@GetMapping` annotation — copy the path literally.
 3. Read the method signature for query params, path variables, and request body.
 4. Write the curl from what you just read.
 
 **CLI command or flag**
-1. Open `conductor-cli/cmd/*.go` (separate repo under this workspace).
+1. Open `agentmesh-cli/cmd/*.go` (separate repo under this workspace).
 2. Find the `cobra.Command` for the subcommand and read its `Flags()` declarations.
 3. Write the example from what you just read — flag names, types, and defaults.
 
@@ -48,10 +48,10 @@ If a running server or CLI is unavailable:
 
 | Content | Where to look |
 |---|---|
-| REST API routes | `rest/src/main/java/com/netflix/conductor/rest/controllers/` |
+| REST API routes | `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/` |
 | Workflow sync execution | `WorkflowResource.java` → `executeWorkflow()` at `@PostMapping("execute/{name}/{version}")` |
 | Task routes | `TaskResource.java` |
-| CLI subcommands and flags | `conductor-cli/cmd/workflow.go`, `cmd/task.go`, etc. |
+| CLI subcommands and flags | `agentmesh-cli/cmd/workflow.go`, `cmd/task.go`, etc. |
 
 ## Other Guidelines
 

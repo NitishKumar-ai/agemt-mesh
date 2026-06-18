@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — copy-paste workflow orchestration recipes for microservice orchestration, dynamic parallelism, event-driven patterns, AI agent orchestration, LLM orchestration, workflow automation, and RAG pipelines."
+description: "AgentMesh cookbook — copy-paste workflow orchestration recipes for microservice orchestration, dynamic parallelism, event-driven patterns, AI agent orchestration, LLM orchestration, workflow automation, and RAG pipelines."
 ---
 
 # Cookbook

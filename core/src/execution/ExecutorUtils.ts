@@ -1,4 +1,4 @@
-import type { WorkflowDef, WorkflowTask } from '@conductor/common';
+import type { WorkflowDef, WorkflowTask } from '@agentmesh/common';
 import type { WorkflowModel } from './types.js';
 
 export const DECIDER_QUEUE = 'decider';

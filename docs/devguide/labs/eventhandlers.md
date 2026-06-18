@@ -1,16 +1,16 @@
 ---
-description: "Event Handlers Lab — hands-on tutorial for publishing events and triggering Conductor workflows with event handlers."
+description: "Event Handlers Lab — hands-on tutorial for publishing events and triggering AgentMesh workflows with event handlers."
 ---
 # Events and Event Handlers
 
 In this exercise, we shall:
 
-* Publish an Event to Conductor using `Event` task.
+* Publish an Event to AgentMesh using `Event` task.
 * Subscribe to Events, and perform actions:
     * Start a Workflow
     * Complete Task
 
-Conductor supports eventing with two Interfaces:
+AgentMesh supports eventing with two Interfaces:
 
 * [Event Task](../../documentation/configuration/workflowdef/systemtasks/event-task.md)
 * [Event Handlers](../../documentation/configuration/eventhandlers.md)
@@ -34,7 +34,7 @@ Send `POST` requests to `/metadata/workflow` endpoint with below payloads:
       "name": "test_start_workflow_event",
       "taskReferenceName": "start_workflow_with_event",
       "type": "EVENT",
-      "sink": "conductor"
+      "sink": "agentmesh"
     },
     {
       "name": "test_task_tobe_completed_by_eventHandler",
@@ -58,7 +58,7 @@ Send `POST` requests to `/metadata/workflow` endpoint with below payloads:
         "sourceWorkflowId": "${workflow.input.sourceWorkflowId}"
       },
       "type": "EVENT",
-      "sink": "conductor"
+      "sink": "agentmesh"
     }
   ]
 }
@@ -71,7 +71,7 @@ Hence, we will not be registering any tasks for these workflows.
 
 ### Events are sent, but they're not handled (yet)
 
-Once you try to start `test_workflow_for_eventHandler` workflow, you would notice that the event is sent successfully, but the second worflow `test_workflow_startedBy_eventHandler` is not started. We have sent the Events, but we also need to define `Event Handlers` for Conductor to take any `actions` based on the Event. Let's create `Event Handlers`.
+Once you try to start `test_workflow_for_eventHandler` workflow, you would notice that the event is sent successfully, but the second worflow `test_workflow_startedBy_eventHandler` is not started. We have sent the Events, but we also need to define `Event Handlers` for AgentMesh to take any `actions` based on the Event. Let's create `Event Handlers`.
 
 ## Create Event Handlers
 
@@ -85,9 +85,9 @@ Event Handler definitions are pretty much like Task or Workflow definitions. We 
 
 Event Handler should know the Queue it has to listen to. This should be defined in `event` parameter.
 
-When using Conductor queues, define `event` with format: 
+When using AgentMesh queues, define `event` with format: 
 
-```conductor:{workflow_name}:{taskReferenceName}```
+```agentmesh:{workflow_name}:{taskReferenceName}```
 
 And when using SQS, define with format: 
 
@@ -96,7 +96,7 @@ And when using SQS, define with format:
 ```json
 {
   "name": "test_start_workflow",
-  "event": "conductor:test_workflow_for_eventHandler:start_workflow_with_event"
+  "event": "agentmesh:test_workflow_for_eventHandler:start_workflow_with_event"
 }
 ```
 
@@ -105,7 +105,7 @@ Event Handler can perform a list of actions defined in `actions` array parameter
 ```json
 {
   "name": "test_start_workflow",
-  "event": "conductor:test_workflow_for_eventHandler:start_workflow_with_event",
+  "event": "agentmesh:test_workflow_for_eventHandler:start_workflow_with_event",
   "actions": [
       "<insert-actions-here>"
   ],
@@ -132,7 +132,7 @@ Send a `POST` request to `/event` endpoint:
 ```json
 {
   "name": "test_start_workflow",
-  "event": "conductor:test_workflow_for_eventHandler:start_workflow_with_event",
+  "event": "agentmesh:test_workflow_for_eventHandler:start_workflow_with_event",
   "actions": [
     {
       "action": "start_workflow",
@@ -153,7 +153,7 @@ Similarly, create another Event Handler to complete task.
 ```json
 {
   "name": "test_complete_task_event",
-  "event": "conductor:test_workflow_startedBy_eventHandler:complete_task_with_event",
+  "event": "agentmesh:test_workflow_startedBy_eventHandler:complete_task_with_event",
   "actions": [
     {
     	"action": "complete_task",

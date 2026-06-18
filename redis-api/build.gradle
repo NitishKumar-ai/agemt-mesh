@@ -1,3 +1,0 @@
-dependencies {
-    api "redis.clients:jedis:${revJedis}"
-}

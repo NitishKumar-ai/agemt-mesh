@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — dynamic parallelism recipes with Dynamic Fork for different tasks per branch, fan-out with same task, and parallel sub-workflows."
+description: "AgentMesh cookbook — dynamic parallelism recipes with Dynamic Fork for different tasks per branch, fan-out with same task, and parallel sub-workflows."
 ---
 
 # Dynamic parallelism
@@ -92,7 +92,7 @@ Use `forkTaskName` + `forkTaskInputs` when running the **same** task type across
 ```
 
 !!! tip
-    Conductor injects `__index` into each fork's input so you can track the position of each parallel branch in the results.
+    AgentMesh injects `__index` into each fork's input so you can track the position of each parallel branch in the results.
 
 **Register and run:**
 

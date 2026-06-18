@@ -1,4 +1,4 @@
-import { TaskModel, WorkflowModel, EventExecution, TaskExecLog } from '@conductor/common';
+import { TaskModel, WorkflowModel, EventExecution, TaskExecLog } from '@agentmesh/common';
 
 export interface ExecutionDAO {
   getPendingTasksByWorkflow(taskName: string, workflowId: string): Promise<TaskModel[]>;

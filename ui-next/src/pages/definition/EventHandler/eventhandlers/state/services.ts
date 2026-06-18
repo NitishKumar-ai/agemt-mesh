@@ -60,7 +60,7 @@ export const fetchEventHandler = async (
   }: SaveEventHandlerMachineContext,
   __: any,
 ) => {
-  // OSS Conductor doesn't have a /event/handler/{name} endpoint
+  // OSS AgentMesh doesn't have a /event/handler/{name} endpoint
   // We need to fetch all event handlers and filter by name
   const path = "/event";
 

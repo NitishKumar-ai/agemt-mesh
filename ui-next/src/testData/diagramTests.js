@@ -873,7 +873,7 @@ export const kitchenSink = {
       forkTasks: [],
       startDelay: 0,
       joinOn: [],
-      sink: "conductor",
+      sink: "agentmesh",
       optional: false,
       defaultExclusiveJoinTask: [],
       asyncComplete: false,
@@ -1087,7 +1087,7 @@ export const kitchenSink = {
       taskReferenceName: "get_es_1",
       inputParameters: {
         http_request: {
-          uri: "http://localhost:9200/conductor/_search?size=10",
+          uri: "http://localhost:9200/agentmesh/_search?size=10",
           method: "GET",
         },
       },
@@ -2230,7 +2230,7 @@ export const unConnectedSwitch = {
       name: "sample_task_name_event",
       taskReferenceName: "sample_task_name_4a2rf_ref",
       type: "EVENT",
-      sink: "conductor:internal_event_name",
+      sink: "agentmesh:internal_event_name",
     },
     unConnectedSwitchTask,
     {
@@ -2274,7 +2274,7 @@ export const switchTaskWithADecisionButNoTerminateTasks = {
         type: "HTTP",
         inputParameters: {
           http_request: {
-            uri: "https://orkes-api-tester.orkesconductor.com/get",
+            uri: "https://orkes-api-tester.orkesagentmesh.com/get",
             method: "GET",
           },
         },
@@ -2296,7 +2296,7 @@ export const workflowWithASwitchWithoutTermination = {
       name: "sample_task_name_event",
       taskReferenceName: "sample_task_name_4a2rf_ref",
       type: "EVENT",
-      sink: "conductor:internal_event_name",
+      sink: "agentmesh:internal_event_name",
     },
     switchTaskWithADecisionButNoTerminateTasks,
     {
@@ -2335,7 +2335,7 @@ export const workflowWithSwitchWithinSwitchUnterminated = {
       name: "sample_task_name_event",
       taskReferenceName: "sample_task_name_4a2rf_ref",
       type: "EVENT",
-      sink: "conductor:internal_event_name",
+      sink: "agentmesh:internal_event_name",
     },
     {
       name: "sample_task_name_switch",
@@ -2352,7 +2352,7 @@ export const workflowWithSwitchWithinSwitchUnterminated = {
             type: "HTTP",
             inputParameters: {
               http_request: {
-                uri: "https://orkes-api-tester.orkesconductor.com/get",
+                uri: "https://orkes-api-tester.orkesagentmesh.com/get",
                 method: "GET",
               },
             },
@@ -2528,7 +2528,7 @@ export const subWorkflowWithinAFork = {
             name: "sample_task_name_event",
             taskReferenceName: "sample_task_name_event_rws94_ref",
             type: "EVENT",
-            sink: "conductor:internal_event_name",
+            sink: "agentmesh:internal_event_name",
           },
         ],
         [
@@ -2665,7 +2665,7 @@ export const nestedForkJoin = {
             type: "HTTP",
             inputParameters: {
               http_request: {
-                uri: "https://orkes-api-tester.orkesconductor.com/get",
+                uri: "https://orkes-api-tester.orkesagentmesh.com/get",
                 method: "GET",
                 connectionTimeOut: 3000,
                 readTimeOut: 3000,
@@ -2678,7 +2678,7 @@ export const nestedForkJoin = {
             name: "sample_task_name_event_erts_ref",
             taskReferenceName: "sample_task_name_event_erts_ref",
             type: "EVENT",
-            sink: "conductor:internal_event_name",
+            sink: "agentmesh:internal_event_name",
           },
         ],
       ],
@@ -2702,7 +2702,7 @@ export const nestedForkJoin = {
       type: "HTTP",
       inputParameters: {
         http_request: {
-          uri: "https://orkes-api-tester.orkesconductor.com/get",
+          uri: "https://orkes-api-tester.orkesagentmesh.com/get",
           method: "GET",
           connectionTimeOut: 3000,
           readTimeOut: 3000,
@@ -2757,7 +2757,7 @@ export const nestedForkJoin = {
             type: "HTTP",
             inputParameters: {
               http_request: {
-                uri: "https://orkes-api-tester.orkesconductor.com/get",
+                uri: "https://orkes-api-tester.orkesagentmesh.com/get",
                 method: "GET",
                 connectionTimeOut: 3000,
                 readTimeOut: 3000,
@@ -2893,7 +2893,7 @@ export const switchExecutionDefaultByEvaluationResultNull = {
         method: "GET",
         asyncComplete: false,
         readTimeOut: "3000",
-        uri: "https://orkes-api-tester.orkesconductor.com/api",
+        uri: "https://orkes-api-tester.orkesagentmesh.com/api",
         connectionTimeOut: 3000,
         contentType: "application/json",
         accept: "application/json",
@@ -2977,7 +2977,7 @@ export const decisionExecutionDataWithValidCase = {
         name: "http",
         taskReferenceName: "http_ref",
         inputParameters: {
-          uri: "https://orkes-api-tester.orkesconductor.com/api",
+          uri: "https://orkes-api-tester.orkesagentmesh.com/api",
           method: "GET",
           accept: "application/json",
           contentType: "application/json",
@@ -3002,7 +3002,7 @@ export const decisionExecutionDataWithValidCase = {
         name: "http_1",
         taskReferenceName: "http_ref_1",
         inputParameters: {
-          uri: "https://orkes-api-tester.orkesconductor.com/api",
+          uri: "https://orkes-api-tester.orkesagentmesh.com/api",
           method: "GET",
           accept: "application/json",
           contentType: "application/json",
@@ -3028,7 +3028,7 @@ export const decisionExecutionDataWithValidCase = {
         name: "http_2",
         taskReferenceName: "http_ref_2",
         inputParameters: {
-          uri: "https://orkes-api-tester.orkesconductor.com/api",
+          uri: "https://orkes-api-tester.orkesagentmesh.com/api",
           method: "GET",
           accept: "application/json",
           contentType: "application/json",
@@ -3054,7 +3054,7 @@ export const decisionExecutionDataWithValidCase = {
       name: "http_3",
       taskReferenceName: "http_ref_3",
       inputParameters: {
-        uri: "https://orkes-api-tester.orkesconductor.com/api",
+        uri: "https://orkes-api-tester.orkesagentmesh.com/api",
         method: "GET",
         accept: "application/json",
         contentType: "application/json",

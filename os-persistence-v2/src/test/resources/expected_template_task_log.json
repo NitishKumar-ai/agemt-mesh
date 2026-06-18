@@ -1,5 +1,5 @@
 {
-  "index_patterns" : [ "*conductor_task*log*" ],
+  "index_patterns" : [ "*agentmesh_task*log*" ],
   "priority" : 1,
   "template" : {
     "settings" : {

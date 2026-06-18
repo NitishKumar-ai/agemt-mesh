@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TaskType, TaskStatus, isTaskTerminal, isTaskSuccessful, type WorkflowTask } from '@conductor/common';
+import { TaskType, TaskStatus, isTaskTerminal, isTaskSuccessful, type WorkflowTask } from '@agentmesh/common';
 import { SystemTaskRegistry, WorkflowSystemTask, Noop, Fork, Join, ExclusiveJoin, Terminate, TERMINATION_STATUS_PARAMETER, TERMINATION_REASON_PARAMETER, createTaskModel, createWorkflowModel, copyTaskModel, type TaskModel, type WorkflowModel, type WorkflowExecutor, type TaskMapper, TaskMapperContext, SimpleTaskMapper, ForkJoinTaskMapper, SwitchTaskMapper, TerminateTaskMapper, DeciderService, DeciderOutcome, getTaskByRefName, getNextTask, workflowTaskHas } from '../src/index.js';
 
 function mockExecutor(): WorkflowExecutor {

@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import type { ExecutionDAO } from '../src/ExecutionDAO.js';
-import type { TaskModel, WorkflowModel, EventExecution, TaskExecLog } from '@conductor/common';
+import type { TaskModel, WorkflowModel, EventExecution, TaskExecLog } from '@agentmesh/common';
 
 export function runExecutionDAOContractTests(
   daoProvider: () => Promise<ExecutionDAO>,

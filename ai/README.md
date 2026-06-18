@@ -1,6 +1,6 @@
-# Conductor AI Module
+# AgentMesh AI Module
 
-The Conductor AI module provides built-in integration with 12 popular LLM providers and vector databases, enabling AI-powered workflows through simple task definitions -- including chat, embeddings, image generation, audio synthesis, video generation, document generation, and tool calling.
+The AgentMesh AI module provides built-in integration with 12 popular LLM providers and vector databases, enabling AI-powered workflows through simple task definitions -- including chat, embeddings, image generation, audio synthesis, video generation, document generation, and tool calling.
 
 ## Table of Contents
 - [Supported Providers](#supported-providers)
@@ -424,13 +424,13 @@ Add to your `application.properties` or `application.yml`:
 
 ```properties
 # Enable AI integrations and workers (default: false, must be explicitly enabled)
-conductor.integrations.ai.enabled=true
+agentmesh.integrations.ai.enabled=true
 
 # Payload storage location for large AI inputs/outputs (optional)
-conductor.ai.payload-store-location=/tmp/conductor-ai
+agentmesh.ai.payload-store-location=/tmp/agentmesh-ai
 ```
 
-> **Note**: AI workers are disabled by default. You must set `conductor.integrations.ai.enabled=true` to enable them.
+> **Note**: AI workers are disabled by default. You must set `agentmesh.integrations.ai.enabled=true` to enable them.
 
 ### Vector Database Configuration
 
@@ -445,9 +445,9 @@ JDBC connections support multiple named instances for the `JDBC` worker task. Fo
 #### OpenAI
 
 ```properties
-conductor.ai.openai.api-key=${OPENAI_API_KEY}
-conductor.ai.openai.base-url=https://api.openai.com/v1
-conductor.ai.openai.organization-id=org-xxxxx
+agentmesh.ai.openai.api-key=${OPENAI_API_KEY}
+agentmesh.ai.openai.base-url=https://api.openai.com/v1
+agentmesh.ai.openai.organization-id=org-xxxxx
 ```
 
 | Property | Required | Default | Description |
@@ -459,10 +459,10 @@ conductor.ai.openai.organization-id=org-xxxxx
 #### Anthropic
 
 ```properties
-conductor.ai.anthropic.api-key=${ANTHROPIC_API_KEY}
-conductor.ai.anthropic.base-url=https://api.anthropic.com
-conductor.ai.anthropic.version=2023-06-01
-conductor.ai.anthropic.beta-version=prompt-caching-2024-07-31
+agentmesh.ai.anthropic.api-key=${ANTHROPIC_API_KEY}
+agentmesh.ai.anthropic.base-url=https://api.anthropic.com
+agentmesh.ai.anthropic.version=2023-06-01
+agentmesh.ai.anthropic.beta-version=prompt-caching-2024-07-31
 ```
 
 | Property | Required | Default | Description |
@@ -484,7 +484,7 @@ Two authentication paths are supported:
 Just set `GEMINI_API_KEY` — works for chat, tool calling, image gen, audio gen, and video gen. No GCP project or service account needed.
 
 ```properties
-conductor.ai.gemini.api-key=${GEMINI_API_KEY}
+agentmesh.ai.gemini.api-key=${GEMINI_API_KEY}
 ```
 
 **Option 2: Vertex AI with GCP credentials (enterprise)**
@@ -492,9 +492,9 @@ conductor.ai.gemini.api-key=${GEMINI_API_KEY}
 For users who need Vertex AI features (VPC-SC, CMEK, private endpoints), use GCP IAM credentials.
 
 ```properties
-conductor.ai.gemini.project-id=${GOOGLE_CLOUD_PROJECT}
-conductor.ai.gemini.location=us-central1
-conductor.ai.gemini.publisher=google
+agentmesh.ai.gemini.project-id=${GOOGLE_CLOUD_PROJECT}
+agentmesh.ai.gemini.location=us-central1
+agentmesh.ai.gemini.publisher=google
 ```
 
 | Property | Required | Default | Description |
@@ -505,15 +505,15 @@ conductor.ai.gemini.publisher=google
 | `base-url` | ❌ | `{location}-aiplatform.googleapis.com:443` | API endpoint (Vertex AI path only) |
 | `publisher` | ❌ | - | Model publisher |
 
-> **How it works**: When only `api-key` is set (no GCP credentials), Conductor uses Spring AI's `GoogleGenAiChatModel` which calls the Google AI Studio REST API directly. When GCP credentials are available (`GOOGLE_APPLICATION_CREDENTIALS` or Workload Identity), it uses `VertexAiGeminiChatModel` with gRPC. Both paths support chat completion with tool calling.
+> **How it works**: When only `api-key` is set (no GCP credentials), AgentMesh uses Spring AI's `GoogleGenAiChatModel` which calls the Google AI Studio REST API directly. When GCP credentials are available (`GOOGLE_APPLICATION_CREDENTIALS` or Workload Identity), it uses `VertexAiGeminiChatModel` with gRPC. Both paths support chat completion with tool calling.
 
 #### Azure OpenAI
 
 ```properties
-conductor.ai.azureopenai.api-key=${AZURE_OPENAI_API_KEY}
-conductor.ai.azureopenai.base-url=${AZURE_OPENAI_ENDPOINT}
-conductor.ai.azureopenai.deployment-name=gpt-4o-mini
-conductor.ai.azureopenai.user=your-user-id
+agentmesh.ai.azureopenai.api-key=${AZURE_OPENAI_API_KEY}
+agentmesh.ai.azureopenai.base-url=${AZURE_OPENAI_ENDPOINT}
+agentmesh.ai.azureopenai.deployment-name=gpt-4o-mini
+agentmesh.ai.azureopenai.user=your-user-id
 ```
 
 | Property | Required | Default | Description |
@@ -526,11 +526,11 @@ conductor.ai.azureopenai.user=your-user-id
 #### AWS Bedrock
 
 ```properties
-conductor.ai.bedrock.access-key=${AWS_ACCESS_KEY_ID}
-conductor.ai.bedrock.secret-key=${AWS_SECRET_ACCESS_KEY}
-conductor.ai.bedrock.region=us-east-1
+agentmesh.ai.bedrock.access-key=${AWS_ACCESS_KEY_ID}
+agentmesh.ai.bedrock.secret-key=${AWS_SECRET_ACCESS_KEY}
+agentmesh.ai.bedrock.region=us-east-1
 # OR use bearer token for AWS SSO/temporary credentials
-conductor.ai.bedrock.bearer-token=${AWS_SESSION_TOKEN}
+agentmesh.ai.bedrock.bearer-token=${AWS_SESSION_TOKEN}
 ```
 
 | Property | Required | Default | Description |
@@ -545,8 +545,8 @@ conductor.ai.bedrock.bearer-token=${AWS_SESSION_TOKEN}
 #### Mistral AI
 
 ```properties
-conductor.ai.mistral.api-key=${MISTRAL_API_KEY}
-conductor.ai.mistral.base-url=https://api.mistral.ai
+agentmesh.ai.mistral.api-key=${MISTRAL_API_KEY}
+agentmesh.ai.mistral.base-url=https://api.mistral.ai
 ```
 
 | Property | Required | Default | Description |
@@ -557,8 +557,8 @@ conductor.ai.mistral.base-url=https://api.mistral.ai
 #### Cohere
 
 ```properties
-conductor.ai.cohere.api-key=${COHERE_API_KEY}
-conductor.ai.cohere.base-url=https://api.cohere.ai
+agentmesh.ai.cohere.api-key=${COHERE_API_KEY}
+agentmesh.ai.cohere.base-url=https://api.cohere.ai
 ```
 
 | Property | Required | Default | Description |
@@ -569,8 +569,8 @@ conductor.ai.cohere.base-url=https://api.cohere.ai
 #### Grok (xAI)
 
 ```properties
-conductor.ai.grok.api-key=${GROK_API_KEY}
-conductor.ai.grok.base-url=https://api.x.ai/v1
+agentmesh.ai.grok.api-key=${GROK_API_KEY}
+agentmesh.ai.grok.base-url=https://api.x.ai/v1
 ```
 
 | Property | Required | Default | Description |
@@ -581,8 +581,8 @@ conductor.ai.grok.base-url=https://api.x.ai/v1
 #### Perplexity AI
 
 ```properties
-conductor.ai.perplexity.api-key=${PERPLEXITY_API_KEY}
-conductor.ai.perplexity.base-url=https://api.perplexity.ai
+agentmesh.ai.perplexity.api-key=${PERPLEXITY_API_KEY}
+agentmesh.ai.perplexity.base-url=https://api.perplexity.ai
 ```
 
 | Property | Required | Default | Description |
@@ -593,8 +593,8 @@ conductor.ai.perplexity.base-url=https://api.perplexity.ai
 #### HuggingFace
 
 ```properties
-conductor.ai.huggingface.api-key=${HUGGINGFACE_API_KEY}
-conductor.ai.huggingface.base-url=https://api-inference.huggingface.co/models
+agentmesh.ai.huggingface.api-key=${HUGGINGFACE_API_KEY}
+agentmesh.ai.huggingface.base-url=https://api-inference.huggingface.co/models
 ```
 
 | Property | Required | Default | Description |
@@ -605,9 +605,9 @@ conductor.ai.huggingface.base-url=https://api-inference.huggingface.co/models
 #### Ollama (Local)
 
 ```properties
-conductor.ai.ollama.base-url=http://localhost:11434
-conductor.ai.ollama.auth-header-name=Authorization
-conductor.ai.ollama.auth-header=Bearer token-here
+agentmesh.ai.ollama.base-url=http://localhost:11434
+agentmesh.ai.ollama.auth-header-name=Authorization
+agentmesh.ai.ollama.auth-header=Bearer token-here
 ```
 
 | Property | Required | Default | Description |
@@ -619,7 +619,7 @@ conductor.ai.ollama.auth-header=Bearer token-here
 #### Stability AI
 
 ```properties
-conductor.ai.stabilityai.api-key=${STABILITY_API_KEY}
+agentmesh.ai.stabilityai.api-key=${STABILITY_API_KEY}
 ```
 
 | Property | Required | Default | Description |
@@ -675,7 +675,7 @@ $env:ANTHROPIC_API_KEY = "sk-ant-your-api-key"
 ./gradlew bootRun
 ```
 
-> **Note**: Explicit property values in `application.properties` or external configuration files (e.g., `conductor.properties`) take precedence over environment variables.
+> **Note**: Explicit property values in `application.properties` or external configuration files (e.g., `agentmesh.properties`) take precedence over environment variables.
 
 ## Docker
 
@@ -688,7 +688,7 @@ docker run -d \
   -p 8080:8080 \
   -e OPENAI_API_KEY=sk-your-api-key \
   -e ANTHROPIC_API_KEY=sk-ant-your-api-key \
-  conductor:server
+  agentmesh:server
 ```
 
 ### Docker Compose
@@ -698,8 +698,8 @@ Create a `docker-compose.yml`:
 ```yaml
 version: '3.8'
 services:
-  conductor:
-    image: conductor:server
+  agentmesh:
+    image: agentmesh:server
     ports:
       - "8080:8080"
     environment:
@@ -731,7 +731,7 @@ docker-compose up -d
 docker run -d \
   -p 8080:8080 \
   -e GEMINI_API_KEY=your-api-key \
-  conductor:server
+  agentmesh:server
 ```
 
 This enables chat, tool calling, image gen, audio gen, and video gen — no GCP project needed.
@@ -744,7 +744,7 @@ docker run -d \
   -e GOOGLE_CLOUD_PROJECT=your-project-id \
   -e GOOGLE_APPLICATION_CREDENTIALS=/app/config/credentials.json \
   -v /path/to/credentials.json:/app/config/credentials.json:ro \
-  conductor:server
+  agentmesh:server
 ```
 
 When running on GKE with Workload Identity, credentials are provided automatically by the platform.
@@ -759,7 +759,7 @@ docker run -d \
   -e AWS_ACCESS_KEY_ID=your-access-key \
   -e AWS_SECRET_ACCESS_KEY=your-secret-key \
   -e AWS_REGION=us-east-1 \
-  conductor:server
+  agentmesh:server
 ```
 
 Or mount your AWS credentials directory:
@@ -768,7 +768,7 @@ Or mount your AWS credentials directory:
 docker run -d \
   -p 8080:8080 \
   -v ~/.aws:/root/.aws:ro \
-  conductor:server
+  agentmesh:server
 ```
 
 ## Sample Workflows
@@ -835,7 +835,7 @@ docker run -d \
       "inputParameters": {
         "llmProvider": "openai",
         "model": "text-embedding-3-small",
-        "text": "Conductor is an orchestration platform"
+        "text": "AgentMesh is an orchestration platform"
       }
     }
   ]
@@ -932,7 +932,7 @@ docker run -d \
         "index": "tech_docs",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
-        "text": "Conductor is a workflow orchestration platform",
+        "text": "AgentMesh is a workflow orchestration platform",
         "docId": "doc_001"
       }
     },
@@ -961,7 +961,7 @@ docker run -d \
     {
       "docId": "doc_001",
       "score": 0.95,
-      "text": "Conductor is a workflow orchestration platform"
+      "text": "AgentMesh is a workflow orchestration platform"
     }
   ]
 }
@@ -1035,7 +1035,7 @@ A self-contained workflow that indexes documents, searches them, and generates a
         "index": "demo_index",
         "namespace": "demo_docs",
         "docId": "intro-001",
-        "text": "Conductor is a distributed workflow orchestration engine that runs in the cloud. It allows developers to build complex stateful applications by orchestrating microservices.",
+        "text": "AgentMesh is a distributed workflow orchestration engine that runs in the cloud. It allows developers to build complex stateful applications by orchestrating microservices.",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -1051,7 +1051,7 @@ A self-contained workflow that indexes documents, searches them, and generates a
         "index": "demo_index",
         "namespace": "demo_docs",
         "docId": "features-002",
-        "text": "Conductor supports multiple vector databases including PostgreSQL (pgvector), MongoDB Atlas, and Pinecone. It also integrates with LLM providers like OpenAI, Anthropic, and Azure OpenAI.",
+        "text": "AgentMesh supports multiple vector databases including PostgreSQL (pgvector), MongoDB Atlas, and Pinecone. It also integrates with LLM providers like OpenAI, Anthropic, and Azure OpenAI.",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -1082,7 +1082,7 @@ A self-contained workflow that indexes documents, searches them, and generates a
         "vectorDB": "postgres-prod",
         "index": "demo_index",
         "namespace": "demo_docs",
-        "query": "What vector databases does Conductor support?",
+        "query": "What vector databases does AgentMesh support?",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -1103,7 +1103,7 @@ A self-contained workflow that indexes documents, searches them, and generates a
           },
           {
             "role": "user",
-            "message": "Context:\n${search_ref.output.result}\n\nQuestion: What vector databases does Conductor support?"
+            "message": "Context:\n${search_ref.output.result}\n\nQuestion: What vector databases does AgentMesh support?"
           }
         ],
         "temperature": 0.2
@@ -1450,7 +1450,7 @@ Generate a PDF document from markdown content with layout options and metadata:
         "theme": "default",
         "pdfMetadata": {
           "title": "Sales Report - Q4 2025",
-          "author": "Conductor Workflow"
+          "author": "AgentMesh Workflow"
         }
       }
     }
@@ -1462,12 +1462,12 @@ Generate a PDF document from markdown content with layout options and metadata:
 ```json
 {
   "result": {
-    "location": "file:///tmp/conductor/wf-123/task-456/abc.pdf",
+    "location": "file:///tmp/agentmesh/wf-123/task-456/abc.pdf",
     "sizeBytes": 12345
   },
   "media": [
     {
-      "location": "file:///tmp/conductor/wf-123/task-456/abc.pdf",
+      "location": "file:///tmp/agentmesh/wf-123/task-456/abc.pdf",
       "mimeType": "application/pdf"
     }
   ],
@@ -1516,7 +1516,7 @@ A multi-step workflow that uses an LLM to generate a markdown report and then co
         "pageSize": "A4",
         "pdfMetadata": {
           "title": "${workflow.input.topic}",
-          "author": "Conductor AI Pipeline"
+          "author": "AgentMesh AI Pipeline"
         }
       }
     }
@@ -1541,7 +1541,7 @@ A multi-step workflow that uses an LLM to generate a markdown report and then co
 ```json
 {
   "reportMarkdown": "# Cloud Migration Best Practices\n\n## Executive Summary\n...",
-  "pdfLocation": "file:///tmp/conductor/wf-789/task-012/report.pdf",
+  "pdfLocation": "file:///tmp/agentmesh/wf-789/task-012/report.pdf",
   "pdfSizeBytes": 28456
 }
 ```
@@ -1591,14 +1591,14 @@ AI workers are **disabled by default** for security. Enable them explicitly:
 
 ```properties
 # Enable all AI workers and integrations
-conductor.integrations.ai.enabled=true
+agentmesh.integrations.ai.enabled=true
 ```
 
 To disable:
 
 ```properties
 # Disable all AI workers (or simply omit the property)
-conductor.integrations.ai.enabled=false
+agentmesh.integrations.ai.enabled=false
 ```
 
 ### Conditional Provider Registration
@@ -1607,10 +1607,10 @@ Providers are automatically registered only when their API keys are configured. 
 
 ```properties
 # OpenAI will be registered
-conductor.ai.openai.api-key=sk-xxx
+agentmesh.ai.openai.api-key=sk-xxx
 
 # Anthropic will NOT be registered (commented out)
-# conductor.ai.anthropic.api-key=sk-ant-xxx
+# agentmesh.ai.anthropic.api-key=sk-ant-xxx
 ```
 
 ### Environment-Based Configuration
@@ -1636,14 +1636,14 @@ The module includes integration tests that run against real APIs when credential
 
 ```bash
 # Run all tests (integration tests skipped if no API keys)
-./gradlew :conductor-ai:test
+./gradlew :agentmesh-ai:test
 
 # Run with real OpenAI API
 export OPENAI_API_KEY=sk-xxx
-./gradlew :conductor-ai:test
+./gradlew :agentmesh-ai:test
 
 # Run without integration tests
-env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY ./gradlew :conductor-ai:test
+env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY ./gradlew :agentmesh-ai:test
 ```
 
 ### Test Environment Variables
@@ -1664,4 +1664,4 @@ env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY ./gradlew :conductor-ai:test
 
 ## License
 
-Copyright 2026 Conductor Authors. Licensed under the Apache License 2.0.
+Copyright 2026 AgentMesh Authors. Licensed under the Apache License 2.0.

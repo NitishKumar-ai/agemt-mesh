@@ -1,20 +1,20 @@
 ---
-description: "Workflow as code — build code-first workflows dynamically in Python using the Conductor SDK. Conditional branching, loops, parallel execution, and runtime-generated dynamic workflows."
+description: "Workflow as code — build code-first workflows dynamically in Python using the AgentMesh SDK. Conditional branching, loops, parallel execution, and runtime-generated dynamic workflows."
 ---
 
 # Dynamic workflows in code
 
 ## Workflow as code
 
-Conductor supports a code-first workflow approach — build workflows programmatically using the Python SDK instead of writing JSON by hand. This workflow as code pattern lets you chain tasks with the `>>` operator, add conditional logic, loops, and parallel branches — all in Python. Code-first workflows are ideal for dynamic workflows where the task graph is determined at runtime.
+AgentMesh supports a code-first workflow approach — build workflows programmatically using the Python SDK instead of writing JSON by hand. This workflow as code pattern lets you chain tasks with the `>>` operator, add conditional logic, loops, and parallel branches — all in Python. Code-first workflows are ideal for dynamic workflows where the task graph is determined at runtime.
 
 ### Simple sequential workflow
 
 Chain tasks with the `>>` operator. Worker functions decorated with `@worker_task` become reusable task building blocks.
 
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.worker.worker_task import worker_task
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.worker.worker_task import worker_task
 
 
 @worker_task(task_definition_name='fetch_order')
@@ -32,7 +32,7 @@ def ship_order(order_id: str, transaction_id: str) -> dict:
     return {'tracking': 'TRACK-456', 'carrier': 'FedEx'}
 
 
-workflow = ConductorWorkflow(name='order_fulfillment', version=1, executor=executor)
+workflow = AgentMeshWorkflow(name='order_fulfillment', version=1, executor=executor)
 
 fetch = fetch_order(task_ref_name='fetch', order_id=workflow.input('order_id'))
 pay = process_payment(
@@ -61,11 +61,11 @@ workflow.register(overwrite=True)
 Route execution based on task output or workflow input. Each case gets its own task chain.
 
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.workflow.task.switch_task import SwitchTask
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.workflow.task.switch_task import SwitchTask
 
 
-workflow = ConductorWorkflow(name='route_by_priority', version=1, executor=executor)
+workflow = AgentMeshWorkflow(name='route_by_priority', version=1, executor=executor)
 
 classify = classify_ticket(
     task_ref_name='classify',
@@ -97,12 +97,12 @@ workflow.register(overwrite=True)
 Run independent tasks in parallel and wait for all to complete.
 
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.workflow.task.fork_task import ForkTask
-from conductor.client.workflow.task.join_task import JoinTask
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.workflow.task.fork_task import ForkTask
+from agentmesh.client.workflow.task.join_task import JoinTask
 
 
-workflow = ConductorWorkflow(name='parallel_enrichment', version=1, executor=executor)
+workflow = AgentMeshWorkflow(name='parallel_enrichment', version=1, executor=executor)
 
 # Define independent tasks
 credit_check = check_credit(task_ref_name='credit', customer_id=workflow.input('customer_id'))
@@ -142,11 +142,11 @@ workflow.register(overwrite=True)
 Repeat a set of tasks until a condition is met — useful for polling, retries, or iterative AI agent loops.
 
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.workflow.task.do_while_task import DoWhileTask
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.workflow.task.do_while_task import DoWhileTask
 
 
-workflow = ConductorWorkflow(name='agent_loop', version=1, executor=executor)
+workflow = AgentMeshWorkflow(name='agent_loop', version=1, executor=executor)
 
 # The task(s) to repeat each iteration
 think = call_llm(
@@ -181,13 +181,13 @@ Combine built-in system tasks (HTTP, Wait, JQ Transform) with custom workers —
 
 {% raw %}
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.workflow.task.http_task import HttpTask
-from conductor.client.workflow.task.json_jq_task import JsonJQTask
-from conductor.client.workflow.task.wait_task import WaitTask
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.workflow.task.http_task import HttpTask
+from agentmesh.client.workflow.task.json_jq_task import JsonJQTask
+from agentmesh.client.workflow.task.wait_task import WaitTask
 
 
-workflow = ConductorWorkflow(name='data_pipeline', version=1, executor=executor)
+workflow = AgentMeshWorkflow(name='data_pipeline', version=1, executor=executor)
 
 # HTTP task — fetch data from an external API (no worker needed)
 fetch = HttpTask(task_ref_name='fetch_data', http_input={
@@ -230,12 +230,12 @@ workflow.register(overwrite=True)
 Break large workflows into reusable pieces. A parent workflow invokes child workflows as tasks.
 
 ```python
-from conductor.client.workflow.conductor_workflow import ConductorWorkflow
-from conductor.client.workflow.task.sub_workflow_task import SubWorkflowTask
+from agentmesh.client.workflow.agentmesh_workflow import AgentMeshWorkflow
+from agentmesh.client.workflow.task.sub_workflow_task import SubWorkflowTask
 
 
 # Child workflow (registered separately)
-child = ConductorWorkflow(name='process_single_item', version=1, executor=executor)
+child = AgentMeshWorkflow(name='process_single_item', version=1, executor=executor)
 validate = validate_item(task_ref_name='validate', item=child.input('item'))
 transform = transform_item(task_ref_name='transform', item=validate.output('validated'))
 child >> validate >> transform
@@ -244,7 +244,7 @@ child.register(overwrite=True)
 
 
 # Parent workflow invokes the child
-parent = ConductorWorkflow(name='batch_processor', version=1, executor=executor)
+parent = AgentMeshWorkflow(name='batch_processor', version=1, executor=executor)
 
 prepare = prepare_batch(task_ref_name='prepare', batch_id=parent.input('batch_id'))
 
@@ -272,9 +272,9 @@ Build a workflow definition at runtime and execute it without pre-registration. 
 
 {% raw %}
 ```python
-from conductor.client.configuration.configuration import Configuration
-from conductor.client.orkes_clients import OrkesClients
-from conductor.client.http.models import StartWorkflowRequest
+from agentmesh.client.configuration.configuration import Configuration
+from agentmesh.client.orkes_clients import OrkesClients
+from agentmesh.client.http.models import StartWorkflowRequest
 
 
 config = Configuration()
@@ -314,7 +314,7 @@ print(f'Started dynamic workflow: {workflow_id}')
 ```
 {% endraw %}
 
-This pattern is powerful for AI agents that generate execution plans at runtime — the LLM produces the list of steps, your code builds the workflow definition, and Conductor executes it with full durability, retries, and observability.
+This pattern is powerful for AI agents that generate execution plans at runtime — the LLM produces the list of steps, your code builds the workflow definition, and AgentMesh executes it with full durability, retries, and observability.
 
 ---
 
@@ -323,8 +323,8 @@ This pattern is powerful for AI agents that generate execution plans at runtime 
 Run a workflow synchronously and get the result inline — useful for APIs and interactive applications.
 
 ```python
-from conductor.client.configuration.configuration import Configuration
-from conductor.client.orkes_clients import OrkesClients
+from agentmesh.client.configuration.configuration import Configuration
+from agentmesh.client.orkes_clients import OrkesClients
 
 config = Configuration()
 clients = OrkesClients(configuration=config)
@@ -349,17 +349,17 @@ print(f'View:    {config.ui_host}/execution/{run.workflow_id}')
 All examples above assume a `WorkflowExecutor` instance. Here is the standard setup:
 
 ```python
-from conductor.client.configuration.configuration import Configuration
-from conductor.client.orkes_clients import OrkesClients
+from agentmesh.client.configuration.configuration import Configuration
+from agentmesh.client.orkes_clients import OrkesClients
 
-config = Configuration()  # reads CONDUCTOR_SERVER_URL from env
+config = Configuration()  # reads AGENTMESH_SERVER_URL from env
 clients = OrkesClients(configuration=config)
 executor = clients.get_workflow_executor()
 ```
 
 ```shell
-pip install conductor-python
-export CONDUCTOR_SERVER_URL=http://localhost:8080/api
+pip install agentmesh-python
+export AGENTMESH_SERVER_URL=http://localhost:8080/api
 ```
 
-For more Python SDK examples, see the [Python SDK documentation](../../documentation/clientsdks/python-sdk.md) and the [examples on GitHub](https://github.com/conductor-oss/python-sdk/tree/main/examples).
+For more Python SDK examples, see the [Python SDK documentation](../../documentation/clientsdks/python-sdk.md) and the [examples on GitHub](https://github.com/agentmesh-oss/python-sdk/tree/main/examples).

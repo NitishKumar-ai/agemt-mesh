@@ -1,4 +1,4 @@
-import { ProtoMessage, ProtoField } from '@conductor/annotations';
+import { ProtoMessage, ProtoField } from '@agentmesh/annotations';
 
 @ProtoMessage()
 export class Example {

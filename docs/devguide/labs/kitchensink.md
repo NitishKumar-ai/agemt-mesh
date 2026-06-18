@@ -1,5 +1,5 @@
 ---
-description: "Run the Conductor kitchen sink example workflow that demonstrates forks, sub-workflows, decisions, dynamic tasks, and HTTP tasks in one definition."
+description: "Run the AgentMesh kitchen sink example workflow that demonstrates forks, sub-workflows, decisions, dynamic tasks, and HTTP tasks in one definition."
 ---
 
 # Kitchen Sink
@@ -30,7 +30,7 @@ An example kitchensink workflow that demonstrates the usage of all the schema co
         "oddEven": "${workflow.input.oddEven}"
       },
       "type": "EVENT",
-      "sink": "conductor"
+      "sink": "agentmesh"
     },
     {
       "name": "dyntask",
@@ -142,7 +142,7 @@ An example kitchensink workflow that demonstrates the usage of all the schema co
       "taskReferenceName": "get_es_1",
       "inputParameters": {
         "http_request": {
-          "uri": "http://localhost:9200/conductor/_search?size=10",
+          "uri": "http://localhost:9200/agentmesh/_search?size=10",
           "method": "GET"
         }
       },
@@ -170,7 +170,7 @@ An example kitchensink workflow that demonstrates the usage of all the schema co
 ![img](kitchensink.png)
 
 ### Running Kitchensink Workflow
-1. If you are running Conductor locally, use the `-DloadSample=true` Java system property when launching the server.  This will create a kitchensink workflow, 
+1. If you are running AgentMesh locally, use the `-DloadSample=true` Java system property when launching the server.  This will create a kitchensink workflow, 
 related task definitions and kick off an instance of kitchensink workflow. Otherwise, you can create a new Workflow Definition in the UI by copying the sample above.
 2. Once the workflow has started, the first task remains in the `SCHEDULED` state.  This is because no workers are currently polling for the task.
 3. We will use the REST endpoints directly to poll for tasks and updating the status.
@@ -179,7 +179,7 @@ related task definitions and kick off an instance of kitchensink workflow. Other
 Start the execution of the kitchensink workflow:
 
 ```bash
-conductor workflow start -w kitchensink -i '{"task2Name": "task_5"}'
+agentmesh workflow start -w kitchensink -i '{"task2Name": "task_5"}'
 ```
 
 The response is a text string identifying the workflow instance id.
@@ -196,7 +196,7 @@ The response is a text string identifying the workflow instance id.
 #### Poll for the first task:
 
 ```bash
-conductor task poll task_1
+agentmesh task poll task_1
 ```
 
 ??? note "Using cURL"
@@ -239,7 +239,7 @@ The response should look something like:
 * Update the status of the task as ```COMPLETED``` as below:
 
 ```bash
-conductor task update-execution --workflow-id b0d1a935-3d74-46fd-92b2-0ca1e388659f --task-ref-name task_1 --status COMPLETED --output '{"mod":5,"taskToExecute":"task_1","oddEven":0,"dynamicTasks":[{"name":"task_1","taskReferenceName":"task_1_1","type":"SIMPLE"},{"name":"sub_workflow_4","taskReferenceName":"wf_dyn","type":"SUB_WORKFLOW","subWorkflowParam":{"name":"sub_flow_1"}}],"inputs":{"task_1_1":{},"wf_dyn":{}}}'
+agentmesh task update-execution --workflow-id b0d1a935-3d74-46fd-92b2-0ca1e388659f --task-ref-name task_1 --status COMPLETED --output '{"mod":5,"taskToExecute":"task_1","oddEven":0,"dynamicTasks":[{"name":"task_1","taskReferenceName":"task_1_1","type":"SIMPLE"},{"name":"sub_workflow_4","taskReferenceName":"wf_dyn","type":"SUB_WORKFLOW","subWorkflowParam":{"name":"sub_flow_1"}}],"inputs":{"task_1_1":{},"wf_dyn":{}}}'
 ```
 
 ??? note "Using cURL"

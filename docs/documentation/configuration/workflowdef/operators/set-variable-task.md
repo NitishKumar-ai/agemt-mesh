@@ -1,5 +1,5 @@
 ---
-description: "Set Variable Task — store and update workflow-level variables in Conductor for use across subsequent tasks."
+description: "Set Variable Task — store and update workflow-level variables in AgentMesh for use across subsequent tasks."
 ---
 # Set Variable
 
@@ -82,5 +82,5 @@ In the example above, `set_name` is a Set Variable task that initializes a varia
 
 Here are some limitation when using the Set Variable task:
 
-* **Payload limit**—By default, there is a hard limit for the payload size of variables defined in the JVM system properties (`conductor.max.workflow.variables.payload.threshold.kb`) of 256KB. Exceeding this limit will cause the Set Variable task to fail.
+* **Payload limit**—By default, there is a hard limit for the payload size of variables defined in the JVM system properties (`agentmesh.max.workflow.variables.payload.threshold.kb`) of 256KB. Exceeding this limit will cause the Set Variable task to fail.
 * **Variable scope**—The scope of the Set Variable task is limited to its workflow. An initialized variable in one workflow will not carry over to another workflow or sub-workflow and will have to be re-initialized using another Set Variable task. 

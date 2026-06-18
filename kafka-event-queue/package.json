@@ -1,12 +1,21 @@
 {
-  "name": "@conductor/kafka-event-queue",
+  "name": "@agentmesh/kafka-event-queue",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src/",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
   }
 }

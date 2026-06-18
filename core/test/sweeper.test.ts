@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { isWorkflowTerminal, isTaskTerminal } from '@conductor/common';
+import { isWorkflowTerminal, isTaskTerminal } from '@agentmesh/common';
 import {
   WorkflowSweeper,
   createTaskModel,
@@ -11,7 +11,7 @@ import type {
   QueueDAO,
   ExecutionDAOFacade,
   ExecutionLockService,
-  ConductorProperties,
+  AgentMeshProperties,
   WorkflowExecutor,
   TaskModel,
 } from '../src/index.js';
@@ -22,7 +22,7 @@ describe('WorkflowSweeper', () => {
   let queueDAO: QueueDAO;
   let workflowExecutor: WorkflowExecutor;
   let executionDAO: ExecutionDAOFacade;
-  let properties: ConductorProperties;
+  let properties: AgentMeshProperties;
   let systemTaskRegistry: SystemTaskRegistry;
   let executionLockService: ExecutionLockService;
   let sweeper: WorkflowSweeper;

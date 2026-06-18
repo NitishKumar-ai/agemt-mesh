@@ -1,5 +1,5 @@
 ---
-description: "Understand the task lifecycle in Conductor — state transitions, retries, timeouts, and failure handling for durable workflow execution."
+description: "Understand the task lifecycle in AgentMesh — state transitions, retries, timeouts, and failure handling for durable workflow execution."
 ---
 
 # Task Lifecycle
@@ -38,9 +38,9 @@ stateDiagram-v2
 | `SCHEDULED` | Task is queued and waiting for a worker to poll it. |
 | `IN_PROGRESS` | A worker has picked up the task and is executing it. |
 | `COMPLETED` | Task completed successfully. |
-| `FAILED` | Task failed due to an error. Conductor will retry based on the task definition's retry configuration. |
+| `FAILED` | Task failed due to an error. AgentMesh will retry based on the task definition's retry configuration. |
 | `FAILED_WITH_TERMINAL_ERROR` | Task failed with a non-retryable error. No retries will be attempted. |
-| `TIMED_OUT` | Task exceeded its configured timeout. Conductor will retry based on the retry configuration. |
+| `TIMED_OUT` | Task exceeded its configured timeout. AgentMesh will retry based on the retry configuration. |
 | `CANCELED` | Task was canceled because the workflow was terminated. |
 | `SKIPPED` | Task was skipped via the Skip Task API. The workflow continues to the next task. |
 | `COMPLETED_WITH_ERRORS` | Task failed but is marked as optional in the workflow definition. The workflow continues. |
@@ -48,12 +48,12 @@ stateDiagram-v2
 
 ## Retry behavior
 
-When a task fails with a retryable error, Conductor automatically reschedules it after the configured delay.
+When a task fails with a retryable error, AgentMesh automatically reschedules it after the configured delay.
 
 ```mermaid
 sequenceDiagram
     participant W as Worker
-    participant C as Conductor Server
+    participant C as AgentMesh Server
 
     C->>W: Task T1 available for polling
     W->>C: Poll task T1
@@ -91,7 +91,7 @@ If no worker polls the task within `pollTimeoutSeconds`, it is marked as `TIMED_
 ```mermaid
 sequenceDiagram
     participant W as Worker
-    participant C as Conductor Server
+    participant C as AgentMesh Server
 
     C->>C: Schedule task T1
     Note over C,W: No worker polls within 60s
@@ -108,7 +108,7 @@ If a worker polls a task but doesn't report back within `responseTimeoutSeconds`
 ```mermaid
 sequenceDiagram
     participant W as Worker
-    participant C as Conductor Server
+    participant C as AgentMesh Server
 
     C->>W: Task T1 available
     W->>C: Poll T1
@@ -130,7 +130,7 @@ Workers can extend the response timeout by sending `IN_PROGRESS` status updates 
 ```mermaid
 sequenceDiagram
     participant W as Worker
-    participant C as Conductor Server
+    participant C as AgentMesh Server
 
     C->>W: Task T1 available
     W->>C: Poll T1
@@ -155,7 +155,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant W as Worker
-    participant C as Conductor Server
+    participant C as AgentMesh Server
 
     Note over C: totalTimeoutSeconds = 30s
     C->>W: Task T1 (attempt 1)

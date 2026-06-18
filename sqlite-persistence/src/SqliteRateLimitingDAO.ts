@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
-import { RateLimitingDAO, Database } from '@conductor/common-persistence';
-import { TaskModel, TaskDef } from '@conductor/common';
+import { RateLimitingDAO, Database } from '@agentmesh/common-persistence';
+import { TaskModel, TaskDef } from '@agentmesh/common';
 
 export class SqliteRateLimitingDAO implements RateLimitingDAO {
   constructor(private readonly db: Kysely<Database>) {}

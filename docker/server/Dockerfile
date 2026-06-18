@@ -1,5 +1,5 @@
 #
-# conductor:server - Conductor Server + UI
+# agentmesh:server - AgentMesh Server + UI
 #
 # Two modes:
 #   Default:        Builds JAR and UI from source (docker-compose, local dev)
@@ -16,12 +16,12 @@ ARG INDEXING_BACKEND=elasticsearch
 
 LABEL maintainer="Orkes OSS <oss@orkes.io>"
 
-COPY . /conductor
-WORKDIR /conductor
+COPY . /agentmesh
+WORKDIR /agentmesh
 
 RUN if [ "$PREBUILT" = "true" ]; then \
       rm -rf server/build/libs && mkdir -p server/build/libs && \
-      cp docker/server/libs/conductor-server.jar server/build/libs/conductor-server-boot.jar && \
+      cp docker/server/libs/agentmesh-server.jar server/build/libs/agentmesh-server-boot.jar && \
       echo "Using pre-built server JAR"; \
     else \
       ./gradlew build -x test -x spotlessCheck -x shadowJar \
@@ -41,8 +41,8 @@ ARG YARN_OPTS
 
 LABEL maintainer="Orkes OSS <oss@orkes.io>"
 
-COPY ui /conductor/ui
-WORKDIR /conductor/ui
+COPY ui /agentmesh/ui
+WORKDIR /agentmesh/ui
 
 RUN if [ "$PREBUILT" = "false" ]; then \
       corepack enable && corepack prepare yarn@stable --activate && \
@@ -72,12 +72,12 @@ RUN mkdir -p /app/config /app/logs /app/libs
 # Copy the compiled output to new image
 COPY docker/server/bin /app
 COPY docker/server/config /app/config
-COPY --from=builder /conductor/server/build/libs/*boot*.jar /app/libs/conductor-server.jar
+COPY --from=builder /agentmesh/server/build/libs/*boot*.jar /app/libs/agentmesh-server.jar
 
 # Copy compiled UI assets to nginx www directory
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
-COPY --from=ui-builder /conductor/ui/build .
+COPY --from=ui-builder /agentmesh/ui/build .
 COPY docker/server/nginx/nginx.conf  /etc/nginx/conf.d/default.conf
 
 # Copy the files for the server into the app folders

@@ -1,16 +1,16 @@
 ---
-description: "Searching Workflows — find Conductor workflow executions by name, status, time range, or task parameters in the UI."
+description: "Searching Workflows — find AgentMesh workflow executions by name, status, time range, or task parameters in the UI."
 ---
 # Searching Workflows
 
-The Conductor UI provides a convenient interface for searching workflow executions. There are two modes of searching:
+The AgentMesh UI provides a convenient interface for searching workflow executions. There are two modes of searching:
 
 * **Workflows** tab — Search using workflow parameters.
 * **Tasks** tab — Search workflows by tasks.
 
 **To search workflow executions:**
 
-1. Go to **[Executions](http://localhost:8080/executions)** in the Conductor UI.
+1. Go to **[Executions](http://localhost:8080/executions)** in the AgentMesh UI.
 2. Configure the [search parameters](#search-parameters).
 3. Select **Search**.
 

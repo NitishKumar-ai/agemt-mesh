@@ -13,7 +13,7 @@
         "index": "demo_index",
         "namespace": "demo_docs",
         "docId": "intro-001",
-        "text": "Conductor is a distributed workflow orchestration engine that runs in the cloud. It allows developers to build complex stateful applications by orchestrating microservices.",
+        "text": "AgentMesh is a distributed workflow orchestration engine that runs in the cloud. It allows developers to build complex stateful applications by orchestrating microservices.",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -29,7 +29,7 @@
         "index": "demo_index",
         "namespace": "demo_docs",
         "docId": "features-002",
-        "text": "Conductor supports multiple vector databases including PostgreSQL (pgvector), MongoDB Atlas, and Pinecone. It also integrates with LLM providers like OpenAI, Anthropic, and Azure OpenAI.",
+        "text": "AgentMesh supports multiple vector databases including PostgreSQL (pgvector), MongoDB Atlas, and Pinecone. It also integrates with LLM providers like OpenAI, Anthropic, and Azure OpenAI.",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -60,7 +60,7 @@
         "vectorDB": "postgres-prod",
         "index": "demo_index",
         "namespace": "demo_docs",
-        "query": "What vector databases does Conductor support?",
+        "query": "What vector databases does AgentMesh support?",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
         "dimensions": 1536,
@@ -81,7 +81,7 @@
           },
           {
             "role": "user",
-            "message": "Context:\n${search_ref.output.result}\n\nQuestion: What vector databases does Conductor support?"
+            "message": "Context:\n${search_ref.output.result}\n\nQuestion: What vector databases does AgentMesh support?"
           }
         ],
         "temperature": 0.2

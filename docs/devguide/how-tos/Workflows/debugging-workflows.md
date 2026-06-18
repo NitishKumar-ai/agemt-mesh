@@ -1,9 +1,9 @@
 ---
-description: "Debugging Workflows — identify and resolve failed Conductor workflow executions using the UI diagram and task details."
+description: "Debugging Workflows — identify and resolve failed AgentMesh workflow executions using the UI diagram and task details."
 ---
 # Debugging Workflows
 
-The [workflow execution views](viewing-workflow-executions.md) in the Conductor UI are useful for debugging workflow issues. Learn how to debug failed executions and rerun them. 
+The [workflow execution views](viewing-workflow-executions.md) in the AgentMesh UI are useful for debugging workflow issues. Learn how to debug failed executions and rerun them. 
 
 ## Debug procedure
 
@@ -14,7 +14,7 @@ The following tab views or fields in the task details are useful for debugging:
 | Field or Tab Name                                      | Description                                                                                                                   |
 |-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | _Reason for Incompletion_ in **Task Detail** > **Summary**  | Contains the exception message thrown by the task worker.                    |
-| _Worker_ in **Task Detail** > **Summary**                   | Contains the worker instance ID where the failure occurred. Useful for digging up detailed logs, if it has not already captured by Conductor.                    |
+| _Worker_ in **Task Detail** > **Summary**                   | Contains the worker instance ID where the failure occurred. Useful for digging up detailed logs, if it has not already captured by AgentMesh.                    |
 | **Task Detail** > **Input**                           | Useful for verifying if the task inputs were correctly computed and provided to the task.                       |
 | **Task Detail** > **Output**                        | Useful for verifying what the task produced as output.                         |
 | **Task Detail** > **Logs**                         | Contains the task logs, if supplied by the task worker.                                                        |
@@ -25,7 +25,7 @@ The following tab views or fields in the task details are useful for debugging:
 
 ## Recovering from failure
 
-Once you have resolved the underlying issue for the execution failure, you can manually restart or retry the failed workflow execution using the Conductor UI or APIs.
+Once you have resolved the underlying issue for the execution failure, you can manually restart or retry the failed workflow execution using the AgentMesh UI or APIs.
 
 Here are the recovery options:
 
@@ -39,7 +39,7 @@ Here are the recovery options:
 !!! Note
     You can set tasks to be retried automatically in case of transient failures. Refer to [Task Definition](../../../documentation/configuration/taskdef.md) for more information.
 
-### Using Conductor UI
+### Using AgentMesh UI
 
 **To recover from failure**:
 
@@ -58,4 +58,4 @@ You can rerun a workflow from a specific task using the Rerun Workflow API (`POS
 
 Likewise, you can retry workflow executions from the last failed task using the Retry Workflow API (`POST api/workflow/{workflowId}/retry`) or the Bulk Retry Workflow API (`POST api/workflow/bulk/retry`).
 
-All three recovery operations — restart, rerun, and retry — work on workflows in any terminal state (COMPLETED, FAILED, TIMED_OUT, TERMINATED) and are available indefinitely. Conductor preserves the full execution history, so you can replay any workflow even months after the original run.
+All three recovery operations — restart, rerun, and retry — work on workflows in any terminal state (COMPLETED, FAILED, TIMED_OUT, TERMINATED) and are available indefinitely. AgentMesh preserves the full execution history, so you can replay any workflow even months after the original run.

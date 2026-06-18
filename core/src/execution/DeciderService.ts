@@ -1,5 +1,5 @@
-import type { TaskDef, WorkflowTask, WorkflowDef, TaskType as TaskTypeEnum, TaskStatus } from '@conductor/common';
-import { isTaskTerminal, isTaskSuccessful, isTaskRetriable, isBuiltInTask } from '@conductor/common';
+import type { TaskDef, WorkflowTask, WorkflowDef, TaskType as TaskTypeEnum, TaskStatus } from '@agentmesh/common';
+import { isTaskTerminal, isTaskSuccessful, isTaskRetriable, isBuiltInTask } from '@agentmesh/common';
 import type { TaskModel, WorkflowModel } from './types.js';
 import { copyTaskModel } from './types.js';
 import type { TaskMapper } from './mappers/TaskMapper.js';

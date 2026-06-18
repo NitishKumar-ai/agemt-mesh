@@ -1,15 +1,15 @@
 # Workflow Scheduler — Quickstart
 
 This guide walks through the full lifecycle of a scheduled workflow using `curl`.
-All examples assume Conductor is running locally on port 8080.
+All examples assume AgentMesh is running locally on port 8080.
 
 ---
 
 ## Prerequisites
 
-- Conductor running with a scheduler-compatible persistence backend
-  (`conductor-scheduler-postgres-persistence`, `conductor-scheduler-mysql-persistence`, etc.)
-- `conductor.scheduler.enabled=true` (default)
+- AgentMesh running with a scheduler-compatible persistence backend
+  (`agentmesh-scheduler-postgres-persistence`, `agentmesh-scheduler-mysql-persistence`, etc.)
+- `agentmesh.scheduler.enabled=true` (default)
 - The `http-task` worker available (built-in for HTTP tasks; swap for `SIMPLE` if needed)
 
 ---
@@ -159,7 +159,7 @@ The scheduler uses **6-field Spring cron** (second-level precision):
 ## Configuration
 
 ```yaml
-conductor:
+agentmesh:
   scheduler:
     enabled: true                      # default: true
     polling-interval: 1000             # ms between polls; default: 100
@@ -210,7 +210,7 @@ curl -s -X POST http://localhost:8080/api/scheduler/schedules \
   -H "Content-Type: application/json" -d @catchup-schedule.json
 ```
 
-To observe catchup: stop Conductor for a few minutes, then restart and watch executions fire
+To observe catchup: stop AgentMesh for a few minutes, then restart and watch executions fire
 in sequence for the missed slots.
 
 ---
@@ -237,7 +237,7 @@ sed "s/__START_MS__/$NOW/; s/__END_MS__/$END/" bounded-schedule-template.json | 
 
 Two parallel HTTP calls (UTC time + America/New_York time), joined into one output map.
 
-> **Gotcha:** Use a literal `/` in timezone query params — not `%2F`. Conductor's HTTP task
+> **Gotcha:** Use a literal `/` in timezone query params — not `%2F`. AgentMesh's HTTP task
 > passes percent-encoded slashes literally, which the remote API rejects as an invalid timezone.
 
 ```bash
@@ -268,11 +268,11 @@ curl -s -X POST http://localhost:8080/api/scheduler/schedules \
 
 ### 6. Concurrent execution (`concurrent-schedule.json` + `concurrent-workflow.json`)
 
-A 90-second WAIT task fired every 60 seconds. OSS Conductor has no built-in concurrent-execution
+A 90-second WAIT task fired every 60 seconds. OSS AgentMesh has no built-in concurrent-execution
 guard, so instances stack up. Demonstrates the behavior users need to design around.
 
 > **Gotcha:** WAIT task duration must be `"90s"` / `"2m"` / `"1h"` — not ISO-8601 `PT90S`.
-> Conductor's `DateTimeUtils.parseDuration` uses its own regex, not the Java Duration parser.
+> AgentMesh's `DateTimeUtils.parseDuration` uses its own regex, not the Java Duration parser.
 
 ```bash
 curl -s -X POST http://localhost:8080/api/metadata/workflow \
@@ -329,13 +329,13 @@ curl -s -X POST http://localhost:8080/api/scheduler/schedules \
 ## Concurrency / Load Test Scripts
 
 The `../scripts/` directory contains four scripts from live concurrency testing.
-All require `curl`, `python3`, and a running Conductor instance.
+All require `curl`, `python3`, and a running AgentMesh instance.
 
 ### test-09-concurrent-write.sh — simultaneous schedule registration
 
 Run on two machines at the same epoch second to verify UPSERT correctness:
 ```bash
-# Both machines run this pointing at the same Conductor instance
+# Both machines run this pointing at the same AgentMesh instance
 ./scripts/test-09-concurrent-write.sh http://localhost:8080
 ```
 

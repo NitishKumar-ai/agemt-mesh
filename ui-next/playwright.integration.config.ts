@@ -2,20 +2,20 @@
  * Playwright integration test configuration.
  *
  * Unlike the default playwright.config.ts (which mocks all /api calls and
- * tests the UI in isolation), this config runs against a live Conductor
+ * tests the UI in isolation), this config runs against a live AgentMesh
  * backend.  The global setup script starts the backend via Docker Compose
  * automatically; the Vite dev server is then pointed at it.
  *
  * Quick start:
  *
  *   # Build the server image once (slow — only needed when server code changes)
- *   docker build -t conductor:server -f docker/server/Dockerfile .
+ *   docker build -t agentmesh:server -f docker/server/Dockerfile .
  *
  *   # Run all integration tests (Docker is managed automatically)
  *   pnpm test:e2e:integration
  *
  * The backend URL defaults to http://localhost:8000.  Override with:
- *   CONDUCTOR_SERVER_URL=http://my-server:8000 pnpm test:e2e:integration
+ *   AGENTMESH_SERVER_URL=http://my-server:8000 pnpm test:e2e:integration
  *
  * Set SKIP_DOCKER=true to skip Docker management entirely (use a server you
  * started yourself):
@@ -24,8 +24,8 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
-const CONDUCTOR_SERVER_URL =
-  process.env.CONDUCTOR_SERVER_URL ?? "http://localhost:8000";
+const AGENTMESH_SERVER_URL =
+  process.env.AGENTMESH_SERVER_URL ?? "http://localhost:8000";
 
 export default defineConfig({
   testDir: "./e2e/integration",
@@ -74,7 +74,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 300_000, // allow up to 5 min for a cold build
     env: {
-      VITE_WF_SERVER: CONDUCTOR_SERVER_URL,
+      VITE_WF_SERVER: AGENTMESH_SERVER_URL,
     },
   },
 });

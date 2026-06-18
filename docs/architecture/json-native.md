@@ -1,10 +1,10 @@
 ---
-description: Conductor stores workflow definitions as JSON — the canonical runtime format for this durable execution workflow engine. Create dynamic workflows at runtime, version and diff definitions, and expose any workflow as an API or MCP tool.
+description: AgentMesh stores workflow definitions as JSON — the canonical runtime format for this durable execution workflow engine. Create dynamic workflows at runtime, version and diff definitions, and expose any workflow as an API or MCP tool.
 ---
 
 # JSON + Code Native Workflow Orchestration
 
-Conductor stores workflow definitions as JSON. This is not a UI convenience or a simplified mode&mdash;JSON is the canonical runtime representation. Every workflow, whether created via SDK, API, UI, or file, is stored, versioned, and executed as a JSON document.
+AgentMesh stores workflow definitions as JSON. This is not a UI convenience or a simplified mode&mdash;JSON is the canonical runtime representation. Every workflow, whether created via SDK, API, UI, or file, is stored, versioned, and executed as a JSON document.
 
 For agent orchestration and dynamic workloads, this is a structural advantage.
 
@@ -14,22 +14,22 @@ For agent orchestration and dynamic workloads, this is a structural advantage.
 1. **Storage.** The workflow definition is a JSON document persisted in the data store. The execution engine reads this document to schedule tasks.
 2. **Versioning.** Each version is a distinct JSON document. Multiple versions can run concurrently. Running executions use a snapshot taken at start time and are immutable against later changes.
 3. **API parity.** The JSON you write in a file is the same JSON you send to the API, see in the UI, and get back from the SDK. There is no compiled intermediate form.
-4. **Dynamic creation.** You can construct a workflow definition as a JSON object at runtime and pass it directly to the `StartWorkflowRequest` API. Conductor executes it immediately without pre-registration.
+4. **Dynamic creation.** You can construct a workflow definition as a JSON object at runtime and pass it directly to the `StartWorkflowRequest` API. AgentMesh executes it immediately without pre-registration.
 
 
 ## Why this matters for agents
 
 ### Agents produce structured output&mdash;JSON is native
 
-LLMs already communicate in structured formats: function calls, tool-use schemas, JSON mode responses. Conductor's JSON workflow definitions are in the same format that agents already produce. An LLM can generate a workflow definition directly, and Conductor can execute it.
+LLMs already communicate in structured formats: function calls, tool-use schemas, JSON mode responses. AgentMesh's JSON workflow definitions are in the same format that agents already produce. An LLM can generate a workflow definition directly, and AgentMesh can execute it.
 
 ### Runtime generation without compile/deploy
 
-Traditional workflow engines require you to define workflows in code, compile, and deploy before they can run. Conductor's JSON + code native approach means:
+Traditional workflow engines require you to define workflows in code, compile, and deploy before they can run. AgentMesh's JSON + code native approach means:
 
 - A planner agent can generate a new workflow definition as JSON.
 - Your code sends that JSON to `POST /api/workflow` with the definition inline.
-- Conductor validates, persists, and executes it immediately.
+- AgentMesh validates, persists, and executes it immediately.
 - The workflow is fully durable, observable, and retryable&mdash;identical to any pre-registered workflow.
 
 This enables patterns like:
@@ -62,7 +62,7 @@ Running executions are never affected by definition changes&mdash;they use the s
 
 ## Dynamic workflows in detail
 
-Conductor supports three levels of dynamism:
+AgentMesh supports three levels of dynamism:
 
 ### 1. Dynamic workflow definitions
 
@@ -94,7 +94,7 @@ Pass the complete workflow definition in the `StartWorkflowRequest`:
     ]
   },
   "input": {
-    "query": "conductor workflow engine"
+    "query": "agentmesh workflow engine"
   }
 }
 ```
@@ -117,7 +117,7 @@ The `DYNAMIC` task type resolves which task to execute at runtime based on input
 }
 ```
 
-The value of `taskToExecute` is determined by the output of a previous task (e.g., an LLM deciding which tool to call). Conductor resolves and schedules the appropriate task type at runtime.
+The value of `taskToExecute` is determined by the output of a previous task (e.g., an LLM deciding which tool to call). AgentMesh resolves and schedules the appropriate task type at runtime.
 
 ### 3. Dynamic fork/join
 
@@ -146,7 +146,7 @@ JSON workflow definitions are pure orchestration — they describe *what* runs a
 
 **No side effects in the workflow definition.** A JSON definition cannot open a database connection, write to a file, or call an API outside of a declared task. Every side effect lives in a worker or system task — isolated, testable, and independently deployable. The workflow definition itself is inert data.
 
-**Every run is deterministic.** Given the same inputs, a Conductor workflow will schedule the same tasks in the same order, every time. There is no ambient state, no thread-local context, no hidden mutation. This is why [replay](durable-execution.md#replay-and-recovery) works unconditionally — restart a workflow from three months ago and it re-executes the same graph. Code-based workflow engines that embed orchestration logic alongside business logic cannot make this guarantee without imposing significant constraints on what your code is allowed to do (no random numbers, no system clocks, no uncontrolled I/O).
+**Every run is deterministic.** Given the same inputs, a AgentMesh workflow will schedule the same tasks in the same order, every time. There is no ambient state, no thread-local context, no hidden mutation. This is why [replay](durable-execution.md#replay-and-recovery) works unconditionally — restart a workflow from three months ago and it re-executes the same graph. Code-based workflow engines that embed orchestration logic alongside business logic cannot make this guarantee without imposing significant constraints on what your code is allowed to do (no random numbers, no system clocks, no uncontrolled I/O).
 
 **Clean separation of concerns.** Orchestration logic (sequencing, branching, retries, timeouts) is defined declaratively in JSON. Implementation logic (calling APIs, transforming data, running ML models) lives in workers written in any language. Each can be tested, deployed, and versioned independently. Change a worker without touching the workflow. Change the workflow without redeploying workers.
 
@@ -154,31 +154,31 @@ JSON workflow definitions are pure orchestration — they describe *what* runs a
 
 The common assumption is that code-based workflows are more flexible. The opposite is true. Code-based definitions are static at deploy time — to change the workflow, you redeploy.
 
-Conductor's JSON definitions can be:
+AgentMesh's JSON definitions can be:
 
-- **Generated at runtime** — an LLM or planner service produces a workflow definition as JSON and Conductor executes it immediately, no compilation or deployment step.
+- **Generated at runtime** — an LLM or planner service produces a workflow definition as JSON and AgentMesh executes it immediately, no compilation or deployment step.
 - **Modified per-execution** — pass a complete `workflowDef` in the start request to customize any execution on the fly.
 - **Dynamically branched** — [DYNAMIC tasks](../documentation/configuration/workflowdef/operators/dynamic-task.md) resolve which task to execute based on runtime output. [DYNAMIC_FORK](../documentation/configuration/workflowdef/operators/dynamic-fork-task.md) creates an arbitrary number of parallel branches determined by a previous task's output. [Sub-workflows](../documentation/configuration/workflowdef/operators/sub-workflow-task.md) can be selected and parameterized dynamically.
 
-Combined, these primitives make Conductor the most dynamic workflow engine available — not despite using JSON, but because of it. A JSON definition is data, and data is easy to generate, transform, and compose programmatically. Code is not.
+Combined, these primitives make AgentMesh the most dynamic workflow engine available — not despite using JSON, but because of it. A JSON definition is data, and data is easy to generate, transform, and compose programmatically. Code is not.
 
 ### AI-native by design
 
-LLMs produce structured output. JSON *is* structured output. There is no impedance mismatch — an agent can generate a Conductor workflow definition directly, and Conductor executes it with full durability, observability, and replayability. No code generation, no compilation, no deployment pipeline. The workflow evolves as fast as the agent can think.
+LLMs produce structured output. JSON *is* structured output. There is no impedance mismatch — an agent can generate a AgentMesh workflow definition directly, and AgentMesh executes it with full durability, observability, and replayability. No code generation, no compilation, no deployment pipeline. The workflow evolves as fast as the agent can think.
 
 Code-based workflow engines require generated code to be compiled, tested, and deployed before it runs — a friction that fundamentally limits how dynamically an AI system can operate.
 
 
 ## Exposing workflows as APIs and MCP tools
 
-Any Conductor workflow is already an API endpoint:
+Any AgentMesh workflow is already an API endpoint:
 
 ```bash
 # Start a workflow (async, returns execution ID)
-conductor workflow start -w my_agent -i '{"query": "summarize this document"}'
+agentmesh workflow start -w my_agent -i '{"query": "summarize this document"}'
 
 # Get the result
-conductor workflow status {executionId}
+agentmesh workflow status {executionId}
 ```
 
 ??? note "Using cURL"
@@ -192,13 +192,13 @@ conductor workflow status {executionId}
 
 Workflows return structured JSON output defined by `outputParameters` in the definition. This makes them directly consumable by other agents, services, or MCP-compatible tools.
 
-For MCP integration, a Conductor workflow can be registered as an MCP tool, allowing LLMs and agent frameworks to discover and invoke it directly with structured input/output.
+For MCP integration, a AgentMesh workflow can be registered as an MCP tool, allowing LLMs and agent frameworks to discover and invoke it directly with structured input/output.
 
 
 ## Next steps
 
 - **[Durable Execution Semantics](durable-execution.md)** &mdash; What persists, what gets retried, failure matrix.
-- **[Why Conductor for Agents](../devguide/ai/index.md)** &mdash; How Conductor's primitives map to agent patterns.
+- **[Why AgentMesh for Agents](../devguide/ai/index.md)** &mdash; How AgentMesh's primitives map to agent patterns.
 - **[Quickstart](../quickstart/index.md)** &mdash; Get running in 5 minutes.
 - **[Workflow Definition Reference](../documentation/configuration/workflowdef/index.md)** &mdash; Full JSON schema for workflow definitions.
 - **[Dynamic Fork](../documentation/configuration/workflowdef/operators/dynamic-fork-task.md)** &mdash; Runtime-determined parallel execution.

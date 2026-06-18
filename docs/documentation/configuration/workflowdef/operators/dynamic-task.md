@@ -1,5 +1,5 @@
 ---
-description: "Dynamic Task — resolve the task type at runtime in Conductor workflows for flexible, data-driven orchestration."
+description: "Dynamic Task — resolve the task type at runtime in AgentMesh workflows for flexible, data-driven orchestration."
 ---
 # Dynamic
 ```json
@@ -8,7 +8,7 @@ description: "Dynamic Task — resolve the task type at runtime in Conductor wor
 
 The Dynamic task (`DYNAMIC`) is used to execute a registered task dynamically at run-time. It is similar to a function pointer in programming, and can be used for when the decision to execute which task will only be made after the workflow has begun.
 
-The Dynamic task accepts as input the name of a task, which can be a system task or a Worker task (`SIMPLE`) registered on Conductor.
+The Dynamic task accepts as input the name of a task, which can be a system task or a Worker task (`SIMPLE`) registered on AgentMesh.
 
 
 ## Task parameters

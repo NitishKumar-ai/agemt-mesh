@@ -1,4 +1,4 @@
-import { Message } from '@conductor/common';
+import { Message } from '@agentmesh/common';
 
 export interface QueueDAO {
   push(queueName: string, id: string, offsetTimeInSecond: number, priority?: number): Promise<void>;

@@ -1,7 +1,7 @@
-import type { TaskModel, WorkflowModel, TaskStatus as TaskStatusType, TaskExecLog, PollData } from '@conductor/common';
-import { SearchResult } from '@conductor/common';
-import { TaskStatus, isTaskTerminal } from '@conductor/common';
-import type { ExecutionDAO, QueueDAO, MetadataDAO, PollDataDAO } from '@conductor/common-persistence';
+import type { TaskModel, WorkflowModel, TaskStatus as TaskStatusType, TaskExecLog, PollData } from '@agentmesh/common';
+import { SearchResult } from '@agentmesh/common';
+import { TaskStatus, isTaskTerminal } from '@agentmesh/common';
+import type { ExecutionDAO, QueueDAO, MetadataDAO, PollDataDAO } from '@agentmesh/common-persistence';
 
 export interface TaskResult {
   workflowInstanceId: string;

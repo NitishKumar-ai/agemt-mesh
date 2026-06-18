@@ -1,4 +1,4 @@
-import { TaskDef, WorkflowDef, EventHandler } from '@conductor/common';
+import { TaskDef, WorkflowDef, EventHandler } from '@agentmesh/common';
 
 export interface WorkflowDefSummary {
   name?: string;

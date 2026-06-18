@@ -17,7 +17,7 @@ import {
   VideoOptions,
 } from './types/index.js';
 
-export enum ConductorTask {
+export enum AgentMeshTask {
   CHAT_COMPLETE = 'CHAT_COMPLETE',
   GENERATE_IMAGE = 'GENERATE_IMAGE',
   GENERATE_VIDEO = 'GENERATE_VIDEO',

@@ -5,7 +5,7 @@ import type {
   TaskDef,
   WorkflowTask,
   WorkflowDef,
-} from '@conductor/common';
+} from '@agentmesh/common';
 
 export interface TaskModel {
   taskId: string;

@@ -1,10 +1,10 @@
 ---
-description: "Conductor Skills — teach your AI coding agent to create, run, monitor, and manage Conductor workflows. Works with Claude Code, Cursor, Copilot, Gemini CLI, and more."
+description: "AgentMesh Skills — teach your AI coding agent to create, run, monitor, and manage AgentMesh workflows. Works with Claude Code, Cursor, Copilot, Gemini CLI, and more."
 ---
 
 # Build with AI agents
 
-Conductor Skills teaches your AI coding agent to create, run, monitor, and manage Conductor workflows. Instead of writing JSON definitions and CLI commands by hand, describe what you want in natural language and your agent builds it for you — complete workflows, workers, error handling, and monitoring.
+AgentMesh Skills teaches your AI coding agent to create, run, monitor, and manage AgentMesh workflows. Instead of writing JSON definitions and CLI commands by hand, describe what you want in natural language and your agent builds it for you — complete workflows, workers, error handling, and monitoring.
 
 Works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, Windsurf, Cline, Amazon Q, Aider, Roo Code, Amp, and OpenCode.
 
@@ -16,32 +16,32 @@ One command installs for all detected agents on your system:
 === "macOS / Linux"
 
     ```bash
-    curl -sSL https://conductor-oss.github.io/conductor-skills/install.sh | bash -s -- --all
+    curl -sSL https://agentmesh-oss.github.io/agentmesh-skills/install.sh | bash -s -- --all
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    irm https://conductor-oss.github.io/conductor-skills/install.ps1 -OutFile install.ps1; .\install.ps1 -All
+    irm https://agentmesh-oss.github.io/agentmesh-skills/install.ps1 -OutFile install.ps1; .\install.ps1 -All
     ```
 
 To install for a specific agent only:
 
 ```bash
-curl -sSL https://conductor-oss.github.io/conductor-skills/install.sh | bash -s -- --agent claude
+curl -sSL https://agentmesh-oss.github.io/agentmesh-skills/install.sh | bash -s -- --agent claude
 ```
 
 
 ## Connect to your server
 
-After installing, tell your agent where your Conductor server is:
+After installing, tell your agent where your AgentMesh server is:
 
-> *"Connect to my Conductor server at http://localhost:8080/api"*
+> *"Connect to my AgentMesh server at http://localhost:8080/api"*
 
 Or set the environment variable directly:
 
 ```bash
-export CONDUCTOR_SERVER_URL=http://localhost:8080/api
+export AGENTMESH_SERVER_URL=http://localhost:8080/api
 ```
 
 
@@ -64,7 +64,7 @@ Once installed, your AI agent can:
 
 ## Walkthrough: build an order processing system
 
-This walkthrough shows how to build a complete application using Conductor as the backend — entirely through natural language prompts to your AI agent.
+This walkthrough shows how to build a complete application using AgentMesh as the backend — entirely through natural language prompts to your AI agent.
 
 ### Step 1: Create the workflow
 
@@ -179,10 +179,10 @@ Your agent creates `order_processing_compensation` with the reverse operations.
 
 > *"Write a Python worker that validates orders by checking that all items exist and quantities are positive"*
 
-Your agent generates the worker code using the Conductor Python SDK:
+Your agent generates the worker code using the AgentMesh Python SDK:
 
 ```python
-from conductor.client.worker.worker_task import worker_task
+from agentmesh.client.worker.worker_task import worker_task
 
 @worker_task(task_definition_name="validate_order")
 def validate_order(task):
@@ -262,7 +262,7 @@ graph LR
 | [GitHub Copilot](https://github.com/features/copilot) | `copilot` | — | `.github/copilot-instructions.md` |
 | [Cline](https://github.com/cline/cline) | `cline` | — | `.clinerules` |
 | [Amazon Q](https://aws.amazon.com/q/developer/) | `amazonq` | — | `.amazonq/rules/` |
-| [Aider](https://aider.chat) | `aider` | `~/.conductor-skills/` | `.conductor-skills/` |
+| [Aider](https://aider.chat) | `aider` | `~/.agentmesh-skills/` | `.agentmesh-skills/` |
 | [Roo Code](https://github.com/RooVetGit/Roo-Code) | `roo` | `~/.roo/rules/` | `.roo/rules/` |
 | [Amp](https://ampcode.com) | `amp` | `~/.config/AGENTS.md` | `.amp/instructions.md` |
 | [OpenCode](https://opencode.ai) | `opencode` | `~/.config/opencode/skills/` | `AGENTS.md` |
@@ -271,13 +271,13 @@ graph LR
 ## Upgrade
 
 ```bash
-curl -sSL https://conductor-oss.github.io/conductor-skills/install.sh | bash -s -- --all --upgrade
+curl -sSL https://agentmesh-oss.github.io/agentmesh-skills/install.sh | bash -s -- --all --upgrade
 ```
 
 
 ## Next steps
 
-- **[conductor-skills repository](https://github.com/conductor-oss/conductor-skills)** &mdash; Full documentation, more examples, and source code.
-- **[Quickstart](../../quickstart/index.md)** &mdash; Get a Conductor server running to use with your agent.
-- **[AI & Agents](../ai/index.md)** &mdash; Build durable AI agent workflows on Conductor.
+- **[agentmesh-skills repository](https://github.com/agentmesh-oss/agentmesh-skills)** &mdash; Full documentation, more examples, and source code.
+- **[Quickstart](../../quickstart/index.md)** &mdash; Get a AgentMesh server running to use with your agent.
+- **[AI & Agents](../ai/index.md)** &mdash; Build durable AI agent workflows on AgentMesh.
 - **[Client SDKs](../../documentation/clientsdks/index.md)** &mdash; Language SDKs for writing workers and programmatic access.

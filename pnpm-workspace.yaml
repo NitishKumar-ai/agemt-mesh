@@ -20,7 +20,7 @@ packages:
   - 'workflow-event-listener'
   - 'task-status-listener'
   - 'scheduler/*'
-  - 'conductor-amqp-node'
+  - 'agentmesh-amqp-node'
 allowBuilds:
   '3': true
   '-': true

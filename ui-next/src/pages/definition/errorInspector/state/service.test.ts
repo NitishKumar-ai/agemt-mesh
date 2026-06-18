@@ -293,7 +293,7 @@ describe("valueContainsTaskReference", () => {
         defaultExclusiveJoinTask: [""],
         inputParameters: {
           http_request: {
-            uri: "https://orkes-api-tester.orkesconductor.com/api",
+            uri: "https://orkes-api-tester.orkesagentmesh.com/api",
             method: "GET",
             connectionTimeOut: 3000,
             readTimeOut: 3000,
@@ -507,7 +507,7 @@ describe("isValidNestedVariable", () => {
   });
   it("Should return true - nested variables inside the url", () => {
     const valueString3 =
-      "https://orkes-api-tester.orkesconductor.com/api/${workflow.secrets.${workflow.input.test}}";
+      "https://orkes-api-tester.orkesagentmesh.com/api/${workflow.secrets.${workflow.input.test}}";
     expect(isValidNestedVariable(expectedReferences, valueString3)).toEqual(
       true,
     );

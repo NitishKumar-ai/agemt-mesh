@@ -1,21 +1,21 @@
 ---
-description: "Choose the right task type for your Conductor workflow — system tasks, operators, and worker tasks for microservice orchestration and workflow automation."
+description: "Choose the right task type for your AgentMesh workflow — system tasks, operators, and worker tasks for microservice orchestration and workflow automation."
 ---
 
 # Choosing Tasks
 
-Tasks are the building blocks of Conductor workflows. In this guide, familiarise yourself with the tasks available in Conductor OSS and the differences between each of them.
+Tasks are the building blocks of AgentMesh workflows. In this guide, familiarise yourself with the tasks available in AgentMesh OSS and the differences between each of them.
 
 ## Built-in tasks
 
-Built-in tasks allow you to easily run common tasks on the Conductor server without needing to build and deploy your own task workers. Here is an introduction of the built-in tasks available in Conductor:
+Built-in tasks allow you to easily run common tasks on the AgentMesh server without needing to build and deploy your own task workers. Here is an introduction of the built-in tasks available in AgentMesh:
 
 * **[System tasks](../../../documentation/configuration/workflowdef/systemtasks/index.md)** common tasks that allow you to get started quickly without needing custom workers. 
 * **[Operators](../../../documentation/configuration/workflowdef/operators/index.md)** enable you to declaratively design the workflow's control flow and logic with minimal code required.
 
 ### System tasks
 
-Here are the system tasks available in Conductor OSS for common use: 
+Here are the system tasks available in AgentMesh OSS for common use: 
 
 | System Task                  | Description                          |
 | :-------------------- | :----------------------------------- |
@@ -31,7 +31,7 @@ Here are the system tasks available in Conductor OSS for common use:
 
 ### Operators
 
-Here are the operators available in Conductor OSS for managing the flow of execution:
+Here are the operators available in AgentMesh OSS for managing the flow of execution:
 
 | Operator                        | Description         |
 | -------------------------- | ----------------------------------------- |
@@ -48,25 +48,25 @@ Here are the operators available in Conductor OSS for managing the flow of execu
 
 ## Custom tasks
 
-If you need to implement custom logic beyond the scope of Conductor's system tasks, you can use Worker (`SIMPLE`) tasks instead. Unlike a built-in task, a Worker task requires setting up a worker outside the Conductor environment that polls for and executes the task.
+If you need to implement custom logic beyond the scope of AgentMesh's system tasks, you can use Worker (`SIMPLE`) tasks instead. Unlike a built-in task, a Worker task requires setting up a worker outside the AgentMesh environment that polls for and executes the task.
 
 ## Task comparison
 
-To help you decide on which tasks to use, here is a detailed comparison of similar tasks available in Conductor.
+To help you decide on which tasks to use, here is a detailed comparison of similar tasks available in AgentMesh.
 
 ### Inline vs Worker tasks
 
-The [Inline task](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md) is used to execute custom JavaScript code directly within the workflow. It’s ideal for lightweight operations like **simple data transformations, conditional checks, or small calculations**. Because the code executes within the Conductor JVM, Inline tasks benefit from low latency, no network overhead, and easier debugging. However, it also has limitations on using other languages, custom libraries, frameworks, or stacks. 
+The [Inline task](../../../documentation/configuration/workflowdef/systemtasks/inline-task.md) is used to execute custom JavaScript code directly within the workflow. It’s ideal for lightweight operations like **simple data transformations, conditional checks, or small calculations**. Because the code executes within the AgentMesh JVM, Inline tasks benefit from low latency, no network overhead, and easier debugging. However, it also has limitations on using other languages, custom libraries, frameworks, or stacks. 
 
 
 The Worker task is handled by external task workers that execute a custom function or service
-is an external custom function or service that performs a specific task in a workflow. Written in any language of choice (Python, Java, etc), it can execute **complex business logic, custom algorithms, or long-running operations**. Worker tasks run outside the Conductor server, meaning they require additional infrastructure set-up and logging mechanisms.
+is an external custom function or service that performs a specific task in a workflow. Written in any language of choice (Python, Java, etc), it can execute **complex business logic, custom algorithms, or long-running operations**. Worker tasks run outside the AgentMesh server, meaning they require additional infrastructure set-up and logging mechanisms.
 
 ### Event vs Kafka Publish tasks
 
 If you only need to publish messages to a Kafka topic for external services to use, the [Kafka Publish](../../../documentation/configuration/workflowdef/systemtasks/kafka-publish-task.md) task is simpler to set up.
 
-In contrast, the [Event](../../../documentation/configuration/workflowdef/systemtasks/event-task.md) task supports more involved set-ups, such as using events to start a Conductor workflow, or having Conductor consume messages. It also supports a wider range of event brokers across AMQP, NATS, SQS, Kafka, and Conductor's own internal queue.
+In contrast, the [Event](../../../documentation/configuration/workflowdef/systemtasks/event-task.md) task supports more involved set-ups, such as using events to start a AgentMesh workflow, or having AgentMesh consume messages. It also supports a wider range of event brokers across AMQP, NATS, SQS, Kafka, and AgentMesh's own internal queue.
 
 
 ### Wait vs Human tasks

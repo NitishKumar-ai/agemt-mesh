@@ -4,7 +4,7 @@ import type {
   WorkflowTask,
   TaskStatus,
   WorkflowStatus,
-} from '@conductor/common';
+} from '@agentmesh/common';
 import {
   isTaskTerminal,
   isTaskSuccessful,
@@ -12,7 +12,7 @@ import {
   isWorkflowSuccessful,
   isBuiltInTask,
   TaskType,
-} from '@conductor/common';
+} from '@agentmesh/common';
 import type { WorkflowExecutor, StartWorkflowInput, TaskResult } from './WorkflowExecutor.js';
 import type { TaskModel, WorkflowModel } from './types.js';
 import { createTaskModel, copyTaskModel, createWorkflowModel } from './types.js';
@@ -30,6 +30,7 @@ export type QueueDAO = {
   setUnackTimeout(queueName: string, id: string, timeoutMs: number): void;
   containsMessage(queueName: string, id: string): boolean;
   resetOffsetTime(queueName: string, id: string): boolean;
+  pop(queueName: string, count: number, timeout: number): Promise<string[]> | string[];
 };
 
 export type ExecutionDAOFacade = {
@@ -91,7 +92,7 @@ export type ExecutionLockService = {
   deleteLock(workflowId: string): void;
 };
 
-export interface ConductorProperties {
+export interface AgentMeshProperties {
   activeWorkerLastPollTimeout: number;
   workflowOffsetTimeout: number;
   lockLeaseTime: number;
@@ -106,7 +107,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
   private deciderService: DeciderService;
   private queueDAO: QueueDAO;
   private executionDAOFacade: ExecutionDAOFacade;
-  private properties: ConductorProperties;
+  private properties: AgentMeshProperties;
   private metadataMapperService: MetadataMapperService;
   private workflowStatusListener: WorkflowStatusListener;
   private taskStatusListener: TaskStatusListener;
@@ -118,7 +119,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     deciderService: DeciderService;
     queueDAO: QueueDAO;
     executionDAOFacade: ExecutionDAOFacade;
-    properties: ConductorProperties;
+    properties: AgentMeshProperties;
     metadataMapperService: MetadataMapperService;
     workflowStatusListener: WorkflowStatusListener;
     taskStatusListener: TaskStatusListener;
@@ -555,9 +556,9 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
             workflowId: failureWFId,
             triggeringWorkflowId: workflow.workflowId,
           });
-          workflow.output['conductor.failure_workflow'] = failureWFId;
+          workflow.output['agentmesh.failure_workflow'] = failureWFId;
         } catch (e) {
-          workflow.output['conductor.failure_workflow'] =
+          workflow.output['agentmesh.failure_workflow'] =
             `Error workflow ${failureWorkflow} failed to start. reason: ${(e as Error).message}`;
         }
         this.executionDAOFacade.updateWorkflow(workflow);

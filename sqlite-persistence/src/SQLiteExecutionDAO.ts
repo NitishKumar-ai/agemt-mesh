@@ -1,6 +1,6 @@
 import { Kysely, sql, Transaction } from 'kysely';
-import { BaseKyselyExecutionDAO, Database } from '@conductor/common-persistence';
-import { TaskModel } from '@conductor/common';
+import { BaseKyselyExecutionDAO, Database } from '@agentmesh/common-persistence';
+import { TaskModel } from '@agentmesh/common';
 
 export class SqliteExecutionDAO extends BaseKyselyExecutionDAO {
   constructor(db: Kysely<Database>) {

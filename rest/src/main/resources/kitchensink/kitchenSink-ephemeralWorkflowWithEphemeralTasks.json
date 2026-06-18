@@ -41,7 +41,7 @@
           "oddEven": "${workflow.input.oddEven}"
         },
         "type": "EVENT",
-        "sink": "conductor"
+        "sink": "agentmesh"
       },
       {
         "name": "dyntask",
@@ -210,7 +210,7 @@
         "taskReferenceName": "get_es_1",
         "inputParameters": {
           "http_request": {
-            "uri": "http://localhost:9200/conductor/_search?size=10",
+            "uri": "http://localhost:9200/agentmesh/_search?size=10",
             "method": "GET"
           }
         },

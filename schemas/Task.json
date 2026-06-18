@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://conductoross.org/schemas/Task.json",
+  "$id": "https://agentmeshoss.org/schemas/Task.json",
   "title": "Task",
   "description": "Task runtime instance schema",
   "type": "object",

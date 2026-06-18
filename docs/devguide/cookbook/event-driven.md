@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — event-driven workflow recipes for publishing to Kafka, NATS, RabbitMQ, SQS, triggering workflows from events, and completing tasks from external events."
+description: "AgentMesh cookbook — event-driven workflow recipes for publishing to Kafka, NATS, RabbitMQ, SQS, triggering workflows from events, and completing tasks from external events."
 ---
 
 # Event-driven recipes
@@ -62,7 +62,7 @@ Use the `EVENT` task type to publish messages. The `sink` field determines the d
 | RabbitMQ queue | `amqp:queue-name` |
 | RabbitMQ exchange | `amqp_exchange:exchange-name` |
 | SQS | `sqs:queue-name` |
-| Conductor internal | `conductor` |
+| AgentMesh internal | `agentmesh` |
 
 ---
 
@@ -221,30 +221,30 @@ Add the relevant properties to your `application.properties` to enable each even
 **Kafka:**
 
 ```properties
-conductor.event-queues.kafka.enabled=true
-conductor.event-queues.kafka.bootstrap-servers=kafka:9092
+agentmesh.event-queues.kafka.enabled=true
+agentmesh.event-queues.kafka.bootstrap-servers=kafka:9092
 ```
 
 **NATS:**
 
 ```properties
-conductor.event-queues.nats.enabled=true
-conductor.event-queues.nats.url=nats://localhost:4222
+agentmesh.event-queues.nats.enabled=true
+agentmesh.event-queues.nats.url=nats://localhost:4222
 ```
 
 **AMQP (RabbitMQ):**
 
 ```properties
-conductor.event-queues.amqp.enabled=true
-conductor.event-queues.amqp.hosts=rabbitmq
-conductor.event-queues.amqp.port=5672
-conductor.event-queues.amqp.username=guest
-conductor.event-queues.amqp.password=guest
+agentmesh.event-queues.amqp.enabled=true
+agentmesh.event-queues.amqp.hosts=rabbitmq
+agentmesh.event-queues.amqp.port=5672
+agentmesh.event-queues.amqp.username=guest
+agentmesh.event-queues.amqp.password=guest
 ```
 
 **SQS:**
 
 ```properties
-conductor.event-queues.sqs.enabled=true
+agentmesh.event-queues.sqs.enabled=true
 # Uses AWS default credential chain (env vars, IAM role, etc.)
 ```

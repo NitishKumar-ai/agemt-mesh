@@ -14,7 +14,7 @@ import {
   TaskExecLog,
   isWorkflowTerminal,
   isTaskTerminal,
-} from '@conductor/common';
+} from '@agentmesh/common';
 
 export abstract class BaseKyselyExecutionDAO
   implements ExecutionDAO, ConcurrentExecutionLimitDAO, RateLimitingDAO

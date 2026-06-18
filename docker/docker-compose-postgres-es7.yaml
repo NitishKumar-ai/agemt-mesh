@@ -1,11 +1,11 @@
 version: '2.3'
 
 services:
-  conductor-server:
+  agentmesh-server:
     environment:
       - CONFIG_PROP=config-postgres-es7.properties
-    image: conductor:server
-    container_name: conductor-server
+    image: agentmesh:server
+    container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
@@ -22,12 +22,12 @@ services:
       timeout: 30s
       retries: 12
     links:
-      - conductor-postgres:postgresdb
-      - conductor-elasticsearch:es
+      - agentmesh-postgres:postgresdb
+      - agentmesh-elasticsearch:es
     depends_on:
-      conductor-postgres:
+      agentmesh-postgres:
         condition: service_healthy
-      conductor-elasticsearch:
+      agentmesh-elasticsearch:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -35,13 +35,13 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-postgres:
+  agentmesh-postgres:
     image: postgres:16
     environment:
-      - POSTGRES_USER=conductor
-      - POSTGRES_PASSWORD=conductor
+      - POSTGRES_USER=agentmesh
+      - POSTGRES_PASSWORD=agentmesh
     volumes:
-      - pgdata-conductor:/var/lib/postgresql/data
+      - pgdata-agentmesh:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
@@ -55,14 +55,14 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-elasticsearch:
+  agentmesh-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - xpack.security.enabled=false
       - discovery.type=single-node
     volumes:
-      - esdata-conductor:/usr/share/elasticsearch/data
+      - esdata-agentmesh:/usr/share/elasticsearch/data
     networks:
       - internal
     healthcheck:
@@ -77,9 +77,9 @@ services:
         max-file: "3"
 
 volumes:
-  pgdata-conductor:
+  pgdata-agentmesh:
     driver: local
-  esdata-conductor:
+  esdata-agentmesh:
     driver: local
 
 networks:

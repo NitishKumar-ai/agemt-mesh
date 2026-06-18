@@ -329,9 +329,9 @@ export enum JDBCType {
 }
 
 export enum QueryProcessorType {
-  CONDUCTOR_API = "CONDUCTOR_API",
+  AGENTMESH_API = "AGENTMESH_API",
   METRICS = "METRICS",
-  CONDUCTOR_EVENTS = "CONDUCTOR_EVENTS",
+  AGENTMESH_EVENTS = "AGENTMESH_EVENTS",
 }
 
 export enum GetSignedJWTAlgorithmType {

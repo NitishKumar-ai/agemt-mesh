@@ -1,15 +1,15 @@
 ---
-description: "Why Conductor for AI agents — native LLM tasks, MCP tool calling, deterministic JSON definitions, durable human-in-the-loop, and dynamic runtime execution. Show-don't-tell with code examples."
+description: "Why AgentMesh for AI agents — native LLM tasks, MCP tool calling, deterministic JSON definitions, durable human-in-the-loop, and dynamic runtime execution. Show-don't-tell with code examples."
 ---
 
-# Why Conductor for agents
+# Why AgentMesh for agents
 
-Conductor is the original durable workflow orchestration engine — born at Netflix to run microservices at internet scale, now powering AI agents with the same battle-tested execution model. Other engines give you generic primitives and say "build your agent infrastructure yourself." Conductor gives you the agent infrastructure. Here's what that looks like in practice.
+AgentMesh is the original durable workflow orchestration engine — born at AgentMesh to run microservices at internet scale, now powering AI agents with the same battle-tested execution model. Other engines give you generic primitives and say "build your agent infrastructure yourself." AgentMesh gives you the agent infrastructure. Here's what that looks like in practice.
 
 
 ## Call an LLM — zero boilerplate
 
-Other engines treat LLM calls as generic function calls. You build the abstraction: prompt construction, provider switching, response parsing, token tracking, retry logic. On Conductor, an LLM call is a system task:
+Other engines treat LLM calls as generic function calls. You build the abstraction: prompt construction, provider switching, response parsing, token tracking, retry logic. On AgentMesh, an LLM call is a system task:
 
 ```json
 {
@@ -28,7 +28,7 @@ Other engines treat LLM calls as generic function calls. You build the abstracti
 }
 ```
 
-That's it. No SDK wrapper, no worker code, no retry logic. Conductor executes it, persists the prompt, response, token usage, model, and latency. Switch providers by changing `llmProvider` — from `anthropic` to `openai` to `bedrock` — with zero code changes. 14+ providers supported natively.
+That's it. No SDK wrapper, no worker code, no retry logic. AgentMesh executes it, persists the prompt, response, token usage, model, and latency. Switch providers by changing `llmProvider` — from `anthropic` to `openai` to `bedrock` — with zero code changes. 14+ providers supported natively.
 
 On other engines, this same task requires:
 
@@ -43,7 +43,7 @@ Every team builds this differently. Every implementation has different bugs.
 
 ## Discover and call tools — native MCP
 
-MCP (Model Context Protocol) is the open standard for agent tool use. On Conductor, tool discovery and execution are system tasks:
+MCP (Model Context Protocol) is the open standard for agent tool use. On AgentMesh, tool discovery and execution are system tasks:
 
 ```json
 [
@@ -66,14 +66,14 @@ MCP (Model Context Protocol) is the open standard for agent tool use. On Conduct
 ]
 ```
 
-The agent discovers tools at runtime, the LLM picks the right one, and Conductor executes it with automatic retry, timeout, and full audit trail. Connect to any MCP server — GitHub, Slack, databases, custom APIs — with no wrapper code.
+The agent discovers tools at runtime, the LLM picks the right one, and AgentMesh executes it with automatic retry, timeout, and full audit trail. Connect to any MCP server — GitHub, Slack, databases, custom APIs — with no wrapper code.
 
 On other engines, you write a "Durable MCP" wrapper: a custom activity/worker that connects to the MCP server, marshals requests, handles errors, and logs results. For every MCP server. For every tool type.
 
 
 ## Human-in-the-loop — one line, durable forever
 
-An agent needs human approval before a risky action. On Conductor:
+An agent needs human approval before a risky action. On AgentMesh:
 
 ```json
 {
@@ -93,7 +93,7 @@ On other engines, you implement `wait_condition()` with signal handlers, write t
 
 ## Agent loops — checkpointed per iteration
 
-An autonomous agent loops: plan, act, observe, repeat. On Conductor, each iteration is a durable checkpoint:
+An autonomous agent loops: plan, act, observe, repeat. On AgentMesh, each iteration is a durable checkpoint:
 
 ```json
 {
@@ -139,7 +139,7 @@ On other engines, you build the loop in your workflow code. If the process crash
 
 ## Dynamic workflows — LLMs generate execution plans
 
-This is the capability no other engine can match. An LLM generates a complete workflow definition as JSON, and Conductor executes it immediately:
+This is the capability no other engine can match. An LLM generates a complete workflow definition as JSON, and AgentMesh executes it immediately:
 
 ```json
 {
@@ -154,9 +154,9 @@ This is the capability no other engine can match. An LLM generates a complete wo
 }
 ```
 
-The LLM's output is a Conductor workflow definition. No code generation. No compilation. No deployment pipeline. The generated workflow runs with the same durable execution guarantees as any hand-written workflow — persistence, retries, observability, replay.
+The LLM's output is a AgentMesh workflow definition. No code generation. No compilation. No deployment pipeline. The generated workflow runs with the same durable execution guarantees as any hand-written workflow — persistence, retries, observability, replay.
 
-Combined with `DYNAMIC` tasks (resolve which task to run at runtime) and `DYNAMIC_FORK` (create N parallel branches at runtime), Conductor is more dynamic than code-based engines. Not despite using JSON — because of it. Data is easier to generate, transform, and compose than code.
+Combined with `DYNAMIC` tasks (resolve which task to run at runtime) and `DYNAMIC_FORK` (create N parallel branches at runtime), AgentMesh is more dynamic than code-based engines. Not despite using JSON — because of it. Data is easier to generate, transform, and compose than code.
 
 On code-based engines, dynamic workflows require generating source code, compiling it, deploying it, and then executing it. That friction fundamentally limits how dynamically an AI system can operate.
 
@@ -214,14 +214,14 @@ A parent agent delegates to specialist agents. Each specialist is a sub-workflow
 }
 ```
 
-The LLM decides how many research agents to spawn and what each one investigates. Conductor creates the branches at runtime, runs them in parallel, and joins the results. If one branch fails, it retries independently without affecting the others. The parent agent sees the full execution tree — drill from parent to child to sub-child in the UI.
+The LLM decides how many research agents to spawn and what each one investigates. AgentMesh creates the branches at runtime, runs them in parallel, and joins the results. If one branch fails, it retries independently without affecting the others. The parent agent sees the full execution tree — drill from parent to child to sub-child in the UI.
 
 
 ## Long-running workflows — evolve without breaking
 
 An agent workflow runs for days. Midway through, you need to fix a bug or add a step. On code-based engines, this is where things get painful — you end up littering your workflow code with version guards and `if/else` branches to keep old executions replaying correctly while new ones pick up the change. Every change adds a permanent branch that can never be removed. After a year of iteration, the workflow is an archaeology site of version checks.
 
-Conductor eliminates this entirely. Each execution snapshots its definition at start time:
+AgentMesh eliminates this entirely. Each execution snapshots its definition at start time:
 
 ```json
 {
@@ -235,19 +235,19 @@ Conductor eliminates this entirely. Each execution snapshots its definition at s
 }
 ```
 
-Running executions continue with their original definition. New executions pick up the updated definition. No version guards. No branching. No archaeology. Update the definition, register it, and move on. If you need to apply the new definition to a running execution, [restart it](../../architecture/durable-execution.md#replay-and-recovery) — Conductor re-executes the workflow with the latest definition from the beginning.
+Running executions continue with their original definition. New executions pick up the updated definition. No version guards. No branching. No archaeology. Update the definition, register it, and move on. If you need to apply the new definition to a running execution, [restart it](../../architecture/durable-execution.md#replay-and-recovery) — AgentMesh re-executes the workflow with the latest definition from the beginning.
 
 This is not a minor convenience. For AI agents that run for hours or days — iterating through plan/act/observe loops, waiting for human approvals, pausing for external events — the ability to evolve the workflow definition without version branching is the difference between a maintainable system and a fragile one.
 
 
 ## Guaranteed execution — failure is not a choice
 
-Conductor was built as a state machine engine at Netflix to orchestrate microservices at internet scale. The execution model is designed around one principle: **every task will be executed to completion, or every failure will be explicitly handled.** There is no silent failure mode.
+AgentMesh was built as a state machine engine at AgentMesh to orchestrate microservices at internet scale. The execution model is designed around one principle: **every task will be executed to completion, or every failure will be explicitly handled.** There is no silent failure mode.
 
 The guarantees:
 
 - **At-least-once task delivery** — Every task is persisted to durable storage before execution. If a worker crashes, the task is automatically requeued and delivered to another worker. Tasks do not disappear.
-- **Sweeper recovery** — A background sweeper service continuously scans for stalled tasks. If a task is `IN_PROGRESS` but its worker has gone silent (no heartbeat, past `responseTimeoutSeconds`), the sweeper requeues it. If the Conductor server itself restarts, the sweeper recovers all in-flight work on startup.
+- **Sweeper recovery** — A background sweeper service continuously scans for stalled tasks. If a task is `IN_PROGRESS` but its worker has gone silent (no heartbeat, past `responseTimeoutSeconds`), the sweeper requeues it. If the AgentMesh server itself restarts, the sweeper recovers all in-flight work on startup.
 - **Configurable retry policies** — Every task has retry count, delay, and backoff strategy. Retries are managed by the engine, not your code. Exponential backoff, fixed delay, and linear backoff are built in.
 - **Failure workflows** — When a workflow fails after exhausting retries, a `failureWorkflow` runs automatically. This is where you put compensation logic: undo API calls, release resources, send alerts. The failure workflow has the full context of what failed and why.
 - **Terminal state is always reached** — A workflow always reaches `COMPLETED`, `FAILED`, or `TERMINATED`. There is no limbo state. You can query, alert, and act on any terminal state.
@@ -277,9 +277,9 @@ These guarantees apply uniformly across the entire workflow graph — including 
 
 ## Deterministic by construction
 
-JSON workflow definitions cannot have side effects. There is no ambient state, no thread-local context, no hidden mutation. Given the same inputs, a Conductor workflow schedules the same tasks in the same order, every time. This is why [replay](../../architecture/durable-execution.md#replay-and-recovery) works unconditionally — restart a workflow from three months ago and it re-executes the same graph.
+JSON workflow definitions cannot have side effects. There is no ambient state, no thread-local context, no hidden mutation. Given the same inputs, a AgentMesh workflow schedules the same tasks in the same order, every time. This is why [replay](../../architecture/durable-execution.md#replay-and-recovery) works unconditionally — restart a workflow from three months ago and it re-executes the same graph.
 
-When workflow logic lives in code, developers must manually enforce determinism constraints: no system clocks, no random numbers, no uncontrolled I/O. Violating these constraints causes subtle replay bugs that are hard to detect and harder to debug. Conductor eliminates this entire class of bugs by construction — JSON cannot have side effects.
+When workflow logic lives in code, developers must manually enforce determinism constraints: no system clocks, no random numbers, no uncontrolled I/O. Violating these constraints causes subtle replay bugs that are hard to detect and harder to debug. AgentMesh eliminates this entire class of bugs by construction — JSON cannot have side effects.
 
 
 ## Observability — automatic, not opt-in
@@ -300,9 +300,9 @@ On other engines, you build this logging yourself. Every team does it differentl
 
 ## The agent use case matrix
 
-Every agentic pattern maps to a specific Conductor primitive:
+Every agentic pattern maps to a specific AgentMesh primitive:
 
-| Use case | Conductor pattern |
+| Use case | AgentMesh pattern |
 |---|---|
 | **Tool-calling agent** | `LLM_CHAT_COMPLETE` + `CALL_MCP_TOOL` |
 | **Approval-gated actions** | `HUMAN` task + `SWITCH` for timeout |

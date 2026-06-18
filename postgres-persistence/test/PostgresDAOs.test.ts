@@ -3,8 +3,8 @@ import { Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
 import { execSync } from 'child_process';
 
-import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
+import type { Database } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration } from '@agentmesh/common-persistence';
 import { runQueueDAOContractTests } from '../../common-persistence/test/QueueDAO.contract.js';
 import { runMetadataDAOContractTests } from '../../common-persistence/test/MetadataDAO.contract.js';
 import { runExecutionDAOContractTests } from '../../common-persistence/test/ExecutionDAO.contract.js';

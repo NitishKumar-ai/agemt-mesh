@@ -1,13 +1,13 @@
 version: '2.3'
 
 services:
-  conductor-server:
+  agentmesh-server:
     environment:
       - CONFIG_PROP=config-redis.properties
       - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
-      - conductor.app.ownerEmailMandatory=false
-    image: conductor:server
-    container_name: conductor-server
+      - agentmesh.app.ownerEmailMandatory=false
+    image: agentmesh:server
+    container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
@@ -24,12 +24,12 @@ services:
       timeout: 30s
       retries: 12
     links:
-      - conductor-elasticsearch:es
-      - conductor-redis:rs
+      - agentmesh-elasticsearch:es
+      - agentmesh-redis:rs
     depends_on:
-      conductor-elasticsearch:
+      agentmesh-elasticsearch:
         condition: service_healthy
-      conductor-redis:
+      agentmesh-redis:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -37,7 +37,7 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-redis:
+  agentmesh-redis:
     image: redis:6.2.3-alpine
     volumes:
       - ../server/config/redis.conf:/usr/local/etc/redis/redis.conf
@@ -46,14 +46,14 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli","ping" ]
 
-  conductor-elasticsearch:
+  agentmesh-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - xpack.security.enabled=false
       - discovery.type=single-node
     volumes:
-      - esdata-conductor:/usr/share/elasticsearch/data
+      - esdata-agentmesh:/usr/share/elasticsearch/data
     networks:
       - internal
     healthcheck:
@@ -68,7 +68,7 @@ services:
         max-file: "3"
 
 volumes:
-  esdata-conductor:
+  esdata-agentmesh:
     driver: local
 
 networks:

@@ -13,7 +13,7 @@
         "index": "tech_docs",
         "embeddingModelProvider": "openai",
         "embeddingModel": "text-embedding-3-small",
-        "text": "Conductor is a workflow orchestration platform",
+        "text": "AgentMesh is a workflow orchestration platform",
         "docId": "doc_001"
       }
     },

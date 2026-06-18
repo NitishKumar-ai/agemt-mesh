@@ -1,10 +1,10 @@
 ---
-description: "Schedule workflows to run on a cron expression using Conductor's built-in scheduler. Create, pause, resume, and delete schedules via the REST API."
+description: "Schedule workflows to run on a cron expression using AgentMesh's built-in scheduler. Create, pause, resume, and delete schedules via the REST API."
 ---
 
 # Scheduling Workflows
 
-Conductor includes a built-in scheduler that triggers workflow executions on a cron schedule. Schedules are managed through the REST API — no external cron daemon or job scheduler is needed.
+AgentMesh includes a built-in scheduler that triggers workflow executions on a cron schedule. Schedules are managed through the REST API — no external cron daemon or job scheduler is needed.
 
 ## How it works
 
@@ -17,7 +17,7 @@ A **schedule** binds a cron expression to a `StartWorkflowRequest`. On every cro
 
 ## Cron expression format
 
-Conductor uses Spring's 6-field cron format with **second-level precision**:
+AgentMesh uses Spring's 6-field cron format with **second-level precision**:
 
 ```
 ┌─────────────── second (0-59)
@@ -177,17 +177,17 @@ Inside the workflow, access all values via `${workflow.input.*}`:
 
 ## Configuration
 
-The scheduler is configured under the `conductor.scheduler` prefix in your application properties:
+The scheduler is configured under the `agentmesh.scheduler` prefix in your application properties:
 
 | Property | Default | Description |
 |---|---|---|
-| `conductor.scheduler.enabled` | `true` | Enable/disable the scheduler |
-| `conductor.scheduler.pollingInterval` | `100` | Poll interval in milliseconds |
-| `conductor.scheduler.pollBatchSize` | `5` | Schedules processed per poll cycle |
-| `conductor.scheduler.pollingThreadCount` | `1` | Number of polling threads |
-| `conductor.scheduler.schedulerTimeZone` | `UTC` | Default timezone |
-| `conductor.scheduler.initialDelayMs` | `15000` | Startup delay before first poll |
-| `conductor.scheduler.maxScheduleJitterMs` | `1000` | Random jitter added to dispatch times to smooth load |
+| `agentmesh.scheduler.enabled` | `true` | Enable/disable the scheduler |
+| `agentmesh.scheduler.pollingInterval` | `100` | Poll interval in milliseconds |
+| `agentmesh.scheduler.pollBatchSize` | `5` | Schedules processed per poll cycle |
+| `agentmesh.scheduler.pollingThreadCount` | `1` | Number of polling threads |
+| `agentmesh.scheduler.schedulerTimeZone` | `UTC` | Default timezone |
+| `agentmesh.scheduler.initialDelayMs` | `15000` | Startup delay before first poll |
+| `agentmesh.scheduler.maxScheduleJitterMs` | `1000` | Random jitter added to dispatch times to smooth load |
 
 !!! note "Catchup mode"
     When `runCatchupScheduleInstances` is `true`, the scheduler fires all cron slots that were missed while it was offline. Use this for workflows where every execution matters (e.g., billing, compliance). Leave it `false` (default) for dashboards or monitoring where only the latest run matters.

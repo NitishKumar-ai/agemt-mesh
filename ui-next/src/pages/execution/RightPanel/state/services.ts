@@ -23,7 +23,7 @@ export const updateTaskState = async (
     payload: { status, body = {} },
   } = event as UpdateSelectedTaskStatus;
   const { referenceTaskName } = selectedTask!;
-  const url = `/tasks/${executionId}/${referenceTaskName}/${status}?workerid=conductor-ui`;
+  const url = `/tasks/${executionId}/${referenceTaskName}/${status}?workerid=agentmesh-ui`;
   try {
     const result = await fetchWithContext(
       url,

@@ -27,8 +27,8 @@ export interface HumanTemplate extends FormRenderProperties {
 }
 
 export enum AssigneeType {
-  CONDUCTOR_USER = "CONDUCTOR_USER",
-  CONDUCTOR_GROUP = "CONDUCTOR_GROUP",
+  AGENTMESH_USER = "AGENTMESH_USER",
+  AGENTMESH_GROUP = "AGENTMESH_GROUP",
   EXTERNAL_USER = "EXTERNAL_USER",
   EXTERNAL_GROUP = "EXTERNAL_GROUP",
 }

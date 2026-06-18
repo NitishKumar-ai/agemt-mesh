@@ -1,5 +1,5 @@
 ---
-description: "Configure Fork (FORK_JOIN) tasks in Conductor to run task sequences in parallel. Learn parameters, JSON configuration, and Join task pairing."
+description: "Configure Fork (FORK_JOIN) tasks in AgentMesh to run task sequences in parallel. Learn parameters, JSON configuration, and Join task pairing."
 ---
 
 # Fork

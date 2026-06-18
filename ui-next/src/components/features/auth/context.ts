@@ -3,7 +3,7 @@
  * Used by useAuth() to access the current auth state.
  *
  * In OSS mode, NoAuthProvider sets both authService and authState (stub).
- * Enterprise (e.g. orkes) can provide authState so conductor-ui's useAuth() and
+ * Enterprise (e.g. orkes) can provide authState so agentmesh-ui's useAuth() and
  * shared components (e.g. UserInfo) work without a custom footer.
  */
 import { createContext } from "react";

@@ -20,8 +20,8 @@ const COMPOSE_FILE = resolve(
   "../../../docker/docker-compose-ui-e2e.yaml",
 );
 
-const COMPOSE_PROJECT = "conductor-ui-e2e";
-const SENTINEL = resolve(tmpdir(), "conductor-ui-e2e-docker-started");
+const COMPOSE_PROJECT = "agentmesh-ui-e2e";
+const SENTINEL = resolve(tmpdir(), "agentmesh-ui-e2e-docker-started");
 
 const compose = (args: string) =>
   `docker compose -p ${COMPOSE_PROJECT} -f "${COMPOSE_FILE}" ${args}`;
@@ -43,11 +43,11 @@ export default async function globalTeardown(): Promise<void> {
     return;
   }
 
-  console.log("Stopping Conductor backend ...");
+  console.log("Stopping AgentMesh backend ...");
   try {
     execSync(compose("down"), { stdio: "inherit" });
-    console.log("Conductor backend stopped");
+    console.log("AgentMesh backend stopped");
   } catch (err) {
-    console.warn("Failed to stop Conductor backend:", err);
+    console.warn("Failed to stop AgentMesh backend:", err);
   }
 }

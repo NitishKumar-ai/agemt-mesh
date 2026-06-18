@@ -1,10 +1,10 @@
 ---
-description: "Overview of built-in system tasks in Conductor — HTTP, Event, Human, Wait, Inline, Kafka Publish, JSON JQ Transform, LLM orchestration, MCP function calling, and more for durable workflow orchestration."
+description: "Overview of built-in system tasks in AgentMesh — HTTP, Event, Human, Wait, Inline, Kafka Publish, JSON JQ Transform, LLM orchestration, MCP function calling, and more for durable workflow orchestration."
 ---
 
 # System Tasks
 
-System tasks are built-in tasks that run on the Conductor server. They execute without external workers, allowing you to build workflows using common operations out of the box.
+System tasks are built-in tasks that run on the AgentMesh server. They execute without external workers, allowing you to build workflows using common operations out of the box.
 
 ## Available system tasks
 
@@ -12,7 +12,7 @@ System tasks are built-in tasks that run on the Conductor server. They execute w
 | :--- | :--- | :--- |
 | [HTTP](http-task.md) | `HTTP` | Call any HTTP/REST endpoint. Supports GET, POST, PUT, DELETE with headers, body, and connection/read timeouts. |
 | [Inline](inline-task.md) | `INLINE` | Execute lightweight JavaScript or Python expressions server-side using GraalJS. Useful for data transformation, validation, and simple logic. |
-| [Event](event-task.md) | `EVENT` | Publish events to external systems — Kafka, NATS, NATS Streaming, AMQP (RabbitMQ), SQS, or Conductor's internal queue. |
+| [Event](event-task.md) | `EVENT` | Publish events to external systems — Kafka, NATS, NATS Streaming, AMQP (RabbitMQ), SQS, or AgentMesh's internal queue. |
 | [Wait](wait-task.md) | `WAIT` | Pause workflow execution until a specified time, duration, or external signal. |
 | [Human](human-task.md) | `HUMAN` | Wait for an external signal, typically a human approval or manual action. The task stays `IN_PROGRESS` until completed via API. |
 | [Kafka Publish](kafka-publish-task.md) | `KAFKA_PUBLISH` | Publish messages directly to a Kafka topic with configurable serializers and headers. |
@@ -39,7 +39,7 @@ These are also system tasks but control workflow execution flow rather than perf
 
 ## AI & LLM tasks
 
-Conductor is the only open-source workflow engine with native AI system tasks. These tasks require the `ai` module to be enabled and provide direct integration with 14+ LLM providers, 3 vector databases, and MCP servers — no external frameworks or custom workers needed.
+AgentMesh is the only open-source workflow engine with native AI system tasks. These tasks require the `ai` module to be enabled and provide direct integration with 14+ LLM providers, 3 vector databases, and MCP servers — no external frameworks or custom workers needed.
 
 ### LLM
 
@@ -60,7 +60,7 @@ Conductor is the only open-source workflow engine with native AI system tasks. T
 | Search Index | `LLM_SEARCH_INDEX` | Semantic search using a text query. |
 | Search Embeddings | `LLM_SEARCH_EMBEDDINGS` | Search using embedding vectors directly. |
 
-**Supported vector databases:** Pinecone, pgvector (PostgreSQL), and MongoDB Atlas Vector Search. These enable RAG (retrieval-augmented generation) pipelines as standard Conductor workflows.
+**Supported vector databases:** Pinecone, pgvector (PostgreSQL), and MongoDB Atlas Vector Search. These enable RAG (retrieval-augmented generation) pipelines as standard AgentMesh workflows.
 
 ### Content Generation
 
@@ -78,7 +78,7 @@ Conductor is the only open-source workflow engine with native AI system tasks. T
 | List MCP Tools | `LIST_MCP_TOOLS` | List available tools from an MCP server. |
 | Call MCP Tool | `CALL_MCP_TOOL` | Execute a tool on an MCP server. |
 
-MCP integration enables Conductor workflows to discover and use tools from any MCP-compatible server, and to expose Conductor workflows as MCP tools for use by LLMs and AI agents.
+MCP integration enables AgentMesh workflows to discover and use tools from any MCP-compatible server, and to expose AgentMesh workflows as MCP tools for use by LLMs and AI agents.
 
 ## Deprecated
 

@@ -1,7 +1,7 @@
 site_name: Durable Execution for workflows and agents
-site_description: Conductor is an open-source durable code execution engine and agentic workflow engine. Orchestrate distributed workflows with saga pattern compensation, at-least-once task delivery, and polyglot workers in Java, Python, Go, and more.
-repo_url: https://github.com/conductor-oss/conductor
-site_url: https://conductor-oss.github.io/conductor
+site_description: AgentMesh is an open-source durable code execution engine and agentic workflow engine. Orchestrate distributed workflows with saga pattern compensation, at-least-once task delivery, and polyglot workers in Java, Python, Go, and more.
+repo_url: https://github.com/agentmesh-oss/agentmesh
+site_url: https://agentmesh-oss.github.io/agentmesh
 edit_uri: ''
 strict: false
 use_directory_urls: false
@@ -18,8 +18,8 @@ nav:
     - JSON + Code Native: architecture/json-native.md
     - Task Lifecycle: devguide/architecture/tasklifecycle.md
   - Guides:
-    - Build with AI Agents: devguide/how-tos/conductor-skills.md
-    - devguide/concepts/conductor.md
+    - Build with AI Agents: devguide/how-tos/agentmesh-skills.md
+    - devguide/concepts/agentmesh.md
     - Workflows:
       - devguide/how-tos/Workflows/creating-workflows.md
       - devguide/how-tos/Workflows/starting-workflows.md
@@ -55,7 +55,7 @@ nav:
     - MCP Integration: devguide/ai/mcp-guide.md
     - Production Agent Architecture: devguide/ai/production-agent-architecture.md
     - Failure Semantics: devguide/ai/failure-semantics.md
-    - Why Conductor for Agents: devguide/ai/why-conductor.md
+    - Why AgentMesh for Agents: devguide/ai/why-agentmesh.md
     - Durable Agents: devguide/ai/durable-agents.md
     - Human-in-the-Loop: devguide/ai/human-in-the-loop.md
     - Dynamic Workflows: devguide/ai/dynamic-workflows.md
@@ -162,9 +162,9 @@ extra:
   generator: false
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/conductor-oss/conductor
+      link: https://github.com/agentmesh-oss/agentmesh
     - icon: fontawesome/brands/slack
-      link: https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA
+      link: https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA
     - icon: fontawesome/brands/youtube
       link: https://www.youtube.com/@orkesio
 
@@ -194,4 +194,4 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.details
 
-copyright: Conductor authors
+copyright: AgentMesh authors

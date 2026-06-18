@@ -1,5 +1,5 @@
 ---
-description: "Annotation Processor — use code generation during Conductor builds with annotation-based processing for protobuf and more."
+description: "Annotation Processor — use code generation during AgentMesh builds with annotation-based processing for protobuf and more."
 ---
 # Annotation Processor
 
@@ -13,16 +13,16 @@ This is an actual example of this module which is implemented in common/build.gr
 ```groovy
 task protogen(dependsOn: jar, type: JavaExec) {
     classpath configurations.annotationsProcessorCodegen
-    main = 'com.netflix.conductor.annotationsprocessor.protogen.ProtoGenTask'
+    main = 'com.agentmesh.agentmesh.annotationsprocessor.protogen.ProtoGenTask'
     args(
-            "conductor.proto",
-            "com.netflix.conductor.proto",
-            "github.com/netflix/conductor/client/gogrpc/conductor/model",
+            "agentmesh.proto",
+            "com.agentmesh.agentmesh.proto",
+            "github.com/agentmesh/agentmesh/client/gogrpc/agentmesh/model",
             "${rootDir}/grpc/src/main/proto",
-            "${rootDir}/grpc/src/main/java/com/netflix/conductor/grpc",
-            "com.netflix.conductor.grpc",
+            "${rootDir}/grpc/src/main/java/com/agentmesh/agentmesh/grpc",
+            "com.agentmesh.agentmesh.grpc",
             jar.archivePath,
-            "com.netflix.conductor.common",
+            "com.agentmesh.agentmesh.common",
     )
 }
 ```

@@ -1,6 +1,6 @@
-# Conductor UI v2
+# AgentMesh UI v2
 
-The open-source React UI for [Conductor](https://github.com/conductor-oss/conductor). It ships as both a **standalone web application** and an **npm library** that enterprise packages can extend via a plugin system.
+The open-source React UI for [AgentMesh](https://github.com/agentmesh-oss/agentmesh). It ships as both a **standalone web application** and an **npm library** that enterprise packages can extend via a plugin system.
 
 ## Running locally
 
@@ -11,7 +11,7 @@ The open-source React UI for [Conductor](https://github.com/conductor-oss/conduc
   ```bash
   corepack enable
   ```
-- A running Conductor server (default: `http://localhost:8080`)
+- A running AgentMesh server (default: `http://localhost:8080`)
 
 ### Setup
 
@@ -41,7 +41,7 @@ The app reads runtime config from `public/context.js`, which is loaded at startu
 cp public/context.js.example public/context.js
 ```
 
-This file sets feature flags (`window.conductor`) and auth config (`window.authConfig`) without requiring a rebuild.
+This file sets feature flags (`window.agentmesh`) and auth config (`window.authConfig`) without requiring a rebuild.
 
 ## Available scripts
 
@@ -83,8 +83,8 @@ pnpm test:coverage   # produces coverage/index.html
 ### E2E tests (Playwright)
 
 E2E tests live in `e2e/` and are run by Playwright against a real Chromium
-browser. Every test mocks the Conductor backend with `page.route()`, so **no
-running Conductor server is required** — the suite works entirely against the
+browser. Every test mocks the AgentMesh backend with `page.route()`, so **no
+running AgentMesh server is required** — the suite works entirely against the
 built-in Vite dev server.
 
 #### First-time setup
@@ -156,7 +156,7 @@ Example GitHub Actions job:
 ### Integration tests (Playwright + live backend)
 
 Integration tests live in `e2e/integration/` and use a separate config,
-`playwright.integration.config.ts`. They talk to a real Conductor server and
+`playwright.integration.config.ts`. They talk to a real AgentMesh server and
 verify the full stack end-to-end: the API client creates test data, the
 browser navigates through the UI, and assertions confirm the data is rendered
 correctly. Docker is managed automatically — no manual server management is
@@ -165,8 +165,8 @@ required.
 #### How it works
 
 1. **Global setup** (`e2e/integration/global-setup.ts`) checks whether a
-   Conductor server is already listening on port 8000. If not, it builds the
-   `conductor:server` Docker image if needed (uses layer cache after first run),
+   AgentMesh server is already listening on port 8000. If not, it builds the
+   `agentmesh:server` Docker image if needed (uses layer cache after first run),
    then starts `docker/docker-compose-ui-e2e.yaml` and waits for the `/health`
    endpoint to return 200 (up to 4 minutes to account for cold JVM starts).
 2. The app is **built with `vite build`** and then **served with `vite preview`**,
@@ -188,10 +188,10 @@ pnpm test:e2e:integration
 
 This single command does everything automatically:
 
-1. Builds the `conductor:server` Docker image if it does not already exist
+1. Builds the `agentmesh:server` Docker image if it does not already exist
    locally — slow the first time (~5–10 min) but Docker's layer cache makes
    subsequent runs fast (~30s) unless server-side code has changed
-2. Starts Postgres + the Conductor server via Docker Compose
+2. Starts Postgres + the AgentMesh server via Docker Compose
    (`docker/docker-compose-ui-e2e.yaml`) and waits up to 4 minutes for the
    backend `/health` endpoint to respond
 3. Builds the UI (`pnpm build`) with `VITE_WF_SERVER=http://localhost:8000`
@@ -215,7 +215,7 @@ pnpm test:e2e:integration e2e/integration/workflows.spec.ts
 # Run tests whose name matches a pattern
 pnpm test:e2e:integration --grep "appears in the"
 
-# Skip Docker management if you already have a Conductor backend running
+# Skip Docker management if you already have a AgentMesh backend running
 # on port 8000 (e.g. started with docker compose separately)
 SKIP_DOCKER=true pnpm test:e2e:integration
 
@@ -223,7 +223,7 @@ SKIP_DOCKER=true pnpm test:e2e:integration
 SKIP_DOCKER_TEARDOWN=true pnpm test:e2e:integration
 
 # Point the tests at a backend running on a non-default URL
-CONDUCTOR_SERVER_URL=http://localhost:9000 pnpm test:e2e:integration
+AGENTMESH_SERVER_URL=http://localhost:9000 pnpm test:e2e:integration
 ```
 
 **Faster iteration after the first run**
@@ -243,7 +243,7 @@ pnpm test:e2e:integration
 To stop the stack manually when you are done:
 
 ```bash
-docker compose -p conductor-ui-e2e -f docker/docker-compose-ui-e2e.yaml down
+docker compose -p agentmesh-ui-e2e -f docker/docker-compose-ui-e2e.yaml down
 ```
 
 #### Running integration tests in CI
@@ -256,7 +256,7 @@ before running the tests, so no explicit build step is needed in CI.
   run: pnpm exec playwright install --with-deps chromium
 
 - name: Run integration tests
-  # Global setup builds the conductor:server image automatically on first run.
+  # Global setup builds the agentmesh:server image automatically on first run.
   # The Playwright webServer config then runs `pnpm build && pnpm preview`.
   run: pnpm test:e2e:integration
 
@@ -281,27 +281,27 @@ package root:
 
 ```bash
 # pnpm (recommended)
-pnpm add "conductor-oss/conductor#<tag>&path:/ui-next"
+pnpm add "agentmesh-oss/agentmesh#<tag>&path:/ui-next"
 
 # npm / yarn
-npm install "conductor-oss/conductor#<tag>&path:/ui-next"
+npm install "agentmesh-oss/agentmesh#<tag>&path:/ui-next"
 ```
 
 Or pin the version in `package.json`:
 
 ```json
-"conductor-ui": "conductor-oss/conductor#v1.0.0&path:/ui-next"
+"agentmesh-ui": "agentmesh-oss/agentmesh#v1.0.0&path:/ui-next"
 ```
 
 Replace `<tag>` / `v1.0.0` with the release tag you want to consume
 (e.g. `v3.2.1`). Available tags:
-https://github.com/conductor-oss/conductor/releases
+https://github.com/agentmesh-oss/agentmesh/releases
 
 Import styles in your app entry point:
 
 ```tsx
-import "conductor-ui/styles.css"; // component styles
-import "conductor-ui/global.css"; // global body/font styles (optional)
+import "agentmesh-ui/styles.css"; // component styles
+import "agentmesh-ui/global.css"; // global body/font styles (optional)
 ```
 
 ### Extending with plugins
@@ -309,7 +309,7 @@ import "conductor-ui/global.css"; // global body/font styles (optional)
 The plugin system lets you register additional routes, sidebar items, task forms, auth providers, and more without modifying the core package.
 
 ```tsx
-import { pluginRegistry, App } from "conductor-ui";
+import { pluginRegistry, App } from "agentmesh-ui";
 
 // Register a custom sidebar item
 pluginRegistry.registerSidebarItem({
@@ -356,7 +356,7 @@ function Root() {
 Sidebar items use numeric positions so plugins can inject between core items without collisions. The core OSS positions are exported for reference:
 
 ```tsx
-import { CORE_SIDEBAR_POSITIONS } from "conductor-ui";
+import { CORE_SIDEBAR_POSITIONS } from "agentmesh-ui";
 
 // CORE_SIDEBAR_POSITIONS.ROOT:
 //   executionsSubMenu: 100

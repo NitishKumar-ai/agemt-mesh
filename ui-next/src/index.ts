@@ -1,7 +1,7 @@
 /**
- * Conductor UI - Open Source
+ * AgentMesh UI - Open Source
  *
- * This is the main entry point for the conductor-ui npm package.
+ * This is the main entry point for the agentmesh-ui npm package.
  * It exports the plugin system, core components, pages, utilities, and types
  * that enterprise packages can use to extend the application.
  */
@@ -11,7 +11,7 @@
 // =============================================================================
 export { pluginRegistry } from "./plugins/registry";
 export type {
-  ConductorPlugin,
+  AgentMeshPlugin,
   PluginRegistry,
   // Task forms
   PluginTaskFormProps,

@@ -2,11 +2,11 @@ version: '2.3'
 
 services:
 
-  conductor-server:
+  agentmesh-server:
     environment:
       - CONFIG_PROP=config-mysql.properties
-    image: conductor:server
-    container_name: conductor-server
+    image: agentmesh:server
+    container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
@@ -23,15 +23,15 @@ services:
       timeout: 30s
       retries: 12
     links:
-      - conductor-elasticsearch:es
-      - conductor-mysql:mysql
-      - conductor-redis:rs
+      - agentmesh-elasticsearch:es
+      - agentmesh-mysql:mysql
+      - agentmesh-redis:rs
     depends_on:
-      conductor-elasticsearch:
+      agentmesh-elasticsearch:
         condition: service_healthy
-      conductor-mysql:
+      agentmesh-mysql:
         condition: service_healthy
-      conductor-redis:
+      agentmesh-redis:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -39,16 +39,16 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-mysql:
+  agentmesh-mysql:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345
-      MYSQL_DATABASE: conductor
-      MYSQL_USER: conductor
-      MYSQL_PASSWORD: conductor
+      MYSQL_DATABASE: agentmesh
+      MYSQL_USER: agentmesh
+      MYSQL_PASSWORD: agentmesh
     volumes:
       - type: volume
-        source: conductor_mysql
+        source: agentmesh_mysql
         target: /var/lib/mysql
     networks:
       - internal
@@ -58,7 +58,7 @@ services:
       timeout: 5s
       retries: 12
 
-  conductor-redis:
+  agentmesh-redis:
     image: redis:6.2.3-alpine
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
@@ -67,14 +67,14 @@ services:
     healthcheck:
       test: [ "CMD", "redis-cli","ping" ]
 
-  conductor-elasticsearch:
+  agentmesh-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - xpack.security.enabled=false
       - discovery.type=single-node
     volumes:
-      - esdata-conductor:/usr/share/elasticsearch/data
+      - esdata-agentmesh:/usr/share/elasticsearch/data
     networks:
       - internal
     healthcheck:
@@ -89,9 +89,9 @@ services:
         max-file: "3"
 
 volumes:
-  conductor_mysql:
+  agentmesh_mysql:
     driver: local
-  esdata-conductor:
+  esdata-agentmesh:
     driver: local
 
 networks:

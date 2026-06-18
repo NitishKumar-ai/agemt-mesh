@@ -1,5 +1,5 @@
 ---
-description: "Build your first AI agent with Conductor in 5 minutes. Step-by-step tutorial: discover MCP tools, call an LLM, execute tools, add human approval, and make it autonomous — all with durable execution guarantees."
+description: "Build your first AI agent with AgentMesh in 5 minutes. Step-by-step tutorial: discover MCP tools, call an LLM, execute tools, add human approval, and make it autonomous — all with durable execution guarantees."
 ---
 
 # Build your first AI agent
@@ -8,7 +8,7 @@ description: "Build your first AI agent with Conductor in 5 minutes. Step-by-ste
 
 **Prerequisites:**
 
-- Conductor running locally (`conductor server start`)
+- AgentMesh running locally (`agentmesh server start`)
 - An LLM provider API key (OpenAI or Anthropic)
 - An MCP server running (we'll use a simple example below)
 
@@ -24,7 +24,7 @@ mcp-testkit --transport http
 This starts an MCP server at `http://localhost:3001/mcp` with deterministic tools for testing. You'll use this URL in the workflow definition.
 
 !!! tip "Any MCP server works"
-    Conductor connects to any MCP-compatible server. Use community MCP servers for GitHub, Slack, databases, or any API — or build your own. See the [MCP integration guide](mcp-guide.md) for details.
+    AgentMesh connects to any MCP-compatible server. Use community MCP servers for GitHub, Slack, databases, or any API — or build your own. See the [MCP integration guide](mcp-guide.md) for details.
 
 
 ## Step 2: Configure your LLM provider
@@ -37,7 +37,7 @@ export OPENAI_API_KEY=sk-your-openai-key
 export ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
 ```
 
-Then start (or restart) the server. Conductor auto-enables providers when their API key is set.
+Then start (or restart) the server. AgentMesh auto-enables providers when their API key is set.
 
 
 ## Step 3: Create the agent workflow
@@ -125,14 +125,14 @@ Save this as `my_first_agent.json`. This is a complete AI agent in four tasks �
 | `execute` | `CALL_MCP_TOOL` | Calls the selected tool on the MCP server |
 | `summarize` | `LLM_CHAT_COMPLETE` | Summarizes the raw tool output for the user |
 
-Every task is a native Conductor system task. No workers to write, no code to deploy.
+Every task is a native AgentMesh system task. No workers to write, no code to deploy.
 
 
 ## Step 4: Register and run
 
 ```bash
 # Register the workflow
-conductor workflow create my_first_agent.json
+agentmesh workflow create my_first_agent.json
 
 # Run the agent synchronously — output prints directly to your terminal
 curl -s -X POST 'http://localhost:8080/api/workflow/execute/my_first_agent/1' \
@@ -145,7 +145,7 @@ curl -s -X POST 'http://localhost:8080/api/workflow/execute/my_first_agent/1' \
 Or using the CLI:
 
 ```bash
-conductor workflow start -w my_first_agent --sync --input '{"task": "What is the weather in San Francisco?"}'
+agentmesh workflow start -w my_first_agent --sync --input '{"task": "What is the weather in San Francisco?"}'
 ```
 
 Open [http://localhost:8080](http://localhost:8080) to see the execution. Click into the workflow to see each task's input, output, and timing.
@@ -282,7 +282,7 @@ In 5 minutes, you built an AI agent that:
 - **Survives crashes** without losing progress or re-running LLM calls
 - **Is fully observable** — every prompt, response, tool call, and decision is recorded
 
-All of this with zero custom code. The entire agent is a JSON workflow definition that Conductor executes with durable execution guarantees.
+All of this with zero custom code. The entire agent is a JSON workflow definition that AgentMesh executes with durable execution guarantees.
 
 
 ## Next steps

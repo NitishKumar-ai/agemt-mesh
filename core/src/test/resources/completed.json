@@ -513,7 +513,7 @@
         "http_request": {
           "uri": "/wfe_perf/workflow/_search?q=status:RUNNING&size=0&devint",
           "method": "GET",
-          "vipAddress": "es_conductor.netflix.com"
+          "vipAddress": "es_agentmesh.agentmesh.com"
         }
       },
       "referenceTaskName": "get_es_1",

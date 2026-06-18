@@ -1,12 +1,12 @@
 ---
-description: "Overview of Conductor workflow operators — control flow primitives like Fork, Switch, Do While, Dynamic Fork, Sub Workflow, and Terminate."
+description: "Overview of AgentMesh workflow operators — control flow primitives like Fork, Switch, Do While, Dynamic Fork, Sub Workflow, and Terminate."
 ---
 
 # Operators
 
-Operators are built-in primitives in Conductor that allow you to define the workflow's control flow. They are similar to programming constructs such as _for loops_, _if-else selections_, and so on. Conductor supports most programming primitives, so that you can create various advanced workflows.
+Operators are built-in primitives in AgentMesh that allow you to define the workflow's control flow. They are similar to programming constructs such as _for loops_, _if-else selections_, and so on. AgentMesh supports most programming primitives, so that you can create various advanced workflows.
 
-Here are the operators available in Conductor OSS: 
+Here are the operators available in AgentMesh OSS: 
 
 | Operator                        | Description         |
 | -------------------------- | ----------------------------------------- |

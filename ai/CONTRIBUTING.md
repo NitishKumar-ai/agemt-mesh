@@ -1,6 +1,6 @@
-# Contributing to Conductor AI Module
+# Contributing to AgentMesh AI Module
 
-Thank you for your interest in contributing to the Conductor AI module! This guide will help you add new LLM providers, vector database integrations, workers, and other enhancements.
+Thank you for your interest in contributing to the AgentMesh AI module! This guide will help you add new LLM providers, vector database integrations, workers, and other enhancements.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ Thank you for your interest in contributing to the Conductor AI module! This gui
 The AI module is organized into several key packages:
 
 ```
-org.conductoross.conductor.ai/
+org.agentmeshoss.agentmesh.ai/
 ├── providers/           # LLM provider implementations (OpenAI, Anthropic, etc.)
 ├── vectordb/           # Vector database integrations (Pinecone, MongoDB, etc.)
 ├── video/              # Video generation abstractions (VideoModel, AsyncVideoModel, etc.)
@@ -47,7 +47,7 @@ Key interfaces:
 Create a new package under `providers/`:
 
 ```
-org.conductoross.conductor.ai.providers.yourprovider/
+org.agentmeshoss.agentmesh.ai.providers.yourprovider/
 ├── YourProvider.java          # Main provider implementation
 └── YourProviderConfiguration.java  # Spring configuration
 ```
@@ -57,9 +57,9 @@ org.conductoross.conductor.ai.providers.yourprovider/
 Create your provider class implementing `AIModel`:
 
 ```java
-package org.conductoross.conductor.ai.providers.yourprovider;
+package org.agentmeshoss.agentmesh.ai.providers.yourprovider;
 
-import org.conductoross.conductor.ai.AIModel;
+import org.agentmeshoss.agentmesh.ai.AIModel;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 
@@ -95,9 +95,9 @@ public class YourProvider implements AIModel {
 Use `@ConditionalOnProperty` to ensure the provider only loads when configured:
 
 ```java
-package org.conductoross.conductor.ai.providers.yourprovider;
+package org.agentmeshoss.agentmesh.ai.providers.yourprovider;
 
-import org.conductoross.conductor.ai.ModelConfiguration;
+import org.agentmeshoss.agentmesh.ai.ModelConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -105,7 +105,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(YourProviderProperties.class)
-@ConditionalOnProperty(prefix = "conductor.ai.your-provider", name = "api-key")
+@ConditionalOnProperty(prefix = "agentmesh.ai.your-provider", name = "api-key")
 public class YourProviderConfiguration {
     
     @Bean
@@ -125,13 +125,13 @@ public class YourProviderConfiguration {
 ### Step 4: Create Properties Class
 
 ```java
-package org.conductoross.conductor.ai.providers.yourprovider;
+package org.agentmeshoss.agentmesh.ai.providers.yourprovider;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
 
 @Data
-@ConfigurationProperties(prefix = "conductor.ai.your-provider")
+@ConfigurationProperties(prefix = "agentmesh.ai.your-provider")
 public class YourProviderProperties {
     private String apiKey;
     private String baseUrl = "https://api.yourprovider.com";
@@ -155,7 +155,7 @@ class YourProviderConfigurationTest {
                         .withConfiguration(
                                 AutoConfigurations.of(YourProviderConfiguration.class))
                         .withPropertyValues(
-                                "conductor.ai.your-provider.api-key=test-key");
+                                "agentmesh.ai.your-provider.api-key=test-key");
         
         contextRunner.run(
                 context -> {
@@ -185,9 +185,9 @@ If your provider supports video generation, implement video model support using 
 #### 6a. Create a Video Model Class
 
 ```java
-package org.conductoross.conductor.ai.providers.yourprovider;
+package org.agentmeshoss.agentmesh.ai.providers.yourprovider;
 
-import org.conductoross.conductor.ai.video.*;
+import org.agentmeshoss.agentmesh.ai.video.*;
 
 public class YourVideoModel implements AsyncVideoModel {
 
@@ -270,7 +270,7 @@ Add your provider to `README.md` under the supported providers section with conf
 
 ### Step 1: Create Config Class
 
-Create a new configuration class in the database package (e.g., `org.conductoross.conductor.ai.vectordb.yourdb`):
+Create a new configuration class in the database package (e.g., `org.agentmeshoss.agentmesh.ai.vectordb.yourdb`):
 
 ```java
 @Data
@@ -321,7 +321,7 @@ public class YourVectorDB extends VectorDB {
 
 ### Step 3: Register in VectorDBInstanceConfig
 
-Add your database type to the `createVectorDB` method and the `VectorDBInstance` inner class in `org.conductoross.conductor.ai.vectordb.VectorDBInstanceConfig`.
+Add your database type to the `createVectorDB` method and the `VectorDBInstance` inner class in `org.agentmeshoss.agentmesh.ai.vectordb.VectorDBInstanceConfig`.
 
 ### Step 4: Add Integration Tests
 
@@ -350,7 +350,7 @@ class YourVectorDBTest {
 ### Step 1: Create Request Model
 
 ```java
-package org.conductoross.conductor.ai.models;
+package org.agentmeshoss.agentmesh.ai.models;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -367,10 +367,10 @@ public class YourTaskRequest extends LLMWorkerInput {
 ### Step 2: Create Worker Class
 
 ```java
-package org.conductoross.conductor.ai.tasks.worker;
+package org.agentmeshoss.agentmesh.ai.tasks.worker;
 
-import com.netflix.conductor.sdk.workflow.annotations.WorkerTask;
-import org.conductoross.conductor.ai.models.YourTaskRequest;
+import com.agentmesh.agentmesh.sdk.workflow.annotations.WorkerTask;
+import org.agentmeshoss.agentmesh.ai.models.YourTaskRequest;
 
 @Component
 public class YourWorker {
@@ -479,13 +479,13 @@ void testGetModel_WithInvalidProvider_ThrowsException()
 
 ```bash
 # Run all tests
-./gradlew :conductor-ai:test
+./gradlew :agentmesh-ai:test
 
 # Run specific test class
-./gradlew :conductor-ai:test --tests YourProviderTest
+./gradlew :agentmesh-ai:test --tests YourProviderTest
 
 # Run with coverage
-./gradlew :conductor-ai:test jacocoTestReport
+./gradlew :agentmesh-ai:test jacocoTestReport
 ```
 
 ---
@@ -558,8 +558,8 @@ Ensure your code has comprehensive test coverage.
 ### 4. Run Tests and Checks
 
 ```bash
-./gradlew :conductor-ai:test
-./gradlew :conductor-ai:compileJava
+./gradlew :agentmesh-ai:test
+./gradlew :agentmesh-ai:compileJava
 ```
 
 ### 5. Update Documentation
@@ -585,7 +585,7 @@ Always use `@ConditionalOnProperty` for optional integrations:
 
 ```java
 @ConditionalOnProperty(
-    prefix = "conductor.ai.your-feature",
+    prefix = "agentmesh.ai.your-feature",
     name = "enabled",
     havingValue = "true"
 )

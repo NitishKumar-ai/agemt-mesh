@@ -1,6 +1,6 @@
 FROM openjdk:17-jdk
 
-WORKDIR /workspace/conductor
-COPY . /workspace/conductor
+WORKDIR /workspace/agentmesh
+COPY . /workspace/agentmesh
 
 RUN ./gradlew clean build

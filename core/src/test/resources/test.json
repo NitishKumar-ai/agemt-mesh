@@ -414,7 +414,7 @@
         "http_request": {
           "uri": "/wfe_perf/workflow/_search?q=status:RUNNING&size=0&beta",
           "method": "GET",
-          "vipAddress": "es_cpe_wfe.us-east-1.cloud.netflix.com"
+          "vipAddress": "es_cpe_wfe.us-east-1.cloud.agentmesh.com"
         }
       },
       "referenceTaskName": "get_es_1",

@@ -1,10 +1,10 @@
 ---
-description: "Orchestrate event-driven workflows with Conductor using Kafka, NATS, AMQP (RabbitMQ), and SQS as event buses. Configure event handlers to trigger workflows, complete tasks, or fail tasks on incoming events."
+description: "Orchestrate event-driven workflows with AgentMesh using Kafka, NATS, AMQP (RabbitMQ), and SQS as event buses. Configure event handlers to trigger workflows, complete tasks, or fail tasks on incoming events."
 ---
 
 # Event Bus Orchestration
 
-Conductor integrates with external messaging systems to enable event-driven workflow orchestration. You can publish events from workflows and react to external events — starting workflows, completing tasks, or failing tasks based on incoming messages.
+AgentMesh integrates with external messaging systems to enable event-driven workflow orchestration. You can publish events from workflows and react to external events — starting workflows, completing tasks, or failing tasks based on incoming messages.
 
 ## Supported event buses
 
@@ -16,7 +16,7 @@ Conductor integrates with external messaging systems to enable event-driven work
 | **NATS JetStream** | `nats` | `nats` | Modern durable NATS streaming |
 | **AMQP (RabbitMQ)** | `amqp`, `amqp_queue`, `amqp_exchange` | `amqp` | Traditional message queuing with routing |
 | **SQS** | `sqs` | `sqs` | AWS-native message queuing |
-| **Conductor** | `conductor` | built-in | Internal event routing between workflows |
+| **AgentMesh** | `agentmesh` | built-in | Internal event routing between workflows |
 
 
 ## How it works
@@ -87,8 +87,8 @@ The `sink` parameter follows the format `prefix:queue_name`:
 | `amqp:task-queue` | AMQP queue `task-queue` |
 | `amqp_exchange:events` | AMQP exchange `events` |
 | `sqs:my-queue` | SQS queue `my-queue` |
-| `conductor` | Conductor internal queue |
-| `conductor:workflow_name:queue_name` | Conductor internal, specific queue |
+| `agentmesh` | AgentMesh internal queue |
+| `agentmesh:workflow_name:queue_name` | AgentMesh internal, specific queue |
 
 
 ## Consuming events
@@ -205,30 +205,30 @@ Register an event handler that completes the task when an approval event arrives
 
 ## Configuration
 
-Each event bus module requires its own configuration. Enable the modules you need in your Conductor server configuration:
+Each event bus module requires its own configuration. Enable the modules you need in your AgentMesh server configuration:
 
 ### Kafka
 
 ```properties
-conductor.event-queues.kafka.enabled=true
-conductor.event-queues.kafka.bootstrap-servers=kafka:9092
+agentmesh.event-queues.kafka.enabled=true
+agentmesh.event-queues.kafka.bootstrap-servers=kafka:9092
 ```
 
 ### NATS
 
 ```properties
-conductor.event-queues.nats.enabled=true
-conductor.event-queues.nats.url=nats://localhost:4222
+agentmesh.event-queues.nats.enabled=true
+agentmesh.event-queues.nats.url=nats://localhost:4222
 ```
 
 ### AMQP (RabbitMQ)
 
 ```properties
-conductor.event-queues.amqp.enabled=true
-conductor.event-queues.amqp.hosts=rabbitmq
-conductor.event-queues.amqp.port=5672
-conductor.event-queues.amqp.username=guest
-conductor.event-queues.amqp.password=guest
+agentmesh.event-queues.amqp.enabled=true
+agentmesh.event-queues.amqp.hosts=rabbitmq
+agentmesh.event-queues.amqp.port=5672
+agentmesh.event-queues.amqp.username=guest
+agentmesh.event-queues.amqp.password=guest
 ```
 
 Refer to the module source code for the full set of configuration properties.

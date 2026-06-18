@@ -30,7 +30,7 @@ import {
   appendIteration,
   type WorkflowExecutor,
 } from '../src/index.js';
-import type { WorkflowTask, WorkflowDef } from '@conductor/common';
+import type { WorkflowTask, WorkflowDef } from '@agentmesh/common';
 
 function loadFixture(name: string): any {
   const path = fileURLToPath(new URL(`../../common/src/test/resources/${name}`, import.meta.url));

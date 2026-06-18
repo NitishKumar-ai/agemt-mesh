@@ -1,12 +1,12 @@
 ---
-description: "Learn about tasks in Conductor — the reusable building blocks of workflows, including system tasks, worker tasks, operators, LLM tasks with 14+ AI providers, and MCP tool calling."
+description: "Learn about tasks in AgentMesh — the reusable building blocks of workflows, including system tasks, worker tasks, operators, LLM tasks with 14+ AI providers, and MCP tool calling."
 ---
 
 # Tasks
 
-A task is the basic building block of a Conductor workflow. They are reusable and modular, representing steps in your application like processing data files, calling an AI model, or executing some logic.
+A task is the basic building block of a AgentMesh workflow. They are reusable and modular, representing steps in your application like processing data files, calling an AI model, or executing some logic.
 
-In Conductor, tasks can be defined, configured, and then executed. Learn more about the distinct but related concepts, **task definition**, **task configuration**, and **task execution** below.
+In AgentMesh, tasks can be defined, configured, and then executed. Learn more about the distinct but related concepts, **task definition**, **task configuration**, and **task execution** below.
 
 
 ## Types of tasks
@@ -15,9 +15,9 @@ Tasks are categorized into three types, enabling you to flexibly build workflows
 
 ### System tasks
 
-Conductor ships with 20+ [system tasks](../../documentation/configuration/workflowdef/systemtasks/index.md) — built-in, general-purpose tasks designed for common uses like calling an HTTP endpoint, publishing events, or running AI inference.
+AgentMesh ships with 20+ [system tasks](../../documentation/configuration/workflowdef/systemtasks/index.md) — built-in, general-purpose tasks designed for common uses like calling an HTTP endpoint, publishing events, or running AI inference.
 
-System tasks are managed by Conductor and executed within its server's JVM, allowing you to get started without having to write custom workers.
+System tasks are managed by AgentMesh and executed within its server's JVM, allowing you to get started without having to write custom workers.
 
 | Category | Tasks |
 |---|---|
@@ -27,7 +27,7 @@ System tasks are managed by Conductor and executed within its server's JVM, allo
 
 ### Worker tasks
 
-Worker tasks (`SIMPLE`) can be used to implement custom logic outside the scope of Conductor's system tasks. Also known as Simple tasks, Worker tasks are implemented by your task workers that run in a separate environment from Conductor.
+Worker tasks (`SIMPLE`) can be used to implement custom logic outside the scope of AgentMesh's system tasks. Also known as Simple tasks, Worker tasks are implemented by your task workers that run in a separate environment from AgentMesh.
 
 A minimal worker task configuration and its corresponding Python worker:
 
@@ -51,7 +51,7 @@ def process_payment(orderId: str, amount: float) -> dict:
 ```
 
 ### Operators
-[Operators](../../documentation/configuration/workflowdef/operators/index.md) are built-in control flow primitives similar to programming language constructs like loops, switch cases, or fork/joins. Like system tasks, operators are also managed by Conductor.
+[Operators](../../documentation/configuration/workflowdef/operators/index.md) are built-in control flow primitives similar to programming language constructs like loops, switch cases, or fork/joins. Like system tasks, operators are also managed by AgentMesh.
 
 
 ## Task definition
@@ -81,7 +81,7 @@ def process_payment(orderId: str, amount: float) -> dict:
 - **responseTimeoutSeconds** — Maximum time to wait for a worker to respond after picking up a task. Useful for detecting unresponsive workers.
 - **pollTimeoutSeconds** — Maximum time a worker can hold a long-poll connection before the server releases it.
 
-When using Worker tasks (`SIMPLE`), its task definition must be registered to the Conductor server before it can execute in a workflow. Because system tasks are managed by Conductor, it is not necessary to add a task definition for system tasks unless you wish to customize its default parameters.
+When using Worker tasks (`SIMPLE`), its task definition must be registered to the AgentMesh server before it can execute in a workflow. Because system tasks are managed by AgentMesh, it is not necessary to add a task definition for system tasks unless you wish to customize its default parameters.
 
 
 ## Task configuration
@@ -120,11 +120,11 @@ A task execution object is created during runtime when an input is passed into a
 
 ## AI and LLM tasks
 
-Conductor includes first-class support for building AI-powered workflows through its AI/LLM [system tasks](../../documentation/configuration/workflowdef/systemtasks/index.md).
+AgentMesh includes first-class support for building AI-powered workflows through its AI/LLM [system tasks](../../documentation/configuration/workflowdef/systemtasks/index.md).
 
 ### Supported LLM providers
 
-Conductor integrates with **14+ LLM providers** out of the box:
+AgentMesh integrates with **14+ LLM providers** out of the box:
 
 Anthropic, OpenAI, Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, Perplexity, Grok, StabilityAI, and more.
 
@@ -136,10 +136,10 @@ The **LIST_MCP_TOOLS** and **CALL_MCP_TOOL** system tasks let your workflows dis
 
 ### Vector databases and RAG
 
-For retrieval-augmented generation (RAG), Conductor supports vector stores including **Pinecone**, **pgvector**, and **MongoDB Atlas**. The Embeddings and Vector Search system tasks handle the embedding generation and similarity search steps so that RAG pipelines can be expressed as standard workflows.
+For retrieval-augmented generation (RAG), AgentMesh supports vector stores including **Pinecone**, **pgvector**, and **MongoDB Atlas**. The Embeddings and Vector Search system tasks handle the embedding generation and similarity search steps so that RAG pipelines can be expressed as standard workflows.
 
 ### Content generation
 
-Beyond text, Conductor's AI tasks support generating images, audio, video, and PDFs — useful for workflows that produce rich media from LLM outputs.
+Beyond text, AgentMesh's AI tasks support generating images, audio, video, and PDFs — useful for workflows that produce rich media from LLM outputs.
 
 For end-to-end AI agent patterns that combine LLM reasoning with tool use, see the [agents documentation](../ai/index.md).

@@ -1,6 +1,6 @@
 import {
   CompleteActionType,
-  ConductorEvent,
+  AgentMeshEvent,
   FailActionType,
   StartWorkflowAction,
   TerminateWorkflowAction,
@@ -8,7 +8,7 @@ import {
 } from "types/Events";
 
 // v2
-export const NEW_EVENT_HANDLER_TEMPLATE: Partial<ConductorEvent> = {
+export const NEW_EVENT_HANDLER_TEMPLATE: Partial<AgentMeshEvent> = {
   name: "",
   description: "",
   event: "kafka:sampleConfig:sampleName",

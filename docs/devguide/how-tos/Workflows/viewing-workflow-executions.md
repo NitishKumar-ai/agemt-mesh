@@ -1,9 +1,9 @@
 ---
-description: "Viewing Workflow Executions — inspect Conductor workflow runs with visual diagrams, task timelines, and input/output data."
+description: "Viewing Workflow Executions — inspect AgentMesh workflow runs with visual diagrams, task timelines, and input/output data."
 ---
 # Viewing Workflow Executions
 
-The Conductor UI provides a convenient interface for viewing workflow executions as visual diagrams. You can view workflow executions:
+The AgentMesh UI provides a convenient interface for viewing workflow executions as visual diagrams. You can view workflow executions:
 
 - In **[Executions](http://localhost:8080/executions)**, after [searching for workflows](searching-workflows.md).
 - In **[Workbench](http://localhost:8080/workbench)** > **Execution History**
@@ -31,7 +31,7 @@ The following tabs are available for each workflow execution:
 
 In **Tasks** > **Diagram**, you can view the workflow's exact execution path. The executed paths are shown in green and while other alternative paths are greyed out.
 
-![Workflow diagram in the Conductor UI.](execution_path.png)
+![Workflow diagram in the AgentMesh UI.](execution_path.png)
 
 Each task status will also be clearly marked, highlighting any task errors.
 

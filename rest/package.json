@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/rest",
+  "name": "@agentmesh/rest",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",
@@ -10,10 +10,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@conductor/common": "workspace:*",
-    "@conductor/common-persistence": "workspace:*",
-    "@conductor/core": "workspace:*",
-    "@conductor/sqlite-persistence": "workspace:*",
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
+    "@agentmesh/core": "workspace:*",
+    "@agentmesh/sqlite-persistence": "workspace:*",
     "@nestjs/common": "^11.1.27",
     "@nestjs/core": "^11.1.27",
     "@nestjs/platform-express": "^11.1.27",

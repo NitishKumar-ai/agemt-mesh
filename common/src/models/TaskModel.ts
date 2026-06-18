@@ -6,7 +6,7 @@ import { TaskDefSchema } from './TaskDef.js';
 import { WorkflowTaskSchema } from './WorkflowTask.js';
 
 /**
- * Port of `com.netflix.conductor.model.TaskModel` — the engine's internal,
+ * Port of `com.agentmesh.agentmesh.model.TaskModel` — the engine's internal,
  * mutable task execution record (richer than the API `Task`). Defaults mirror
  * the Java field initializers.
  */

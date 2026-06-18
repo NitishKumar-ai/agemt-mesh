@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/sandbox",
+  "name": "@agentmesh/sandbox",
   "version": "0.0.0",
   "description": "Sandbox for Code Execution",
   "type": "module",
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@e2b/code-interpreter": "^1.0.5",
-    "@conductor/core": "workspace:*",
-    "@conductor/common": "workspace:*"
+    "@agentmesh/core": "workspace:*",
+    "@agentmesh/common": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

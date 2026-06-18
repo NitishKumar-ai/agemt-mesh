@@ -1,4 +1,4 @@
-import { WorkflowDefSchema, type WorkflowDef } from '@conductor/common';
+import { WorkflowDefSchema, type WorkflowDef } from '@agentmesh/common';
 
 export function validateWorkflow(def: unknown): WorkflowDef {
   return WorkflowDefSchema.parse(def);
@@ -11,6 +11,7 @@ export { createTaskModel, copyTaskModel, createWorkflowModel } from './execution
 // Execution engine core
 export { WorkflowSystemTask } from './execution/WorkflowSystemTask.js';
 export { SystemTaskRegistry } from './execution/SystemTaskRegistry.js';
+export { SystemTaskWorker } from './execution/SystemTaskWorker.js';
 export { DeciderService, DeciderOutcome, TerminateWorkflowError } from './execution/DeciderService.js';
 export { WorkflowExecutorOps } from './execution/WorkflowExecutorOps.js';
 export { WorkflowSweeper } from './execution/WorkflowSweeper.js';
@@ -23,7 +24,7 @@ export type {
   WorkflowStatusListener,
   TaskStatusListener,
   ExecutionLockService,
-  ConductorProperties,
+  AgentMeshProperties,
 } from './execution/WorkflowExecutorOps.js';
 export { DECIDER_QUEUE, removeIterationFromTaskRefName, appendIteration, hasInProgressHumanTask, getQueueName, computePostpone, getTaskByRefName, getNextTask, workflowTaskHas, workflowTaskNext } from './execution/ExecutorUtils.js';
 

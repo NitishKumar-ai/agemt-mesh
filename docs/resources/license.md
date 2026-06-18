@@ -1,9 +1,9 @@
 ---
-description: "License — Conductor is released under the Apache License 2.0 for free commercial and open-source use."
+description: "License — AgentMesh is released under the Apache License 2.0 for free commercial and open-source use."
 ---
 # License
 
-Copyright 2023 Conductor authors.
+Copyright 2023 AgentMesh authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

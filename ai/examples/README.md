@@ -1,15 +1,15 @@
-# Conductor AI Workflow Examples
+# AgentMesh AI Workflow Examples
 
-This folder contains ready-to-use workflow examples demonstrating the AI capabilities of Conductor.
+This folder contains ready-to-use workflow examples demonstrating the AI capabilities of AgentMesh.
 
 ## Prerequisites
 
-### 1. Start Conductor Server
+### 1. Start AgentMesh Server
 
-Ensure Conductor is running with AI integrations enabled:
+Ensure AgentMesh is running with AI integrations enabled:
 
 ```bash
-# From the conductor root directory
+# From the agentmesh root directory
 ./gradlew bootRun
 ```
 
@@ -34,12 +34,12 @@ For vector database examples, add to `application.properties`:
 
 ```properties
 # PostgreSQL Vector DB (for RAG/embedding examples)
-conductor.vectordb.instances[0].name=postgres-prod
-conductor.vectordb.instances[0].type=postgres
-conductor.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
-conductor.vectordb.instances[0].postgres.user=conductor
-conductor.vectordb.instances[0].postgres.password=secret
-conductor.vectordb.instances[0].postgres.dimensions=1536
+agentmesh.vectordb.instances[0].name=postgres-prod
+agentmesh.vectordb.instances[0].type=postgres
+agentmesh.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
+agentmesh.vectordb.instances[0].postgres.user=agentmesh
+agentmesh.vectordb.instances[0].postgres.password=secret
+agentmesh.vectordb.instances[0].postgres.dimensions=1536
 ```
 
 ### 3. MCP Test Server (for MCP examples)
@@ -199,7 +199,7 @@ curl -X POST 'http://localhost:8080/api/metadata/workflow' \
 # Execute with a question
 curl -X POST 'http://localhost:8080/api/workflow/rag_workflow' \
   -H 'Content-Type: application/json' \
-  -d '{"question": "What is Conductor?"}'
+  -d '{"question": "What is AgentMesh?"}'
 ```
 
 ### 7. RAG (Complete Demo)
@@ -462,12 +462,12 @@ done
 Ensure you have configured the PostgreSQL vector database in your `application.properties`:
 
 ```properties
-conductor.vectordb.instances[0].name=postgres-prod
-conductor.vectordb.instances[0].type=postgres
-conductor.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
-conductor.vectordb.instances[0].postgres.user=conductor
-conductor.vectordb.instances[0].postgres.password=secret
-conductor.vectordb.instances[0].postgres.dimensions=1536
+agentmesh.vectordb.instances[0].name=postgres-prod
+agentmesh.vectordb.instances[0].type=postgres
+agentmesh.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
+agentmesh.vectordb.instances[0].postgres.user=agentmesh
+agentmesh.vectordb.instances[0].postgres.password=secret
+agentmesh.vectordb.instances[0].postgres.dimensions=1536
 ```
 
 ### "No configuration found for: openai"
@@ -501,4 +501,4 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ## License
 
-Copyright 2026 Conductor Authors. Licensed under the Apache License 2.0.
+Copyright 2026 AgentMesh Authors. Licensed under the Apache License 2.0.

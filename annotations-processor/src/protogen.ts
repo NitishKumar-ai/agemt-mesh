@@ -4,7 +4,7 @@ import * as path from 'path';
 import { ProtoFile } from './proto-file';
 import { AbstractMessage } from './abstract-message';
 
-const GENERATOR_NAME = '@conductor/annotations-processor';
+const GENERATOR_NAME = '@agentmesh/annotations-processor';
 
 const FILE_TEMPLATE_SOURCE = `syntax = "proto3";
 package {{protoPackageName}};

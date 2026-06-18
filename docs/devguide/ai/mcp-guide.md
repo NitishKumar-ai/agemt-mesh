@@ -1,10 +1,10 @@
 ---
-description: "MCP (Model Context Protocol) integration with Conductor — connect AI agents to external tools, discover tools at runtime, execute with durable retry, and expose workflows as MCP tools."
+description: "MCP (Model Context Protocol) integration with AgentMesh — connect AI agents to external tools, discover tools at runtime, execute with durable retry, and expose workflows as MCP tools."
 ---
 
 # MCP integration
 
-MCP (Model Context Protocol) is the open standard for connecting AI agents to tools and data sources. Conductor provides native MCP integration — discover tools, call them with full durability, and expose your own workflows as MCP tools.
+MCP (Model Context Protocol) is the open standard for connecting AI agents to tools and data sources. AgentMesh provides native MCP integration — discover tools, call them with full durability, and expose your own workflows as MCP tools.
 
 
 ## What is MCP
@@ -15,7 +15,7 @@ MCP defines a protocol for how AI agents discover and use tools. Instead of hard
 
 **With MCP:** Tools are standardized. Connect once, use any MCP-compatible tool server.
 
-Conductor supports MCP as a first-class integration with two native system tasks.
+AgentMesh supports MCP as a first-class integration with two native system tasks.
 
 
 ## Native MCP system tasks
@@ -57,9 +57,9 @@ Calls a specific tool on an MCP server with the given arguments.
 }
 ```
 
-**What Conductor adds on top of raw MCP:**
+**What AgentMesh adds on top of raw MCP:**
 
-- **Durable execution** — if the tool call fails, Conductor retries according to the task's retry policy. The retry is automatic and configurable (fixed delay, exponential backoff, linear backoff).
+- **Durable execution** — if the tool call fails, AgentMesh retries according to the task's retry policy. The retry is automatic and configurable (fixed delay, exponential backoff, linear backoff).
 - **Full audit trail** — every tool call is persisted: the method, arguments, response, timing, and retry history. You can inspect exactly what your agent did.
 - **Crash recovery** — if the server crashes between tool calls, the workflow resumes from the last completed step. The tool call is never silently lost.
 - **Timeout handling** — configure `responseTimeoutSeconds` to prevent stuck tool calls from blocking your agent.
@@ -67,7 +67,7 @@ Calls a specific tool on an MCP server with the given arguments.
 
 ## Connecting to MCP servers
 
-Conductor connects to any MCP server via HTTP. Pass the server URL as a workflow input or hardcode it in the task definition.
+AgentMesh connects to any MCP server via HTTP. Pass the server URL as a workflow input or hardcode it in the task definition.
 
 ```json
 {
@@ -124,12 +124,12 @@ An agent can connect to multiple MCP servers in the same workflow. Discover tool
 
 ## Exposing workflows as MCP tools
 
-Any Conductor workflow can be exposed as an MCP tool via the MCP Gateway. This means other agents and LLMs can discover and invoke your workflows using the MCP protocol.
+Any AgentMesh workflow can be exposed as an MCP tool via the MCP Gateway. This means other agents and LLMs can discover and invoke your workflows using the MCP protocol.
 
 ```
 Agent → LIST_MCP_TOOLS → discovers your workflow
 Agent → CALL_MCP_TOOL → starts your workflow
-Conductor → executes with full durability
+AgentMesh → executes with full durability
 Agent → receives structured output
 ```
 
@@ -234,7 +234,7 @@ A production-ready agent that discovers tools, plans, gets human approval, execu
 }
 ```
 
-Every task type here — `LIST_MCP_TOOLS`, `LLM_CHAT_COMPLETE`, `CALL_MCP_TOOL`, `HUMAN` — is a native Conductor system task. No custom code needed.
+Every task type here — `LIST_MCP_TOOLS`, `LLM_CHAT_COMPLETE`, `CALL_MCP_TOOL`, `HUMAN` — is a native AgentMesh system task. No custom code needed.
 
 
 ## Next steps

@@ -1,5 +1,5 @@
 ---
-description: "Understand workflows in Conductor — JSON workflow definition, dynamic workflows, distributed workflow execution, and long-running async workflows that power durable code execution across distributed services."
+description: "Understand workflows in AgentMesh — JSON workflow definition, dynamic workflows, distributed workflow execution, and long-running async workflows that power durable code execution across distributed services."
 ---
 
 # Workflows
@@ -12,14 +12,14 @@ A workflow is a sequence of tasks with a defined order and execution. Each workf
 - Transcoding videos
 - Approving expenses
 
-In Conductor, workflows can be defined and then executed. Learn more about the two distinct but related concepts, **workflow definition** and **workflow execution**, below.
+In AgentMesh, workflows can be defined and then executed. Learn more about the two distinct but related concepts, **workflow definition** and **workflow execution**, below.
 
 
-## What makes Conductor workflows different
+## What makes AgentMesh workflows different
 
-Conductor workflows stand apart from traditional orchestration approaches in several key ways:
+AgentMesh workflows stand apart from traditional orchestration approaches in several key ways:
 
-- **Durable execution** — Workflows survive process failures, restarts, and infrastructure outages. Conductor persists state at every step, so a long-running workflow or async workflow picks up exactly where it left off — even after days or weeks.
+- **Durable execution** — Workflows survive process failures, restarts, and infrastructure outages. AgentMesh persists state at every step, so a long-running workflow or async workflow picks up exactly where it left off — even after days or weeks.
 - **JSON-native definitions** — Every workflow is a JSON workflow definition you can store in version control, diff across releases, and generate programmatically. No compiled DSL or proprietary format required.
 - **Dynamic workflows** — Workflows can be created and modified at runtime as code-first or JSON definitions, enabling use cases where the task graph is not known ahead of time (for example, when the number of parallel branches depends on an API response).
 - **Versioned** — Each workflow definition carries an explicit version number so you can roll out changes incrementally and run multiple versions side by side.

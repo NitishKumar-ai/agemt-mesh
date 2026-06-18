@@ -1,10 +1,10 @@
 ---
-description: "The canonical reference architecture for building production AI agents on Conductor — end-to-end pattern with planner, tool selection, execution, retry, memory, human approval, long waits, reflection loops, budget caps, and full observability."
+description: "The canonical reference architecture for building production AI agents on AgentMesh — end-to-end pattern with planner, tool selection, execution, retry, memory, human approval, long waits, reflection loops, budget caps, and full observability."
 ---
 
 # Production agent architecture
 
-This is the reference architecture for a durable AI agent on Conductor. Not a toy. Not a feature list. This is the exact pattern for an agent that plans, acts, waits, recovers, and runs in production.
+This is the reference architecture for a durable AI agent on AgentMesh. Not a toy. Not a feature list. This is the exact pattern for an agent that plans, acts, waits, recovers, and runs in production.
 
 
 ## Architecture diagram
@@ -132,9 +132,9 @@ This is the reference architecture for a durable AI agent on Conductor. Not a to
 
 ## The canonical agent pattern
 
-A production agent has these concerns. Each one maps to a specific Conductor primitive:
+A production agent has these concerns. Each one maps to a specific AgentMesh primitive:
 
-| Agent concern | Conductor primitive | How it works |
+| Agent concern | AgentMesh primitive | How it works |
 |---|---|---|
 | **Plan next action** | `LLM_CHAT_COMPLETE` | LLM receives goal + context + tool list, returns structured plan |
 | **Select tool at runtime** | `DYNAMIC` task | LLM output determines which task type executes next |
@@ -155,7 +155,7 @@ A production agent has these concerns. Each one maps to a specific Conductor pri
 
 ## End-to-end workflow
 
-Here is the complete agent as a single Conductor workflow. Every step is a native system task or operator — no custom code, no external framework.
+Here is the complete agent as a single AgentMesh workflow. Every step is a native system task or operator — no custom code, no external framework.
 
 ```json
 {
@@ -306,7 +306,7 @@ Every tool call (`CALL_MCP_TOOL`, `HTTP`, `SIMPLE`) inherits retry behavior from
 }
 ```
 
-If the MCP server is down, Conductor retries with exponential backoff. The LLM is **not** re-called — only the failed tool call retries.
+If the MCP server is down, AgentMesh retries with exponential backoff. The LLM is **not** re-called — only the failed tool call retries.
 
 ### Memory persists across iterations
 
@@ -322,7 +322,7 @@ If the agent fails after taking real-world actions (sent an email, created a rec
 
 ### Observability is automatic
 
-Open the Conductor UI to see:
+Open the AgentMesh UI to see:
 
 - The exact task graph for this execution
 - Every LLM prompt and response (click any `LLM_CHAT_COMPLETE` task)
@@ -353,7 +353,7 @@ Replace a single tool call with `DYNAMIC_FORK` to fan out to multiple tools in p
 }
 ```
 
-The LLM decides how many tools to call in parallel and with what inputs. Conductor creates the branches at runtime.
+The LLM decides how many tools to call in parallel and with what inputs. AgentMesh creates the branches at runtime.
 
 ### Add a reflection / evaluation step
 
@@ -445,7 +445,7 @@ The parent agent waits for the child to complete. If the child fails, the parent
 ## Next steps
 
 - **[Failure Semantics for AI Agents](failure-semantics.md)** — The exact failure contract: what happens under crashes, retries, duplicates, and long waits.
-- **[Why Conductor for Agents](why-conductor.md)** — What Conductor gives you out of the box for agentic workflows.
+- **[Why AgentMesh for Agents](why-agentmesh.md)** — What AgentMesh gives you out of the box for agentic workflows.
 - **[Build Your First AI Agent](first-ai-agent.md)** — Start simple and build up to this architecture in 5 minutes.
 - **[MCP Integration](mcp-guide.md)** — Connect to any MCP server, expose workflows as MCP tools.
 - **[Token Efficiency](token-efficiency.md)** — How durable execution saves tokens and reduces LLM costs.

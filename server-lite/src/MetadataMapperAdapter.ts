@@ -1,5 +1,5 @@
-import type { WorkflowDef } from '@conductor/common';
-import type { WorkflowModel, TaskModel } from '@conductor/core';
+import type { WorkflowDef } from '@agentmesh/common';
+import type { WorkflowModel, TaskModel } from '@agentmesh/core';
 
 interface Stmt {
   get(...args: unknown[]): unknown;

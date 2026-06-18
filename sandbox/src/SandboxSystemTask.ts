@@ -1,6 +1,6 @@
-import { WorkflowSystemTask } from '@conductor/core';
-import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@conductor/core';
-import { TaskStatus } from '@conductor/common';
+import { WorkflowSystemTask } from '@agentmesh/core';
+import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@agentmesh/core';
+import { TaskStatus } from '@agentmesh/common';
 import { Sandbox } from '@e2b/code-interpreter';
 
 export interface SandboxExecutionRequest {

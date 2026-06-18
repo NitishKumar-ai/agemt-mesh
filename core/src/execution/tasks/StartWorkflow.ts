@@ -1,7 +1,7 @@
 import { WorkflowSystemTask } from '../WorkflowSystemTask.js';
 import type { WorkflowModel, TaskModel } from '../types.js';
 import type { WorkflowExecutor } from '../WorkflowExecutor.js';
-import { TaskType } from '@conductor/common';
+import { TaskType } from '@agentmesh/common';
 
 const WORKFLOW_ID = 'workflowId';
 const START_WORKFLOW_PARAMETER = 'startWorkflow';

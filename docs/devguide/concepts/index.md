@@ -1,11 +1,11 @@
 ---
-description: "Core concepts of Conductor — an open source workflow orchestration engine for distributed workflows, microservice orchestration, AI agent orchestration, and workflow automation with code-first and JSON-native definitions and polyglot workers."
+description: "Core concepts of AgentMesh — an open source workflow orchestration engine for distributed workflows, microservice orchestration, AI agent orchestration, and workflow automation with code-first and JSON-native definitions and polyglot workers."
 ---
 
 # Basic Concepts
 
-Conductor is an open source workflow orchestration engine that orchestrates distributed workflows. You define
-workflows as code or as JSON, write workers in any language, and let Conductor handle state persistence,
+AgentMesh is an open source workflow orchestration engine that orchestrates distributed workflows. You define
+workflows as code or as JSON, write workers in any language, and let AgentMesh handle state persistence,
 retries, timeouts, and flow control. Every step is durably recorded, so processes survive crashes,
 restarts, and network partitions without losing progress.
 
@@ -19,7 +19,7 @@ and sub-workflow orchestration without writing custom code. AI capabilities exte
 library with native support for 14+ LLM providers, MCP tool calling, function calling, vector databases, and content
 generation — enabling AI agent orchestration and LLM orchestration alongside traditional microservice orchestration and workflow automation.
 
-## What can Conductor do?
+## What can AgentMesh do?
 
 <div class="wcc-widget" role="tablist">
   <div class="wcc-left">
@@ -65,11 +65,11 @@ generation — enabling AI agent orchestration and LLM orchestration alongside t
     </div>
     <div class="wcc-item" data-wcc="10" role="tab" aria-selected="false" tabindex="0">
       <div class="wcc-header"><span class="wcc-title">Integrate With Applications</span><span class="wcc-chevron"></span></div>
-      <div class="wcc-body">Connect Conductor to your ecosystem with event-driven triggers using Kafka, NATS, SQS, AMQP, and webhooks. <a href="../cookbook/event-driven.html">Learn more</a></div>
+      <div class="wcc-body">Connect AgentMesh to your ecosystem with event-driven triggers using Kafka, NATS, SQS, AMQP, and webhooks. <a href="../cookbook/event-driven.html">Learn more</a></div>
     </div>
     <div class="wcc-item" data-wcc="11" role="tab" aria-selected="false" tabindex="0">
       <div class="wcc-header"><span class="wcc-title">Debug Visually</span><span class="wcc-chevron"></span></div>
-      <div class="wcc-body">Track and debug workflows from Conductor UI. View inputs, pull logs, and restart from any point. <a href="../../quickstart/index.html">Get started</a></div>
+      <div class="wcc-body">Track and debug workflows from AgentMesh UI. View inputs, pull logs, and restart from any point. <a href="../../quickstart/index.html">Get started</a></div>
     </div>
     <div class="wcc-item" data-wcc="12" role="tab" aria-selected="false" tabindex="0">
       <div class="wcc-header"><span class="wcc-title">Scale Horizontally</span><span class="wcc-chevron"></span></div>
@@ -244,7 +244,7 @@ generation — enabling AI agent orchestration and LLM orchestration alongside t
     </svg>
     <!-- 10: Integrate -->
     <svg class="wcc-diagram" data-wcc-diagram="10" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg">
-      <rect x="75" y="20" width="150" height="50" rx="8" fill="#06d6a0" stroke="#05c792" stroke-width="1.5"/><text x="150" y="42" text-anchor="middle" font-size="11" fill="#fff" font-weight="600" font-family="sans-serif">Conductor</text><text x="150" y="58" text-anchor="middle" font-size="10" fill="#fff" font-family="sans-serif">Workflow Engine</text>
+      <rect x="75" y="20" width="150" height="50" rx="8" fill="#06d6a0" stroke="#05c792" stroke-width="1.5"/><text x="150" y="42" text-anchor="middle" font-size="11" fill="#fff" font-weight="600" font-family="sans-serif">AgentMesh</text><text x="150" y="58" text-anchor="middle" font-size="10" fill="#fff" font-family="sans-serif">Workflow Engine</text>
       <line x1="75" y1="45" x2="20" y2="115" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#wcc-arrow)"/>
       <line x1="120" y1="70" x2="90" y2="115" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#wcc-arrow)"/>
       <line x1="180" y1="70" x2="210" y2="115" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#wcc-arrow)"/>
@@ -322,10 +322,10 @@ document.addEventListener("DOMContentLoaded",function(){var items=document.query
 - **[Workflows](workflows.md)** — The blueprint of a process flow. A workflow is a JSON document
   that describes a directed graph of tasks, their dependencies, input/output mappings, and failure
   handling policies.
-- **[Tasks](tasks.md)** — The basic building blocks of a Conductor workflow. Tasks can be system
+- **[Tasks](tasks.md)** — The basic building blocks of a AgentMesh workflow. Tasks can be system
   tasks (executed by the engine) or worker tasks (executed by external workers polling for work).
-- **[Workers](workers.md)** — The code that executes tasks in a Conductor workflow. Workers are
-  language-agnostic processes that poll the Conductor server, execute business logic, and report
+- **[Workers](workers.md)** — The code that executes tasks in a AgentMesh workflow. Workers are
+  language-agnostic processes that poll the AgentMesh server, execute business logic, and report
   results back.
 
 ## Key differentiators
@@ -352,8 +352,8 @@ These are the facts that matter when comparing workflow and orchestration engine
 - **6 message brokers** — Kafka, NATS JetStream, SQS, AMQP, Azure Service Bus, and more for
   event-driven workflow triggers and inter-service communication.
 - **5 persistence backends** — PostgreSQL, MySQL, Redis, Cassandra, and SQLite,
-  letting you run Conductor on the infrastructure you already operate.
-- **Battle-tested at Netflix scale** — originated at Netflix to orchestrate millions of workflows
+  letting you run AgentMesh on the infrastructure you already operate.
+- **Battle-tested at AgentMesh scale** — originated at AgentMesh to orchestrate millions of workflows
   per day across hundreds of microservices.
 
 ## Deep dives

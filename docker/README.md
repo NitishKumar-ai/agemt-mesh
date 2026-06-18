@@ -1,9 +1,9 @@
 
-# Conductor Docker Builds
+# AgentMesh Docker Builds
 
 ## Pre-built docker images
 
-Conductor server with support for the following backend:
+AgentMesh server with support for the following backend:
 1. Redis
 2. Postgres
 3. Mysql
@@ -13,9 +13,9 @@ Conductor server with support for the following backend:
 
 [Docker Image Source for Server with UI](server/Dockerfile)
 
-### Configuration Guide for Conductor Server
-Conductor uses a persistent store for managing state.  
-The choice of backend is quite flexible and can be configured at runtime using `conductor.db.type` property.
+### Configuration Guide for AgentMesh Server
+AgentMesh uses a persistent store for managing state.  
+The choice of backend is quite flexible and can be configured at runtime using `agentmesh.db.type` property.
 
 Refer to the table below for various supported backend and required configurations to enable each of them.
 
@@ -25,13 +25,13 @@ Refer to the table below for various supported backend and required configuratio
 >
 > | Backend    | Property                           |
 > |------------|------------------------------------|
-> | postgres   | conductor.db.type=postgres         |
-> | redis      | conductor.db.type=redis_standalone |
-> | mysql      | conductor.db.type=mysql            |
-> | cassandra  | conductor.db.type=cassandra        |    
+> | postgres   | agentmesh.db.type=postgres         |
+> | redis      | agentmesh.db.type=redis_standalone |
+> | mysql      | agentmesh.db.type=mysql            |
+> | cassandra  | agentmesh.db.type=cassandra        |    
 >
 
-Conductor is using Elasticsearch or OpenSearch for indexing the workflow data.
+AgentMesh is using Elasticsearch or OpenSearch for indexing the workflow data.
 Currently, Elasticsearch 7 and OpenSearch 2.x/3.x are supported.
 
 We welcome community contributions for other indexing backends.
@@ -42,7 +42,7 @@ We welcome community contributions for other indexing backends.
 TODO: Link to the helm charts
 
 ## Run Docker Compose Locally
-### Use the docker-compose to bring up the local conductor server.
+### Use the docker-compose to bring up the local agentmesh server.
 
 | Docker Compose                                               | Description                |
 |--------------------------------------------------------------|----------------------------|
@@ -84,5 +84,5 @@ YARN_OPTS='--network-timeout 10000000' docker compose -f docker-compose.yaml up
 When building a Docker image using `docker`, you must call it like e.g.
 
 ```
-docker build --build-arg='YARN_OPTS=--network-timeout 10000000' .. -f server/Dockerfile -t oss-conductor:v3.21.9
+docker build --build-arg='YARN_OPTS=--network-timeout 10000000' .. -f server/Dockerfile -t oss-agentmesh:v3.21.9
 ```

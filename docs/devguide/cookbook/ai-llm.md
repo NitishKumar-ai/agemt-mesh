@@ -4,7 +4,7 @@ description: "LLM orchestration cookbook — AI agent orchestration recipes for 
 
 # AI & LLM orchestration recipes
 
-Build durable agents and LLM workflows with Conductor's native AI capabilities. Every recipe below runs with full durable execution guarantees — retries, state persistence, and crash recovery.
+Build durable agents and LLM workflows with AgentMesh's native AI capabilities. Every recipe below runs with full durable execution guarantees — retries, state persistence, and crash recovery.
 
 ### Chat completion
 
@@ -113,7 +113,7 @@ curl -X POST 'http://localhost:8080/api/workflow/rag_workflow' \
 ```
 
 !!! note "Prerequisites"
-    Requires a vector database (pgvector, Pinecone, or MongoDB Atlas) configured as a Conductor integration, plus at least one LLM provider. See [AI provider configuration](#ai-provider-configuration) below.
+    Requires a vector database (pgvector, Pinecone, or MongoDB Atlas) configured as a AgentMesh integration, plus at least one LLM provider. See [AI provider configuration](#ai-provider-configuration) below.
 
 ---
 
@@ -244,7 +244,7 @@ curl -X POST 'http://localhost:8080/api/workflow/image_gen_workflow' \
 
 ### LLM report to PDF pipeline
 
-An LLM generates a structured markdown report, then Conductor converts it to a downloadable PDF.
+An LLM generates a structured markdown report, then AgentMesh converts it to a downloadable PDF.
 
 ```json
 {
@@ -280,7 +280,7 @@ An LLM generates a structured markdown report, then Conductor converts it to a d
         "baseFontSize": 11,
         "pdfMetadata": {
           "title": "${workflow.input.topic}",
-          "author": "Conductor AI Pipeline"
+          "author": "AgentMesh AI Pipeline"
         }
       }
     }
@@ -653,7 +653,7 @@ A multi-step agent that uses web search to gather information, an LLM with exten
         "pageSize": "A4",
         "pdfMetadata": {
           "title": "${workflow.input.topic}",
-          "author": "Conductor Research Agent"
+          "author": "AgentMesh Research Agent"
         }
       }
     }
@@ -681,7 +681,7 @@ curl -X POST 'http://localhost:8080/api/workflow/web_research_agent' \
 
 ### AI provider configuration
 
-Set environment variables before starting the server. Conductor auto-enables providers when their API key is present.
+Set environment variables before starting the server. AgentMesh auto-enables providers when their API key is present.
 
 ```bash
 # OpenAI (required for most examples)
@@ -699,16 +699,16 @@ For vector database and other advanced configuration, add to `application.proper
 
 ```properties
 # PostgreSQL Vector DB (for RAG examples)
-conductor.vectordb.instances[0].name=postgres-prod
-conductor.vectordb.instances[0].type=postgres
-conductor.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
-conductor.vectordb.instances[0].postgres.user=conductor
-conductor.vectordb.instances[0].postgres.password=secret
-conductor.vectordb.instances[0].postgres.dimensions=1536
+agentmesh.vectordb.instances[0].name=postgres-prod
+agentmesh.vectordb.instances[0].type=postgres
+agentmesh.vectordb.instances[0].postgres.datasourceURL=jdbc:postgresql://localhost:5432/vectors
+agentmesh.vectordb.instances[0].postgres.user=agentmesh
+agentmesh.vectordb.instances[0].postgres.password=secret
+agentmesh.vectordb.instances[0].postgres.dimensions=1536
 ```
 
 ---
 
 ## More examples
 
-For additional AI workflow definitions, see the [AI workflow examples on GitHub](https://github.com/conductor-oss/conductor/tree/main/ai/examples).
+For additional AI workflow definitions, see the [AI workflow examples on GitHub](https://github.com/agentmesh-oss/agentmesh/tree/main/ai/examples).

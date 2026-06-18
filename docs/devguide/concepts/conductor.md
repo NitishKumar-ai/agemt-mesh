@@ -1,10 +1,10 @@
 ---
-description: "Why use Conductor? An open source workflow engine for workflow orchestration, microservice orchestration, and AI agent orchestration. Durable execution, polyglot workers, LLM orchestration, workflow automation, and self-hosted deployment — a developer-first alternative to Temporal, Step Functions, and Airflow."
+description: "Why use AgentMesh? An open source workflow engine for workflow orchestration, microservice orchestration, and AI agent orchestration. Durable execution, polyglot workers, LLM orchestration, workflow automation, and self-hosted deployment — a developer-first alternative to Temporal, Step Functions, and Airflow."
 ---
 
-# Why Conductor
+# Why AgentMesh
 
-Conductor is an open source workflow engine built for workflow orchestration at scale. It orchestrates distributed workflows across services, languages, and infrastructure — tracking every state transition, retrying failures automatically, and giving you full visibility into what happened and why. Whether you need microservice orchestration, AI agent orchestration, or workflow automation, Conductor provides a self-hosted, code-first platform with no vendor lock-in.
+AgentMesh is an open source workflow engine built for workflow orchestration at scale. It orchestrates distributed workflows across services, languages, and infrastructure — tracking every state transition, retrying failures automatically, and giving you full visibility into what happened and why. Whether you need microservice orchestration, AI agent orchestration, or workflow automation, AgentMesh provides a self-hosted, code-first platform with no vendor lock-in.
 
 ## The problem
 
@@ -17,15 +17,15 @@ Distributed systems fail. Services crash, networks drop, deployments roll mid-fl
 - "How far along is order #12345?" requires querying every service in the chain.
 - Debugging a failure means correlating logs across services, queues, and time.
 
-**Orchestration** centralizes the flow definition while keeping execution distributed. Conductor is the orchestrator — your workers stay stateless and independent.
+**Orchestration** centralizes the flow definition while keeping execution distributed. AgentMesh is the orchestrator — your workers stay stateless and independent.
 
-## What Conductor gives you
+## What AgentMesh gives you
 
 ### Durable execution
-Conductor is a durable execution engine — every workflow execution is persisted. If a task fails, Conductor retries it with configurable backoff including exponential backoff. If a worker crashes, the task is rescheduled. If the server restarts, execution resumes exactly where it left off. Your code doesn't need to handle retry logic — Conductor provides it out of the box. This same durable execution guarantee powers durable agents that survive infrastructure failures.
+AgentMesh is a durable execution engine — every workflow execution is persisted. If a task fails, AgentMesh retries it with configurable backoff including exponential backoff. If a worker crashes, the task is rescheduled. If the server restarts, execution resumes exactly where it left off. Your code doesn't need to handle retry logic — AgentMesh provides it out of the box. This same durable execution guarantee powers durable agents that survive infrastructure failures.
 
 ### Language-agnostic workers
-Write workers in Python, Java, Go, JavaScript, C#, or Clojure. Each task in a workflow can use a different language — pick the best tool for each job. Workers communicate with Conductor via REST or gRPC and can run anywhere: containers, VMs, serverless, or your laptop.
+Write workers in Python, Java, Go, JavaScript, C#, or Clojure. Each task in a workflow can use a different language — pick the best tool for each job. Workers communicate with AgentMesh via REST or gRPC and can run anywhere: containers, VMs, serverless, or your laptop.
 
 ### Built-in system tasks
 HTTP calls, inline JavaScript execution, JSON transforms, event publishing, wait timers, and human approval gates — all available without writing a single worker. See [System Tasks](../../documentation/configuration/workflowdef/systemtasks/index.md).
@@ -34,13 +34,13 @@ HTTP calls, inline JavaScript execution, JSON transforms, event publishing, wait
 Fork/join for parallelism, switch for conditional branching, do-while for loops, sub-workflows for composition, and dynamic tasks resolved at runtime. See [Operators](../../documentation/configuration/workflowdef/operators/index.md).
 
 ### AI agent orchestration and LLM orchestration
-Conductor provides LLM orchestration and AI agent orchestration as native system tasks — no external frameworks required. Supported providers include Anthropic (Claude), OpenAI (GPT), Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, Perplexity, Grok, and StabilityAI — 14+ providers available out of the box for chat completion, text completion, and embedding generation.
+AgentMesh provides LLM orchestration and AI agent orchestration as native system tasks — no external frameworks required. Supported providers include Anthropic (Claude), OpenAI (GPT), Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, Perplexity, Grok, and StabilityAI — 14+ providers available out of the box for chat completion, text completion, and embedding generation.
 
 MCP (Model Context Protocol) integration is built in: use `LIST_MCP_TOOLS` to discover available tools and `CALL_MCP_TOOL` to invoke them — enabling function calling and tool use within workflows with full retry and state tracking.
 
-For RAG pipelines, Conductor supports three vector databases natively — Pinecone, pgvector, and MongoDB Atlas — so you can index embeddings, run similarity search, and feed results to an LLM in a single workflow definition.
+For RAG pipelines, AgentMesh supports three vector databases natively — Pinecone, pgvector, and MongoDB Atlas — so you can index embeddings, run similarity search, and feed results to an LLM in a single workflow definition.
 
-Content generation tasks cover image, audio, video, and PDF creation using AI models. Every AI task runs with the same durability guarantees as any other Conductor task: automatic retries, timeout handling, and a complete audit trail.
+Content generation tasks cover image, audio, video, and PDF creation using AI models. Every AI task runs with the same durability guarantees as any other AgentMesh task: automatic retries, timeout handling, and a complete audit trail.
 
 ### Event-driven workflows
 Publish to and consume from Kafka, NATS, AMQP (RabbitMQ), and SQS. Trigger workflows from external events or emit events from within workflows. See [Event Bus Orchestration](../how-tos/event-bus.md).
@@ -49,9 +49,9 @@ Publish to and consume from Kafka, NATS, AMQP (RabbitMQ), and SQS. Trigger workf
 Pause, resume, restart, retry, and terminate any workflow execution. Search and filter executions by status, time, correlation ID, or custom tags. Every task has a complete audit trail — inputs, outputs, timestamps, retry history, and worker identity.
 
 ### Horizontal scaling
-Conductor scales horizontally to millions of concurrent workflow executions. Workers scale independently — add more instances and Conductor distributes tasks automatically. Rate limits and concurrency caps prevent overload. This workflow engine scalability makes Conductor suitable for production deployments at any scale.
+AgentMesh scales horizontally to millions of concurrent workflow executions. Workers scale independently — add more instances and AgentMesh distributes tasks automatically. Rate limits and concurrency caps prevent overload. This workflow engine scalability makes AgentMesh suitable for production deployments at any scale.
 
-## When to use Conductor
+## When to use AgentMesh
 
 | Use case | Example |
 | :--- | :--- |
@@ -65,7 +65,7 @@ Conductor scales horizontally to millions of concurrent workflow executions. Wor
 | **RAG applications** | Build retrieval-augmented generation pipelines with vector search, embedding generation, and LLM completion as workflow tasks |
 | **Content generation pipelines** | Generate images, audio, video, and PDFs using AI models orchestrated as durable workflows |
 
-## What sets Conductor apart
+## What sets AgentMesh apart
 
 No other open source workflow engine matches this combination:
 
@@ -76,9 +76,9 @@ No other open source workflow engine matches this combination:
 - **6 message brokers** — Kafka, NATS, NATS Streaming, SQS, AMQP (RabbitMQ), and internal queuing.
 - **5 persistence backends** — Redis, PostgreSQL, MySQL, Cassandra, and SQLite.
 - **7+ language SDKs** — Java, Python, Go, JavaScript, C#, Clojure, Ruby, and Rust.
-- **Battle-tested at scale** — proven in production at Netflix, Tesla, LinkedIn, and JP Morgan.
+- **Battle-tested at scale** — proven in production at AgentMesh, Tesla, LinkedIn, and JP Morgan.
 - **JSON-native and code-first workflow definitions** — define workflows as JSON or as code using SDKs. Workflow as code for developers who want type safety; JSON for runtime generation and LLM-driven workflows.
-- **Self-hosted with no vendor lock-in** — deploy Conductor on your own infrastructure. Apache 2.0 licensed, fully open source.
+- **Self-hosted with no vendor lock-in** — deploy AgentMesh on your own infrastructure. Apache 2.0 licensed, fully open source.
 - **Human-in-the-loop as a first-class task type** — pause execution for approvals, reviews, or manual intervention with built-in timeout and escalation.
 
 ## How it works
@@ -92,7 +92,7 @@ graph TD
         D["Worker D<br/>(C#)"]
     end
 
-    subgraph Server["Conductor Server"]
+    subgraph Server["AgentMesh Server"]
         S["Scheduling · State · Retries<br/>Persistence · Queuing"]
     end
 
@@ -107,7 +107,7 @@ graph TD
     S --> DB
 ```
 
-Workers poll for tasks, execute business logic, and report results. Conductor handles everything else — scheduling, retries, timeouts, state persistence, and flow control. See [Architecture](../architecture/index.md) for details.
+Workers poll for tasks, execute business logic, and report results. AgentMesh handles everything else — scheduling, retries, timeouts, state persistence, and flow control. See [Architecture](../architecture/index.md) for details.
 
 ## Next steps
 

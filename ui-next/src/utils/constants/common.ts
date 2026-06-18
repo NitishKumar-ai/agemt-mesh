@@ -47,7 +47,7 @@ export const ACTIVE_FILTER_QUERY_PARAM = "activeFilter";
 export const USER_ROLE_FILTER_QUERY_PARAM = "roleFilter";
 
 export const HTTP_TEST_ENDPOINT =
-  "https://orkes-api-tester.orkesconductor.com/api";
+  "https://orkes-api-tester.orkesagentmesh.com/api";
 
 export const HOT_KEYS_SIDEBAR = "sidebar";
 export const HOT_KEYS_WORKFLOW_DEFINITION = "workflow-definition";

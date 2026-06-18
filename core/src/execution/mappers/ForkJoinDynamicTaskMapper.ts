@@ -1,7 +1,7 @@
 import type { TaskMapper } from './TaskMapper.js';
 import type { TaskMapperContext } from './TaskMapperContext.js';
 import type { TaskModel } from '../types.js';
-import { TaskType, type WorkflowTask } from '@conductor/common';
+import { TaskType, type WorkflowTask } from '@agentmesh/common';
 import { getNextTask } from '../ExecutorUtils.js';
 
 export class ForkJoinDynamicTaskMapper implements TaskMapper {

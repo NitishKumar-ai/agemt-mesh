@@ -1,15 +1,15 @@
 ---
-description: "Server Metrics — monitor Conductor server health and performance using Micrometer-based metrics and alerting."
+description: "Server Metrics — monitor AgentMesh server health and performance using Micrometer-based metrics and alerting."
 ---
 # Server Metrics
 
 !!! Info "Feature Update"
-    Since [v3.21.16](https://github.com/conductor-oss/conductor/releases/tag/v3.21.16), Conductor has switched to [Micrometer](https://micrometer.io/) for metrics collection.
+    Since [v3.21.16](https://github.com/agentmesh-oss/agentmesh/releases/tag/v3.21.16), AgentMesh has switched to [Micrometer](https://micrometer.io/) for metrics collection.
 
 
-Conductor uses [Micrometer](https://micrometer.io/) for metrics collection and export. 
+AgentMesh uses [Micrometer](https://micrometer.io/) for metrics collection and export. 
 
-The following metrics are published by the Conductor server. You can export these metrics to set up alerts for your workflows and tasks.
+The following metrics are published by the AgentMesh server. You can export these metrics to set up alerts for your workflows and tasks.
 
 | Metric Name          | Description       | Tags  |
 | ------------- |:----------------- | ----- |
@@ -36,7 +36,7 @@ The following metrics are published by the Conductor server. You can export thes
 
 ## Supported monitoring systems
 
-Conductor supports the following Micrometer publishers:
+AgentMesh supports the following Micrometer publishers:
 
 - [Atlas](https://docs.micrometer.io/micrometer/reference/implementations/atlas.html)
 - [Prometheus](https://docs.micrometer.io/micrometer/reference/implementations/prometheus.html)
@@ -54,4 +54,4 @@ Conductor supports the following Micrometer publishers:
 
 ### Enabling metrics collection
 
-To enable metrics collection to a particular monitoring system, refer to the [Micrometer documentation](https://docs.micrometer.io/micrometer/reference/implementations.html) complete the implementation. You will also need to enable the particular monitoring system in the Conductor's [`application.properties` file](https://github.com/conductor-oss/conductor/blob/6147d61d1babf47f5a0a328d114f1eb5d3d5ecb1/server/src/main/resources/application.properties#L163).
+To enable metrics collection to a particular monitoring system, refer to the [Micrometer documentation](https://docs.micrometer.io/micrometer/reference/implementations.html) complete the implementation. You will also need to enable the particular monitoring system in the AgentMesh's [`application.properties` file](https://github.com/agentmesh-oss/agentmesh/blob/6147d61d1babf47f5a0a328d114f1eb5d3d5ecb1/server/src/main/resources/application.properties#L163).

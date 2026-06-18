@@ -1,10 +1,10 @@
 # Vector Database Configuration
 
-This document describes the configuration format for vector databases in Conductor.
+This document describes the configuration format for vector databases in AgentMesh.
 
 ## Overview
 
-Conductor supports multiple vector database providers with the ability to configure **multiple named instances** of each type. This allows you to:
+AgentMesh supports multiple vector database providers with the ability to configure **multiple named instances** of each type. This allows you to:
 
 - Use multiple databases of the same type (e.g., multiple PostgreSQL instances)
 - Connect to different environments (prod, dev, staging)
@@ -18,10 +18,10 @@ Conductor supports multiple vector database providers with the ability to config
 
 ## Configuration Format
 
-Vector databases are configured using a list-based approach under `conductor.vectordb.instances`:
+Vector databases are configured using a list-based approach under `agentmesh.vectordb.instances`:
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "instance-name"        # Unique identifier for this instance
@@ -35,33 +35,33 @@ conductor:
 ### Single PostgreSQL Instance
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "postgres-main"
         type: "postgres"
         postgres:
           datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-          user: "conductor"
+          user: "agentmesh"
           password: "secret"
           dimensions: 1536
           connectionPoolSize: 10
           indexingMethod: "hnsw"        # Options: hnsw, ivfflat
           distanceMetric: "cosine"      # Options: l2, cosine, inner_product
-          tablePrefix: "conductor"
+          tablePrefix: "agentmesh"
 ```
 
 ### Multiple PostgreSQL Instances
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "postgres-prod"
         type: "postgres"
         postgres:
           datasourceURL: "jdbc:postgresql://prod-db:5432/vectors"
-          user: "conductor"
+          user: "agentmesh"
           password: "prod-secret"
           dimensions: 1536
           
@@ -69,7 +69,7 @@ conductor:
         type: "postgres"
         postgres:
           datasourceURL: "jdbc:postgresql://dev-db:5432/vectors"
-          user: "conductor"
+          user: "agentmesh"
           password: "dev-secret"
           dimensions: 768
 ```
@@ -77,14 +77,14 @@ conductor:
 ### MongoDB Atlas Vector Search
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "mongodb-embeddings"
         type: "mongodb"
         mongodb:
           connectionString: "mongodb+srv://user:pass@cluster.mongodb.net/"
-          database: "conductor"
+          database: "agentmesh"
           collection: "embeddings"
           numCandidates: 100
 ```
@@ -92,7 +92,7 @@ conductor:
 ### Pinecone
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "pinecone-search"
@@ -104,14 +104,14 @@ conductor:
 ### Mixed Configuration (Multiple Types)
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "postgres-prod"
         type: "postgres"
         postgres:
           datasourceURL: "jdbc:postgresql://prod:5432/vectors"
-          user: "conductor"
+          user: "agentmesh"
           password: "secret"
           dimensions: 1536
           
@@ -124,7 +124,7 @@ conductor:
         type: "mongodb"
         mongodb:
           connectionString: "mongodb://localhost:27017"
-          database: "conductor"
+          database: "agentmesh"
 ```
 
 ## Usage in Workflows
@@ -182,25 +182,25 @@ When using vector database tasks in your workflows, reference the instance by it
 ### Old Format (Single Instance Per Type)
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     postgres:
       datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-      user: "conductor"
+      user: "agentmesh"
       password: "secret"
 ```
 
 ### New Format (Named Instances)
 
 ```yaml
-conductor:
+agentmesh:
   vectordb:
     instances:
       - name: "pgvectordb"           # Use old type name for backward compatibility
         type: "postgres"
         postgres:
           datasourceURL: "jdbc:postgresql://localhost:5432/vectors"
-          user: "conductor"
+          user: "agentmesh"
           password: "secret"
 ```
 

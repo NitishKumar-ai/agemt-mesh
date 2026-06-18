@@ -2,11 +2,11 @@
 
 ## Published Artifacts
 
-Group: `com.netflix.conductor`
+Group: `com.agentmesh.agentmesh`
 
 | Published Artifact | Description |
 | ----------- | ----------- | 
-| conductor-task | Community contributed tasks  |
+| agentmesh-task | Community contributed tasks  |
 
 **Note**: If you are using `condutor-contribs` as a dependency, the task module is already included, you do not need to include it separately.
 
@@ -25,9 +25,9 @@ Check the [JQ Manual](https://stedolan.github.io/jq/manual/v1.5/), and the
 ### Use Cases
 
 JSON is a popular format of choice for data-interchange. It is widely used in web and server applications, document
-storage, API I/O etc. It’s also used within Conductor to define workflow and task definitions and passing data and state
+storage, API I/O etc. It’s also used within AgentMesh to define workflow and task definitions and passing data and state
 between tasks and workflows. This makes a tool like JQ a natural fit for processing task related data. Some common
-usages within Conductor includes, working with HTTP task, JOIN tasks or standalone tasks that try to transform data from
+usages within AgentMesh includes, working with HTTP task, JOIN tasks or standalone tasks that try to transform data from
 the output of one task to the input of another.
 
 ### Configuration

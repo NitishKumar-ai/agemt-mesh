@@ -1,10 +1,10 @@
-import { WorkflowSystemTask } from '@conductor/core';
-import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@conductor/core';
+import { WorkflowSystemTask } from '@agentmesh/core';
+import type { WorkflowModel, TaskModel, WorkflowExecutor } from '@agentmesh/core';
 import { LLMs } from '../LLMs.js';
 import { ChatCompletion, LLMResponse } from '../models/index.js';
-import { TaskStatus } from '@conductor/common';
+import { TaskStatus } from '@agentmesh/common';
 import { ModelClient } from '../routing/ModelClient.js';
-import { TelemetryService, Span } from '@conductor/telemetry';
+import { TelemetryService, Span } from '@agentmesh/telemetry';
 
 export class LlmChatComplete extends WorkflowSystemTask {
   public static readonly NAME = 'LLM_CHAT_COMPLETE';
@@ -78,7 +78,7 @@ export class LlmChatComplete extends WorkflowSystemTask {
   override execute(workflow: WorkflowModel, task: TaskModel, workflowExecutor: WorkflowExecutor): boolean {
     // We execute async and return true to let the engine know we have updated the task.
     // However, since it's an async operation, we'd normally queue it to an async executor.
-    // Assuming Conductor's AsyncSystemTaskExecutor will handle async logic:
+    // Assuming AgentMesh's AsyncSystemTaskExecutor will handle async logic:
     // This is just a basic implementation. We'll mark it as IN_PROGRESS and handle async via Worker.
     return false; // Return false if no synchronous changes are complete
   }

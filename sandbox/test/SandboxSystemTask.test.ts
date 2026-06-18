@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { SandboxSystemTask } from '../src/SandboxSystemTask.js';
-import { TaskStatus } from '@conductor/common';
+import { TaskStatus } from '@agentmesh/common';
 
 describe('SandboxSystemTask', () => {
   it('blocks exfiltration attempt', async () => {

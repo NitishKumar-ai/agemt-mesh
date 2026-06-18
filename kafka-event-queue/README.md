@@ -2,11 +2,11 @@
 
 ## Published Artifacts
 
-Group: `com.netflix.conductor`
+Group: `com.agentmesh.agentmesh`
 
 | Published Artifact | Description |
 | ----------- | ----------- |
-| conductor-kafka-event-queue | Support for integration with Kafka and consume events from it. |
+| agentmesh-kafka-event-queue | Support for integration with Kafka and consume events from it. |
 
 ## Modules
 
@@ -27,7 +27,7 @@ Example:
 ```json
 {
     "name": "kafka_test_event_handler",
-    "event": "kafka:conductor-event",
+    "event": "kafka:agentmesh-event",
     "actions": [
       {
         "action": "start_workflow",
@@ -71,26 +71,26 @@ To access them in the event handler use for example `"${payload}"` to access the
 To enable the queue use set the following to true.
 
 ```properties
-conductor.event-queues.kafka.enabled=true
+agentmesh.event-queues.kafka.enabled=true
 ```
 
 There are is a set of shared properties these are:
 
 ```properties
 # If kafka should be used with event queues like SQS or AMPQ
-conductor.default-event-queue.type=kafka
+agentmesh.default-event-queue.type=kafka
 
 # the bootstrap server ot use. 
-conductor.event-queues.kafka.bootstrap-servers=kafka:29092
+agentmesh.event-queues.kafka.bootstrap-servers=kafka:29092
 
 # The dead letter queue to use for events that had some error.
-conductor.event-queues.kafka.dlq-topic=conductor-dlq
+agentmesh.event-queues.kafka.dlq-topic=agentmesh-dlq
 
-# topic prefix combined with conductor.default-event-queue.type
-conductor.event-queues.kafka.listener-queue-prefix=conductor_
+# topic prefix combined with agentmesh.default-event-queue.type
+agentmesh.event-queues.kafka.listener-queue-prefix=agentmesh_
 
 # The polling duration. Start at 500ms and reduce based on how your environment behaves.
-conductor.event-queues.kafka.poll-time-duration=500ms
+agentmesh.event-queues.kafka.poll-time-duration=500ms
 ```
 
 There are 3 clients that should be configured, there is the Consumer, responsible to consuming messages, Publisher that publishes messages to Kafka and the Admin which handles admin operations.
@@ -102,12 +102,12 @@ The supported properties for the 3 clients are the ones included in `org.apache.
 Example of consumer settings.
 
 ```properties
-conductor.event-queues.kafka.consumer.client.id=consumer-client
-conductor.event-queues.kafka.consumer.auto.offset.reset=earliest
-conductor.event-queues.kafka.consumer.enable.auto.commit=false
-conductor.event-queues.kafka.consumer.fetch.min.bytes=1
-conductor.event-queues.kafka.consumer.max.poll.records=500
-conductor.event-queues.kafka.consumer.group-id=conductor-group
+agentmesh.event-queues.kafka.consumer.client.id=consumer-client
+agentmesh.event-queues.kafka.consumer.auto.offset.reset=earliest
+agentmesh.event-queues.kafka.consumer.enable.auto.commit=false
+agentmesh.event-queues.kafka.consumer.fetch.min.bytes=1
+agentmesh.event-queues.kafka.consumer.max.poll.records=500
+agentmesh.event-queues.kafka.consumer.group-id=agentmesh-group
 ```
 
 ## Producer properties
@@ -115,12 +115,12 @@ conductor.event-queues.kafka.consumer.group-id=conductor-group
 Example of producer settings.
 
 ```properties
-conductor.event-queues.kafka.producer.client.id=producer-client
-conductor.event-queues.kafka.producer.acks=all
-conductor.event-queues.kafka.producer.retries=5
-conductor.event-queues.kafka.producer.batch.size=16384
-conductor.event-queues.kafka.producer.linger.ms=10
-conductor.event-queues.kafka.producer.compression.type=gzip
+agentmesh.event-queues.kafka.producer.client.id=producer-client
+agentmesh.event-queues.kafka.producer.acks=all
+agentmesh.event-queues.kafka.producer.retries=5
+agentmesh.event-queues.kafka.producer.batch.size=16384
+agentmesh.event-queues.kafka.producer.linger.ms=10
+agentmesh.event-queues.kafka.producer.compression.type=gzip
 ```
 
 ## Admin properties
@@ -128,6 +128,6 @@ conductor.event-queues.kafka.producer.compression.type=gzip
 Example of admin settings.
 
 ```properties
-conductor.event-queues.kafka.admin.client.id=admin-client
-conductor.event-queues.kafka.admin.connections.max.idle.ms=10000
+agentmesh.event-queues.kafka.admin.client.id=admin-client
+agentmesh.event-queues.kafka.admin.connections.max.idle.ms=10000
 ```

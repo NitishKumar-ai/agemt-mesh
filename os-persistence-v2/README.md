@@ -1,6 +1,6 @@
 # OpenSearch 2.x Persistence
 
-This module provides OpenSearch 2.x persistence for indexing workflows and tasks in Conductor.
+This module provides OpenSearch 2.x persistence for indexing workflows and tasks in AgentMesh.
 
 ## Overview
 
@@ -13,42 +13,42 @@ server is deployed alongside the `os-persistence-v3` module.
 Set the following properties to enable OpenSearch 2.x indexing:
 
 ```properties
-conductor.indexing.enabled=true
-conductor.indexing.type=opensearch2
+agentmesh.indexing.enabled=true
+agentmesh.indexing.type=opensearch2
 
 # URL of the OpenSearch cluster (comma-separated for multiple nodes)
-conductor.opensearch.url=http://localhost:9200
+agentmesh.opensearch.url=http://localhost:9200
 
-# Index prefix (default: conductor)
-conductor.opensearch.indexPrefix=conductor
+# Index prefix (default: agentmesh)
+agentmesh.opensearch.indexPrefix=agentmesh
 ```
 
 ### All Configuration Properties
 
 | Property | Default | Description |
 |---|---|---|
-| `conductor.opensearch.url` | `localhost:9201` | Comma-separated list of OpenSearch node URLs. Supports `http://` and `https://` schemes. |
-| `conductor.opensearch.indexPrefix` | `conductor` | Prefix used when creating indices. |
-| `conductor.opensearch.clusterHealthColor` | `green` | Cluster health color to wait for before starting (`green`, `yellow`). |
-| `conductor.opensearch.indexBatchSize` | `1` | Number of documents per batch when async indexing is enabled. |
-| `conductor.opensearch.asyncWorkerQueueSize` | `100` | Size of the async indexing task queue. |
-| `conductor.opensearch.asyncMaxPoolSize` | `12` | Maximum threads in the async indexing pool. |
-| `conductor.opensearch.asyncBufferFlushTimeout` | `10s` | How long async buffers are held before being flushed. |
-| `conductor.opensearch.indexShardCount` | `5` | Number of shards per index. |
-| `conductor.opensearch.indexReplicasCount` | `0` | Number of replicas per index. |
-| `conductor.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per query. |
-| `conductor.opensearch.restClientConnectionRequestTimeout` | `-1` | Connection request timeout in ms (`-1` = unlimited). |
-| `conductor.opensearch.autoIndexManagementEnabled` | `true` | Whether Conductor creates and manages indices automatically. |
-| `conductor.opensearch.username` | _(none)_ | Username for basic authentication. |
-| `conductor.opensearch.password` | _(none)_ | Password for basic authentication. |
+| `agentmesh.opensearch.url` | `localhost:9201` | Comma-separated list of OpenSearch node URLs. Supports `http://` and `https://` schemes. |
+| `agentmesh.opensearch.indexPrefix` | `agentmesh` | Prefix used when creating indices. |
+| `agentmesh.opensearch.clusterHealthColor` | `green` | Cluster health color to wait for before starting (`green`, `yellow`). |
+| `agentmesh.opensearch.indexBatchSize` | `1` | Number of documents per batch when async indexing is enabled. |
+| `agentmesh.opensearch.asyncWorkerQueueSize` | `100` | Size of the async indexing task queue. |
+| `agentmesh.opensearch.asyncMaxPoolSize` | `12` | Maximum threads in the async indexing pool. |
+| `agentmesh.opensearch.asyncBufferFlushTimeout` | `10s` | How long async buffers are held before being flushed. |
+| `agentmesh.opensearch.indexShardCount` | `5` | Number of shards per index. |
+| `agentmesh.opensearch.indexReplicasCount` | `0` | Number of replicas per index. |
+| `agentmesh.opensearch.taskLogResultLimit` | `10` | Maximum task log entries returned per query. |
+| `agentmesh.opensearch.restClientConnectionRequestTimeout` | `-1` | Connection request timeout in ms (`-1` = unlimited). |
+| `agentmesh.opensearch.autoIndexManagementEnabled` | `true` | Whether AgentMesh creates and manages indices automatically. |
+| `agentmesh.opensearch.username` | _(none)_ | Username for basic authentication. |
+| `agentmesh.opensearch.password` | _(none)_ | Password for basic authentication. |
 
 ### Basic Authentication
 
 To connect to a secured OpenSearch cluster:
 
 ```properties
-conductor.opensearch.username=myuser
-conductor.opensearch.password=mypassword
+agentmesh.opensearch.username=myuser
+agentmesh.opensearch.password=mypassword
 ```
 
 ### Single-Node / Development Clusters
@@ -57,8 +57,8 @@ A single-node cluster cannot achieve `green` health because replica shards have 
 assigned. Set:
 
 ```properties
-conductor.opensearch.clusterHealthColor=yellow
-conductor.opensearch.indexReplicasCount=0
+agentmesh.opensearch.clusterHealthColor=yellow
+agentmesh.opensearch.indexReplicasCount=0
 ```
 
 ### External Index Management
@@ -66,24 +66,24 @@ conductor.opensearch.indexReplicasCount=0
 If you manage OpenSearch indices externally (e.g., via ILM policies or Terraform):
 
 ```properties
-conductor.opensearch.autoIndexManagementEnabled=false
+agentmesh.opensearch.autoIndexManagementEnabled=false
 ```
 
 ## Migration from Legacy `opensearch` Type
 
-If you previously used `conductor.indexing.type=opensearch`, update to `opensearch2`:
+If you previously used `agentmesh.indexing.type=opensearch`, update to `opensearch2`:
 
 ```properties
 # Before
-conductor.indexing.type=opensearch
-conductor.elasticsearch.url=http://localhost:9200
+agentmesh.indexing.type=opensearch
+agentmesh.elasticsearch.url=http://localhost:9200
 
 # After
-conductor.indexing.type=opensearch2
-conductor.opensearch.url=http://localhost:9200
+agentmesh.indexing.type=opensearch2
+agentmesh.opensearch.url=http://localhost:9200
 ```
 
-The `conductor.elasticsearch.*` namespace is still accepted for backward compatibility but is
+The `agentmesh.elasticsearch.*` namespace is still accepted for backward compatibility but is
 deprecated. A warning is logged at startup when legacy properties are detected.
 
 ## Docker Compose
@@ -92,7 +92,7 @@ deprecated. A warning is logged at startup when legacy properties are detected.
 docker compose -f docker/docker-compose-redis-os2.yaml up
 ```
 
-This starts Conductor, Redis, and OpenSearch 2.18.0.
+This starts AgentMesh, Redis, and OpenSearch 2.18.0.
 
 ## Dependency Isolation
 
@@ -101,7 +101,7 @@ uses the [Shadow plugin](https://github.com/johnrengelman/shadow) to relocate al
 classes to an isolated namespace:
 
 ```
-org.opensearch.client → org.conductoross.conductor.os2.shaded.opensearch.client
+org.opensearch.client → org.agentmeshoss.agentmesh.os2.shaded.opensearch.client
 ```
 
 This allows both `os-persistence-v2` and `os-persistence-v3` to coexist on the same classpath
@@ -111,4 +111,4 @@ without conflicts.
 
 - [os-persistence-v3](../os-persistence-v3/README.md) — for OpenSearch 3.x clusters
 - [OpenSearch configuration guide](../docs/documentation/advanced/opensearch.md)
-- [Issue #678](https://github.com/conductor-oss/conductor/issues/678) — OpenSearch improvement epic
+- [Issue #678](https://github.com/agentmesh-oss/agentmesh/issues/678) — OpenSearch improvement epic

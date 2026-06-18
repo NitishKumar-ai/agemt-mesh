@@ -25,12 +25,12 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
 
-  conductor:
-    image: conductoross/conductor:latest
+  agentmesh:
+    image: agentmeshoss/agentmesh:latest
     ports:
       - "8080:8080"
     environment:
-      - CONDUCTOR_EXTERNAL_PAYLOAD_STORAGE=db
+      - AGENTMESH_EXTERNAL_PAYLOAD_STORAGE=db
     depends_on:
       - redis
       - postgres

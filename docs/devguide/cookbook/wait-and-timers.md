@@ -1,5 +1,5 @@
 ---
-description: "Conductor cookbook — wait and timer pattern recipes for fixed delays, scheduled execution, external signals, and human-in-the-loop approvals."
+description: "AgentMesh cookbook — wait and timer pattern recipes for fixed delays, scheduled execution, external signals, and human-in-the-loop approvals."
 ---
 
 # Wait and timer patterns

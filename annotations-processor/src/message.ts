@@ -2,7 +2,7 @@ import { AbstractMessage, Field } from './abstract-message';
 import { AbstractType } from './types/abstract-type';
 import { MessageType } from './types/message-type';
 import { TypeMapper } from './types/type-mapper';
-import { PROTO_FIELD_KEY, PROTO_MESSAGE_KEY } from '@conductor/annotations';
+import { PROTO_FIELD_KEY, PROTO_MESSAGE_KEY } from '@agentmesh/annotations';
 
 export class Message extends AbstractMessage {
   constructor(cls: Function, parent: MessageType) {

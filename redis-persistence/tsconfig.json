@@ -2,14 +2,15 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src/main/typescript"
+    "rootDir": "./src"
   },
   "include": [
-    "src/main/typescript/**/*",
-    "src/test/typescript/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/test/java/**/*",
+    "src/main/java/**/*"
   ]
 }

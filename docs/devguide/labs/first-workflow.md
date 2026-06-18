@@ -1,11 +1,11 @@
 ---
-description: "First Workflow Lab — step-by-step tutorial to create and run your first Conductor workflow using built-in HTTP tasks."
+description: "First Workflow Lab — step-by-step tutorial to create and run your first AgentMesh workflow using built-in HTTP tasks."
 ---
 # A First Workflow
 
 In this article we will explore how we can run a really simple workflow that runs without deploying any new microservice. 
 
-Conductor can orchestrate HTTP services out of the box without implementing any code.  We will use that to create and run the first workflow.
+AgentMesh can orchestrate HTTP services out of the box without implementing any code.  We will use that to create and run the first workflow.
 
 See [System Task](../../documentation/configuration/workflowdef/systemtasks/index.md) for the list of such built-in tasks.
 Using system tasks is a great way to run a lot of our code in production.
@@ -48,7 +48,7 @@ This is a sample workflow that we can leverage for our test.
 
 This is an example workflow that queries a publicly available JSON API to retrieve some data. This workflow doesn’t
 require any worker implementation as the tasks in this workflow are managed by the system itself. This is an awesome
-feature of Conductor. For a lot of typical work, we won’t have to write any code at all.
+feature of AgentMesh. For a lot of typical work, we won’t have to write any code at all.
 
 Let's talk about this workflow a little more so that we can gain some context.
 
@@ -85,7 +85,7 @@ Here is a list of fields and what it does:
    also provide dynamic inputs such as from the workflow input or based on the output of another worker. We can find
    examples of this in our documentation.
 4. `"type"` : This is what defines what the type of worker is. In our example - this is `HTTP`. There are more task
-   types which we can find in the Conductor documentation.
+   types which we can find in the AgentMesh documentation.
 5. `"http_request"` : This is an input that is required for tasks of type `HTTP`. In our example we have provided a well
    known internet JSON API url and the type of HTTP method to invoke - `GET`
 
@@ -94,7 +94,7 @@ metadata or more advanced concepts which we can learn more in the detailed docum
 
 Ok, now that we have walked through our workflow details, let's run this and see how it works.
 
-To configure the workflow, head over to the swagger API of conductor server and access the metadata workflow create API:
+To configure the workflow, head over to the swagger API of agentmesh server and access the metadata workflow create API:
 
 [http://{{ server_host }}/swagger-ui/index.html?configUrl=/api-docs/swagger-config#/metadata-resource/create](http://{{ server_host }}/swagger-ui/index.html?configUrl=/api-docs/swagger-config#/metadata-resource/create)
 
@@ -107,11 +107,11 @@ Paste the workflow payload into the Swagger API and hit Execute.
 
 Now if we head over to the UI, we can see this workflow definition created:
 
-![Conductor UI - Workflow Definition](uiWorkflowDefinition.png)
+![AgentMesh UI - Workflow Definition](uiWorkflowDefinition.png)
 
 If we click through we can see a visual representation of the workflow:
 
-![Conductor UI - Workflow Definition - Visual Flow](uiWorkflowDefinitionVisual.png)
+![AgentMesh UI - Workflow Definition - Visual Flow](uiWorkflowDefinitionVisual.png)
 
 ## Running our First Workflow
 
@@ -123,7 +123,7 @@ Let’s run this workflow. To do that we can use the swagger API under the workf
 
 Hit **Execute**!
 
-Conductor will return a workflow id. We will need to use this id to load this up on the UI. If our UI installation has
+AgentMesh will return a workflow id. We will need to use this id to load this up on the UI. If our UI installation has
 search enabled we wouldn't need to copy this. If we don't have search enabled (using Elasticsearch) copy it from the
 Swagger UI.
 
@@ -140,11 +140,11 @@ http://localhost:5000/execution/<WORKFLOW_ID>
 Replace `<WORKFLOW_ID>` with our workflow id from the previous step. We should see a screen like below. Click on the
 different tabs to see all inputs and outputs and task list etc. Explore away!
 
-![Conductor UI - Workflow Run](workflowLoaded.png)
+![AgentMesh UI - Workflow Run](workflowLoaded.png)
 
 ## Summary
 
-In this article — we learned how to run a sample workflow in our Conductor installation. Concepts we touched on:
+In this article — we learned how to run a sample workflow in our AgentMesh installation. Concepts we touched on:
 
 1. Workflow creation
 2. System tasks such as HTTP

@@ -1,15 +1,15 @@
 ---
-description: "Production best practices for Conductor — idempotency, retry logic with exponential backoff, timeouts, payload management, horizontal scaling of workers, saga patterns, and deployment strategies for durable execution at scale."
+description: "Production best practices for AgentMesh — idempotency, retry logic with exponential backoff, timeouts, payload management, horizontal scaling of workers, saga patterns, and deployment strategies for durable execution at scale."
 ---
 
 # Best Practices
 
-This guide covers production best practices for running Conductor as a durable execution engine at scale. Every recommendation here comes from real-world operational experience.
+This guide covers production best practices for running AgentMesh as a durable execution engine at scale. Every recommendation here comes from real-world operational experience.
 
 
 ## Idempotent workers
 
-Conductor guarantees **at-least-once** task delivery. Network partitions, worker restarts, and response timeouts can all cause a task to be delivered more than once. Your workers must be idempotent — executing the same task twice should produce the same result without side effects.
+AgentMesh guarantees **at-least-once** task delivery. Network partitions, worker restarts, and response timeouts can all cause a task to be delivered more than once. Your workers must be idempotent — executing the same task twice should produce the same result without side effects.
 
 **Patterns for idempotency:**
 
@@ -21,7 +21,7 @@ Conductor guarantees **at-least-once** task delivery. Network partitions, worker
 | **Idempotent HTTP methods** | Prefer PUT over POST when the downstream API supports it. |
 
 ```python
-from conductor.client.worker.worker_task import worker_task
+from agentmesh.client.worker.worker_task import worker_task
 
 @worker_task(task_definition_name="charge_payment")
 def charge_payment(workflow_id: str, task_id: str, amount: float, currency: str) -> dict:
@@ -73,7 +73,7 @@ See [Task Definitions](../documentation/configuration/taskdef.md) for the full p
 
 ## Payload management
 
-Conductor stores task inputs and outputs in its database. Large payloads degrade performance and increase storage costs.
+AgentMesh stores task inputs and outputs in its database. Large payloads degrade performance and increase storage costs.
 
 ### Size guidelines
 
@@ -85,14 +85,14 @@ Conductor stores task inputs and outputs in its database. Large payloads degrade
 
 ### External payload storage
 
-For payloads exceeding 64 KB, use external payload storage. Conductor supports S3 out of the box:
+For payloads exceeding 64 KB, use external payload storage. AgentMesh supports S3 out of the box:
 
 ```json
 {
-  "conductor.external-payload-storage.type": "s3",
-  "conductor.external-payload-storage.s3.bucket-name": "my-conductor-payloads",
-  "conductor.external-payload-storage.s3.region": "us-east-1",
-  "conductor.external-payload-storage.s3.signed-url-expiration-seconds": 300
+  "agentmesh.external-payload-storage.type": "s3",
+  "agentmesh.external-payload-storage.s3.bucket-name": "my-agentmesh-payloads",
+  "agentmesh.external-payload-storage.s3.region": "us-east-1",
+  "agentmesh.external-payload-storage.s3.signed-url-expiration-seconds": 300
 }
 ```
 
@@ -114,7 +114,7 @@ Break work into small tasks that each do one thing. This gives you:
 
 - **Granular retries** — only the failed step retries, not the entire pipeline.
 - **Reusability** — small tasks compose into different workflows.
-- **Visibility** — each step is independently observable in the Conductor UI.
+- **Visibility** — each step is independently observable in the AgentMesh UI.
 
 ### Sub-workflows vs inline tasks
 
@@ -193,7 +193,7 @@ See [Scaling Workers](how-tos/Workers/scaling-workers.md) for more detail.
 By default, a failed task is retried according to `retryCount` and `retryLogic` (`FIXED`, `EXPONENTIAL_BACKOFF`, or `LINEAR_BACKOFF`). For errors that should **not** be retried, set the task status to `FAILED_WITH_TERMINAL_ERROR`:
 
 ```python
-from conductor.client.http.models import TaskResult, TaskResultStatus
+from agentmesh.client.http.models import TaskResult, TaskResultStatus
 
 @worker_task(task_definition_name="validate_order")
 def validate_order(order_id: str, items: list) -> TaskResult:
@@ -209,7 +209,7 @@ def validate_order(order_id: str, items: list) -> TaskResult:
 
 | Error type | Strategy |
 | :--- | :--- |
-| Transient (network timeout, 503) | Let Conductor retry with backoff. |
+| Transient (network timeout, 503) | Let AgentMesh retry with backoff. |
 | Client error (400, validation failure) | Return `FAILED_WITH_TERMINAL_ERROR`. |
 | Partial failure in batch | Return partial results as output; use workflow logic to handle remainder. |
 
@@ -222,7 +222,7 @@ For workflows that span multiple services, design compensation tasks to undo com
 **Backward compensation** — Undo completed work in reverse order. Model this as a separate workflow triggered by the [failure workflow](how-tos/Workflows/handling-errors.md) mechanism:
 
 1. The main workflow fails at step 3.
-2. Conductor invokes the configured `failureWorkflow`.
+2. AgentMesh invokes the configured `failureWorkflow`.
 3. The failure workflow runs compensating tasks: undo step 2, then undo step 1.
 
 !!! tip
@@ -231,7 +231,7 @@ For workflows that span multiple services, design compensation tasks to undo com
 
 ## Versioning and deployments
 
-Conductor supports [workflow versioning](how-tos/Workflows/versioning-workflows.md) natively. Use this for safe deployments.
+AgentMesh supports [workflow versioning](how-tos/Workflows/versioning-workflows.md) natively. Use this for safe deployments.
 
 ### Blue-green with versions
 
@@ -260,7 +260,7 @@ Because workers are decoupled from workflow definitions, you can roll back the w
 
 ## Monitoring
 
-Track these metrics to maintain healthy Conductor operations:
+Track these metrics to maintain healthy AgentMesh operations:
 
 | Metric | What it tells you | Alert threshold |
 | :--- | :--- | :--- |

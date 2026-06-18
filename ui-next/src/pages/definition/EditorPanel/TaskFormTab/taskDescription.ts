@@ -6,11 +6,11 @@ type TaskDescriptions = Partial<Record<FormTaskType, string>>;
 export const taskDescriptions: TaskDescriptions = {
   // system
   [TaskType.EVENT]:
-    "EVENT is a task used to publish an event into one of the supported eventing systems in Conductor.",
+    "EVENT is a task used to publish an event into one of the supported eventing systems in AgentMesh.",
   [TaskType.HTTP]:
     "HTTP task allows you to make calls to remote services exposed over HTTP/HTTPS.",
   [TaskType.HTTP_POLL]:
-    "The HTTP_POLL is a conductor task used to invoke HTTP API until the specified condition matches.",
+    "The HTTP_POLL is a agentmesh task used to invoke HTTP API until the specified condition matches.",
   [TaskType.JSON_JQ_TRANSFORM]:
     "The JSON_JQ_TRANSFORM task is a System task that allows the processing of JSON data that is supplied to the task by using the popular JQ processing tool’s query expression language.",
   [TaskType.INLINE]:
@@ -21,7 +21,7 @@ export const taskDescriptions: TaskDescriptions = {
   [TaskType.START_WORKFLOW]:
     "Start Workflow is an operator task used to start another workflow from an existing workflow. Unlike a sub-workflow task, a start workflow task doesn’t create a relationship between the current workflow and the newly started workflow. That means it doesn’t wait for the started workflow to get completed.",
   [TaskType.WAIT_FOR_WEBHOOK]:
-    "Webhook is an HTTP-based callback function that facilitates the communication between the Conductor and other third-party systems. It can be used to receive data from other applications to the Conductor.",
+    "Webhook is an HTTP-based callback function that facilitates the communication between the AgentMesh and other third-party systems. It can be used to receive data from other applications to the AgentMesh.",
   [TaskType.UPDATE_SECRET]:
     "A system task to update the value of any secret, given the user has permission to update the secret.",
   [TaskType.QUERY_PROCESSOR]:
@@ -59,7 +59,7 @@ export const taskDescriptions: TaskDescriptions = {
   [TaskType.JDBC]:
     "A JDBC task is a system task used to execute or store information in MySQL.",
   [TaskType.SIMPLE]:
-    "A Simple task is a Worker task that requires an external worker for polling. The Workers can be implemented in any language, and Conductor SDKs provide additional features such as metrics, server communication, and polling threads that make the worker creation process easier.",
+    "A Simple task is a Worker task that requires an external worker for polling. The Workers can be implemented in any language, and AgentMesh SDKs provide additional features such as metrics, server communication, and polling threads that make the worker creation process easier.",
 
   // alerting
   [TaskType.OPS_GENIE]:

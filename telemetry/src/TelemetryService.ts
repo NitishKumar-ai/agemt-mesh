@@ -19,7 +19,7 @@ export class TelemetryService {
   public tracer: Tracer;
 
   constructor(config: TelemetryConfig = {}) {
-    const serviceName = config.serviceName || 'conductor-agent-mesh';
+    const serviceName = config.serviceName || 'agentmesh-agent-mesh';
     
     // Initialize Langfuse client for manual operations if needed
     if (config.langfusePublicKey && config.langfuseSecretKey) {

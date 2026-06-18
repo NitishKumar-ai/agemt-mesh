@@ -1,19 +1,19 @@
 # syntax=docker/dockerfile:1.7
 # ---------------------------------------------------------------------------
-# Phase 8 — Production image for @conductor/server-lite
+# Phase 8 — Production image for @agentmesh/server-lite
 #
 # Multi-stage build:
 #   1. builder  — installs all deps, compiles TypeScript
 #   2. runtime  — minimal Node image, production deps only
 #
 # Build:
-#   docker build -t conductor-agent:latest -f deploy/Dockerfile .
+#   docker build -t agentmesh-agent:latest -f deploy/Dockerfile .
 #
 # Run:
 #   docker run -p 8080:8080 \
 #     -e DB_PATH=/data/agent-mesh.db \
 #     -v $(pwd)/data:/data \
-#     conductor-agent:latest
+#     agentmesh-agent:latest
 # ---------------------------------------------------------------------------
 
 # ---------------------  Stage 1: builder  -----------------------------------
@@ -64,13 +64,13 @@ COPY sandbox/src          ./sandbox/src
 COPY server-lite/src      ./server-lite/src
 
 # Build (turbo respects dependency order)
-RUN pnpm turbo run build --filter=@conductor/server-lite...
+RUN pnpm turbo run build --filter=@agentmesh/server-lite...
 
 # ---------------------  Stage 2: runtime  -----------------------------------
 FROM node:20-alpine AS runtime
 
 # Security: run as non-root
-RUN addgroup -g 1001 conductor && adduser -u 1001 -G conductor -s /bin/sh -D conductor
+RUN addgroup -g 1001 agentmesh && adduser -u 1001 -G agentmesh -s /bin/sh -D agentmesh
 
 WORKDIR /app
 
@@ -112,10 +112,10 @@ RUN pnpm install --frozen-lockfile --prod && \
     pnpm store prune
 
 # Data directory (SQLite DB lives here by default)
-RUN mkdir -p /data && chown conductor:conductor /data
+RUN mkdir -p /data && chown agentmesh:agentmesh /data
 
 # Drop to non-root
-USER conductor
+USER agentmesh
 
 # Health check: poll our own /health endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \

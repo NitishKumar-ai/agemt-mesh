@@ -1,15 +1,15 @@
 ---
-description: "Monitor task queues and scale Conductor workers — queue depth, poll data, Prometheus metrics, autoscaling policies, and performance tuning."
+description: "Monitor task queues and scale AgentMesh workers — queue depth, poll data, Prometheus metrics, autoscaling policies, and performance tuning."
 ---
 
 # Scaling Task Workers
 
-Workers execute business logic outside the Conductor server. Keeping them healthy requires two things: **monitoring** queue and worker state, and **scaling** based on what the data tells you.
+Workers execute business logic outside the AgentMesh server. Keeping them healthy requires two things: **monitoring** queue and worker state, and **scaling** based on what the data tells you.
 
 
 ## Monitoring task queues
 
-Conductor tracks queue size and worker poll activity for every task type. Use this data to detect backlogs, stalled workers, and capacity issues.
+AgentMesh tracks queue size and worker poll activity for every task type. Use this data to detect backlogs, stalled workers, and capacity issues.
 
 ### Using the UI
 
@@ -22,10 +22,10 @@ Navigate to **Home > Task Queues** (or `<your UI server URL>/taskQueue`). For ea
 
 ```bash
 # List all tasks with queue info
-conductor task list
+agentmesh task list
 
 # Get details for a specific task
-conductor task get <TASK_NAME>
+agentmesh task get <TASK_NAME>
 ```
 
 ### Using APIs
@@ -50,7 +50,7 @@ curl '{{ server_host }}{{ api_prefix }}/tasks/queue/polldata?taskType=<TASK_NAME
 
 ## Prometheus metrics
 
-Conductor publishes metrics that feed dashboards, alerts, and autoscaling policies. All metrics include `taskType` as a tag so you can monitor per-task.
+AgentMesh publishes metrics that feed dashboards, alerts, and autoscaling policies. All metrics include `taskType` as a tag so you can monitor per-task.
 
 ### Queue depth (Gauge)
 
@@ -99,7 +99,7 @@ How long tasks sit in the queue before a worker picks them up. If this is more t
 
 ### Horizontal scaling
 
-Add more worker instances. Conductor distributes tasks automatically — every worker polling the same task type competes for work from the same queue. No configuration changes needed on the Conductor server.
+Add more worker instances. AgentMesh distributes tasks automatically — every worker polling the same task type competes for work from the same queue. No configuration changes needed on the AgentMesh server.
 
 ### Polling interval tuning
 

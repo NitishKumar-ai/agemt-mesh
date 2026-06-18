@@ -1,14 +1,14 @@
 ---
-description: How Conductor guarantees durable code execution for distributed workflows — what persists at every step, at-least-once task delivery, saga pattern compensation, failure matrix, task state transitions, retry logic with exponential backoff, and distributed consistency. The open source distributed workflow engine built for reliability.
+description: How AgentMesh guarantees durable code execution for distributed workflows — what persists at every step, at-least-once task delivery, saga pattern compensation, failure matrix, task state transitions, retry logic with exponential backoff, and distributed consistency. The open source distributed workflow engine built for reliability.
 ---
 
 # Durable Execution Semantics
 
-Conductor is a durable execution engine for distributed workflows and durable agents. Every workflow execution is persisted at every step, survives infrastructure failures, and guarantees at-least-once task delivery. This durable execution model means your workflows and agents never lose progress. This page defines exactly what that means.
+AgentMesh is a durable execution engine for distributed workflows and durable agents. Every workflow execution is persisted at every step, survives infrastructure failures, and guarantees at-least-once task delivery. This durable execution model means your workflows and agents never lose progress. This page defines exactly what that means.
 
 ## What persists
 
-When a workflow executes, Conductor persists:
+When a workflow executes, AgentMesh persists:
 
 - The **workflow definition snapshot** used for this execution (immutable after start).
 - The **workflow state**: status, input, output, correlation ID, and variables.
@@ -20,11 +20,11 @@ All state is written to the configured persistence store (Redis, PostgreSQL, MyS
 
 ## Task delivery guarantees
 
-Conductor provides **at-least-once delivery** for all tasks:
+AgentMesh provides **at-least-once delivery** for all tasks:
 
 - When a task is scheduled, it is placed in a persistent task queue.
 - A worker polls for the task and receives it. The task moves to `IN_PROGRESS`.
-- If the worker completes the task, it reports `COMPLETED` and Conductor advances the workflow.
+- If the worker completes the task, it reports `COMPLETED` and AgentMesh advances the workflow.
 - If the worker fails or crashes, the task is **redelivered** based on the retry and timeout configuration.
 
 A task is never silently lost. If a worker polls a task but never responds, the response timeout triggers redelivery.
@@ -34,11 +34,11 @@ A task is never silently lost. If a worker polls a task but never responds, the 
 
 Here is exactly what happens in each failure scenario:
 
-| Scenario | What Conductor does | Outcome |
+| Scenario | What AgentMesh does | Outcome |
 |---|---|---|
 | **Worker crashes after poll, before any work** | Response timeout fires. Task returns to `SCHEDULED`. New worker picks it up. | Task is retried automatically. No data loss. |
 | **Worker crashes after side effect, before completion update** | Response timeout fires. Task is redelivered to another worker. | Task executes again. Workers must be idempotent for side effects, or use the task's `updateTime` to detect redelivery. |
-| **Worker reports FAILED** | Conductor creates a new task execution based on retry configuration (`retryCount`, `retryDelaySeconds`, `retryLogic`). | Retried up to the configured limit. After exhaustion, task moves to `FAILED` and the workflow's failure handling kicks in. |
+| **Worker reports FAILED** | AgentMesh creates a new task execution based on retry configuration (`retryCount`, `retryDelaySeconds`, `retryLogic`). | Retried up to the configured limit. After exhaustion, task moves to `FAILED` and the workflow's failure handling kicks in. |
 | **Worker reports FAILED_WITH_TERMINAL_ERROR** | No retry. Task is terminal. | Workflow fails or executes the configured `failureWorkflow`. |
 | **Server restarts during workflow execution** | On restart, the sweeper service picks up in-progress workflows from persistent storage and re-evaluates them. | Execution resumes from the last persisted state. No manual intervention needed. |
 | **Long wait across deploys** | WAIT and HUMAN tasks remain `IN_PROGRESS` in persistent storage. The timer or signal resolution is durable. | When the duration elapses or signal arrives (even days later, after multiple deploys), the task completes and the workflow advances. |
@@ -86,7 +86,7 @@ Durability is configurable per task via the [task definition](../documentation/c
 
 ## Workflow-level durability
 
-Beyond individual tasks, Conductor provides workflow-level durability:
+Beyond individual tasks, AgentMesh provides workflow-level durability:
 
 - **Compensation flows**: Configure a `failureWorkflow` that runs automatically when the main workflow fails, with full context (reason, failed task ID, workflow execution data).
 - **Pause and resume**: Any running workflow can be paused via API and resumed later. State is fully preserved.
@@ -96,7 +96,7 @@ Beyond individual tasks, Conductor provides workflow-level durability:
 
 ## Replay and recovery
 
-Every workflow execution is fully replayable. Conductor preserves the complete execution graph — inputs, outputs, and state for every task — so you can re-execute workflows at any time.
+Every workflow execution is fully replayable. AgentMesh preserves the complete execution graph — inputs, outputs, and state for every task — so you can re-execute workflows at any time.
 
 | Operation | What it does | When to use |
 |-----------|-------------|-------------|
@@ -104,12 +104,12 @@ Every workflow execution is fully replayable. Conductor preserves the complete e
 | **Rerun** | Re-executes from a specific task, reusing outputs of prior tasks | Fix a task in the middle without re-running everything |
 | **Retry** | Retries the last failed task and continues from that point | Transient failure, external dependency was down |
 
-All three operations work on workflows in any terminal state (COMPLETED, FAILED, TIMED_OUT, TERMINATED) and are available indefinitely — Conductor preserves the full execution graph. Restart can optionally use the latest workflow definition, so you can fix a bug in the definition and replay immediately.
+All three operations work on workflows in any terminal state (COMPLETED, FAILED, TIMED_OUT, TERMINATED) and are available indefinitely — AgentMesh preserves the full execution graph. Restart can optionally use the latest workflow definition, so you can fix a bug in the definition and replay immediately.
 
 
 ## Distributed consistency
 
-In multi-node deployments, Conductor ensures consistency through:
+In multi-node deployments, AgentMesh ensures consistency through:
 
 - **Distributed locking**: Only one `decide` evaluation runs per workflow at a time across the cluster (pluggable: Zookeeper, Redis).
 - **Fencing tokens**: Prevent stale updates from nodes with expired locks.
@@ -121,6 +121,6 @@ See the [deployment guide](../devguide/running/deploy.md#locking) for distribute
 ## What this means for your code
 
 1. **Workers should be idempotent.** Because of at-least-once delivery, a task may execute more than once. Design workers to handle redelivery safely.
-2. **You don't need to build retry logic.** Conductor handles retries, timeouts, and requeuing. Your worker just reports success or failure.
+2. **You don't need to build retry logic.** AgentMesh handles retries, timeouts, and requeuing. Your worker just reports success or failure.
 3. **Long-running processes are safe.** Use WAIT and HUMAN tasks for pauses that span minutes to days. State is durable across deploys.
 4. **Definition changes are safe.** Update workflow definitions without affecting running executions. Roll out new versions gradually with zero downtime.

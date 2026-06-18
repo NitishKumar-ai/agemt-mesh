@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Instructions for AI coding agents working on the Conductor codebase.
+Instructions for AI coding agents working on the AgentMesh codebase.
 
 ## Project Overview
 
-Conductor is an open-source, distributed workflow orchestration engine designed for microservices.
+AgentMesh is an open-source, distributed workflow orchestration engine designed for microservices.
 It uses a pluggable architecture with interface-based abstractions for persistence, queuing, and indexing.
 The project is built with Java 21 and uses Gradle as the build system.
 
@@ -27,7 +27,7 @@ The project is built with Java 21 and uses Gradle as the build system.
 ## Code Style
 
 - Use the Spotless plugin for uniform code formatting—always run before committing
-- Conductor is pluggable: when introducing new concepts, always use an **interface-based approach**
+- AgentMesh is pluggable: when introducing new concepts, always use an **interface-based approach**
 - DAO interfaces **MUST** be defined in the `core` module
 - Implementation classes go in their respective persistence modules (e.g., `postgres-persistence`, `redis-persistence`)
 - Follow existing patterns in the codebase for consistency
@@ -41,7 +41,7 @@ The project is built with Java 21 and uses Gradle as the build system.
 - **core**: Contains interfaces, domain models, and core business logic
 - **persistence modules**: Implementations of DAO interfaces (postgres, redis, mysql, etc.)
 - **server**: Spring Boot application that brings everything together
-- **client**: SDK for interacting with Conductor
+- **client**: SDK for interacting with AgentMesh
 - **ui**: React-based user interface
 
 ### Key Patterns
@@ -81,7 +81,7 @@ Some dependencies have hard version constraints that **must not be auto-bumped**
 // PINNED (#964): <reason>
 ```
 
-The issue number links back to https://github.com/conductor-oss/conductor/issues/964, which documents the full audit and upgrade path for each constraint.
+The issue number links back to https://github.com/agentmesh-oss/agentmesh/issues/964, which documents the full audit and upgrade path for each constraint.
 
 ### What PINNED means
 
@@ -96,7 +96,7 @@ The issue number links back to https://github.com/conductor-oss/conductor/issues
 | `org.graalvm.*` (all 5 artifacts) | same version | All must share one version — mixing causes a `"polyglot version X not compatible with Truffle Y"` runtime error |
 | `redis.clients:jedis` in `redis-concurrency-limit` | `3.6.0` | `revJedis` (6.0.0) does not work with Spring Data Redis in that module |
 | `org.codehaus.jettison:jettison` | `strictly 1.5.4` | Gradle `strictly` constraint — no higher version has been validated |
-| `org.conductoross:conductor-client` in `test-harness` | `5.0.1` | Fat JAR classpath conflict with conductor-common; resolved via a stripped JAR task |
+| `org.agentmeshoss:agentmesh-client` in `test-harness` | `5.0.1` | Fat JAR classpath conflict with agentmesh-common; resolved via a stripped JAR task |
 | `org.awaitility:awaitility` in functional tests | `4.x` | e2e tests call `pollInterval(Duration)` added in Awaitility 4.0 |
 
 ### Before bumping a PINNED dependency
@@ -132,18 +132,18 @@ These are grep-able (`grep "// Security:" **/*.gradle`, `grep "// Compat:" **/*.
 
 Documentation in this project is **derived from source**, not composed from memory. Open the source first, read what's there, then write the doc from what you find. The source is the spec; the doc is a rendering of it.
 
-This matters because plausible-looking docs can be silently wrong. Concretely: a curl equivalent for `conductor workflow start --sync` was once written as `POST /api/workflow/{name}/run` — an endpoint that does not exist. Reading the controller first would have given the correct path immediately.
+This matters because plausible-looking docs can be silently wrong. Concretely: a curl equivalent for `agentmesh workflow start --sync` was once written as `POST /api/workflow/{name}/run` — an endpoint that does not exist. Reading the controller first would have given the correct path immediately.
 
 ### Workflow for each content type
 
 **REST API endpoint or curl example**
-1. Open the relevant controller: `rest/src/main/java/com/netflix/conductor/rest/controllers/`
+1. Open the relevant controller: `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/`
 2. Find the method using its `@PostMapping`/`@GetMapping`/etc. annotation — copy the path literally.
 3. Read the method signature for query params, path variables, and request body type.
 4. Write the curl command from what you just read.
 
 **CLI command or flag**
-1. Open `cmd/*.go` in `conductor-cli` (separate repo).
+1. Open `cmd/*.go` in `agentmesh-cli` (separate repo).
 2. Find the `cobra.Command` definition for the subcommand.
 3. Read the `Flags()` declarations for exact flag names, types, and defaults.
 4. Write the example from what you just read.

@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/chaos-suite",
+  "name": "@agentmesh/chaos-suite",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "vitest": "^2.0.0",
-    "@conductor/common": "workspace:*",
+    "@agentmesh/common": "workspace:*",
     "axios": "^1.6.0"
   }
 }

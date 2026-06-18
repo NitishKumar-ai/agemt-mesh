@@ -1,14 +1,14 @@
 /**
  * Plugin Registry
  *
- * This module provides the plugin system for Conductor UI.
+ * This module provides the plugin system for AgentMesh UI.
  * Use registerPlugin() to add plugins that extend the application.
  *
  * @example
  * ```typescript
- * import { registerPlugin, ConductorPlugin } from 'plugins/registry';
+ * import { registerPlugin, AgentMeshPlugin } from 'plugins/registry';
  *
- * const myPlugin: ConductorPlugin = {
+ * const myPlugin: AgentMeshPlugin = {
  *   id: 'my-plugin',
  *   name: 'My Plugin',
  *   routes: [...],
@@ -26,7 +26,7 @@ export { pluginRegistry, registerPlugin } from "./registry";
 // Export all types
 export type {
   // Main plugin interface
-  ConductorPlugin,
+  AgentMeshPlugin,
   PluginRegistry,
   // Task form types
   PluginTaskFormProps,

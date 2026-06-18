@@ -1,9 +1,9 @@
 ---
-description: "Building from Source — build and run the Conductor server and UI locally from source for development and testing."
+description: "Building from Source — build and run the AgentMesh server and UI locally from source for development and testing."
 ---
 # Building from source
 
-Build and run Conductor server and UI locally from source. The default configuration uses in-memory persistence with no indexing — all data is lost when the server stops. This setup is for development and testing only.
+Build and run AgentMesh server and UI locally from source. The default configuration uses in-memory persistence with no indexing — all data is lost when the server stops. This setup is for development and testing only.
 
 For persistent backends, use [Docker Compose](deploy.md) or configure a database backend.
 
@@ -19,8 +19,8 @@ For persistent backends, use [Docker Compose](deploy.md) or configure a database
 1. Clone the repository:
 
     ```shell
-    git clone https://github.com/conductor-oss/conductor.git
-    cd conductor
+    git clone https://github.com/agentmesh-oss/agentmesh.git
+    cd agentmesh
     ```
 
 2. Run with Gradle:
@@ -40,7 +40,7 @@ For persistent backends, use [Docker Compose](deploy.md) or configure a database
 
     | URL | Description |
     |:----|:---|
-    | `http://localhost:8080` | Conductor UI |
+    | `http://localhost:8080` | AgentMesh UI |
     | `http://localhost:8080/swagger-ui/index.html` | REST API docs |
     | `http://localhost:8080/api/` | API base URL |
 
@@ -50,11 +50,11 @@ For persistent backends, use [Docker Compose](deploy.md) or configure a database
 As an alternative to building from source, download and run the pre-compiled JAR:
 
 ```shell
-export CONDUCTOR_VER=3.21.10
-export REPO_URL=https://repo1.maven.org/maven2/org/conductoross/conductor-server
-curl $REPO_URL/$CONDUCTOR_VER/conductor-core-$CONDUCTOR_VER-boot.jar \
-  --output conductor-core-$CONDUCTOR_VER-boot.jar
-java -jar conductor-core-$CONDUCTOR_VER-boot.jar
+export AGENTMESH_VER=3.21.10
+export REPO_URL=https://repo1.maven.org/maven2/org/agentmeshoss/agentmesh-server
+curl $REPO_URL/$AGENTMESH_VER/agentmesh-core-$AGENTMESH_VER-boot.jar \
+  --output agentmesh-core-$AGENTMESH_VER-boot.jar
+java -jar agentmesh-core-$AGENTMESH_VER-boot.jar
 ```
 
 
@@ -62,7 +62,7 @@ java -jar conductor-core-$CONDUCTOR_VER-boot.jar
 
 ### Prerequisites
 
-- A running Conductor server on port 8080
+- A running AgentMesh server on port 8080
 - [Node.js](https://nodejs.org) v18+
 - [Yarn](https://classic.yarnpkg.com/en/docs/install)
 

@@ -1,14 +1,14 @@
 ---
-description: "Conductor REST API reference — complete endpoint documentation for workflow orchestration including metadata, execution management, task polling, bulk operations, and event handlers."
+description: "AgentMesh REST API reference — complete endpoint documentation for workflow orchestration including metadata, execution management, task polling, bulk operations, and event handlers."
 ---
 
 # API Reference
 
-Conductor exposes a full REST API for managing workflow definitions, executions, tasks, and events.
+AgentMesh exposes a full REST API for managing workflow definitions, executions, tasks, and events.
 
 ## Base URL
 
-All API endpoints are relative to your Conductor server's base URL:
+All API endpoints are relative to your AgentMesh server's base URL:
 
 ```
 http://localhost:8080/api/
@@ -20,11 +20,11 @@ For example, to list all workflow definitions:
 curl http://localhost:8080/api/metadata/workflow
 ```
 
-If your Conductor server runs on a different host or port, replace `localhost:8080` accordingly.
+If your AgentMesh server runs on a different host or port, replace `localhost:8080` accordingly.
 
 ## Authentication
 
-Conductor OSS does not require authentication by default. All API endpoints are open. If you need to secure your Conductor instance, you can add authentication via a reverse proxy (e.g., Nginx, Envoy) or by implementing a custom security filter in Spring Boot.
+AgentMesh OSS does not require authentication by default. All API endpoints are open. If you need to secure your AgentMesh instance, you can add authentication via a reverse proxy (e.g., Nginx, Envoy) or by implementing a custom security filter in Spring Boot.
 
 ## Content Type
 
@@ -45,7 +45,7 @@ A few endpoints return plain text (e.g., workflow ID on start). These are noted 
 | `400 Bad Request` | Invalid request — check your request body or parameters. |
 | `404 Not Found` | The requested resource (workflow, task, definition) does not exist. |
 | `409 Conflict` | Conflict with current state (e.g., trying to resume a workflow that is not paused). |
-| `500 Internal Server Error` | Server-side error. Check Conductor server logs. |
+| `500 Internal Server Error` | Server-side error. Check AgentMesh server logs. |
 
 ### Error Response Format
 
@@ -55,7 +55,7 @@ When an error occurs, the response body contains:
 {
   "status": 400,
   "message": "Workflow definition is not valid",
-  "instance": "conductor-server",
+  "instance": "agentmesh-server",
   "retryable": false
 }
 ```
@@ -113,4 +113,4 @@ The Swagger UI at `http://localhost:8080/swagger-ui/index.html` provides an inte
 
 ## SDKs
 
-For programmatic access, use one of the official [Conductor SDKs](../clientsdks/index.md) which wrap these REST APIs with language-native interfaces for Java, Python, Go, JavaScript, C#, Ruby, and Rust.
+For programmatic access, use one of the official [AgentMesh SDKs](../clientsdks/index.md) which wrap these REST APIs with language-native interfaces for Java, Python, Go, JavaScript, C#, Ruby, and Rust.

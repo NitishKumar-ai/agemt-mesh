@@ -1,11 +1,11 @@
 services:
-  conductor-server:
+  agentmesh-server:
     environment:
       - CONFIG_PROP=config-cassandra-es7.properties
       - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
-      - conductor.app.ownerEmailMandatory=false
-    image: conductor:server
-    container_name: conductor-server
+      - agentmesh.app.ownerEmailMandatory=false
+    image: agentmesh:server
+    container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
@@ -22,15 +22,15 @@ services:
       timeout: 30s
       retries: 12
     links:
-      - conductor-cassandra:cassandradb
-      - conductor-redis:rs
-      - conductor-elasticsearch:es
+      - agentmesh-cassandra:cassandradb
+      - agentmesh-redis:rs
+      - agentmesh-elasticsearch:es
     depends_on:
-      conductor-cassandra:
+      agentmesh-cassandra:
         condition: service_healthy
-      conductor-redis:
+      agentmesh-redis:
         condition: service_healthy
-      conductor-elasticsearch:
+      agentmesh-elasticsearch:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -38,10 +38,10 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-cassandra:
+  agentmesh-cassandra:
     image: cassandra:4
     environment:
-      - CASSANDRA_CLUSTER_NAME=conductor
+      - CASSANDRA_CLUSTER_NAME=agentmesh
       - CASSANDRA_NUM_TOKENS=4
       - MAX_HEAP_SIZE=512M
       - HEAP_NEWSIZE=128M
@@ -58,7 +58,7 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  conductor-redis:
+  agentmesh-redis:
     image: redis:6.2.3-alpine
     volumes:
       - ../server/config/redis.conf:/usr/local/etc/redis/redis.conf
@@ -67,7 +67,7 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
 
-  conductor-elasticsearch:
+  agentmesh-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"

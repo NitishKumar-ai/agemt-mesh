@@ -1,5 +1,5 @@
 ---
-description: "Configure HTTP tasks in Conductor to call remote APIs and services. Supports GET, POST, PUT, DELETE methods with headers, body, and timeout options."
+description: "Configure HTTP tasks in AgentMesh to call remote APIs and services. Supports GET, POST, PUT, DELETE methods with headers, body, and timeout options."
 ---
 
 # HTTP Task
@@ -133,7 +133,7 @@ Use the `headers` parameter to send custom HTTP headers, including authenticatio
     "headers": {
       "Authorization": "Bearer ${workflow.input.token}",
       "X-Correlation-Id": "${workflow.correlationId}",
-      "X-Request-Source": "conductor",
+      "X-Request-Source": "agentmesh",
       "Accept-Language": "en-US"
     },
     "body": {

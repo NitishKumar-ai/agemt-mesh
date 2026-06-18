@@ -1,12 +1,12 @@
 ---
-description: "Conductor cookbook — microservice orchestration recipes with HTTP service chains, conditional branching, and parallel HTTP calls using Fork/Join."
+description: "AgentMesh cookbook — microservice orchestration recipes with HTTP service chains, conditional branching, and parallel HTTP calls using Fork/Join."
 ---
 
 # Microservice orchestration
 
 ### HTTP service chain
 
-A common pattern: call a series of HTTP endpoints where each step uses output from the previous one. No custom workers needed — Conductor handles it with built-in HTTP tasks.
+A common pattern: call a series of HTTP endpoints where each step uses output from the previous one. No custom workers needed — AgentMesh handles it with built-in HTTP tasks.
 
 ```json
 {
@@ -97,7 +97,7 @@ A common pattern: call a series of HTTP endpoints where each step uses output fr
 }
 ```
 
-Each task passes data forward using `${taskReferenceName.output.response.body.field}` expressions. If any step fails, Conductor retries it (configurable) and can trigger the `failureWorkflow` for compensation.
+Each task passes data forward using `${taskReferenceName.output.response.body.field}` expressions. If any step fails, AgentMesh retries it (configurable) and can trigger the `failureWorkflow` for compensation.
 
 **Register and run:**
 

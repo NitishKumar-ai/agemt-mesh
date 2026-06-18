@@ -11,7 +11,7 @@ const json = {
 };
 
 const emptyJson = {
-  uri: "https://orkes-api-tester.orkesconductor.com/api",
+  uri: "https://orkes-api-tester.orkesagentmesh.com/api",
   method: "GET",
   connectionTimeOut: 3000,
   readTimeOut: "3000",

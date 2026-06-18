@@ -1,7 +1,7 @@
 export const CONTAIN_VARIABLE_SYNTAX_REGEX = /^(?=.*?[${}]{1}).*$/;
 
 // The backend allows everything but a semicolon
-// https://github.com/orkes-io/conductor/blob/f07dc36f08dcaf91cb40ea6ee211c840de5ac8f3/common/src/main/java/com/netflix/conductor/common/metadata/workflow/WorkflowDefSummary.java#L29C24-L29C89
+// https://github.com/orkes-io/agentmesh/blob/f07dc36f08dcaf91cb40ea6ee211c840de5ac8f3/common/src/main/java/com/agentmesh/agentmesh/common/metadata/workflow/WorkflowDefSummary.java#L29C24-L29C89
 // Using `()` would cause errors in querys such as:
 // workflowType IN (wf_name(test), wf_name2), because the
 // end parenthesis would be interpreted as the end of the

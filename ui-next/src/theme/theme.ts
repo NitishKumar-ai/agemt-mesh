@@ -1,4 +1,4 @@
-import type { ConductorInputStyleProps } from "components/ui/inputs/ConductorInput";
+import type { AgentMeshInputStyleProps } from "components/ui/inputs/AgentMeshInput";
 import baseTheme from "./material/baseTheme";
 import appBar from "./material/components/appBar";
 import paper from "./material/components/paper";
@@ -69,7 +69,7 @@ export const getColor = ({
   error,
   isLabel,
   isInputEmpty,
-}: ConductorInputStyleProps) => {
+}: AgentMeshInputStyleProps) => {
   if (error) {
     return theme.palette.input.error;
   }

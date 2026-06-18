@@ -1,5 +1,5 @@
-import type { TaskModel } from '@conductor/common';
-import type { ExecutionDAO } from '@conductor/common-persistence';
+import type { TaskModel } from '@agentmesh/common';
+import type { ExecutionDAO } from '@agentmesh/common-persistence';
 import type { WorkflowService } from './WorkflowService.js';
 
 export class AdminService {

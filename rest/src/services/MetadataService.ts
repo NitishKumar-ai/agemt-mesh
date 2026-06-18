@@ -1,6 +1,6 @@
-import type { TaskDef, WorkflowDef } from '@conductor/common';
-import { BulkResponse } from '@conductor/common';
-import type { MetadataDAO, WorkflowDefSummary } from '@conductor/common-persistence';
+import type { TaskDef, WorkflowDef } from '@agentmesh/common';
+import { BulkResponse } from '@agentmesh/common';
+import type { MetadataDAO, WorkflowDefSummary } from '@agentmesh/common-persistence';
 
 export class MetadataService {
   constructor(private readonly metadataDAO: MetadataDAO) {}

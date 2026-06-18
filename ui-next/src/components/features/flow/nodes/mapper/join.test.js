@@ -20,7 +20,7 @@ describe("toJoinTaskToNodesEdgesFn", () => {
     name: "event_task_q3cxy_ref",
     taskReferenceName: "event_task_q3cxy_ref",
     type: "EVENT",
-    sink: "conductor:internal_event_name",
+    sink: "agentmesh:internal_event_name",
   };
 
   it("Should return a labeless edge since the task is after the switch", () => {

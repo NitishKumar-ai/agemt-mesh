@@ -104,7 +104,7 @@ export const simpleNodeDiagram = [
         type: "HTTP",
         inputParameters: {
           http_request: {
-            uri: "https://orkes-api-tester.orkesconductor.com/get",
+            uri: "https://orkes-api-tester.orkesagentmesh.com/get",
             method: "GET",
             connectionTimeOut: 3000,
             readTimeOut: 3000,
@@ -538,7 +538,7 @@ const crumbMapsWithoutVariables = {
         workflowNames: [],
         statuses: [],
         correlationIds: [],
-        queryType: "CONDUCTOR_API",
+        queryType: "AGENTMESH_API",
         startTimeFrom: 60,
         startTimeTo: 30,
         freeText: "automation test",
@@ -560,7 +560,7 @@ const crumbMapsWithoutVariables = {
       taskReferenceName: "http_ref",
       type: "HTTP",
       inputParameters: {
-        uri: "https://orkes-api-tester.orkesconductor.com/api",
+        uri: "https://orkes-api-tester.orkesagentmesh.com/api",
         method: "GET",
         connectionTimeOut: 3000,
         readTimeOut: "3000",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  ConductorError,
+  AgentMeshError,
   EnvUtils,
   NonRetryableError,
   RetryLogic,
@@ -159,16 +159,16 @@ describe('EnvUtils', () => {
 });
 
 describe('Exceptions', () => {
-  it('ConductorError captures cause', () => {
+  it('AgentMeshError captures cause', () => {
     const cause = new Error('root cause');
-    const err = new ConductorError('wrapper', cause);
+    const err = new AgentMeshError('wrapper', cause);
     expect(err.message).toBe('wrapper');
     expect(err.cause).toBe(cause);
   });
 
-  it('NonRetryableError is a ConductorError', () => {
+  it('NonRetryableError is a AgentMeshError', () => {
     const err = new NonRetryableError('terminal');
-    expect(err).toBeInstanceOf(ConductorError);
+    expect(err).toBeInstanceOf(AgentMeshError);
     expect(err.name).toBe('NonRetryableError');
   });
 });

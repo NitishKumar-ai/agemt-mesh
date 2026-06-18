@@ -1,5 +1,5 @@
 /**
- * Core enumerations ported from `com.netflix.conductor.common.metadata`.
+ * Core enumerations ported from `com.agentmesh.agentmesh.common.metadata`.
  *
  * Modeled as const-object + union type (not TS `enum`) so values serialize to
  * the exact strings Java emits via `.name()`, preserving JSON wire parity.
@@ -180,7 +180,7 @@ export const RateLimitPolicy = {
 } as const;
 export type RateLimitPolicy = (typeof RateLimitPolicy)[keyof typeof RateLimitPolicy];
 
-/** Port of `org.conductoross.conductor.model.WorkflowSignalReturnStrategy`. */
+/** Port of `org.agentmeshoss.agentmesh.model.WorkflowSignalReturnStrategy`. */
 export const WorkflowSignalReturnStrategy = {
   TARGET_WORKFLOW: 'TARGET_WORKFLOW',
   BLOCKING_WORKFLOW: 'BLOCKING_WORKFLOW',

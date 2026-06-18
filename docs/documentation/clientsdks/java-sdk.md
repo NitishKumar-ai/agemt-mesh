@@ -1,36 +1,36 @@
 ---
-description: "Build Conductor workers in Java with automated polling, thread management, and Spring Boot integration."
+description: "Build AgentMesh workers in Java with automated polling, thread management, and Spring Boot integration."
 ---
 
 # Java SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/java-sdk](https://github.com/conductor-oss/java-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/java-sdk](https://github.com/agentmesh-oss/java-sdk) | Report issues and contribute on GitHub.
 
-## Start Conductor server
+## Start AgentMesh server
 
-If you don't already have a Conductor server running, pick one:
+If you don't already have a AgentMesh server running, pick one:
 
 **Docker (recommended, includes UI):**
 
 ```shell
-docker run -p 8080:8080 conductoross/conductor:latest
+docker run -p 8080:8080 agentmeshoss/agentmesh:latest
 ```
 The UI will be available at `http://localhost:8080` and the API at `http://localhost:8080/api`
 
 **MacOS / Linux (one-liner):** (If you don't want to use docker, you can install and run the binary directly)
 ```shell
-curl -sSL https://raw.githubusercontent.com/conductor-oss/conductor/main/conductor_server.sh | sh
+curl -sSL https://raw.githubusercontent.com/agentmesh-oss/agentmesh/main/agentmesh_server.sh | sh
 ```
 
-**Conductor CLI**
+**AgentMesh CLI**
 ```shell
-# Installs conductor cli
-npm install -g @conductor-oss/conductor-cli
+# Installs agentmesh cli
+npm install -g @agentmesh-oss/agentmesh-cli
 
-# Start the open source conductor server
-conductor server start
-# see conductor server --help for all the available commands
+# Start the open source agentmesh server
+agentmesh server start
+# see agentmesh server --help for all the available commands
 ```
 
 ## Install the SDK
@@ -41,10 +41,10 @@ The SDK requires Java 17+. Add the following dependency to your project:
 
 ```gradle
 dependencies {
-    implementation 'org.conductoross:conductor-client:5.0.1'
+    implementation 'org.agentmeshoss:agentmesh-client:5.0.1'
 
     // Optionally, you can also add spring module for auto configuration
-    // implementation 'org.conductoross:conductor-client-spring:5.0.1'
+    // implementation 'org.agentmeshoss:agentmesh-client-spring:5.0.1'
 }
 ```
 
@@ -52,16 +52,16 @@ dependencies {
 
 ```xml
 <dependency>
-    <groupId>org.conductoross</groupId>
-    <artifactId>conductor-client</artifactId>
+    <groupId>org.agentmeshoss</groupId>
+    <artifactId>agentmesh-client</artifactId>
     <version>5.0.1</version>
 </dependency>
 ```
 *Optionally, you can also add spring module for auto configuration*
 ```xml
 <dependency>
-    <groupId>org.conductoross</groupId>
-    <artifactId>conductor-client-spring</artifactId>
+    <groupId>org.agentmeshoss</groupId>
+    <artifactId>agentmesh-client-spring</artifactId>
     <version>5.0.1</version>
 </dependency>
 ```
@@ -71,7 +71,7 @@ dependencies {
 
 **Step 1: Write a worker**
 
-Workers are Java classes that implement the `Worker` interface and poll Conductor for tasks to execute.
+Workers are Java classes that implement the `Worker` interface and poll AgentMesh for tasks to execute.
 
 ```java
 public class GreetWorker implements Worker {
@@ -97,13 +97,13 @@ public class GreetWorker implements Worker {
 Create a `Main.java` with the following:
 
 ```java
-import io.orkes.conductor.client.ApiClient;
-import io.orkes.conductor.client.OrkesClients;
-import com.netflix.conductor.client.automator.TaskRunnerConfigurer;
-import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
-import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
-import com.netflix.conductor.sdk.workflow.def.tasks.SimpleTask;
-import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
+import io.orkes.agentmesh.client.ApiClient;
+import io.orkes.agentmesh.client.OrkesClients;
+import com.agentmesh.agentmesh.client.automator.TaskRunnerConfigurer;
+import com.agentmesh.agentmesh.common.metadata.workflow.StartWorkflowRequest;
+import com.agentmesh.agentmesh.sdk.workflow.def.AgentMeshWorkflow;
+import com.agentmesh.agentmesh.sdk.workflow.def.tasks.SimpleTask;
+import com.agentmesh.agentmesh.sdk.workflow.executor.WorkflowExecutor;
 
 import java.util.List;
 import java.util.Map;
@@ -118,7 +118,7 @@ public class Main {
         WorkflowExecutor executor = new WorkflowExecutor(apiClient, 100);
 
         // Build and register the workflow
-        ConductorWorkflow<Map> workflow = new ConductorWorkflow<>(executor);
+        AgentMeshWorkflow<Map> workflow = new AgentMeshWorkflow<>(executor);
         workflow.setName("greetings");
         workflow.setVersion(1);
 
@@ -138,7 +138,7 @@ public class Main {
         StartWorkflowRequest request = new StartWorkflowRequest();
         request.setName("greetings");
         request.setVersion(1);
-        request.setInput(Map.of("name", "Conductor"));
+        request.setInput(Map.of("name", "AgentMesh"));
         String workflowId = clients.getWorkflowClient().startWorkflow(request);
 
         System.out.println("Started workflow: " + workflowId);
@@ -153,23 +153,23 @@ Run it:
 ./gradlew run
 ```
 
-> ### Using Orkes Conductor / Remote Server?
+> ### Using Orkes AgentMesh / Remote Server?
 > Export your authentication credentials as well:
 >
 > ```shell
-> export CONDUCTOR_SERVER_URL="https://your-cluster.orkesconductor.io/api"
+> export AGENTMESH_SERVER_URL="https://your-cluster.orkesagentmesh.io/api"
 >
-> # If using Orkes Conductor that requires auth key/secret
-> export CONDUCTOR_AUTH_KEY="your-key"
-> export CONDUCTOR_AUTH_SECRET="your-secret"
+> # If using Orkes AgentMesh that requires auth key/secret
+> export AGENTMESH_AUTH_KEY="your-key"
+> export AGENTMESH_AUTH_SECRET="your-secret"
 > ```
 
-That's it -- you just defined a worker, built a workflow, and executed it. Open the Conductor UI (default:
+That's it -- you just defined a worker, built a workflow, and executed it. Open the AgentMesh UI (default:
 [http://localhost:8080](http://localhost:8080)) to see the execution.
 
 ## Comprehensive worker example
 
-See [examples/basics/hello-world/](https://github.com/conductor-oss/java-sdk/tree/main/examples/basics/hello-world) for a complete working example with:
+See [examples/basics/hello-world/](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/basics/hello-world) for a complete working example with:
 - Workflow definition using the SDK
 - Worker implementation with annotations
 - Workflow execution and monitoring
@@ -178,7 +178,7 @@ See [examples/basics/hello-world/](https://github.com/conductor-oss/java-sdk/tre
 
 ## Workers
 
-Workers are Java classes that execute Conductor tasks. Implement the `Worker` interface or use the `@WorkerTask` annotation:
+Workers are Java classes that execute AgentMesh tasks. Implement the `Worker` interface or use the `@WorkerTask` annotation:
 
 **Using Worker interface:**
 
@@ -243,7 +243,7 @@ executor.initWorkers("com.mycompany.workers");  // Package to scan for @WorkerTa
 
 - Workers should be stateless and idempotent
 - Handle failure scenarios gracefully
-- Report status back to Conductor
+- Report status back to AgentMesh
 - Complete execution quickly (or use polling for long-running tasks)
 
 **Worker vs. HTTP Endpoints:**
@@ -256,17 +256,17 @@ executor.initWorkers("com.mycompany.workers");  // Package to scan for @WorkerTa
 | Complexity | Simple | Complex (service mesh, load balancer) |
 
 **Learn more:**
-- [Worker SDK Guide](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) — Complete worker framework documentation
-- [Worker Examples](https://github.com/conductor-oss/java-sdk/blob/main/examples/) — Sample worker implementations
+- [Worker SDK Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) — Complete worker framework documentation
+- [Worker Examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/) — Sample worker implementations
 
 ## Monitoring Workers
 
 Enable metrics collection for monitoring workers:
 
 ```java
-// Using conductor-client-metrics module
+// Using agentmesh-client-metrics module
 dependencies {
-    implementation 'org.conductoross:conductor-client-metrics:5.0.1'
+    implementation 'org.agentmeshoss:agentmesh-client-metrics:5.0.1'
 }
 ```
 
@@ -278,14 +278,14 @@ TaskRunnerConfigurer configurer = new TaskRunnerConfigurer.Builder(taskClient, w
     .build();
 ```
 
-See [conductor-client-metrics/README.md](https://github.com/conductor-oss/java-sdk/blob/main/conductor-client-metrics/README.md) for full metrics documentation.
+See [agentmesh-client-metrics/README.md](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-metrics/README.md) for full metrics documentation.
 
 ## Workflows
 
-Define workflows in Java using the `ConductorWorkflow` builder:
+Define workflows in Java using the `AgentMeshWorkflow` builder:
 
 ```java
-ConductorWorkflow<MyInput> workflow = new ConductorWorkflow<>(executor);
+AgentMeshWorkflow<MyInput> workflow = new AgentMeshWorkflow<>(executor);
 workflow.setName("my_workflow");
 workflow.setVersion(1);
 workflow.setOwnerEmail("team@example.com");
@@ -341,21 +341,21 @@ workflowClient.restartWorkflow(workflowId, false);
 ```
 
 **Learn more:**
-- [Workflow SDK Guide](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) — Workflow-as-code documentation
-- [Workflow Testing](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/testing_framework.md) — Unit testing workflows
+- [Workflow SDK Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) — Workflow-as-code documentation
+- [Workflow Testing](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md) — Unit testing workflows
 
 ## Troubleshooting
 
 **Worker stops polling or crashes:**
-- Check network connectivity to Conductor server
-- Verify `CONDUCTOR_SERVER_URL` is set correctly
+- Check network connectivity to AgentMesh server
+- Verify `AGENTMESH_SERVER_URL` is set correctly
 - Ensure sufficient thread pool size for your workload
 - Monitor JVM memory and GC pauses
 
 **Connection refused errors:**
-- Verify Conductor server is running: `curl http://localhost:8080/health`
+- Verify AgentMesh server is running: `curl http://localhost:8080/health`
 - Check firewall rules if connecting to remote server
-- For Orkes Conductor, verify auth credentials are correct
+- For Orkes AgentMesh, verify auth credentials are correct
 
 **Tasks stuck in SCHEDULED state:**
 - Ensure workers are polling for the correct task type
@@ -365,10 +365,10 @@ workflowClient.restartWorkflow(workflowId, false);
 **Workflow execution timeout:**
 - Increase workflow timeout in definition
 - Check if tasks are completing within expected time
-- Monitor Conductor server logs for errors
+- Monitor AgentMesh server logs for errors
 
-**Authentication errors with Orkes Conductor:**
-- Verify `CONDUCTOR_AUTH_KEY` and `CONDUCTOR_AUTH_SECRET` are set
+**Authentication errors with Orkes AgentMesh:**
+- Verify `AGENTMESH_AUTH_KEY` and `AGENTMESH_AUTH_SECRET` are set
 - Ensure the application has required permissions
 - Check that credentials haven't expired
 
@@ -378,7 +378,7 @@ workflowClient.restartWorkflow(workflowId, false);
 
 For workflows that move binary file payloads, the SDK exposes `FileHandler` — a worker-facing reference to a file in the configured backend. Pass it as a worker input/output and the runtime handles upload, download, and the metadata roundtrip transparently. See [File Storage](../advanced/file-storage.md) for the operator-side configuration and [File API](../api/files.md) for the underlying REST surface.
 
-The relevant types in `org.conductoross.conductor.sdk.file`:
+The relevant types in `org.agentmeshoss.agentmesh.sdk.file`:
 
 | Type | Use |
 |---|---|
@@ -427,11 +427,11 @@ Use this form when you want to control upload timing (e.g., upload before the ta
 
 ## AI & LLM Workflows
 
-Conductor supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration.
+AgentMesh supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration.
 
 **Agentic Workflows**
 
-Build AI agents where LLMs dynamically select and call Java workers as tools. All agentic examples live in [`AgenticExamplesRunner.java`](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/agentic/AgenticExamplesRunner.java) — a single unified runner.
+Build AI agents where LLMs dynamically select and call Java workers as tools. All agentic examples live in [`AgenticExamplesRunner.java`](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/AgenticExamplesRunner.java) — a single unified runner.
 
 | Workflow | Description |
 |----------|-------------|
@@ -445,8 +445,8 @@ Build AI agents where LLMs dynamically select and call Java workers as tools. Al
 
 | Example | Description |
 |---------|-------------|
-| [RagWorkflowExample.java](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/agentic/RagWorkflowExample.java) | End-to-end RAG: document indexing, semantic search, answer generation |
-| [VectorDbExample.java](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/agentic/VectorDbExample.java) | Vector database operations: text indexing, embedding generation, and semantic search |
+| [RagWorkflowExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java) | End-to-end RAG: document indexing, semantic search, answer generation |
+| [VectorDbExample.java](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/VectorDbExample.java) | Vector database operations: text indexing, embedding generation, and semantic search |
 
 **Using LLM Tasks in Workflows:**
 
@@ -485,11 +485,11 @@ LlmSearchIndex searchTask = new LlmSearchIndex("search_docs", "search_ref")
     .query("${workflow.input.question}")
     .topK(5);
 
-// MCP tool discovery (MCP_LIST_TOOLS system task — Orkes Conductor)
+// MCP tool discovery (MCP_LIST_TOOLS system task — Orkes AgentMesh)
 ListMcpTools listTools = new ListMcpTools("discover_tools", "tools_ref")
     .mcpServer("http://localhost:3001/mcp");
 
-// MCP tool execution (MCP_CALL_TOOL system task — Orkes Conductor)
+// MCP tool execution (MCP_CALL_TOOL system task — Orkes AgentMesh)
 CallMcpTool callTool = new CallMcpTool("execute_tool", "tool_ref")
     .mcpServer("http://localhost:3001/mcp")
     .method("${tools_ref.output.result.method}")
@@ -503,7 +503,7 @@ workflow.add(indexTask);
 Run all agentic examples:
 
 ```shell
-export CONDUCTOR_SERVER_URL=http://localhost:8080/api
+export AGENTMESH_SERVER_URL=http://localhost:8080/api
 export OPENAI_API_KEY=your-key   # or ANTHROPIC_API_KEY
 
 # Run all examples end-to-end
@@ -515,17 +515,17 @@ export OPENAI_API_KEY=your-key   # or ANTHROPIC_API_KEY
 
 ## Examples
 
-See the [Examples Guide](https://github.com/conductor-oss/java-sdk/blob/main/examples/README.md) for the full catalog. Key examples:
+See the [Examples Guide](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) for the full catalog. Key examples:
 
 | Example | Description | Run |
 |---------|-------------|-----|
-| [Hello World](https://github.com/conductor-oss/java-sdk/tree/main/examples/basics/hello-world) | Minimal workflow with worker | `./gradlew :examples:run -PmainClass=com.netflix.conductor.sdk.examples.helloworld.Main` |
-| [Workflow Operations](https://github.com/conductor-oss/java-sdk/tree/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/workflowops) | Pause, resume, terminate workflows | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.workflowops.Main` |
-| [Shipment Workflow](https://github.com/conductor-oss/java-sdk/tree/main/examples/old/src/main/java/com/netflix/conductor/sdk/examples/shipment) | Real-world order processing | `./gradlew :examples:run -PmainClass=com.netflix.conductor.sdk.examples.shipment.Main` |
-| [Events](https://github.com/conductor-oss/java-sdk/tree/main/examples/old/src/main/java/com/netflix/conductor/sdk/examples/events) | Event-driven workflows | `./gradlew :examples:run -PmainClass=com.netflix.conductor.sdk.examples.events.EventHandlerExample` |
-| [All AI examples](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/agentic/AgenticExamplesRunner.java) | All agentic/LLM workflows | `./gradlew :examples:run --args="--all"` |
-| [RAG Workflow](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/agentic/RagWorkflowExample.java) | RAG pipeline (index → search → answer) | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.agentic.RagWorkflowExample` |
-| [Media Transcoder](https://github.com/conductor-oss/file-storage-java-sdk/tree/main/examples/file-storage/media-transcoder) | File-handling pipeline: upload video → transcode → thumbnail → manifest | `mvn -f examples/file-storage/media-transcoder/pom.xml exec:java` |
+| [Hello World](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/basics/hello-world) | Minimal workflow with worker | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.helloworld.Main` |
+| [Workflow Operations](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/workflowops) | Pause, resume, terminate workflows | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.workflowops.Main` |
+| [Shipment Workflow](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/shipment) | Real-world order processing | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.shipment.Main` |
+| [Events](https://github.com/agentmesh-oss/java-sdk/tree/main/examples/old/src/main/java/com/agentmesh/agentmesh/sdk/examples/events) | Event-driven workflows | `./gradlew :examples:run -PmainClass=com.agentmesh.agentmesh.sdk.examples.events.EventHandlerExample` |
+| [All AI examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/AgenticExamplesRunner.java) | All agentic/LLM workflows | `./gradlew :examples:run --args="--all"` |
+| [RAG Workflow](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/agentic/RagWorkflowExample.java) | RAG pipeline (index → search → answer) | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.agentic.RagWorkflowExample` |
+| [Media Transcoder](https://github.com/agentmesh-oss/file-storage-java-sdk/tree/main/examples/file-storage/media-transcoder) | File-handling pipeline: upload video → transcode → thumbnail → manifest | `mvn -f examples/file-storage/media-transcoder/pom.xml exec:java` |
 
 ## API Journey Examples
 
@@ -533,59 +533,59 @@ End-to-end examples covering all APIs for each domain:
 
 | Example | APIs | Run |
 |---------|------|-----|
-| [Metadata Management](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/MetadataManagement.java) | Task & workflow definitions | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.MetadataManagement` |
-| [Workflow Management](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/WorkflowManagement.java) | Start, monitor, control workflows | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.WorkflowManagement` |
-| [Authorization Management](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/AuthorizationManagement.java) | Users, groups, permissions | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.AuthorizationManagement` |
-| [Scheduler Management](https://github.com/conductor-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/conductor/sdk/examples/SchedulerManagement.java) | Workflow scheduling | `./gradlew :examples:run -PmainClass=io.orkes.conductor.sdk.examples.SchedulerManagement` |
+| [Metadata Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/MetadataManagement.java) | Task & workflow definitions | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.MetadataManagement` |
+| [Workflow Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/WorkflowManagement.java) | Start, monitor, control workflows | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.WorkflowManagement` |
+| [Authorization Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/AuthorizationManagement.java) | Users, groups, permissions | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.AuthorizationManagement` |
+| [Scheduler Management](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/old/src/main/java/io/orkes/agentmesh/sdk/examples/SchedulerManagement.java) | Workflow scheduling | `./gradlew :examples:run -PmainClass=io.orkes.agentmesh.sdk.examples.SchedulerManagement` |
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Worker SDK](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) | Complete worker framework guide |
-| [Workflow SDK](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) | Workflow-as-code documentation |
-| [Testing Framework](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/testing_framework.md) | Unit testing workflows and workers |
-| [Conductor Client](https://github.com/conductor-oss/java-sdk/blob/main/conductor-client/README.md) | HTTP client library documentation |
-| [Client Metrics](https://github.com/conductor-oss/java-sdk/blob/main/conductor-client-metrics/README.md) | Prometheus metrics collection |
-| [Spring Integration](https://github.com/conductor-oss/java-sdk/blob/main/conductor-client-spring/README.md) | Spring Boot auto-configuration |
-| [Examples](https://github.com/conductor-oss/java-sdk/blob/main/examples/README.md) | Complete examples catalog |
+| [Worker SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/worker_sdk.md) | Complete worker framework guide |
+| [Workflow SDK](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/workflow_sdk.md) | Workflow-as-code documentation |
+| [Testing Framework](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md) | Unit testing workflows and workers |
+| [AgentMesh Client](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client/README.md) | HTTP client library documentation |
+| [Client Metrics](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-metrics/README.md) | Prometheus metrics collection |
+| [Spring Integration](https://github.com/agentmesh-oss/java-sdk/blob/main/agentmesh-client-spring/README.md) | Spring Boot auto-configuration |
+| [Examples](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) | Complete examples catalog |
 
 ## Support
 
-- [Open an issue (SDK)](https://github.com/conductor-oss/conductor-java-sdk/issues) for SDK bugs, questions, and feature requests
-- [Open an issue (Conductor server)](https://github.com/conductor-oss/conductor/issues) for Conductor OSS server issues
-- [Join the Conductor Slack](https://join.slack.com/t/orkes-conductor/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
+- [Open an issue (SDK)](https://github.com/agentmesh-oss/agentmesh-java-sdk/issues) for SDK bugs, questions, and feature requests
+- [Open an issue (AgentMesh server)](https://github.com/agentmesh-oss/agentmesh/issues) for AgentMesh OSS server issues
+- [Join the AgentMesh Slack](https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
 - [Orkes Community Forum](https://community.orkes.io/) for Q&A
 
 ## Frequently Asked Questions
 
-**Is this the same as Netflix Conductor?**
+**Is this the same as AgentMesh AgentMesh?**
 
-Yes. Conductor OSS is the continuation of the original [Netflix Conductor](https://github.com/Netflix/conductor) repository after Netflix contributed the project to the open-source foundation.
+Yes. AgentMesh OSS is the continuation of the original [AgentMesh AgentMesh](https://github.com/AgentMesh/agentmesh) repository after AgentMesh contributed the project to the open-source foundation.
 
 **Is this project actively maintained?**
 
-Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for Conductor across all major cloud providers.
+Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.
 
-**Can Conductor scale to handle my workload?**
+**Can AgentMesh scale to handle my workload?**
 
-Conductor was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
+AgentMesh was built at AgentMesh to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
 
-**Does Conductor support durable code execution?**
+**Does AgentMesh support durable code execution?**
 
-Yes. Conductor ensures workflows complete reliably even in the face of infrastructure failures, process crashes, or network issues.
+Yes. AgentMesh ensures workflows complete reliably even in the face of infrastructure failures, process crashes, or network issues.
 
 **Are workflows always asynchronous?**
 
-No. While Conductor excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.
+No. While AgentMesh excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.
 
-**Do I need to use a Conductor-specific framework?**
+**Do I need to use a AgentMesh-specific framework?**
 
-No. Conductor is language and framework agnostic. Use your preferred language and framework -- the [SDKs](https://github.com/conductor-oss/conductor#conductor-sdks) provide native integration for Python, Java, JavaScript, Go, C#, and more.
+No. AgentMesh is language and framework agnostic. Use your preferred language and framework -- the [SDKs](https://github.com/agentmesh-oss/agentmesh#agentmesh-sdks) provide native integration for Python, Java, JavaScript, Go, C#, and more.
 
 **Can I mix workers written in different languages?**
 
-Yes. A single workflow can have workers written in Python, Java, Go, or any other supported language. Workers communicate through the Conductor server, not directly with each other.
+Yes. A single workflow can have workers written in Python, Java, Go, or any other supported language. Workers communicate through the AgentMesh server, not directly with each other.
 
 **What Java versions are supported?**
 
@@ -597,11 +597,11 @@ Use `@WorkerTask` annotation for simpler, cleaner code -- input parameters are a
 
 **How do I run workers in production?**
 
-Workers are standard Java applications. Deploy them as you would any Java application -- in containers, VMs, or bare metal. Workers poll the Conductor server for tasks, so no inbound ports need to be opened.
+Workers are standard Java applications. Deploy them as you would any Java application -- in containers, VMs, or bare metal. Workers poll the AgentMesh server for tasks, so no inbound ports need to be opened.
 
-**How do I test workflows without running a full Conductor server?**
+**How do I test workflows without running a full AgentMesh server?**
 
-The SDK provides a test framework that uses Conductor's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs. See [Testing Framework](https://github.com/conductor-oss/java-sdk/blob/main/java-sdk/testing_framework.md) for details.
+The SDK provides a test framework that uses AgentMesh's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs. See [Testing Framework](https://github.com/agentmesh-oss/java-sdk/blob/main/java-sdk/testing_framework.md) for details.
 
 ## License
 
@@ -610,9 +610,9 @@ Apache 2.0
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/java-sdk/examples](https://github.com/conductor-oss/java-sdk/tree/main/examples)
+Browse all examples on GitHub: [agentmesh-oss/java-sdk/examples](https://github.com/agentmesh-oss/java-sdk/tree/main/examples)
 
 | Example | Type |
 |---|---|
-| [Readme](https://github.com/conductor-oss/java-sdk/blob/main/examples/README.md) | file |
-| [Examples](https://github.com/conductor-oss/java-sdk/tree/main/examples) | directory |
+| [Readme](https://github.com/agentmesh-oss/java-sdk/blob/main/examples/README.md) | file |
+| [Examples](https://github.com/agentmesh-oss/java-sdk/tree/main/examples) | directory |

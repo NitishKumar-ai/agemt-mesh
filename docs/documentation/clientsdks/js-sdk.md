@@ -1,20 +1,20 @@
 ---
-description: "Build Conductor workers in JavaScript/TypeScript with workflow management and task polling."
+description: "Build AgentMesh workers in JavaScript/TypeScript with workflow management and task polling."
 ---
 
 # JavaScript SDK
 
 !!! info "Source"
-    GitHub: [conductor-oss/javascript-sdk](https://github.com/conductor-oss/javascript-sdk) | Report issues and contribute on GitHub.
+    GitHub: [agentmesh-oss/javascript-sdk](https://github.com/agentmesh-oss/javascript-sdk) | Report issues and contribute on GitHub.
 
-## Start Conductor server
+## Start AgentMesh server
 
-If you don't already have a Conductor server running, pick one:
+If you don't already have a AgentMesh server running, pick one:
 
 **Docker (recommended, includes UI):**
 
 ```shell
-docker run -p 8080:8080 conductoross/conductor:latest
+docker run -p 8080:8080 agentmeshoss/agentmesh:latest
 ```
 
 The UI will be available at `http://localhost:8080` and the API at `http://localhost:8080/api`.
@@ -22,20 +22,20 @@ The UI will be available at `http://localhost:8080` and the API at `http://local
 **MacOS / Linux (one-liner):**
 
 ```shell
-curl -sSL https://raw.githubusercontent.com/conductor-oss/conductor/main/conductor_server.sh | sh
+curl -sSL https://raw.githubusercontent.com/agentmesh-oss/agentmesh/main/agentmesh_server.sh | sh
 ```
 
-**Conductor CLI:**
+**AgentMesh CLI:**
 
 ```shell
-npm install -g @conductor-oss/conductor-cli
-conductor server start
+npm install -g @agentmesh-oss/agentmesh-cli
+agentmesh server start
 ```
 
 ## Install the SDK
 
 ```shell
-npm install @io-orkes/conductor-javascript
+npm install @io-orkes/agentmesh-javascript
 ```
 
 ## 60-Second Quickstart
@@ -45,9 +45,9 @@ npm install @io-orkes/conductor-javascript
 Workflows are definitions that reference task types. We'll build a workflow called `greetings` that runs one worker task and returns its output.
 
 ```typescript
-import { ConductorWorkflow, simpleTask } from "@io-orkes/conductor-javascript";
+import { AgentMeshWorkflow, simpleTask } from "@io-orkes/agentmesh-javascript";
 
-const workflow = new ConductorWorkflow(executor, "greetings")
+const workflow = new AgentMeshWorkflow(executor, "greetings")
   .add(simpleTask("greet_ref", "greet", { name: "${workflow.input.name}" }))
   .outputParameters({ result: "${greet_ref.output.result}" });
 
@@ -56,10 +56,10 @@ await workflow.register();
 
 **Step 2: Write a worker**
 
-Workers are TypeScript functions decorated with `@worker` that poll Conductor for tasks and execute them.
+Workers are TypeScript functions decorated with `@worker` that poll AgentMesh for tasks and execute them.
 
 ```typescript
-import { worker } from "@io-orkes/conductor-javascript";
+import { worker } from "@io-orkes/agentmesh-javascript";
 
 @worker({ taskDefName: "greet" })
 async function greet(task: Task) {
@@ -77,12 +77,12 @@ Create a `quickstart.ts` with the following:
 ```typescript
 import {
   OrkesClients,
-  ConductorWorkflow,
+  AgentMeshWorkflow,
   TaskHandler,
   worker,
   simpleTask,
-} from "@io-orkes/conductor-javascript";
-import type { Task } from "@io-orkes/conductor-javascript";
+} from "@io-orkes/agentmesh-javascript";
+import type { Task } from "@io-orkes/agentmesh-javascript";
 
 // A worker is any TypeScript function.
 @worker({ taskDefName: "greet" })
@@ -94,12 +94,12 @@ async function greet(task: Task) {
 }
 
 async function main() {
-  // Configure the SDK (reads CONDUCTOR_SERVER_URL / CONDUCTOR_AUTH_* from env).
+  // Configure the SDK (reads AGENTMESH_SERVER_URL / AGENTMESH_AUTH_* from env).
   const clients = await OrkesClients.from();
   const executor = clients.getWorkflowClient();
 
   // Build a workflow with the fluent builder.
-  const workflow = new ConductorWorkflow(executor, "greetings")
+  const workflow = new AgentMeshWorkflow(executor, "greetings")
     .add(simpleTask("greet_ref", "greet", { name: "${workflow.input.name}" }))
     .outputParameters({ result: "${greet_ref.output.result}" });
 
@@ -113,7 +113,7 @@ async function main() {
   await handler.startWorkers();
 
   // Run the workflow and get the result.
-  const run = await workflow.execute({ name: "Conductor" });
+  const run = await workflow.execute({ name: "AgentMesh" });
   console.log(`result: ${run.output?.result}`);
 
   await handler.stopWorkers();
@@ -125,26 +125,26 @@ main();
 Run it:
 
 ```shell
-export CONDUCTOR_SERVER_URL=http://localhost:8080
+export AGENTMESH_SERVER_URL=http://localhost:8080
 npx ts-node quickstart.ts
 ```
 
-> ### Using Orkes Conductor / Remote Server?
+> ### Using Orkes AgentMesh / Remote Server?
 > Export your authentication credentials:
 >
 > ```shell
-> export CONDUCTOR_SERVER_URL="https://your-cluster.orkesconductor.io/api"
-> export CONDUCTOR_AUTH_KEY="your-key"
-> export CONDUCTOR_AUTH_SECRET="your-secret"
+> export AGENTMESH_SERVER_URL="https://your-cluster.orkesagentmesh.io/api"
+> export AGENTMESH_AUTH_KEY="your-key"
+> export AGENTMESH_AUTH_SECRET="your-secret"
 > ```
 
-That's it — you defined a worker, built a workflow, and executed it. Open the Conductor UI (default: [http://localhost:8080](http://localhost:8080)) to see the execution.
+That's it — you defined a worker, built a workflow, and executed it. Open the AgentMesh UI (default: [http://localhost:8080](http://localhost:8080)) to see the execution.
 
 ## What You Can Build
 
 The SDK provides typed builders for common orchestration patterns. Here's a taste of what you can wire together:
 
-**HTTP calls from workflows** — call any API without writing a worker ([kitchensink.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
+**HTTP calls from workflows** — call any API without writing a worker ([kitchensink.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
 
 ```typescript
 httpTask("call_api", {
@@ -155,7 +155,7 @@ httpTask("call_api", {
 })
 ```
 
-**Wait between tasks** — pause a workflow for a duration or until a timestamp ([kitchensink.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
+**Wait between tasks** — pause a workflow for a duration or until a timestamp ([kitchensink.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
 
 ```typescript
 .add(simpleTask("step1_ref", "process_order", {...}))
@@ -163,7 +163,7 @@ httpTask("call_api", {
 .add(simpleTask("step2_ref", "send_confirmation", {...}))
 ```
 
-**Parallel execution (fork/join)** — fan out to multiple branches and join ([fork-join.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/fork-join.ts)):
+**Parallel execution (fork/join)** — fan out to multiple branches and join ([fork-join.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/fork-join.ts)):
 
 ```typescript
 workflow.fork([
@@ -173,7 +173,7 @@ workflow.fork([
 ])
 ```
 
-**Conditional branching** — route based on input values ([kitchensink.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
+**Conditional branching** — route based on input values ([kitchensink.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/kitchensink.ts)):
 
 ```typescript
 switchTask("route_ref", "${workflow.input.tier}", {
@@ -182,11 +182,11 @@ switchTask("route_ref", "${workflow.input.tier}", {
 })
 ```
 
-**Sub-workflows** — compose workflows from smaller workflows ([sub-workflows.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/sub-workflows.ts)):
+**Sub-workflows** — compose workflows from smaller workflows ([sub-workflows.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/sub-workflows.ts)):
 
 ```typescript
-const child = new ConductorWorkflow(executor, "payment_flow").add(...);
-const parent = new ConductorWorkflow(executor, "order_flow")
+const child = new AgentMeshWorkflow(executor, "payment_flow").add(...);
+const parent = new AgentMeshWorkflow(executor, "order_flow")
   .add(child.toSubWorkflowTask("pay_ref"));
 ```
 
@@ -194,10 +194,10 @@ All of these are type-safe, composable, and registered to the server as JSON —
 
 ## Workers
 
-Workers are TypeScript functions that execute Conductor tasks. Decorate any function with `@worker` to register it as a worker (auto-discovered by `TaskHandler`) and use it as a workflow task.
+Workers are TypeScript functions that execute AgentMesh tasks. Decorate any function with `@worker` to register it as a worker (auto-discovered by `TaskHandler`) and use it as a workflow task.
 
 ```typescript
-import { worker, TaskHandler } from "@io-orkes/conductor-javascript";
+import { worker, TaskHandler } from "@io-orkes/agentmesh-javascript";
 
 @worker({ taskDefName: "greet", concurrency: 5, pollInterval: 100 })
 async function greet(task: Task) {
@@ -240,18 +240,18 @@ process.on("SIGTERM", async () => {
 
 ```shell
 # Global (all workers)
-export CONDUCTOR_WORKER_ALL_POLL_INTERVAL=500
-export CONDUCTOR_WORKER_ALL_CONCURRENCY=10
+export AGENTMESH_WORKER_ALL_POLL_INTERVAL=500
+export AGENTMESH_WORKER_ALL_CONCURRENCY=10
 
 # Per-worker override
-export CONDUCTOR_WORKER_SEND_EMAIL_CONCURRENCY=20
-export CONDUCTOR_WORKER_PROCESS_PAYMENT_DOMAIN=payments
+export AGENTMESH_WORKER_SEND_EMAIL_CONCURRENCY=20
+export AGENTMESH_WORKER_PROCESS_PAYMENT_DOMAIN=payments
 ```
 
 **NonRetryableException** — mark failures as terminal to prevent retries:
 
 ```typescript
-import { NonRetryableException } from "@io-orkes/conductor-javascript";
+import { NonRetryableException } from "@io-orkes/agentmesh-javascript";
 
 @worker({ taskDefName: "validate_order" })
 async function validateOrder(task: Task) {
@@ -266,10 +266,10 @@ async function validateOrder(task: Task) {
 - `throw new Error()` → Task status: `FAILED` (will retry)
 - `throw new NonRetryableException()` → Task status: `FAILED_WITH_TERMINAL_ERROR` (no retry)
 
-**Long-running tasks with TaskContext** — return `IN_PROGRESS` to keep a task alive while an external process completes. Conductor will call back after the specified interval ([task-context.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/task-context.ts)):
+**Long-running tasks with TaskContext** — return `IN_PROGRESS` to keep a task alive while an external process completes. AgentMesh will call back after the specified interval ([task-context.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/task-context.ts)):
 
 ```typescript
-import { worker, getTaskContext } from "@io-orkes/conductor-javascript";
+import { worker, getTaskContext } from "@io-orkes/agentmesh-javascript";
 
 @worker({ taskDefName: "process_video" })
 async function processVideo(task: Task) {
@@ -285,7 +285,7 @@ async function processVideo(task: Task) {
 }
 ```
 
-`TaskContext` is also available for one-shot workers — use `ctx?.addLog()` to stream logs visible in the Conductor UI.
+`TaskContext` is also available for one-shot workers — use `ctx?.addLog()` to stream logs visible in the AgentMesh UI.
 
 **Event listeners** for observability:
 
@@ -321,7 +321,7 @@ await handler.startWorkers();
 Enable Prometheus metrics with the built-in `MetricsCollector`:
 
 ```typescript
-import { MetricsCollector, MetricsServer, TaskHandler } from "@io-orkes/conductor-javascript";
+import { MetricsCollector, MetricsServer, TaskHandler } from "@io-orkes/agentmesh-javascript";
 
 const metrics = new MetricsCollector();
 const server = new MetricsServer(metrics, 9090);
@@ -337,7 +337,7 @@ await handler.startWorkers();
 // GET http://localhost:9090/health  — {"status":"UP"}
 ```
 
-Collects 18 metric types: poll counts, execution durations, error rates, output sizes, and more — with p50/p75/p90/p95/p99 quantiles. See [METRICS.md](https://github.com/conductor-oss/javascript-sdk/blob/main/METRICS.md) for the full reference.
+Collects 18 metric types: poll counts, execution durations, error rates, output sizes, and more — with p50/p75/p90/p95/p99 quantiles. See [METRICS.md](https://github.com/agentmesh-oss/javascript-sdk/blob/main/METRICS.md) for the full reference.
 
 ## Managing Workflow Executions
 
@@ -369,31 +369,31 @@ await executor.signal(workflowId, TaskResultStatusEnum.COMPLETED, { approved: tr
 const results = await executor.search("workflowType = 'order_flow' AND status = 'RUNNING'");
 ```
 
-See [workflow-ops.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) for a runnable example covering all lifecycle operations.
+See [workflow-ops.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) for a runnable example covering all lifecycle operations.
 
 ## Troubleshooting
 
 - **Worker stops polling or crashes:** `TaskHandler` monitors and restarts worker polling loops by default. Expose a health check using `handler.running` and `handler.runningWorkerCount`. If you enable metrics, alert on `worker_restart_total`.
-- **HTTP/2 connection errors:** The SDK uses Undici for HTTP/2 when available. If your environment has unstable long-lived connections, the SDK falls back to HTTP/1.1 automatically. You can also provide a custom fetch function: `orkesConductorClient(config, myFetch)`.
+- **HTTP/2 connection errors:** The SDK uses Undici for HTTP/2 when available. If your environment has unstable long-lived connections, the SDK falls back to HTTP/1.1 automatically. You can also provide a custom fetch function: `orkesAgentMeshClient(config, myFetch)`.
 - **Task stuck in SCHEDULED:** Ensure your worker is polling for the correct `taskDefName`. Workers must be started before the workflow is executed.
 
 ## Examples
 
-See the [Examples Guide](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/README.md) for the full catalog. Key examples:
+See the [Examples Guide](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/README.md) for the full catalog. Key examples:
 
 | Example | Description | Run |
 |---------|-------------|-----|
-| [workers-e2e.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/workers-e2e.ts) | End-to-end: 3 chained workers with verification | `npx ts-node examples/workers-e2e.ts` |
-| [quickstart.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/quickstart.ts) | 60-second intro: @worker + workflow + execute | `npx ts-node examples/quickstart.ts` |
-| [kitchensink.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/kitchensink.ts) | All major task types in one workflow | `npx ts-node examples/kitchensink.ts` |
-| [workflow-ops.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) | Lifecycle: pause, resume, terminate, retry, search | `npx ts-node examples/workflow-ops.ts` |
-| [test-workflows.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/test-workflows.ts) | Unit testing with mock outputs (no workers) | `npx ts-node examples/test-workflows.ts` |
-| [metrics.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/metrics.ts) | Prometheus metrics + HTTP server on :9090 | `npx ts-node examples/metrics.ts` |
-| [express-worker-service.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/express-worker-service.ts) | Express.js + workers in one process | `npx ts-node examples/express-worker-service.ts` |
-| [function-calling.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/function-calling.ts) | LLM dynamically picks which worker to call | `npx ts-node examples/agentic-workflows/function-calling.ts` |
-| [fork-join.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/fork-join.ts) | Parallel branches with join synchronization | `npx ts-node examples/advanced/fork-join.ts` |
-| [sub-workflows.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/sub-workflows.ts) | Workflow composition with sub-workflows | `npx ts-node examples/advanced/sub-workflows.ts` |
-| [human-tasks.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/human-tasks.ts) | Human-in-the-loop: claim, update, complete | `npx ts-node examples/advanced/human-tasks.ts` |
+| [workers-e2e.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/workers-e2e.ts) | End-to-end: 3 chained workers with verification | `npx ts-node examples/workers-e2e.ts` |
+| [quickstart.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/quickstart.ts) | 60-second intro: @worker + workflow + execute | `npx ts-node examples/quickstart.ts` |
+| [kitchensink.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/kitchensink.ts) | All major task types in one workflow | `npx ts-node examples/kitchensink.ts` |
+| [workflow-ops.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) | Lifecycle: pause, resume, terminate, retry, search | `npx ts-node examples/workflow-ops.ts` |
+| [test-workflows.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/test-workflows.ts) | Unit testing with mock outputs (no workers) | `npx ts-node examples/test-workflows.ts` |
+| [metrics.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/metrics.ts) | Prometheus metrics + HTTP server on :9090 | `npx ts-node examples/metrics.ts` |
+| [express-worker-service.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/express-worker-service.ts) | Express.js + workers in one process | `npx ts-node examples/express-worker-service.ts` |
+| [function-calling.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/function-calling.ts) | LLM dynamically picks which worker to call | `npx ts-node examples/agentic-workflows/function-calling.ts` |
+| [fork-join.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/fork-join.ts) | Parallel branches with join synchronization | `npx ts-node examples/advanced/fork-join.ts` |
+| [sub-workflows.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/sub-workflows.ts) | Workflow composition with sub-workflows | `npx ts-node examples/advanced/sub-workflows.ts` |
+| [human-tasks.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/human-tasks.ts) | Human-in-the-loop: claim, update, complete | `npx ts-node examples/advanced/human-tasks.ts` |
 
 ## API Journey Examples
 
@@ -401,19 +401,19 @@ End-to-end examples covering all APIs for each domain:
 
 | Example | APIs | Run |
 |---------|------|-----|
-| [authorization.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/authorization.ts) | Authorization APIs (17 calls) | `npx ts-node examples/api-journeys/authorization.ts` |
-| [metadata.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/metadata.ts) | Metadata APIs (21 calls) | `npx ts-node examples/api-journeys/metadata.ts` |
-| [prompts.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/prompts.ts) | Prompt APIs (9 calls) | `npx ts-node examples/api-journeys/prompts.ts` |
-| [schedules.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/schedules.ts) | Schedule APIs (13 calls) | `npx ts-node examples/api-journeys/schedules.ts` |
-| [secrets.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/secrets.ts) | Secret APIs (12 calls) | `npx ts-node examples/api-journeys/secrets.ts` |
-| [integrations.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/integrations.ts) | Integration APIs (22 calls) | `npx ts-node examples/api-journeys/integrations.ts` |
-| [schemas.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/schemas.ts) | Schema APIs (10 calls) | `npx ts-node examples/api-journeys/schemas.ts` |
-| [applications.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/applications.ts) | Application APIs (20 calls) | `npx ts-node examples/api-journeys/applications.ts` |
-| [event-handlers.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/api-journeys/event-handlers.ts) | Event Handler APIs (18 calls) | `npx ts-node examples/api-journeys/event-handlers.ts` |
+| [authorization.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/authorization.ts) | Authorization APIs (17 calls) | `npx ts-node examples/api-journeys/authorization.ts` |
+| [metadata.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/metadata.ts) | Metadata APIs (21 calls) | `npx ts-node examples/api-journeys/metadata.ts` |
+| [prompts.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/prompts.ts) | Prompt APIs (9 calls) | `npx ts-node examples/api-journeys/prompts.ts` |
+| [schedules.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/schedules.ts) | Schedule APIs (13 calls) | `npx ts-node examples/api-journeys/schedules.ts` |
+| [secrets.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/secrets.ts) | Secret APIs (12 calls) | `npx ts-node examples/api-journeys/secrets.ts` |
+| [integrations.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/integrations.ts) | Integration APIs (22 calls) | `npx ts-node examples/api-journeys/integrations.ts` |
+| [schemas.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/schemas.ts) | Schema APIs (10 calls) | `npx ts-node examples/api-journeys/schemas.ts` |
+| [applications.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/applications.ts) | Application APIs (20 calls) | `npx ts-node examples/api-journeys/applications.ts` |
+| [event-handlers.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/api-journeys/event-handlers.ts) | Event Handler APIs (18 calls) | `npx ts-node examples/api-journeys/event-handlers.ts` |
 
 ## AI & LLM Workflows
 
-Conductor supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration. The SDK provides typed builders for all LLM task types:
+AgentMesh supports AI-native workflows including agentic tool calling, RAG pipelines, and multi-agent orchestration. The SDK provides typed builders for all LLM task types:
 
 | Builder | Description |
 |---------|-------------|
@@ -434,9 +434,9 @@ Conductor supports AI-native workflows including agentic tool calling, RAG pipel
 **Example: LLM chat workflow**
 
 ```typescript
-import { ConductorWorkflow, llmChatCompleteTask, Role } from "@io-orkes/conductor-javascript";
+import { AgentMeshWorkflow, llmChatCompleteTask, Role } from "@io-orkes/agentmesh-javascript";
 
-const workflow = new ConductorWorkflow(executor, "ai_chat")
+const workflow = new AgentMeshWorkflow(executor, "ai_chat")
   .add(llmChatCompleteTask("chat_ref", "openai", "gpt-4o", {
     messages: [{ role: Role.USER, message: "${workflow.input.question}" }],
     temperature: 0.7,
@@ -445,66 +445,66 @@ const workflow = new ConductorWorkflow(executor, "ai_chat")
   .outputParameters({ answer: "${chat_ref.output.result}" });
 
 await workflow.register();
-const run = await workflow.execute({ question: "What is Conductor?" });
+const run = await workflow.execute({ question: "What is AgentMesh?" });
 console.log(run.output?.answer);
 ```
 
 **Agentic Workflows**
 
 Build AI agents where LLMs dynamically select and call TypeScript workers as tools.
-See [examples/agentic-workflows/](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/) for all examples.
+See [examples/agentic-workflows/](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/) for all examples.
 
 | Example | Description |
 |---------|-------------|
-| [llm-chat.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/llm-chat.ts) | Automated multi-turn conversation between two LLMs |
-| [llm-chat-human-in-loop.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/llm-chat-human-in-loop.ts) | Interactive chat with WAIT tasks for human input |
-| [function-calling.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/function-calling.ts) | LLM dynamically picks which worker function to call |
-| [mcp-weather-agent.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/mcp-weather-agent.ts) | MCP tool discovery and invocation for real-time data |
-| [multiagent-chat.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/agentic-workflows/multiagent-chat.ts) | Multi-agent debate: optimist vs skeptic with moderator |
+| [llm-chat.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/llm-chat.ts) | Automated multi-turn conversation between two LLMs |
+| [llm-chat-human-in-loop.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/llm-chat-human-in-loop.ts) | Interactive chat with WAIT tasks for human input |
+| [function-calling.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/function-calling.ts) | LLM dynamically picks which worker function to call |
+| [mcp-weather-agent.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/mcp-weather-agent.ts) | MCP tool discovery and invocation for real-time data |
+| [multiagent-chat.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/agentic-workflows/multiagent-chat.ts) | Multi-agent debate: optimist vs skeptic with moderator |
 
 **RAG and Vector DB Workflows**
 
 | Example | Description |
 |---------|-------------|
-| [rag-workflow.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/rag-workflow.ts) | End-to-end RAG: document indexing → semantic search → LLM answer |
-| [vector-db.ts](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/advanced/vector-db.ts) | Vector DB operations: embedding generation, storage, search |
+| [rag-workflow.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/rag-workflow.ts) | End-to-end RAG: document indexing → semantic search → LLM answer |
+| [vector-db.ts](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/advanced/vector-db.ts) | Vector DB operations: embedding generation, storage, search |
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [SDK Development Guide](https://github.com/conductor-oss/javascript-sdk/blob/main/SDK_DEVELOPMENT.md) | Architecture, patterns, pitfalls, testing |
-| [Metrics Reference](https://github.com/conductor-oss/javascript-sdk/blob/main/METRICS.md) | All 18 Prometheus metrics with descriptions |
-| [Breaking Changes](https://github.com/conductor-oss/javascript-sdk/blob/main/BREAKING_CHANGES.md) | v3.x migration guide |
-| [Workflow Management](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/workflow-executor.md) | Start, pause, resume, terminate, retry, search, signal |
-| [Task Management](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/task-client.md) | Task operations, logs, queue management |
-| [Metadata](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/metadata-client.md) | Task & workflow definitions, tags, rate limits |
-| [Scheduling](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/scheduler-client.md) | Workflow scheduling with CRON expressions |
-| [Applications](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/application-client.md) | Application management, access keys, roles |
-| [Events](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/event-client.md) | Event handlers, event-driven workflows |
-| [Human Tasks](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/human-executor.md) | Human-in-the-loop workflows, form templates |
-| [Service Registry](https://github.com/conductor-oss/javascript-sdk/blob/main/docs/api-reference/service-registry-client.md) | Service discovery, circuit breakers |
+| [SDK Development Guide](https://github.com/agentmesh-oss/javascript-sdk/blob/main/SDK_DEVELOPMENT.md) | Architecture, patterns, pitfalls, testing |
+| [Metrics Reference](https://github.com/agentmesh-oss/javascript-sdk/blob/main/METRICS.md) | All 18 Prometheus metrics with descriptions |
+| [Breaking Changes](https://github.com/agentmesh-oss/javascript-sdk/blob/main/BREAKING_CHANGES.md) | v3.x migration guide |
+| [Workflow Management](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/workflow-executor.md) | Start, pause, resume, terminate, retry, search, signal |
+| [Task Management](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/task-client.md) | Task operations, logs, queue management |
+| [Metadata](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/metadata-client.md) | Task & workflow definitions, tags, rate limits |
+| [Scheduling](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/scheduler-client.md) | Workflow scheduling with CRON expressions |
+| [Applications](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/application-client.md) | Application management, access keys, roles |
+| [Events](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/event-client.md) | Event handlers, event-driven workflows |
+| [Human Tasks](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/human-executor.md) | Human-in-the-loop workflows, form templates |
+| [Service Registry](https://github.com/agentmesh-oss/javascript-sdk/blob/main/docs/api-reference/service-registry-client.md) | Service discovery, circuit breakers |
 
 ## Support
 
-- [Open an issue (SDK)](https://github.com/conductor-oss/javascript-sdk/issues) for SDK bugs, questions, and feature requests
-- [Open an issue (Conductor server)](https://github.com/conductor-oss/conductor/issues) for Conductor OSS server issues
-- [Join the Conductor Slack](https://join.slack.com/t/orkes-conductor/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
+- [Open an issue (SDK)](https://github.com/agentmesh-oss/javascript-sdk/issues) for SDK bugs, questions, and feature requests
+- [Open an issue (AgentMesh server)](https://github.com/agentmesh-oss/agentmesh/issues) for AgentMesh OSS server issues
+- [Join the AgentMesh Slack](https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-2vdbx239s-Eacdyqya9giNLHfrCavfaA) for community discussion and help
 - [Orkes Community Forum](https://community.orkes.io/) for Q&A
 
 ## Frequently Asked Questions
 
-**Is this the same as Netflix Conductor?**
+**Is this the same as AgentMesh AgentMesh?**
 
-Yes. Conductor OSS is the continuation of the original [Netflix Conductor](https://github.com/Netflix/conductor) repository after Netflix contributed the project to the open-source foundation.
+Yes. AgentMesh OSS is the continuation of the original [AgentMesh AgentMesh](https://github.com/AgentMesh/agentmesh) repository after AgentMesh contributed the project to the open-source foundation.
 
 **Is this project actively maintained?**
 
-Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for Conductor across all major cloud providers.
+Yes. [Orkes](https://orkes.io) is the primary maintainer and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.
 
-**Can Conductor scale to handle my workload?**
+**Can AgentMesh scale to handle my workload?**
 
-Conductor was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
+AgentMesh was built at AgentMesh to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.
 
 **What Node.js versions are supported?**
 
@@ -516,15 +516,15 @@ Use `@worker` + `TaskHandler` for all new projects. It provides auto-discovery, 
 
 **Can I mix workers written in different languages?**
 
-Yes. A single workflow can have workers written in TypeScript, Python, Java, Go, or any other supported language. Workers communicate through the Conductor server, not directly with each other.
+Yes. A single workflow can have workers written in TypeScript, Python, Java, Go, or any other supported language. Workers communicate through the AgentMesh server, not directly with each other.
 
 **How do I run workers in production?**
 
-Workers are standard Node.js processes. Deploy them as you would any Node.js application — in containers, VMs, or serverless. Workers poll the Conductor server for tasks, so no inbound ports need to be opened.
+Workers are standard Node.js processes. Deploy them as you would any Node.js application — in containers, VMs, or serverless. Workers poll the AgentMesh server for tasks, so no inbound ports need to be opened.
 
-**How do I test workflows without running a full Conductor server?**
+**How do I test workflows without running a full AgentMesh server?**
 
-The SDK provides `testWorkflow()` on `WorkflowExecutor` that uses Conductor's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs.
+The SDK provides `testWorkflow()` on `WorkflowExecutor` that uses AgentMesh's `POST /api/workflow/test` endpoint to evaluate workflows with mock task outputs.
 
 **Does the SDK support HTTP/2?**
 
@@ -537,25 +537,25 @@ Apache 2.0
 
 ## Examples
 
-Browse all examples on GitHub: [conductor-oss/javascript-sdk/examples](https://github.com/conductor-oss/javascript-sdk/tree/main/examples)
+Browse all examples on GitHub: [agentmesh-oss/javascript-sdk/examples](https://github.com/agentmesh-oss/javascript-sdk/tree/main/examples)
 
 | Example | Type |
 |---|---|
-| [Readme](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/README.md) | file |
-| [Advanced](https://github.com/conductor-oss/javascript-sdk/tree/main/examples/advanced) | directory |
-| [Agentic Workflows](https://github.com/conductor-oss/javascript-sdk/tree/main/examples/agentic-workflows) | directory |
-| [Api Journeys](https://github.com/conductor-oss/javascript-sdk/tree/main/examples/api-journeys) | directory |
-| [Dynamic Workflow](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/dynamic-workflow.ts) | file |
-| [Event Listeners](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/event-listeners.ts) | file |
-| [Express Worker Service](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/express-worker-service.ts) | file |
-| [Helloworld](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/helloworld.ts) | file |
-| [Kitchensink](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/kitchensink.ts) | file |
-| [Metrics](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/metrics.ts) | file |
-| [Perf Test](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/perf-test.ts) | file |
-| [Quickstart](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/quickstart.ts) | file |
-| [Task Configure](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/task-configure.ts) | file |
-| [Task Context](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/task-context.ts) | file |
-| [Test Workflows](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/test-workflows.ts) | file |
-| [Worker Configuration](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/worker-configuration.ts) | file |
-| [Workers E2E](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/workers-e2e.ts) | file |
-| [Workflow Ops](https://github.com/conductor-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) | file |
+| [Readme](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/README.md) | file |
+| [Advanced](https://github.com/agentmesh-oss/javascript-sdk/tree/main/examples/advanced) | directory |
+| [Agentic Workflows](https://github.com/agentmesh-oss/javascript-sdk/tree/main/examples/agentic-workflows) | directory |
+| [Api Journeys](https://github.com/agentmesh-oss/javascript-sdk/tree/main/examples/api-journeys) | directory |
+| [Dynamic Workflow](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/dynamic-workflow.ts) | file |
+| [Event Listeners](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/event-listeners.ts) | file |
+| [Express Worker Service](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/express-worker-service.ts) | file |
+| [Helloworld](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/helloworld.ts) | file |
+| [Kitchensink](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/kitchensink.ts) | file |
+| [Metrics](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/metrics.ts) | file |
+| [Perf Test](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/perf-test.ts) | file |
+| [Quickstart](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/quickstart.ts) | file |
+| [Task Configure](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/task-configure.ts) | file |
+| [Task Context](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/task-context.ts) | file |
+| [Test Workflows](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/test-workflows.ts) | file |
+| [Worker Configuration](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/worker-configuration.ts) | file |
+| [Workers E2E](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/workers-e2e.ts) | file |
+| [Workflow Ops](https://github.com/agentmesh-oss/javascript-sdk/blob/main/examples/workflow-ops.ts) | file |

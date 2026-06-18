@@ -12,7 +12,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import type { WorkflowModel } from '@conductor/common';
+import type { WorkflowModel } from '@agentmesh/common';
 import { WorkflowService } from '../services/WorkflowService.js';
 
 @ApiTags('workflows')

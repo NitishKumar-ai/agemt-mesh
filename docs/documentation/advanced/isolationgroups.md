@@ -1,5 +1,5 @@
 ---
-description: "Isolation Groups — isolate Conductor system task execution into dedicated queues and thread pools for predictable performance."
+description: "Isolation Groups — isolate AgentMesh system task execution into dedicated queues and thread pools for predictable performance."
 ---
 # Isolation Groups
 
@@ -52,7 +52,7 @@ If no `isolationgroupId` is specified in task definition, then fallback is defau
       "type": "HTTP", 
       "inputParameters": {
         "http_request": {
-          "uri": "http://localhost:9200/conductor/_search?size=10",
+          "uri": "http://localhost:9200/agentmesh/_search?size=10",
           "method": "GET"
         }
       }
@@ -130,7 +130,7 @@ If the property is not set, the executor executes tasks without any executionNam
       "type": "HTTP", 
       "inputParameters": {
         "http_request": {
-          "uri": "http://localhost:9200/conductor/_search?size=10",
+          "uri": "http://localhost:9200/agentmesh/_search?size=10",
           "method": "GET"
         }
       }

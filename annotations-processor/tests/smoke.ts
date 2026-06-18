@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
-const { ProtoMessage, ProtoField } = require('@conductor/annotations');
+const { ProtoMessage, ProtoField } = require('@agentmesh/annotations');
 const { ProtoGen } = require('../dist/protogen');
 const { ProtoFile } = require('../dist/proto-file');
 

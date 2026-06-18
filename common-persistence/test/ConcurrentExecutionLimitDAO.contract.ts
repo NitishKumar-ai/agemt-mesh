@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import type { ConcurrentExecutionLimitDAO } from '../src/ConcurrentExecutionLimitDAO.js';
-import type { TaskModel } from '@conductor/common';
+import type { TaskModel } from '@agentmesh/common';
 
 export function runConcurrentExecutionLimitDAOContractTests(
   daoProvider: () => Promise<ConcurrentExecutionLimitDAO>,

@@ -1,18 +1,18 @@
 ---
-description: "Start workflow executions in Conductor using the UI, CLI, REST APIs, or client SDKs. Pass inputs and track executions with a unique workflow ID."
+description: "Start workflow executions in AgentMesh using the UI, CLI, REST APIs, or client SDKs. Pass inputs and track executions with a unique workflow ID."
 ---
 
 # Starting Workflows
 
-In Conductor, workflows can be started using the Conductor UI, APIs, or SDKs.
+In AgentMesh, workflows can be started using the AgentMesh UI, APIs, or SDKs.
 
-## Using Conductor UI
+## Using AgentMesh UI
 
-The Conductor UI is useful for sandbox testing before deploying the workflows to production using the APIs or SDKs.
+The AgentMesh UI is useful for sandbox testing before deploying the workflows to production using the APIs or SDKs.
 
 **To start a workflow:**
 
-1. Go to [Workbench](http://localhost:8080/workbench) in the Conductor UI.
+1. Go to [Workbench](http://localhost:8080/workbench) in the AgentMesh UI.
 2. Select the  **Workflow Name** and **Workflow version**.
 3. If required, provide the workflow inputs in **Input (JSON)**.
 4. (Optional) Specify the **Correlation ID** and **Task to Domain (JSON)** for the execution.
@@ -22,14 +22,14 @@ Once the workflow has started, you can view the ongoing execution by selecting t
 
 ## Using the CLI
 
-You can start workflow executions using the Conductor CLI.
+You can start workflow executions using the AgentMesh CLI.
 
 ### Example using the CLI
 
 In this example, the CLI is used to invoke the workflow `sample_workflow` with the input `service` specified as `fedex`.
 
 ```bash
-conductor workflow start -w sample_workflow -i '{"service":"fedex"}'
+agentmesh workflow start -w sample_workflow -i '{"service":"fedex"}'
 ```
 
 ## Using APIs
@@ -48,7 +48,7 @@ You can also start workflow executions using the Start Workflow API (`POST api/w
 
 ## Using SDKs
 
-Conductor offers client SDKs for popular languages which have library methods for making the Start Workflow API call. Refer to the SDK documentation to configure a client in your selected language to invoke workflow executions.
+AgentMesh offers client SDKs for popular languages which have library methods for making the Start Workflow API call. Refer to the SDK documentation to configure a client in your selected language to invoke workflow executions.
 
 ### Example using JavaScript
 

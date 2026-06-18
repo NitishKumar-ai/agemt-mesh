@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { WorkflowSignalReturnStrategy } from '../enums.js';
 
 /**
- * Port of `org.conductoross.conductor.model.SignalResponse`.
+ * Port of `org.agentmeshoss.agentmesh.model.SignalResponse`.
  */
 export const SignalResponseSchema = z.object({
   responseType: z.nativeEnum(WorkflowSignalReturnStrategy).optional(),

@@ -44,8 +44,8 @@ export default defineConfig(({ mode }) => {
       build: {
         lib: {
           entry: resolve(__dirname, "src/index.ts"),
-          name: "ConductorUI",
-          fileName: "conductor-ui",
+          name: "AgentMeshUI",
+          fileName: "agentmesh-ui",
           formats: ["es"] as const,
         },
         rollupOptions: {
@@ -92,7 +92,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 1234,
       // Mirror the dev-server proxy so `vite preview` (used by integration
-      // tests) forwards API calls to the Conductor backend.
+      // tests) forwards API calls to the AgentMesh backend.
       // VITE_WF_SERVER can be set in the process environment at preview time
       // to override the .env file value (e.g. for CI or Playwright webServer).
       proxy: {

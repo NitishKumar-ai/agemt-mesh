@@ -1,4 +1,4 @@
-import { PollData } from '@conductor/common';
+import { PollData } from '@agentmesh/common';
 
 export interface PollDataDAO {
   updateLastPollData(taskDefName: string, domain: string, workerId: string): Promise<void>;

@@ -49,7 +49,7 @@ export interface AuthProviderMachineContext {
   provider: SupportedProviders;
   error?: unknown;
   providerUser?: unknown;
-  conductorUser?: { id: string };
+  agentmeshUser?: { id: string };
   isTrialExpired: boolean;
   trialExpiryDate?: number | Date;
   limits?: unknown;

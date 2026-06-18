@@ -1,7 +1,7 @@
 import _merge from "lodash/merge";
 declare global {
   interface Window {
-    conductor: any;
+    agentmesh: any;
     heap?: any;
     authConfig?: {
       domain?: string;
@@ -113,7 +113,7 @@ const mapOfEnvValues = Object.fromEntries(
 const mapOfContextJs = Object.fromEntries(
   Object.entries(FEATURES).map(([k, v]) => [
     k,
-    window.conductor && window.conductor[v],
+    window.agentmesh && window.agentmesh[v],
   ]),
 );
 
@@ -134,6 +134,6 @@ export const featureFlags = {
     return result[feature] || defaultValue;
   },
   getContextValue: (feature: string) => {
-    return window.conductor && window.conductor[feature];
+    return window.agentmesh && window.agentmesh[feature];
   },
 };

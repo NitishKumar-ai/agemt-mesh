@@ -1,4 +1,4 @@
-import { TaskModel } from '@conductor/common';
+import { TaskModel } from '@agentmesh/common';
 
 export interface ConcurrentExecutionLimitDAO {
   addTaskToLimit(task: TaskModel): Promise<void>;

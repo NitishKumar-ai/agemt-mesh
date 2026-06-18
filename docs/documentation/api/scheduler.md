@@ -1,5 +1,5 @@
 ---
-description: "REST API reference for Conductor's workflow scheduler — create, list, search, pause, resume, delete schedules, preview cron execution times, and search execution history."
+description: "REST API reference for AgentMesh's workflow scheduler — create, list, search, pause, resume, delete schedules, preview cron execution times, and search execution history."
 ---
 
 # Scheduler API

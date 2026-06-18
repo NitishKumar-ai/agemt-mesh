@@ -1,10 +1,10 @@
 ---
-description: "Task definition schema in Conductor — configure retry logic, exponential backoff, timeouts, rate limiting, and concurrency for durable workflow execution."
+description: "Task definition schema in AgentMesh — configure retry logic, exponential backoff, timeouts, rate limiting, and concurrency for durable workflow execution."
 ---
 
 # Task Definition
 
-Task Definitions are used to register SIMPLE tasks (workers). Conductor maintains a registry of user task types. A task type MUST be registered before being used in a workflow.
+Task Definitions are used to register SIMPLE tasks (workers). AgentMesh maintains a registry of user task types. A task type MUST be registered before being used in a workflow.
 
 This should not be confused with [*Task Configurations*](workflowdef/index.md#task-configurations) which are part of the Workflow Definition, and are iterated in the `tasks` property in the definition.
 
@@ -83,7 +83,7 @@ You have 1000 task executions waiting in the queue, and 1000 workers polling thi
 * `rateLimitPerFrequency`defines the number of Tasks that can be given to Workers per given "frequency window". No rate limit if set to 0.
 
 **Example**
-Let's set `rateLimitFrequencyInSeconds = 5`, and `rateLimitPerFrequency = 12`. This means our frequency window is of 5 seconds duration, and for each frequency window, Conductor would only give 12 tasks to workers. So, in a given minute, Conductor would only give 12*(60/5) = 144 tasks to workers irrespective of the number of workers that are polling for the task.
+Let's set `rateLimitFrequencyInSeconds = 5`, and `rateLimitPerFrequency = 12`. This means our frequency window is of 5 seconds duration, and for each frequency window, AgentMesh would only give 12 tasks to workers. So, in a given minute, AgentMesh would only give 12*(60/5) = 144 tasks to workers irrespective of the number of workers that are polling for the task.
 
 Note that unlike `concurrentExecLimit`, rate limiting doesn't take into account tasks already in progress or a terminal state. Even if all the previous tasks are executed within 1 sec, or would take a few days, the new tasks are still given to workers at configured frequency, 144 tasks per minute in above example.
 

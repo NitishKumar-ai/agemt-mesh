@@ -1,12 +1,12 @@
 # Docker Compose stack for Playwright UI integration tests.
 #
-# Uses the locally-built conductor:server image with Postgres as the backing
+# Uses the locally-built agentmesh:server image with Postgres as the backing
 # store (no Elasticsearch required — Postgres full-text search is sufficient
 # for the UI test workload).
 #
 # Build the server image once before running integration tests:
 #
-#   docker build -t conductor:server -f docker/server/Dockerfile \
+#   docker build -t agentmesh:server -f docker/server/Dockerfile \
 #     --build-arg PREBUILT=false .
 #
 # Then start this stack (from the repo root):
@@ -18,15 +18,15 @@
 # run side-by-side without port or name conflicts.
 
 services:
-  conductor-server:
-    image: conductor:server
+  agentmesh-server:
+    image: agentmesh:server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
-    container_name: conductor-server-ui-e2e
+    container_name: agentmesh-server-ui-e2e
     environment:
       - CONFIG_PROP=config-postgres.properties
-      - conductor.app.ownerEmailMandatory=false
+      - agentmesh.app.ownerEmailMandatory=false
     networks:
       - internal
     ports:
@@ -37,9 +37,9 @@ services:
       timeout: 10s
       retries: 24  # up to 4 minutes for a cold JVM start
     links:
-      - conductor-postgres:postgresdb
+      - agentmesh-postgres:postgresdb
     depends_on:
-      conductor-postgres:
+      agentmesh-postgres:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -47,12 +47,12 @@ services:
         max-size: "10k"
         max-file: "3"
 
-  conductor-postgres:
+  agentmesh-postgres:
     image: postgres:16
-    container_name: conductor-postgres-ui-e2e
+    container_name: agentmesh-postgres-ui-e2e
     environment:
-      - POSTGRES_USER=conductor
-      - POSTGRES_PASSWORD=conductor
+      - POSTGRES_USER=agentmesh
+      - POSTGRES_PASSWORD=agentmesh
     networks:
       - internal
     healthcheck:

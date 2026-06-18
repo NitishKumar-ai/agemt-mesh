@@ -1,5 +1,5 @@
 ---
-description: "Terminate Task — end a Conductor workflow execution with a specified status and output from any point in the flow."
+description: "Terminate Task — end a AgentMesh workflow execution with a specified status and output from any point in the flow."
 ---
 # Terminate
 ```json

@@ -1,7 +1,7 @@
-// OSS Conductor UI Runtime Configuration
+// OSS AgentMesh UI Runtime Configuration
 // This file configures feature flags at runtime for the OSS UI
 
-window.conductor = {
+window.agentmesh = {
   // Authentication - DISABLED for OSS
   ACCESS_MANAGEMENT: false,
   RBAC: false,

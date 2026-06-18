@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
-import { SqliteMetadataDAO } from '@conductor/sqlite-persistence';
+import type { Database } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration } from '@agentmesh/common-persistence';
+import { SqliteMetadataDAO } from '@agentmesh/sqlite-persistence';
 import { MetadataService } from '../../src/services/MetadataService.js';
-import type { TaskDef, WorkflowDef } from '@conductor/common';
+import type { TaskDef, WorkflowDef } from '@agentmesh/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createDb(): any {

@@ -39,15 +39,15 @@ const gtagAbstract = (event_name: string, event_params: EventParams) => {
 };
 
 export const useConfigureGtagUserIdIfPlayground = (
-  conductorUser?: SimpleUserInfo,
+  agentmeshUser?: SimpleUserInfo,
 ) => {
   useEffect(() => {
-    if (isPlayground && window && window.gtag && conductorUser?.id) {
+    if (isPlayground && window && window.gtag && agentmeshUser?.id) {
       window.gtag("config", GTAG_LABEL, {
-        user_id: conductorUser.id,
+        user_id: agentmeshUser.id,
       });
     }
-  }, [conductorUser?.id]);
+  }, [agentmeshUser?.id]);
 };
 // flatten a given nested object
 type FlattenedObject = Record<string, any>;

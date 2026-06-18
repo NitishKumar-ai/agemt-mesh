@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/redis-api",
+  "name": "@agentmesh/redis-api",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

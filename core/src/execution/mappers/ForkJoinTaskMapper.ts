@@ -1,7 +1,7 @@
 import type { TaskMapper } from './TaskMapper.js';
 import type { TaskMapperContext } from './TaskMapperContext.js';
 import type { TaskModel } from '../types.js';
-import { TaskType } from '@conductor/common';
+import { TaskType } from '@agentmesh/common';
 import { getNextTask } from '../ExecutorUtils.js';
 
 export class ForkJoinTaskMapper implements TaskMapper {

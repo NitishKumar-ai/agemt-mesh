@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import type { RateLimitingDAO } from '../src/RateLimitingDAO.js';
-import type { TaskModel, TaskDef } from '@conductor/common';
+import type { TaskModel, TaskDef } from '@agentmesh/common';
 
 export function runRateLimitingDAOContractTests(
   daoProvider: () => Promise<RateLimitingDAO>,

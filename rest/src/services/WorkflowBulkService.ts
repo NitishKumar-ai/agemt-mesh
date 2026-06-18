@@ -1,4 +1,4 @@
-import { BulkResponse } from '@conductor/common';
+import { BulkResponse } from '@agentmesh/common';
 import type { WorkflowService } from './WorkflowService.js';
 
 export class WorkflowBulkService {

@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely';
-import { QueueDAO, Database } from '@conductor/common-persistence';
-import { Message } from '@conductor/common';
+import { QueueDAO, Database } from '@agentmesh/common-persistence';
+import { Message } from '@agentmesh/common';
 
 export class PostgresQueueDAO implements QueueDAO {
   constructor(private readonly db: Kysely<Database>) {}

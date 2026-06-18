@@ -1,6 +1,6 @@
 {
   "name": "concurrent_demo_workflow",
-  "description": "Scheduled workflow that intentionally takes longer (90s) than the firing interval (60s). Demonstrates that OSS Conductor's scheduler does NOT prevent concurrent executions: each minute a new workflow starts even if the previous one is still running.",
+  "description": "Scheduled workflow that intentionally takes longer (90s) than the firing interval (60s). Demonstrates that OSS AgentMesh's scheduler does NOT prevent concurrent executions: each minute a new workflow starts even if the previous one is still running.",
   "version": 1,
   "tasks": [
     {

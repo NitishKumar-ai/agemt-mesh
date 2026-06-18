@@ -57,7 +57,7 @@ export type TerminateWorkflowAction = {
   };
 };
 
-export type ConductorEvent = {
+export type AgentMeshEvent = {
   name: string;
   description?: string;
   event: string;

@@ -1,10 +1,10 @@
 /**
- * Port of `com.netflix.conductor.common.utils.EnvUtils`.
+ * Port of `com.agentmesh.agentmesh.common.utils.EnvUtils`.
  */
 export const SystemParameters = {
   CPEWF_TASK_ID: 'CPEWF_TASK_ID',
-  NETFLIX_ENV: 'NETFLIX_ENV',
-  NETFLIX_STACK: 'NETFLIX_STACK',
+  AGENTMESH_ENV: 'AGENTMESH_ENV',
+  AGENTMESH_STACK: 'AGENTMESH_STACK',
 } as const;
 export type SystemParameters = (typeof SystemParameters)[keyof typeof SystemParameters];
 

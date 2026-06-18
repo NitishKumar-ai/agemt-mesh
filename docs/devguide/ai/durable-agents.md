@@ -6,7 +6,7 @@ description: What makes a durable AI agent — persisted state, crash recovery, 
 
 An agent that runs in a single process is fragile. A crashed pod replays every LLM call from the beginning — burning tokens and money. A human approval that took three days is lost because a deploy bounced the server. A multi-hour research pipeline fails at step 47 and starts over from step 1.
 
-Conductor eliminates all of this. Every step of a durable agent workflow is persisted to storage as it completes. If the process dies, the agent resumes from the last completed step — not from the beginning.
+AgentMesh eliminates all of this. Every step of a durable agent workflow is persisted to storage as it completes. If the process dies, the agent resumes from the last completed step — not from the beginning.
 
 
 ## What gets persisted
@@ -18,33 +18,33 @@ Conductor eliminates all of this. Every step of a durable agent workflow is pers
 - Each **human decision**: who approved, when, with what data.
 - The **loop state**: iteration count, intermediate results, exit condition evaluation.
 
-No LLM calls are repeated unless a task explicitly failed and needs retry. A human approval that completed on Tuesday is still there on Wednesday, even if the cluster was replaced overnight. This is what makes Conductor-based agents production-ready.
+No LLM calls are repeated unless a task explicitly failed and needs retry. A human approval that completed on Tuesday is still there on Wednesday, even if the cluster was replaced overnight. This is what makes AgentMesh-based agents production-ready.
 
 
 ## JSON is AI-native
 
-LLMs natively produce JSON. Conductor natively executes JSON. This means an agent can generate its own execution plan as a workflow definition and Conductor will execute it immediately — no compilation, no deployment, no code generation step.
+LLMs natively produce JSON. AgentMesh natively executes JSON. This means an agent can generate its own execution plan as a workflow definition and AgentMesh will execute it immediately — no compilation, no deployment, no code generation step.
 
 ```
-LLM generates plan → JSON workflow definition → Conductor executes it
+LLM generates plan → JSON workflow definition → AgentMesh executes it
 ```
 
-This is not a workaround. It is the intended design, and it makes Conductor uniquely suited to agent orchestration:
+This is not a workaround. It is the intended design, and it makes AgentMesh uniquely suited to agent orchestration:
 
-**Runtime generation.** An LLM or planner emits a workflow definition as JSON, your code passes it to the [StartWorkflowRequest API](../../documentation/api/startworkflow.md), and Conductor validates, persists, and executes it immediately — without pre-registration. The workflow itself becomes a first-class output of the agent's planning step.
+**Runtime generation.** An LLM or planner emits a workflow definition as JSON, your code passes it to the [StartWorkflowRequest API](../../documentation/api/startworkflow.md), and AgentMesh validates, persists, and executes it immediately — without pre-registration. The workflow itself becomes a first-class output of the agent's planning step.
 
 **Inspectability.** Every agent run is a JSON document you can query, diff, and audit. You can see exactly what the LLM decided, what tools were called, what the human approved, and in what order. No opaque framework state — just data.
 
 **Versioning.** Workflow definitions are versioned. Run multiple agent versions concurrently, A/B test different tool configurations, and roll back without affecting running executions.
 
-**SDK/UI/API parity.** The same workflow can be defined via JSON file, SDK code, API call, or the Conductor UI. All paths produce the same stored JSON definition. An agent that generates workflows programmatically and a human who designs them in the UI are using the same runtime.
+**SDK/UI/API parity.** The same workflow can be defined via JSON file, SDK code, API call, or the AgentMesh UI. All paths produce the same stored JSON definition. An agent that generates workflows programmatically and a human who designs them in the UI are using the same runtime.
 
 
 ## Error handling and compensation
 
 Agents don't just read data — they take actions. They send emails, create tickets, charge cards, update databases. When a step fails after earlier steps have already produced side effects, you need compensation: the ability to undo or mitigate what was already done.
 
-Conductor provides this through the `failureWorkflow` field and the saga compensation pattern:
+AgentMesh provides this through the `failureWorkflow` field and the saga compensation pattern:
 
 ```json
 {
@@ -67,14 +67,14 @@ This is not error handling you bolt on later. It is built into the execution mod
 - **Timeout policies** that fail or alert when an LLM call or tool takes too long.
 - **`TERMINATE` task** to end execution early with a specific status and output when the agent detects an unrecoverable condition.
 
-Most AI frameworks have no concept of compensation. If your LangChain agent sends an email in step 3 and crashes in step 5, the email is already sent and there is no built-in mechanism to undo it. Conductor's failure workflows solve this.
+Most AI frameworks have no concept of compensation. If your LangChain agent sends an email in step 3 and crashes in step 5, the email is already sent and there is no built-in mechanism to undo it. AgentMesh's failure workflows solve this.
 
 
 ## Multi-agent composition
 
 Real-world AI systems rarely run as a single agent. A research agent delegates to specialist sub-agents. A customer service agent escalates to a billing agent. A planning agent spawns parallel analysis agents and synthesizes their results.
 
-Conductor models this with `SUB_WORKFLOW` tasks inside a `FORK`/`JOIN` for parallel execution:
+AgentMesh models this with `SUB_WORKFLOW` tasks inside a `FORK`/`JOIN` for parallel execution:
 
 ```json
 {
@@ -142,7 +142,7 @@ Conductor models this with `SUB_WORKFLOW` tasks inside a `FORK`/`JOIN` for paral
 
 Both sub-agents run concurrently. The `JOIN` waits for both to complete before the synthesize step runs. If you don't know the number of sub-agents ahead of time, use `DYNAMIC_FORK` instead — the LLM's plan output determines how many sub-agents to spawn.
 
-**What you get from multi-agent composition in Conductor:**
+**What you get from multi-agent composition in AgentMesh:**
 
 - **Parallel execution.** Sub-agents run concurrently via `FORK`/`JOIN` or `DYNAMIC_FORK`. The join collects all results before the next step proceeds.
 - **Full observability across the agent tree.** The parent workflow shows the status of each sub-agent. You can drill into any sub-workflow to see its individual LLM calls, tool calls, and decisions.
@@ -153,7 +153,7 @@ Both sub-agents run concurrently. The `JOIN` waits for both to complete before t
 
 ## Observability
 
-Every agent execution in Conductor is fully observable — not through external logging you have to set up, but as a built-in property of the execution model. Because every step is persisted, the observability is automatic and complete.
+Every agent execution in AgentMesh is fully observable — not through external logging you have to set up, but as a built-in property of the execution model. Because every step is persisted, the observability is automatic and complete.
 
 **What you can see for every agent run:**
 

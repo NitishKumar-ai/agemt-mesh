@@ -1,5 +1,5 @@
 ---
-description: "Configure JDBC tasks in Conductor to execute SQL queries and updates against relational databases. Supports SELECT, UPDATE, and parameterized queries with connection pooling."
+description: "Configure JDBC tasks in AgentMesh to execute SQL queries and updates against relational databases. Supports SELECT, UPDATE, and parameterized queries with connection pooling."
 ---
 
 # JDBC Task
@@ -16,7 +16,7 @@ Multiple named database connections can be configured, allowing workflows to int
 
 | Parameter          | Type         | Description                                       | Required / Optional  |
 | ------------------ | ------------ | ------------------------------------------------- | -------------------- |
-| connectionId       | String       | The name of the configured JDBC instance to use. Must match a name from `conductor.jdbc.instances` configuration. | Required (unless `integrationName` is used). |
+| connectionId       | String       | The name of the configured JDBC instance to use. Must match a name from `agentmesh.jdbc.instances` configuration. | Required (unless `integrationName` is used). |
 | integrationName    | String       | The name of a managed integration (multi-tenant). Used instead of `connectionId` for platform-managed connections. | Optional. |
 | type               | String       | The SQL operation type. Supported: `SELECT`, `UPDATE`. | Required. |
 | statement          | String       | The SQL statement to execute. Use `?` for parameterized queries. | Required. |
@@ -104,19 +104,19 @@ Example output:
 
 ## Connection configuration
 
-JDBC connections are configured using named instances under `conductor.jdbc.instances`.
+JDBC connections are configured using named instances under `agentmesh.jdbc.instances`.
 
 ### Quick setup
 
 ```yaml
-conductor:
+agentmesh:
   jdbc:
     instances:
       - name: "mysql-prod"
         connection:
           datasourceURL: "jdbc:mysql://prod-db:3306/myapp"
           jdbcDriver: "com.mysql.cj.jdbc.Driver"
-          user: "conductor"
+          user: "agentmesh"
           password: "secret"
           maximumPoolSize: 20
 

@@ -5,7 +5,7 @@ import { SignalResponseSchema } from './SignalResponse.js';
 import { TaskModelSchema } from './TaskModel.js';
 
 /**
- * Port of `org.conductoross.conductor.model.WorkflowRun`.
+ * Port of `org.agentmeshoss.agentmesh.model.WorkflowRun`.
  * Mentioned as `WorkflowModel` in the Transformation Plan.
  */
 export const WorkflowModelSchema = SignalResponseSchema.extend({

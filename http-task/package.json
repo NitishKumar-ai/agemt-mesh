@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/http-task",
+  "name": "@agentmesh/http-task",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",

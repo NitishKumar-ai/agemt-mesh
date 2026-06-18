@@ -1,5 +1,5 @@
 #
-# conductor:ui - Conductor UI
+# agentmesh:ui - AgentMesh UI
 #
 FROM node:20-alpine
 LABEL maintainer="Orkes OSS <oss@orkes.io>"

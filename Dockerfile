@@ -9,7 +9,7 @@ WORKDIR /app
 FROM base AS pruner
 RUN pnpm add -g turbo
 COPY . .
-RUN turbo prune @conductor/server-lite --docker
+RUN turbo prune @agentmesh/server-lite --docker
 
 # Stage 2: Install all dependencies and build
 FROM base AS builder
@@ -23,7 +23,7 @@ COPY --from=pruner /app/out/full/ .
 COPY turbo.json turbo.json
 
 # Build the target package and its dependencies
-RUN pnpm turbo build --filter=@conductor/server-lite...
+RUN pnpm turbo build --filter=@agentmesh/server-lite...
 
 # Stage 3: Production runtime
 FROM node:20-slim AS runner

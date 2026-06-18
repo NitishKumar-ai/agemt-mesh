@@ -1,5 +1,5 @@
 ---
-description: "Configure Dynamic Fork tasks in Conductor to run parallel branches determined at runtime. Supports different tasks per fork or the same task type."
+description: "Configure Dynamic Fork tasks in AgentMesh to run parallel branches determined at runtime. Supports different tasks per fork or the same task type."
 ---
 
 # Dynamic Fork
@@ -354,14 +354,14 @@ When using `forkTaskInputs`, you can use a simplified configuration without `dyn
         "forkTaskName": "HTTP",
         "forkTaskInputs": [
           {
-            "uri": "https://orkes-api-tester.orkesconductor.com/api",
+            "uri": "https://orkes-api-tester.orkesagentmesh.com/api",
             "method": "GET",
             "accept": "application/json",
             "contentType": "application/json",
             "encode": true
           },
           {
-            "uri": "https://orkes-api-tester.orkesconductor.com/api",
+            "uri": "https://orkes-api-tester.orkesagentmesh.com/api",
             "method": "GET",
             "accept": "application/json",
             "contentType": "application/json",

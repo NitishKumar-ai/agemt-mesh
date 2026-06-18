@@ -1,12 +1,12 @@
 ---
-description: "Conductor File API — create, upload, download, and inspect file payloads. Includes single-shot and multipart presigned URL flows."
+description: "AgentMesh File API — create, upload, download, and inspect file payloads. Includes single-shot and multipart presigned URL flows."
 ---
 
 # File API
 
-The File API manages binary file payloads associated with workflow executions. All endpoints use the base path `/api/files` and are gated by `conductor.file-storage.enabled=true` — when the feature is disabled, every endpoint returns `404`. See [File Storage](../advanced/file-storage.md) for backend setup.
+The File API manages binary file payloads associated with workflow executions. All endpoints use the base path `/api/files` and are gated by `agentmesh.file-storage.enabled=true` — when the feature is disabled, every endpoint returns `404`. See [File Storage](../advanced/file-storage.md) for backend setup.
 
-Path variables carry the bare `fileId` (a UUID assigned at creation). Request and response bodies carry the prefixed handle as `fileHandleId` (`conductor://file/<fileId>`); pass either form back in to subsequent calls — the server normalizes them.
+Path variables carry the bare `fileId` (a UUID assigned at creation). Request and response bodies carry the prefixed handle as `fileHandleId` (`agentmesh://file/<fileId>`); pass either form back in to subsequent calls — the server normalizes them.
 
 Download access is *workflow-family scoped*: callers must supply a `workflowId` that belongs to the same workflow family (self, ancestors, or descendants) as the file's owning workflow. Cross-family access returns `403 Forbidden`.
 
@@ -41,12 +41,12 @@ curl -X POST 'http://localhost:8080/api/files' \
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
   "fileName": "input.mp4",
   "contentType": "video/mp4",
   "storageType": "S3",
   "uploadStatus": "UPLOADING",
-  "uploadUrl": "https://bucket.s3.amazonaws.com/conductor/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
+  "uploadUrl": "https://bucket.s3.amazonaws.com/agentmesh/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
   "uploadUrlExpiresAt": 1700000060000,
   "createdAt": 1700000000000
 }
@@ -72,8 +72,8 @@ curl 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-111111111111/uploa
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
-  "uploadUrl": "https://bucket.s3.amazonaws.com/conductor/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "uploadUrl": "https://bucket.s3.amazonaws.com/agentmesh/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
   "expiresAt": 1700000060000
 }
 ```
@@ -96,7 +96,7 @@ curl -X POST 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-1111111111
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
   "uploadStatus": "UPLOADED",
   "contentHash": "d41d8cd98f00b204e9800998ecf8427e"
 }
@@ -127,8 +127,8 @@ curl 'http://localhost:8080/api/files/3a5b8c2d-1234-5678-9abc-def012345678/a1b2c
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
-  "downloadUrl": "https://bucket.s3.amazonaws.com/conductor/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "downloadUrl": "https://bucket.s3.amazonaws.com/agentmesh/3a5b8c2d.../a1b2c3d4...?X-Amz-Signature=...",
   "expiresAt": 1700000060000
 }
 ```
@@ -153,7 +153,7 @@ curl 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-111111111111'
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
   "fileName": "input.mp4",
   "contentType": "video/mp4",
   "contentHash": "d41d8cd98f00b204e9800998ecf8427e",
@@ -188,7 +188,7 @@ curl -X POST 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-1111111111
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
   "uploadId": "S3-multipart-upload-id-string",
   "uploadUrl": null
 }
@@ -210,8 +210,8 @@ curl 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-111111111111/multi
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
-  "uploadUrl": "https://bucket.s3.amazonaws.com/conductor/.../?partNumber=1&uploadId=...&X-Amz-Signature=...",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "uploadUrl": "https://bucket.s3.amazonaws.com/agentmesh/.../?partNumber=1&uploadId=...&X-Amz-Signature=...",
   "expiresAt": 1700000060000
 }
 ```
@@ -236,7 +236,7 @@ curl -X POST 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-1111111111
 
 ```json
 {
-  "fileHandleId": "conductor://file/a1b2c3d4-5678-90ab-cdef-111111111111",
+  "fileHandleId": "agentmesh://file/a1b2c3d4-5678-90ab-cdef-111111111111",
   "uploadStatus": "UPLOADED",
   "contentHash": "d41d8cd98f00b204e9800998ecf8427e"
 }
@@ -250,7 +250,7 @@ curl -X POST 'http://localhost:8080/api/files/a1b2c3d4-5678-90ab-cdef-1111111111
 |---|---|
 | `400 Bad Request` | Missing `workflowId` on create; download requested before file is `UPLOADED`. |
 | `403 Forbidden` | Caller's `workflowId` is not in the file's workflow family. |
-| `404 Not Found` | Unknown `fileId`, or `conductor.file-storage.enabled=false`. |
+| `404 Not Found` | Unknown `fileId`, or `agentmesh.file-storage.enabled=false`. |
 | `409 Conflict` | Confirm-upload called on a file already in `UPLOADED` status. |
 | `413 Payload Too Large` | `FileStorageException` raised by a backend (e.g., upstream size enforcement). |
 | `500 Internal Server Error` | Backend reports object missing on confirm/complete; other transient/non-transient backend errors. |

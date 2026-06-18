@@ -1,5 +1,5 @@
-import { isWorkflowTerminal, isTaskTerminal } from '@conductor/common';
-import type { TaskModel, WorkflowModel } from '@conductor/core';
+import { isWorkflowTerminal, isTaskTerminal } from '@agentmesh/common';
+import type { TaskModel, WorkflowModel } from '@agentmesh/core';
 
 interface Stmt {
   run(...args: unknown[]): { changes: number };

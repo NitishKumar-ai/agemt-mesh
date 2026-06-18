@@ -1,9 +1,9 @@
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration, AgentRuntimeMigration } from '@conductor/common-persistence';
-import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@conductor/sqlite-persistence';
-import { WorkflowService, TaskService } from '@conductor/rest';
+import type { Database } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration } from '@agentmesh/common-persistence';
+import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@agentmesh/sqlite-persistence';
+import { WorkflowService, TaskService } from '@agentmesh/rest';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './AppModule.js';
@@ -20,7 +20,7 @@ import {
   createAgentDef,
   BudgetManager,
   createCommitGuardTools
-} from '@conductor/agent-runtime';
+} from '@agentmesh/agent-runtime';
 import {
   LLMs,
   ModelClient,
@@ -62,9 +62,9 @@ import {
   SwitchTaskMapper,
   TerminateTaskMapper,
   WaitTaskMapper
-} from '@conductor/core';
-import { TelemetryService } from '@conductor/telemetry';
-import { SandboxSystemTask } from '@conductor/sandbox';
+} from '@agentmesh/core';
+import { TelemetryService } from '@agentmesh/telemetry';
+import { SandboxSystemTask } from '@agentmesh/sandbox';
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
 import { MetadataMapperAdapter } from './MetadataMapperAdapter.js';
 import express from 'express';
@@ -97,7 +97,7 @@ function loadConfig(): Config {
   return {
     port: parseInt(process.env.PORT ?? '8080', 10),
     dbPath: process.env.DB_PATH ?? ':memory:',
-    version: process.env.CONDUCTOR_VERSION ?? '0.0.0',
+    version: process.env.AGENTMESH_VERSION ?? '0.0.0',
     corsOrigins: (process.env.CORS_ORIGINS ?? '*').split(',').map(s => s.trim()),
     logFormat: process.env.LOG_FORMAT ?? 'dev',
     langfusePublicKey: process.env.LANGFUSE_PUBLIC_KEY,
@@ -113,7 +113,7 @@ function printBanner(cfg: Config): void {
   const border = '='.repeat(58);
   console.log(`
 ${border}
-  Conductor server-lite
+  AgentMesh server-lite
   Version : ${cfg.version}
   Port    : ${cfg.port}
   DB      : ${cfg.dbPath === ':memory:' ? 'in-memory SQLite' : cfg.dbPath}
@@ -147,7 +147,7 @@ async function main(): Promise<void> {
 
   // -- Telemetry (initialise before anything else so spans start from boot) --
   const telemetry = new TelemetryService({
-    serviceName: 'conductor-server-lite',
+    serviceName: 'agentmesh-server-lite',
     langfusePublicKey: cfg.langfusePublicKey,
     langfuseSecretKey: cfg.langfuseSecretKey,
     langfuseBaseUrl: cfg.langfuseBaseUrl,
@@ -165,18 +165,22 @@ async function main(): Promise<void> {
     }),
   });
 
+  console.log('Running migrations...');
   await InitialSchemaMigration.up(db as never);
   await AgentRuntimeMigration.up(db as never);
+  console.log('Migrations complete.');
 
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);
   const queueDAO = new SqliteQueueDAO(db as never);
 
   // --- Sync Engine Adapters ---
+  console.log('Initializing sync adapters...');
   const syncAdapter = new SyncSqliteAdapter(sqliteDb as any);
   const metadataMapper = new MetadataMapperAdapter(sqliteDb as any);
 
   // --- AI Module Initialisation ---
+  console.log('Initializing AI modules...');
   const aiProvider = new AIModelProvider([
     {
       get: () => new AnthropicProvider(cfg.anthropicApiKey || 'dummy-key')
@@ -200,7 +204,8 @@ async function main(): Promise<void> {
   const llms = new LLMs([noopLoader as any], noopValidator as any, aiProvider);
   const budgetManager = new BudgetManager();
 
-  // --- Conductor Execution Engine Wiring ---
+  // --- AgentMesh Execution Engine Wiring ---
+  console.log('Initializing execution engine wiring...');
   const systemTasks = [
     new Decision(),
     new DoWhile(),
@@ -312,6 +317,7 @@ async function main(): Promise<void> {
 
   // Start sweeper loop
   const sweeperState = { running: true };
+  console.log('Starting sweeper loop...');
   const sweeperPromise = sweeperLoop(syncAdapter, sweeper, sweeperState);
 
   // Lightweight DB probe: SELECT 1 from queue table
@@ -321,6 +327,7 @@ async function main(): Promise<void> {
 
   const startTime = Date.now();
   
+  console.log('Creating NestJS app...');
   const app = await NestFactory.create(AppModule.register({
     executionDAO: executionDAO as never,
     metadataDAO: metadataDAO as never,
@@ -330,12 +337,12 @@ async function main(): Promise<void> {
     dbProbe,
     startTime,
     workflowExecutor: executorOps as any
-  }), { cors: { origin: cfg.corsOrigins }, logger: false });
+  }), { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] });
 
   // OpenAPI/Swagger
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Conductor API')
-    .setDescription('The Conductor server-lite API')
+    .setTitle('AgentMesh API')
+    .setDescription('The AgentMesh server-lite API')
     .setVersion(cfg.version)
     .addTag('workflows')
     .addTag('tasks')
@@ -350,12 +357,13 @@ async function main(): Promise<void> {
   expressApp.use(express.static(path.join(__dirname, '..', 'public')));
 
   // --- Agent Runtime Wiring ---
+  console.log('Initializing agent runtime wiring...');
   // Resolve services from NestJS DI
   const workflowService = app.get(WorkflowService);
   const taskService = app.get(TaskService);
 
   const eventBus = new InProcessEventBus();
-  const killswitch = new DbKillswitch(executionDAO as never);
+  const killswitch = new DbKillswitch(db as never);
   const systemTools = new ToolRegistry();
   
   // Register CommitGuard tools
@@ -459,8 +467,10 @@ async function main(): Promise<void> {
 
   expressApp.use('/api/agents', agentRouter);
 
+  console.log('Initializing NestJS app...');
   await app.init();
   const server = app.getHttpServer();
+  console.log('Starting HTTP server...');
   await app.listen(cfg.port);
   console.log(`Listening on http://localhost:${cfg.port}`);
 

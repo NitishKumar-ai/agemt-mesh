@@ -1,5 +1,5 @@
 {
-  "name": "@conductor/consumer",
+  "name": "@agentmesh/consumer",
   "version": "0.0.0",
   "private": true,
   "main": "dist/index.js",
@@ -10,6 +10,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@conductor/hello": "workspace:*"
+    "@agentmesh/hello": "workspace:*"
   }
 }
