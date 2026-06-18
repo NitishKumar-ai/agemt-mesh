@@ -14,9 +14,15 @@
     "@conductor/common-persistence": "workspace:*",
     "@conductor/core": "workspace:*",
     "@conductor/sqlite-persistence": "workspace:*",
-    "express": "^5.2.1"
+    "@nestjs/common": "^11.1.27",
+    "@nestjs/core": "^11.1.27",
+    "@nestjs/platform-express": "^11.1.27",
+    "express": "^5.2.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@nestjs/swagger": "^8.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/supertest": "^7.2.0",

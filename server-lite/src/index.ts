@@ -3,7 +3,10 @@ import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@conductor/common-persistence';
 import { InitialSchemaMigration } from '@conductor/common-persistence';
 import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@conductor/sqlite-persistence';
-import { createApp, WorkflowService, TaskService } from '@conductor/rest';
+import { WorkflowService, TaskService } from '@conductor/rest';
+import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './AppModule.js';
 import {
   AgentWorkerPool,
   AgentWorkflowExecutor,
@@ -16,6 +19,13 @@ import {
   ProcessManager,
   createAgentDef
 } from '@conductor/agent-runtime';
+import {
+  LLMs,
+  ModelClient,
+  AIModelProvider,
+  AnthropicProvider,
+  GeminiProvider
+} from '@agentmesh/ai';
 import { TelemetryService } from '@conductor/telemetry';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -30,6 +40,9 @@ interface Config {
   langfusePublicKey?: string;
   langfuseSecretKey?: string;
   langfuseBaseUrl?: string;
+  // AI Provider Keys
+  anthropicApiKey?: string;
+  geminiApiKey?: string;
 }
 
 function loadConfig(): Config {
@@ -42,6 +55,8 @@ function loadConfig(): Config {
     langfusePublicKey: process.env.LANGFUSE_PUBLIC_KEY,
     langfuseSecretKey: process.env.LANGFUSE_SECRET_KEY,
     langfuseBaseUrl: process.env.LANGFUSE_BASE_URL,
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+    geminiApiKey: process.env.GEMINI_API_KEY,
   };
 }
 
@@ -93,11 +108,34 @@ async function main(): Promise<void> {
     await queueDAO.getSize('__probe__');
   };
 
-  const app = createApp({ executionDAO, metadataDAO, queueDAO, pollDataDAO: metadataDAO as never, dbProbe }, cfg.version);
+  const startTime = Date.now();
+  
+  const app = await NestFactory.create(AppModule.register({
+    executionDAO: executionDAO as never,
+    metadataDAO: metadataDAO as never,
+    queueDAO: queueDAO as never,
+    pollDataDAO: metadataDAO as never,
+    version: cfg.version,
+    dbProbe,
+    startTime
+  }), { cors: { origin: cfg.corsOrigins }, logger: false });
+
+  // --- OpenAPI / Swagger ---
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Conductor Agent Mesh API')
+    .setDescription('Durable workflow engine for the 24/7 Agent Mesh OS')
+    .setVersion(cfg.version)
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use(morgan(cfg.logFormat));
 
   // --- Agent Runtime Wiring ---
-  const workflowService = new WorkflowService(executionDAO as never, metadataDAO as never, queueDAO as never);
-  const taskService = new TaskService(executionDAO as never, queueDAO as never, metadataDAO as never, metadataDAO as never);
+  // Resolve services from NestJS DI
+  const workflowService = app.get(WorkflowService);
+  const taskService = app.get(TaskService);
 
   const eventBus = new InProcessEventBus();
   const killswitch = new DbKillswitch(executionDAO as never);
@@ -120,12 +158,35 @@ async function main(): Promise<void> {
   const agentRegistry = new AgentRegistry();
   const agentExecutor = new AgentWorkflowExecutor(taskService as never, workflowService as never);
 
+  // --- AI Module Initialisation ---
+  const aiProvider = new AIModelProvider([
+    {
+      get: () => new AnthropicProvider(cfg.anthropicApiKey || 'dummy-key')
+    },
+    {
+      get: () => new GeminiProvider(cfg.geminiApiKey || 'dummy-key')
+    }
+  ]);
+  const modelClient = new ModelClient(aiProvider);
+  
+  // Minimal implementations for LLMHelper requirements
+  const noopLoader = {
+    supports: () => false,
+    download: () => new Uint8Array(),
+    upload: () => 'noop'
+  };
+  const noopValidator = {
+    validate: () => []
+  };
+
+  const llms = new LLMs([noopLoader], noopValidator, aiProvider);
+
   // Register CommitGuardLite reference agent
   agentRegistry.register(createAgentDef({
     agentId: 'commit_guard_lite',
     name: 'CommitGuardLite',
     description: 'A reference agent that reviews commits for security issues.',
-    modelExecute: 'gpt-4',
+    modelExecute: 'claude-3-7-sonnet-20250219',
     tools: [
       {
         name: 'git_diff',
@@ -161,7 +222,7 @@ async function main(): Promise<void> {
     pollIntervalMs: 10000
   });
   
-  // Dummy LLM for testing
+  // Dummy LLM for testing (legacy fallback)
   const dummyLlm = async (model: string, prompt: string) => {
     console.log(`[LLM ${model}] received prompt length ${prompt.length}`);
     return JSON.stringify({ action: 'finish', result: 'Agent executed successfully.' });
@@ -171,6 +232,8 @@ async function main(): Promise<void> {
     taskService as never,
     workflowService as never,
     dummyLlm,
+    llms,
+    modelClient,
     killswitch,
     eventBus,
     systemTools,
@@ -187,25 +250,18 @@ async function main(): Promise<void> {
     agentExecutor as never
   );
 
-  app.use(cors({ origin: cfg.corsOrigins }));
-  app.use(morgan(cfg.logFormat));
-  
-  app.use('/api/agents', agentRouter);
+  expressApp.use('/api/agents', agentRouter);
 
-  const server = app.listen(cfg.port, () => {
-    console.log(`Listening on http://localhost:${cfg.port}`);
-  });
+  await app.init();
+  const server = app.getHttpServer();
+  await app.listen(cfg.port);
+  console.log(`Listening on http://localhost:${cfg.port}`);
 
   const processManager = new ProcessManager();
   
   processManager.register({
     name: 'http-server',
-    shutdown: () => new Promise<void>((resolve, reject) => {
-      server.close((err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    })
+    shutdown: () => app.close()
   });
 
   processManager.register({
