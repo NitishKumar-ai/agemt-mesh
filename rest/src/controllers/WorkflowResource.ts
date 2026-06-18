@@ -9,9 +9,13 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import type { WorkflowModel } from '@conductor/common';
 import { WorkflowService } from '../services/WorkflowService.js';
 
+@ApiTags('workflows')
 @Controller('api/workflow')
 export class WorkflowResource {
   constructor(private readonly workflowService: WorkflowService) {}
@@ -21,6 +25,21 @@ export class WorkflowResource {
     try {
       const workflowId = await this.workflowService.startWorkflow(body);
       return workflowId;
+    } catch (err) {
+      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('execute/:name/:version')
+  async executeWorkflow(
+    @Param('name') name: string,
+    @Param('version', ParseIntPipe) version: number,
+    @Query('requestId') requestId?: string,
+    @Query('waitUntilTaskRef') _waitUntilTaskRef?: string,
+    @Body() body?: Record<string, unknown>,
+  ): Promise<WorkflowModel> {
+    try {
+      return await this.workflowService.executeWorkflow({ name, version, input: body ?? {}, requestId });
     } catch (err) {
       throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
     }

@@ -1,0 +1,14 @@
+{
+  "name": "@conductor/chaos-suite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@conductor/common": "workspace:*",
+    "axios": "^1.6.0"
+  }
+}

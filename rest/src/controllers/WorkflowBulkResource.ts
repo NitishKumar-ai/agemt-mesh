@@ -1,59 +1,41 @@
-import {
-  Controller,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Body, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { WorkflowBulkService } from '../services/WorkflowBulkService.js';
 
+@ApiTags('workflows')
 @Controller('api/workflow/bulk')
 export class WorkflowBulkResource {
-  constructor(private readonly bulkService: WorkflowBulkService) {}
+  constructor(private readonly workflowBulkService: WorkflowBulkService) {}
 
-  @Put('pause')
-  async pauseWorkflow(@Body() body: any): Promise<any> {
-    return await this.bulkService.pauseWorkflow(body);
+  @Post('pause')
+  async pauseWorkflow(@Body() workflowIds: string[]): Promise<any> {
+    return await this.workflowBulkService.pauseWorkflow(workflowIds);
   }
 
-  @Put('resume')
-  async resumeWorkflow(@Body() body: any): Promise<any> {
-    return await this.bulkService.resumeWorkflow(body);
-  }
-
-  @Post('terminate')
-  async terminate(
-    @Body() body: any,
-    @Query('reason') reason: string,
-  ): Promise<any> {
-    return await this.bulkService.terminate(body, reason);
-  }
-
-  @Delete('remove')
-  async deleteWorkflow(
-    @Body() body: any,
-    @Query('archiveWorkflow') archiveStr: string,
-  ): Promise<any> {
-    const archiveWorkflow = archiveStr !== 'false';
-    return await this.bulkService.deleteWorkflow(body, archiveWorkflow);
+  @Post('resume')
+  async resumeWorkflow(@Body() workflowIds: string[]): Promise<any> {
+    return await this.workflowBulkService.resumeWorkflow(workflowIds);
   }
 
   @Post('restart')
-  async restart(
-    @Body() body: any,
+  async restartWorkflow(
+    @Body() workflowIds: string[],
     @Query('useLatestDefinitions') useLatestStr: string,
   ): Promise<any> {
     const useLatest = useLatestStr === 'true';
-    return await this.bulkService.restart(body, useLatest);
+    return await this.workflowBulkService.restartWorkflow(workflowIds, useLatest);
   }
 
   @Post('retry')
-  async retry(
-    @Body() body: any,
-    @Query('resumeSubworkflowTasks') resumeSubStr: string,
+  async retryWorkflow(@Body() workflowIds: string[]): Promise<any> {
+    return await this.workflowBulkService.retryWorkflow(workflowIds);
+  }
+
+  @Post('terminate')
+  async terminateWorkflow(
+    @Body() workflowIds: string[],
+    @Query('reason') reason: string,
   ): Promise<any> {
-    const resumeSub = resumeSubStr === 'true';
-    return await this.bulkService.retry(body, resumeSub);
+    return await this.workflowBulkService.terminateWorkflow(workflowIds, reason);
   }
 }

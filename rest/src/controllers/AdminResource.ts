@@ -6,9 +6,11 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AdminService } from '../services/AdminService.js';
 
+@ApiTags('admin')
 @Controller('api/admin')
 export class AdminResource {
   constructor(private readonly adminService: AdminService) {}

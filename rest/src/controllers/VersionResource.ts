@@ -1,13 +1,14 @@
-import { Controller, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { VersionService } from '../services/VersionService.js';
 
+@ApiTags('metadata')
 @Controller('api/version')
 export class VersionResource {
   constructor(private readonly versionService: VersionService) {}
 
   @Get()
-  getVersion(@Res() res: Response): void {
-    res.type('text/plain').send(this.versionService.getVersion());
+  getVersion(): string {
+    return this.versionService.getVersion();
   }
 }
