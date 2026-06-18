@@ -13,7 +13,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@conductor/agent-runtime": "workspace:*",
     "@conductor/common": "workspace:*",
     "@conductor/common-persistence": "workspace:*",
     "@conductor/core": "workspace:*",
