@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config';
  */
 export const sharedConfig = defineConfig({
   test: {
-    include: ['src/test/**/*.test.ts', 'tests/**/*.test.ts', 'test/**/*.test.ts'],
+    include: ['src/test/**/*.test.ts', 'tests/**/*.test.ts', 'test/**/*.test.ts', '**/src/test/**/*Test.ts', '**/src/testFixtures/**/*Test.ts', '**/src/test/**/*.test.ts', '**/src/testFixtures/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],
     // Packages not yet ported have no tests; don't fail the pipeline for them.
     passWithNoTests: true,
