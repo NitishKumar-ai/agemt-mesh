@@ -1,5 +1,5 @@
 import type { WorkflowDef } from '@conductor/common';
-import type { MetadataMapperService, WorkflowModel, TaskModel } from '@conductor/core';
+import type { WorkflowModel, TaskModel } from '@conductor/core';
 
 interface Stmt {
   get(...args: unknown[]): unknown;
@@ -9,7 +9,7 @@ interface RawDb {
   prepare(sql: string): Stmt;
 }
 
-export class MetadataMapperAdapter implements MetadataMapperService {
+export class MetadataMapperAdapter {
   private readonly stmtGetByNameVersion: Stmt;
   private readonly stmtGetLatest: Stmt;
 

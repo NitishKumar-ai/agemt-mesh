@@ -1,4 +1,8 @@
-# Agent Mesh OS
+# Agent Mesh OS (Python Legacy)
+
+> [!WARNING]
+> **DEPRECATED:** This Python-based implementation of the Agent Mesh OS is officially deprecated as of Phase 8. 
+> All new development and production traffic should move to the [TypeScript Agent Mesh OS](../server-lite/).
 
 The 24/7 autonomous agent mesh orchestrated on top of **DBOS**, designed for durability, observability, and human-in-the-loop safety.
 

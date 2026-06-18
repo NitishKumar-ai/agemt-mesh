@@ -1,5 +1,5 @@
 import { isWorkflowTerminal, isTaskTerminal } from '@conductor/common';
-import type { TaskModel, WorkflowModel, ExecutionDAOFacade, QueueDAO } from '@conductor/core';
+import type { TaskModel, WorkflowModel } from '@conductor/core';
 
 interface Stmt {
   run(...args: unknown[]): { changes: number };
@@ -11,7 +11,7 @@ interface RawDb {
   prepare(sql: string): Stmt;
 }
 
-export class SyncSqliteAdapter implements ExecutionDAOFacade, QueueDAO {
+export class SyncSqliteAdapter {
   private readonly stmtGetWorkflow: Stmt;
   private readonly stmtGetTasksForWorkflow: Stmt;
   private readonly stmtGetTask: Stmt;

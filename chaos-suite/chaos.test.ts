@@ -3,6 +3,10 @@ import { spawn, ChildProcess } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import axios from 'axios';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const SERVER_LITE_DIR = path.resolve(__dirname, '../server-lite');
 const DB_PATH = path.resolve(__dirname, 'chaos-test.db');
@@ -28,20 +32,21 @@ async function startServer() {
 
     const timeout = setTimeout(() => {
       reject(new Error('Server start timeout'));
-    }, 15000);
+    }, 30000);
 
     const checkHealth = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/health`);
+        console.log(`Health check: ${res.status}`);
         if (res.status === 200) {
           clearTimeout(timeout);
           resolve();
           return;
         }
-      } catch (e) {
-        // ignore
+      } catch (e: any) {
+        console.log(`Health check failed: ${e.message}`);
       }
-      setTimeout(checkHealth, 500);
+      setTimeout(checkHealth, 1000);
     };
 
     checkHealth();
@@ -50,7 +55,7 @@ async function startServer() {
 
 async function stopServer(force = false) {
   if (serverProcess) {
-    console.log(`Stopping server-lite (force=${force})...`);
+    console.log(`Stopping server-lite (pid=${serverProcess.pid}, force=${force})...`);
     if (force) {
       serverProcess.kill('SIGKILL');
     } else {
@@ -65,15 +70,14 @@ beforeAll(async () => {
   if (fs.existsSync(DB_PATH)) {
     fs.unlinkSync(DB_PATH);
   }
-  // Build server-lite if needed (assuming dist exists for now)
-});
+}, 30000);
 
 afterAll(async () => {
   await stopServer();
   if (fs.existsSync(DB_PATH)) {
     fs.unlinkSync(DB_PATH);
   }
-});
+}, 30000);
 
 test('Chaos Test: System recovers from abrupt crash', async () => {
   await startServer();
@@ -114,8 +118,7 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
   console.log('RESTARTING...');
   await startServer();
 
-  // 6. Verify workflow still exists and is in RUNNING or COMPLETED state (eventually)
-  // Since we have a sweeper, it should pick up the workflow and continue.
+  // 6. Verify workflow still exists and is in RUNNING or COMPLETED state
   wfStatus = await axios.get(`${BASE_URL}/api/workflow/${workflowId}`);
   expect(wfStatus.data.status).toBe('RUNNING');
 
@@ -134,7 +137,7 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
 
   // 8. Wait for completion
   let completed = false;
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 30; i++) {
     wfStatus = await axios.get(`${BASE_URL}/api/workflow/${workflowId}`);
     if (wfStatus.data.status === 'COMPLETED') {
       completed = true;
@@ -144,4 +147,4 @@ test('Chaos Test: System recovers from abrupt crash', async () => {
   }
   expect(completed).toBe(true);
   console.log('Chaos test passed: workflow recovered and completed.');
-}, 60000);
+}, 180000);

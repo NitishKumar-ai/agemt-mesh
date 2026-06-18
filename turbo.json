@@ -12,6 +12,10 @@
     },
     "lint": {
       "inputs": ["src/**/*.ts", "tests/**/*.ts", "test/**/*.ts"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

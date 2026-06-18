@@ -1,7 +1,7 @@
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@conductor/common-persistence';
-import { InitialSchemaMigration } from '@conductor/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration } from '@conductor/common-persistence';
 import { SqliteExecutionDAO, SqliteMetadataDAO, SqliteQueueDAO } from '@conductor/sqlite-persistence';
 import { WorkflowService, TaskService } from '@conductor/rest';
 import { NestFactory } from '@nestjs/core';
@@ -166,6 +166,7 @@ async function main(): Promise<void> {
   });
 
   await InitialSchemaMigration.up(db as never);
+  await AgentRuntimeMigration.up(db as never);
 
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);
