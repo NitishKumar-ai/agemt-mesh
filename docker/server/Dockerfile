@@ -1,89 +1,143 @@
+# ---------------------------------------------------------------------------
+# agentmesh:server -- AgentMesh Server (TypeScript/NestJS)
 #
-# agentmesh:server - AgentMesh Server + UI
+# Multi-stage build:
+#   1. builder  -- installs all deps, compiles TypeScript via turbo
+#   2. runtime  -- minimal Node image, production deps only
 #
-# Two modes:
-#   Default:        Builds JAR and UI from source (docker-compose, local dev)
-#   PREBUILT=true:  Skips builds, uses pre-built artifacts (CI multi-arch)
+# Build context is the project root (../) when invoked from docker-compose:
+#   docker compose -f docker/docker-compose.yaml up --build
 #
+# Standalone:
+#   docker build -t agentmesh:server -f docker/server/Dockerfile .
+# ---------------------------------------------------------------------------
 
-# ===========================================================================================================
-# 0. Builder stage
-# ===========================================================================================================
-FROM azul/zulu-openjdk-debian:21 AS builder
+# ---------------------  Stage 1: builder  -----------------------------------
+FROM node:20-alpine AS builder
 
-ARG PREBUILT=false
-ARG INDEXING_BACKEND=elasticsearch
+WORKDIR /build
 
-LABEL maintainer="Orkes OSS <oss@orkes.io>"
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-COPY . /agentmesh
-WORKDIR /agentmesh
+# Copy workspace manifests first for layer caching
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY tsconfig.base.json vitest.shared.ts turbo.json ./
+COPY eslint.config.js .prettierrc ./
 
-RUN if [ "$PREBUILT" = "true" ]; then \
-      rm -rf server/build/libs && mkdir -p server/build/libs && \
-      cp docker/server/libs/agentmesh-server.jar server/build/libs/agentmesh-server-boot.jar && \
-      echo "Using pre-built server JAR"; \
-    else \
-      ./gradlew build -x test -x spotlessCheck -x shadowJar \
-        -PindexingBackend=${INDEXING_BACKEND} \
-        -Dorg.gradle.jvmargs=-Xmx2g \
-        --no-daemon --no-parallel; \
-    fi
+# Copy package.json + tsconfig files for all workspace packages.
+# Packages with tsconfig.json + tsconfig.build.json:
+COPY common/package.json              common/tsconfig.json          common/tsconfig.build.json          ./common/
+COPY common-persistence/package.json  common-persistence/tsconfig.json  common-persistence/tsconfig.build.json  ./common-persistence/
+COPY core/package.json                core/tsconfig.json            core/tsconfig.build.json            ./core/
+COPY ai/package.json                  ai/tsconfig.json              ai/tsconfig.build.json              ./ai/
+COPY agent-runtime/package.json       agent-runtime/tsconfig.json   agent-runtime/tsconfig.build.json   ./agent-runtime/
+COPY telemetry/package.json           telemetry/tsconfig.json       telemetry/tsconfig.build.json       ./telemetry/
+COPY secrets/package.json             secrets/tsconfig.json         secrets/tsconfig.build.json         ./secrets/
+COPY sandbox/package.json             sandbox/tsconfig.json         sandbox/tsconfig.build.json         ./sandbox/
 
+# Packages with tsconfig.json only:
+COPY sqlite-persistence/package.json  sqlite-persistence/tsconfig.json  ./sqlite-persistence/
+COPY postgres-persistence/package.json postgres-persistence/tsconfig.json ./postgres-persistence/
+COPY rest/package.json                rest/tsconfig.json            ./rest/
+COPY http-task/package.json           http-task/tsconfig.json       ./http-task/
+COPY json-jq-task/package.json        json-jq-task/tsconfig.json    ./json-jq-task/
+COPY workflow-event-listener/package.json workflow-event-listener/tsconfig.json ./workflow-event-listener/
+COPY task-status-listener/package.json task-status-listener/tsconfig.json ./task-status-listener/
+COPY amqp/package.json                amqp/tsconfig.json            ./amqp/
+COPY server-lite/package.json         server-lite/tsconfig.json     ./server-lite/
 
-# ===========================================================================================================
-# 1. UI builder stage
-# ===========================================================================================================
-FROM node:lts AS ui-builder
+RUN pnpm install --frozen-lockfile
 
-ARG PREBUILT=false
-ARG YARN_OPTS
+# Copy source for every package
+COPY common/src                 ./common/src
+COPY common/test                ./common/test
+COPY common-persistence/src     ./common-persistence/src
+COPY sqlite-persistence/src     ./sqlite-persistence/src
+COPY postgres-persistence/src   ./postgres-persistence/src
+COPY core/src                   ./core/src
+COPY core/test                  ./core/test
+COPY rest/src                   ./rest/src
+COPY ai/src                     ./ai/src
+COPY agent-runtime/src          ./agent-runtime/src
+COPY telemetry/src              ./telemetry/src
+COPY secrets/src                ./secrets/src
+COPY sandbox/src                ./sandbox/src
+COPY http-task/src              ./http-task/src
+COPY json-jq-task/src           ./json-jq-task/src
+COPY workflow-event-listener/src ./workflow-event-listener/src
+COPY task-status-listener/src   ./task-status-listener/src
+COPY amqp/src                   ./amqp/src
+COPY server-lite/src            ./server-lite/src
 
-LABEL maintainer="Orkes OSS <oss@orkes.io>"
+# Build (turbo resolves dependency order automatically)
+RUN pnpm turbo run build --filter=@agentmesh/server-lite...
 
-COPY ui /agentmesh/ui
-WORKDIR /agentmesh/ui
+# ---------------------  Stage 2: runtime  -----------------------------------
+FROM node:20-alpine AS runtime
 
-RUN if [ "$PREBUILT" = "false" ]; then \
-      corepack enable && corepack prepare yarn@stable --activate && \
-      export REACT_APP_MONACO_EDITOR_USING_CDN=false && \
-      export REACT_APP_ENABLE_ERRORS_INSPECTOR=true && \
-      yarn config set network-timeout 600000 -g && \
-      yarn ${YARN_OPTS} install && cp -r node_modules/monaco-editor public/ && yarn ${YARN_OPTS} build; \
-    else \
-      echo "Using pre-built UI assets"; \
-    fi
+RUN addgroup -g 1001 agentmesh && adduser -u 1001 -G agentmesh -s /bin/sh -D agentmesh
 
-# ===========================================================================================================
-# 2. Final stage
-# ===========================================================================================================
-FROM debian:stable-slim
+WORKDIR /app
 
-LABEL maintainer="Orkes OSS <oss@orkes.io>"
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openjdk-21-jre-headless nginx curl ca-certificates \
-    && rm -f /etc/nginx/sites-enabled/default \
-    && rm -rf /var/lib/apt/lists/*
+# Workspace skeleton for pnpm workspace resolution
+COPY --from=builder /build/package.json             ./package.json
+COPY --from=builder /build/pnpm-workspace.yaml      ./pnpm-workspace.yaml
+COPY --from=builder /build/pnpm-lock.yaml           ./pnpm-lock.yaml
 
-# Make app folders
-RUN mkdir -p /app/config /app/logs /app/libs
+# Compiled packages: dist/ + package.json
+COPY --from=builder /build/common/dist                      ./common/dist
+COPY --from=builder /build/common/package.json              ./common/package.json
+COPY --from=builder /build/common-persistence/dist          ./common-persistence/dist
+COPY --from=builder /build/common-persistence/package.json  ./common-persistence/package.json
+COPY --from=builder /build/sqlite-persistence/dist          ./sqlite-persistence/dist
+COPY --from=builder /build/sqlite-persistence/package.json  ./sqlite-persistence/package.json
+COPY --from=builder /build/postgres-persistence/dist        ./postgres-persistence/dist
+COPY --from=builder /build/postgres-persistence/package.json ./postgres-persistence/package.json
+COPY --from=builder /build/core/dist                        ./core/dist
+COPY --from=builder /build/core/package.json                ./core/package.json
+COPY --from=builder /build/rest/dist                        ./rest/dist
+COPY --from=builder /build/rest/package.json                ./rest/package.json
+COPY --from=builder /build/ai/dist                          ./ai/dist
+COPY --from=builder /build/ai/package.json                  ./ai/package.json
+COPY --from=builder /build/agent-runtime/dist               ./agent-runtime/dist
+COPY --from=builder /build/agent-runtime/package.json       ./agent-runtime/package.json
+COPY --from=builder /build/telemetry/dist                   ./telemetry/dist
+COPY --from=builder /build/telemetry/package.json           ./telemetry/package.json
+COPY --from=builder /build/secrets/dist                     ./secrets/dist
+COPY --from=builder /build/secrets/package.json             ./secrets/package.json
+COPY --from=builder /build/sandbox/dist                     ./sandbox/dist
+COPY --from=builder /build/sandbox/package.json             ./sandbox/package.json
+COPY --from=builder /build/http-task/dist                   ./http-task/dist
+COPY --from=builder /build/http-task/package.json           ./http-task/package.json
+COPY --from=builder /build/json-jq-task/dist                ./json-jq-task/dist
+COPY --from=builder /build/json-jq-task/package.json        ./json-jq-task/package.json
+COPY --from=builder /build/workflow-event-listener/dist     ./workflow-event-listener/dist
+COPY --from=builder /build/workflow-event-listener/package.json ./workflow-event-listener/package.json
+COPY --from=builder /build/task-status-listener/dist        ./task-status-listener/dist
+COPY --from=builder /build/task-status-listener/package.json ./task-status-listener/package.json
+COPY --from=builder /build/amqp/dist                        ./amqp/dist
+COPY --from=builder /build/amqp/package.json                ./amqp/package.json
+COPY --from=builder /build/server-lite/dist                 ./server-lite/dist
+COPY --from=builder /build/server-lite/package.json         ./server-lite/package.json
 
-# Copy the compiled output to new image
-COPY docker/server/bin /app
-COPY docker/server/config /app/config
-COPY --from=builder /agentmesh/server/build/libs/*boot*.jar /app/libs/agentmesh-server.jar
+# Production deps only
+RUN pnpm install --frozen-lockfile --prod && \
+    pnpm store prune
 
-# Copy compiled UI assets to nginx www directory
-WORKDIR /usr/share/nginx/html
-RUN rm -rf ./*
-COPY --from=ui-builder /agentmesh/ui/build .
-COPY docker/server/nginx/nginx.conf  /etc/nginx/conf.d/default.conf
+# Data directory for SQLite persistence
+RUN mkdir -p /data && chown agentmesh:agentmesh /data
 
-# Copy the files for the server into the app folders
-RUN chmod +x /app/startup.sh
+USER agentmesh
 
-HEALTHCHECK --interval=60s --timeout=30s --retries=10 CMD curl -I -XGET http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT:-8080}/health | grep -q '"status":"OK"' || exit 1
 
-CMD [ "/app/startup.sh" ]
-ENTRYPOINT [ "/bin/sh"]
+ENV NODE_ENV=production \
+    PORT=8080 \
+    DB_PATH=/data/agentmesh.sqlite
+
+EXPOSE 8080
+
+ENTRYPOINT ["node", "/app/server-lite/dist/index.js"]

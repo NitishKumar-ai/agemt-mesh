@@ -1,24 +1,28 @@
-# PostgreSQL External Storage Module
+# @agentmesh/postgres-external-storage
 
-This module use PostgreSQL to store and retrieve workflows/tasks input/output payload that
-went over the thresholds defined in properties named `agentmesh.[workflow|task].[input|output].payload.threshold.kb`.
+PostgreSQL implementation of `ExternalPayloadStorage` for AgentMesh.
 
-## Configuration
+Stores JSON payloads as bytea rows with automatic cleanup via a trigger.
 
-### Usage
+## Usage
 
-Cf. Documentation [External Payload Storage](https://agentmesh.github.io/agentmesh/externalpayloadstorage/#postgresql-storage)
+```typescript
+import { PostgresExternalPayloadStorage } from '@agentmesh/postgres-external-storage';
 
-### Example
-
-```properties
-agentmesh.external-payload-storage.type=postgres
-agentmesh.external-payload-storage.postgres.agentmesh-url=http://localhost:8080
-agentmesh.external-payload-storage.postgres.url=jdbc:postgresql://postgresql:5432/agentmesh?charset=utf8&parseTime=true&interpolateParams=true
-agentmesh.external-payload-storage.postgres.username=postgres
-agentmesh.external-payload-storage.postgres.password=postgres
-agentmesh.external-payload-storage.postgres.max-data-rows=1000000
-agentmesh.external-payload-storage.postgres.max-data-days=0
-agentmesh.external-payload-storage.postgres.max-data-months=0
-agentmesh.external-payload-storage.postgres.max-data-years=1
+const storage = new PostgresExternalPayloadStorage({
+  connectionString: 'postgres://localhost:5432/agentmesh',
+  tableName: 'external_payload',
+});
 ```
+
+## Schema
+
+```sql
+CREATE TABLE external_payload (
+    id   TEXT PRIMARY KEY,
+    data BYTEA NOT NULL,
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+See `src/main/resources/db/migration_external_postgres/R__initial_schema.sql` for the full schema including the cleanup trigger.

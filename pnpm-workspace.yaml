@@ -20,4 +20,10 @@ packages:
   - 'workflow-event-listener'
   - 'task-status-listener'
   - 'scheduler/*'
-  - 'agentmesh-amqp-node'
+  - 'amqp'
+  - 'amqp-queue'
+  - 'annotations'
+  - 'annotations-processor'
+  - 'zod-proto-gen'
+
+

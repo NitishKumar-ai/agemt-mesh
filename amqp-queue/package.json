@@ -1,0 +1,23 @@
+{
+  "name": "@agentmesh/amqp-queue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
+    "amqplib": "^0.10.5"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.6",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.4.5",
+    "vitest": "^2.0.0"
+  }
+}

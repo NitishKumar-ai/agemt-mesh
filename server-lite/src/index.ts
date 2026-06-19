@@ -7,6 +7,7 @@ import {
   SqliteMetadataDAO,
   SqliteQueueDAO,
 } from '@agentmesh/sqlite-persistence';
+import { AMQPQueueDAO } from '@agentmesh/amqp';
 import { WorkflowService, TaskService } from '@agentmesh/rest';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -70,11 +71,15 @@ import {
   SwitchTaskMapper,
   TerminateTaskMapper,
   WaitTaskMapper,
+  UserDefinedTaskMapper,
+  SystemTaskWorker,
   WorkflowStatusListener,
   TaskStatusListener,
 } from '@agentmesh/core';
 import { TelemetryService } from '@agentmesh/telemetry';
 import { SandboxSystemTask } from '@agentmesh/sandbox';
+import { HttpTask } from '@agentmesh/http-task';
+import { JsonJqTransform } from '@agentmesh/json-jq-task';
 import {
   WorkflowEventPublisher,
   WorkflowEventListener,
@@ -107,6 +112,9 @@ interface Config {
   geminiApiKey?: string;
   // Sandbox Config
   e2bApiKey?: string;
+  // Queue Provider Configuration
+  queueProvider?: string;
+  rabbitmqUrl?: string;
 }
 
 function loadConfig(): Config {
@@ -122,6 +130,8 @@ function loadConfig(): Config {
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     geminiApiKey: process.env.GEMINI_API_KEY,
     e2bApiKey: process.env.E2B_API_KEY,
+    queueProvider: process.env.QUEUE_PROVIDER,
+    rabbitmqUrl: process.env.RABBITMQ_URL,
   };
 }
 
@@ -191,6 +201,10 @@ export async function bootstrapServer(options?: {
   }
 
   const sqliteDb = new DatabaseDriver(cfg.dbPath);
+  if (cfg.dbPath !== ':memory:') {
+    sqliteDb.pragma('journal_mode = WAL');
+  }
+  sqliteDb.pragma('busy_timeout = 5000');
   const db = new Kysely<Database>({
     dialect: new SqliteDialect({
       database: sqliteDb,
@@ -204,7 +218,12 @@ export async function bootstrapServer(options?: {
 
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);
-  const queueDAO = new SqliteQueueDAO(db as never);
+  const baseQueueDAO = new SqliteQueueDAO(db as never);
+  
+  // Use hybrid AMQPQueueDAO if QUEUE_PROVIDER=amqp is specified
+  const queueDAO = cfg.queueProvider === 'amqp' && cfg.rabbitmqUrl
+    ? new AMQPQueueDAO(baseQueueDAO, cfg.rabbitmqUrl)
+    : baseQueueDAO;
 
   // --- Proxies and variables for NestJS middleware registration ---
   let activeAgentExecutor: any = null;
@@ -301,6 +320,8 @@ export async function bootstrapServer(options?: {
     new LlmChatComplete(llms, modelClient, telemetry as any, budgetManager),
     new LlmGenerateEmbeddings(llms, modelClient, telemetry as any),
     new SandboxSystemTask(cfg.e2bApiKey || 'dummy-key', ['api.github.com']),
+    new HttpTask(),
+    new JsonJqTransform(),
   ];
 
   const systemTaskRegistry = new SystemTaskRegistry(systemTasks as any);
@@ -316,6 +337,7 @@ export async function bootstrapServer(options?: {
     SWITCH: new SwitchTaskMapper(),
     TERMINATE: new TerminateTaskMapper(),
     WAIT: new WaitTaskMapper(),
+    USER_DEFINED: new UserDefinedTaskMapper(),
   };
 
   const deciderService = new DeciderService({
@@ -415,6 +437,20 @@ export async function bootstrapServer(options?: {
   const sweeperState = { running: true };
   console.log('Starting sweeper loop...');
   const sweeperPromise = sweeperLoop(syncAdapter, sweeper, sweeperState);
+
+  // Start system task worker (polls queues for async system tasks: HTTP, etc.)
+  const systemTaskWorker = new SystemTaskWorker({
+    queueDAO: syncAdapter as any,
+    workflowExecutor: executorOps as any,
+    systemTaskRegistry: systemTaskRegistry as any,
+    executionDAOFacade: syncAdapter as any,
+    properties: {
+      systemTaskWorkerPollInterval: 500,
+      systemTaskWorkerThreadCount: 5,
+    },
+  });
+  systemTaskWorker.start();
+  console.log('System task worker started');
 
   // Lightweight DB probe: SELECT 1 from queue table
   const dbProbe = async () => {
@@ -739,6 +775,11 @@ export async function bootstrapServer(options?: {
       sweeperState.running = false;
       await sweeperPromise;
     },
+  });
+
+  processManager.register({
+    name: 'system-task-worker',
+    shutdown: async () => systemTaskWorker.stop(),
   });
 
   processManager.register({

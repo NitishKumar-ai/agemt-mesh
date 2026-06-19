@@ -1,3 +1,17 @@
+# ---------------------------------------------------------------------------
+# AgentMesh production image (turbo prune strategy)
+#
+# Uses turbo prune to create a minimal Docker context containing only the
+# packages needed by @agentmesh/server-lite. This is the recommended approach
+# for CI/CD pipelines.
+#
+# Build:
+#   docker build -t agentmesh:latest .
+#
+# Run:
+#   docker run -p 8080:8080 -v $(pwd)/data:/app/data agentmesh:latest
+# ---------------------------------------------------------------------------
+
 # Base image with pnpm
 FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
@@ -37,18 +51,25 @@ RUN corepack enable
 # Copy built files and dependencies from builder
 COPY --from=builder /app .
 
-# Prune dev dependencies (optional but recommended for production)
-# We do this here because pnpm needs the workspace structure to prune correctly
+# Prune dev dependencies for production
 RUN pnpm install --prod --frozen-lockfile
+
+# Security: run as non-root
+RUN addgroup --gid 1001 agentmesh && adduser --uid 1001 --gid 1001 --disabled-password agentmesh
+RUN mkdir -p /app/data && chown -R agentmesh:agentmesh /app/data
+
+USER agentmesh
 
 # Environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=8080
 
-# Create a data directory for SQLite (if still used)
-RUN mkdir -p /app/data
+# Health check
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://localhost:${PORT}/health').then(r=>r.json()).then(d=>{if(d.status!=='OK')process.exit(1)}).catch(()=>process.exit(1))"
 
-EXPOSE 3000
+# Data directory for SQLite
+EXPOSE 8080
 
 # Start the server
 CMD ["node", "server-lite/dist/index.js"]

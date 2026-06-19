@@ -1,0 +1,1 @@
+{"version":3,"file":"QueueDAO.contract.d.ts","sourceRoot":"","sources":["QueueDAO.contract.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,oBAAoB,CAAC;AAEnD,wBAAgB,wBAAwB,CACtC,WAAW,EAAE,MAAM,OAAO,CAAC,QAAQ,CAAC,EACpC,OAAO,EAAE,MAAM,OAAO,CAAC,IAAI,CAAC,GAC3B,IAAI,CAwBN"}

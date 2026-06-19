@@ -1,80 +1,16 @@
-version: '2.3'
+# DEPRECATED - Redis + OpenSearch 3 Backend
+#
+# This compose file previously configured AgentMesh with Redis and
+# OpenSearch 3. The TypeScript rewrite of AgentMesh no longer supports
+# OpenSearch as an indexing backend.
+#
+# Supported backends:
+#   - SQLite (default, zero-config) -- no compose file needed
+#   - PostgreSQL                    -- see docker-compose-postgres.yaml
+#   - PostgreSQL + Redis            -- see docker-compose.yaml
+#
+# This file is retained for reference. It will be removed in a future release.
+#
+# Migration: Switch to docker-compose.yaml or docker-compose-postgres.yaml.
 
-services:
-  agentmesh-server:
-    environment:
-      - CONFIG_PROP=config-redis-os3.properties
-      - JAVA_OPTS=-Dpolyglot.engine.WarnInterpreterOnly=false
-    image: agentmesh:server
-    container_name: agentmesh-server-os3
-    build:
-      context: ../
-      dockerfile: docker/server/Dockerfile
-      args:
-        YARN_OPTS: ${YARN_OPTS}
-        INDEXING_BACKEND: opensearch3
-    networks:
-      - internal
-    ports:
-      - 8000:8080
-      - 8128:5000
-    healthcheck:
-      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
-      interval: 60s
-      timeout: 30s
-      retries: 12
-    links:
-      - agentmesh-opensearch:os
-      - agentmesh-redis:rs
-    depends_on:
-      agentmesh-opensearch:
-        condition: service_healthy
-      agentmesh-redis:
-        condition: service_healthy
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '1k'
-        max-file: '3'
-
-  agentmesh-redis:
-    image: redis:6.2.3-alpine
-    volumes:
-      - ../server/config/redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - internal
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-
-  agentmesh-opensearch:
-    image: opensearchproject/opensearch:3.0.0
-    container_name: opensearch-3
-    environment:
-      - plugins.security.disabled=true
-      - cluster.name=opensearch-cluster # Name the cluster
-      - node.name=agentmesh-opensearch # Name the node that will run in this container
-      - discovery.seed_hosts=agentmesh-opensearch # Nodes to look for when discovering the cluster
-      - cluster.initial_cluster_manager_nodes=agentmesh-opensearch # Nodes eligible to serve as cluster manager
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=P4zzW)rd>>123_
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - osdata3-agentmesh:/usr/share/opensearch/data
-    networks:
-      - internal
-    healthcheck:
-      test: curl http://localhost:9200/_cluster/health -o /dev/null
-      interval: 5s
-      timeout: 5s
-      retries: 12
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '1k'
-        max-file: '3'
-
-volumes:
-  osdata3-agentmesh:
-    driver: local
-
-networks:
-  internal:
+services: {}

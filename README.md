@@ -1,4 +1,4 @@
-# Agent Mesh OS (TypeScript Conductor)
+# AgentMesh (TypeScript Workflow Engine)
 
 An autonomous, durable agent mesh built on a TypeScript port of the Netflix Conductor workflow engine.
 

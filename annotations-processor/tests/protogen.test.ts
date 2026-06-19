@@ -52,6 +52,7 @@ async function testHappyPath(): Promise<void> {
   const expected = `syntax = "proto3";
 package protoPackage;
 
+
 option java_package = "abc.protogen.example";
 option java_outer_classname = "ExamplePb";
 option go_package = "goPackage";

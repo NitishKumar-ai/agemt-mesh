@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Conductor OSS | Open Source Workflow Orchestration</title>
+    <title>AgentMesh OSS | Open Source Workflow Orchestration</title>
     <meta
       name="description"
       content="Open-source workflow orchestration and durable execution for long-running workflows, microservices, and AI agents. Self-hosted, JSON-native, and polyglot."
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:title" content="Conductor OSS | Open Source Workflow Orchestration" />
+    <meta property="og:title" content="AgentMesh OSS | Open Source Workflow Orchestration" />
     <meta
       property="og:description"
       content="Open-source workflow orchestration and durable execution for long-running workflows, microservices, and AI agents."
@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
 
@@ -51,21 +51,21 @@
       }
 
       :root {
-        --bg: #09090b;
-        --bg-surface: #18181b;
-        --bg-card: #18181b;
-        --bg-card-h: #27272a;
-        --accent: #f97316;
-        --accent-dim: rgba(249, 115, 22, 0.1);
-        --accent-glow: rgba(249, 115, 22, 0.22);
-        --accent-hi: #fb923c;
-        --blue: #3b82f6;
-        --blue-dim: rgba(59, 130, 246, 0.1);
-        --t1: #fafafa;
-        --t2: #a1a1aa;
-        --t3: #71717a;
-        --border: rgba(255, 255, 255, 0.08);
-        --border-h: rgba(249, 115, 22, 0.35);
+        --bg: #181818; /* Obsidian canvas */
+        --bg-surface: #111111;
+        --bg-card: #222222;
+        --bg-card-h: #2b2b2b;
+        --accent: #e47c6e; /* Coral/terracotta */
+        --accent-dim: rgba(228, 124, 110, 0.1);
+        --accent-glow: rgba(228, 124, 110, 0.22);
+        --accent-hi: #ffb084;
+        --blue: #ffb084;
+        --blue-dim: rgba(255, 176, 132, 0.1);
+        --t1: #f2f2f2;
+        --t2: #d0d0d0;
+        --t3: #9b9b9b;
+        --border: #303030;
+        --border-h: rgba(228, 124, 110, 0.35);
         --r: 12px;
         --r-lg: 16px;
         --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -76,21 +76,21 @@
        LIGHT MODE TOKENS
     ═══════════════════════════════════════════ */
       [data-theme='light'] {
-        --bg: #ffffff;
-        --bg-surface: #f4f4f5;
+        --bg: #fffaf0; /* Cream canvas */
+        --bg-surface: #faf5e8;
         --bg-card: #ffffff;
-        --bg-card-h: #f4f4f5;
-        --accent: #f97316;
-        --accent-dim: rgba(249, 115, 22, 0.08);
-        --accent-glow: rgba(249, 115, 22, 0.16);
-        --accent-hi: #ea580c;
-        --blue: #2563eb;
-        --blue-dim: rgba(37, 99, 235, 0.08);
-        --t1: #09090b;
-        --t2: #52525b;
-        --t3: #71717a;
-        --border: #d4d4d8;
-        --border-h: rgba(249, 115, 22, 0.35);
+        --bg-card-h: #f5f0e0;
+        --accent: #d97757; /* Terracotta */
+        --accent-dim: rgba(217, 119, 87, 0.08);
+        --accent-glow: rgba(217, 119, 87, 0.16);
+        --accent-hi: #c05638;
+        --blue: #ff6b5a; /* Coral links */
+        --blue-dim: rgba(255, 107, 90, 0.08);
+        --t1: #1a1a1a;
+        --t2: #3a3a3a;
+        --t3: #6a6a6a;
+        --border: #e5e2db;
+        --border-h: rgba(217, 119, 87, 0.35);
       }
 
       /* Smooth theme transitions */
@@ -139,17 +139,17 @@
 
       /* Hero dot grid */
       [data-theme='light'] .hero::before {
-        background-image: radial-gradient(circle, rgba(249, 115, 22, 0.11) 1px, transparent 1px);
+        background-image: radial-gradient(circle, rgba(217, 119, 87, 0.11) 1px, transparent 1px);
       }
       /* Hero orbs */
       [data-theme='light'] .orb-1 {
-        background: radial-gradient(circle, rgba(249, 115, 22, 0.07) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(217, 119, 87, 0.07) 0%, transparent 70%);
       }
       [data-theme='light'] .orb-2 {
-        background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255, 107, 90, 0.05) 0%, transparent 70%);
       }
       [data-theme='light'] .orb-3 {
-        background: radial-gradient(circle, rgba(249, 115, 22, 0.04) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(217, 119, 87, 0.04) 0%, transparent 70%);
       }
 
       /* Dark section → light gray in light mode */
@@ -244,7 +244,7 @@
       }
 
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Lora', Georgia, serif;
         background: var(--bg);
         color: var(--t1);
         line-height: 1.6;
@@ -264,7 +264,7 @@
       h2,
       h3,
       h4 {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Poppins', sans-serif;
         line-height: 1.1;
       }
 
@@ -458,7 +458,7 @@
         font-family: inherit;
       }
       .btn-nav:hover {
-        background: rgba(249, 115, 22, 0.18);
+        background: rgba(217, 119, 87, 0.18);
         box-shadow: 0 0 18px var(--accent-glow);
       }
       .btn-nav img {
@@ -647,7 +647,7 @@
         content: '';
         position: absolute;
         inset: 0;
-        background-image: radial-gradient(circle, rgba(249, 115, 22, 0.13) 1px, transparent 1px);
+        background-image: radial-gradient(circle, rgba(228, 124, 110, 0.13) 1px, transparent 1px);
         background-size: 38px 38px;
         mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 80%);
         -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 80%);
@@ -664,7 +664,7 @@
       .orb-1 {
         width: 560px;
         height: 560px;
-        background: radial-gradient(circle, rgba(249, 115, 22, 0.09) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(228, 124, 110, 0.09) 0%, transparent 70%);
         top: -120px;
         left: -80px;
         animation: float1 18s ease-in-out infinite;
@@ -672,7 +672,7 @@
       .orb-2 {
         width: 440px;
         height: 440px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.07) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255, 176, 132, 0.07) 0%, transparent 70%);
         bottom: -60px;
         right: 5%;
         animation: float2 22s ease-in-out infinite;
@@ -680,7 +680,7 @@
       .orb-3 {
         width: 320px;
         height: 320px;
-        background: radial-gradient(circle, rgba(249, 115, 22, 0.05) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(228, 124, 110, 0.05) 0%, transparent 70%);
         top: 35%;
         left: 38%;
         animation: float3 15s ease-in-out infinite;
@@ -1081,8 +1081,8 @@
       }
       .feat-card:hover {
         border-color: var(--border-h);
-        background: rgba(249, 115, 22, 0.025);
-        box-shadow: 0 0 40px rgba(249, 115, 22, 0.08);
+        background: rgba(228, 124, 110, 0.025);
+        box-shadow: 0 0 40px rgba(228, 124, 110, 0.08);
       }
 
       .feat-thumb {
@@ -1288,7 +1288,7 @@
         transition: all var(--dur) var(--ease);
       }
       .comm-cta:hover {
-        background: rgba(249, 115, 22, 0.18);
+        background: rgba(228, 124, 110, 0.18);
         box-shadow: 0 0 18px var(--accent-glow);
       }
       .comm-cta img {
@@ -1464,12 +1464,12 @@
         </button>
         <h2 class="modal-title">Get Involved</h2>
         <p class="modal-copy">
-          Conductor is maintained in the open. Use the links below to contribute code, ask
+          AgentMesh is maintained in the open. Use the links below to contribute code, ask
           questions, report issues, or review project policies.
         </p>
         <div class="modal-links">
           <a
-            href="https://github.com/conductor-oss/conductor/blob/main/CONTRIBUTING.md"
+            href="https://github.com/agentmesh-oss/agentmesh/blob/main/CONTRIBUTING.md"
             target="_blank"
             class="modal-link"
           >
@@ -1480,7 +1480,7 @@
             <span class="modal-arr">→</span>
           </a>
           <a
-            href="https://github.com/conductor-oss/conductor/discussions"
+            href="https://github.com/agentmesh-oss/agentmesh/discussions"
             target="_blank"
             class="modal-link"
           >
@@ -1491,7 +1491,7 @@
             <span class="modal-arr">→</span>
           </a>
           <a
-            href="https://github.com/conductor-oss/conductor/security/policy"
+            href="https://github.com/agentmesh-oss/agentmesh/security/policy"
             target="_blank"
             class="modal-link"
           >
@@ -1502,7 +1502,7 @@
             <span class="modal-arr">→</span>
           </a>
           <a
-            href="https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
+            href="https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
             target="_blank"
             class="modal-link"
           >
@@ -1522,31 +1522,31 @@
     <!-- ═══════════════════════ NAV ═══════════════════════ -->
     <nav class="nav" id="nav">
       <div class="nav-inner">
-        <a href="https://conductor-oss.org/" class="nav-logo">
+        <a href="https://agentmesh-oss.github.io/agentmesh/" class="nav-logo">
           <img
-            src="https://cdn.prod.website-files.com/6572bd8c27ee5db3eb91f4b3/657349f6b74e4f7dab1b979b_Conductor-Logo_RW.png"
-            alt="Conductor"
+            src="img/logo.svg"
+            alt="AgentMesh"
           />
         </a>
 
         <div class="nav-links">
-          <a href="https://docs.conductor-oss.org/index.html" target="_blank" class="nav-link"
+          <a href="https://agentmesh-oss.github.io/agentmesh/index.html" target="_blank" class="nav-link"
             >Docs</a
           >
           <a
-            href="https://docs.conductor-oss.org/quickstart/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/quickstart/index.html"
             target="_blank"
             class="nav-link"
             >Quickstart</a
           >
-          <a href="https://github.com/conductor-oss/conductor" target="_blank" class="nav-link"
+          <a href="https://github.com/agentmesh-oss/agentmesh" target="_blank" class="nav-link"
             >GitHub</a
           >
         </div>
 
         <div class="nav-right">
           <a
-            href="https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
+            href="https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
             target="_blank"
             class="nav-slack"
           >
@@ -1560,12 +1560,12 @@
           <div class="github-wrap">
             <a
               class="github-button"
-              href="https://github.com/conductor-oss/conductor"
+              href="https://github.com/agentmesh-oss/agentmesh"
               data-color-scheme="no-preference: dark; light: dark; dark: dark;"
               data-icon="octicon-star"
               data-size="large"
               data-show-count="true"
-              aria-label="Star conductor-oss/conductor on GitHub"
+              aria-label="Star agentmesh-oss/agentmesh on GitHub"
               >Star</a
             >
           </div>
@@ -1618,18 +1618,18 @@
 
     <!-- Mobile drawer -->
     <div class="nav-drawer" id="nav-drawer">
-      <a href="https://docs.conductor-oss.org/index.html" target="_blank" class="nav-link">Docs</a>
+      <a href="https://agentmesh-oss.github.io/agentmesh/index.html" target="_blank" class="nav-link">Docs</a>
       <a
-        href="https://docs.conductor-oss.org/quickstart/index.html"
+        href="https://agentmesh-oss.github.io/agentmesh/quickstart/index.html"
         target="_blank"
         class="nav-link"
         >Quickstart</a
       >
-      <a href="https://github.com/conductor-oss/conductor" target="_blank" class="nav-link"
+      <a href="https://github.com/agentmesh-oss/agentmesh" target="_blank" class="nav-link"
         >GitHub</a
       >
       <a
-        href="https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
+        href="https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
         target="_blank"
         class="nav-link"
         >Community</a
@@ -1658,7 +1658,7 @@
 
         <div class="hero-ctas">
           <a
-            href="https://docs.conductor-oss.org/quickstart/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/quickstart/index.html"
             target="_blank"
             class="btn-primary"
           >
@@ -1679,7 +1679,7 @@
             </svg>
             Get Started
           </a>
-          <a href="https://github.com/conductor-oss/conductor" target="_blank" class="btn-ghost">
+          <a href="https://github.com/agentmesh-oss/agentmesh" target="_blank" class="btn-ghost">
             <svg
               viewBox="0 0 16 16"
               width="18"
@@ -1720,14 +1720,14 @@
           <div class="sec-label">Polyglot Execution</div>
           <h2 class="sec-title">Keep workers in the stacks you already run</h2>
           <p class="sec-sub">
-            Conductor orchestrates across languages and services instead of forcing workflow logic
+            AgentMesh orchestrates across languages and services instead of forcing workflow logic
             into a single application runtime
           </p>
         </div>
 
         <div class="sdk-grid">
           <a
-            href="https://github.com/conductor-oss/python-sdk"
+            href="https://github.com/agentmesh-oss/python-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1739,12 +1739,12 @@
             </div>
             <div>
               <div class="sdk-name">Python</div>
-              <div class="sdk-sub">conductor-oss/python-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/python-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
           <a
-            href="https://github.com/conductor-oss/java-sdk"
+            href="https://github.com/agentmesh-oss/java-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1756,12 +1756,12 @@
             </div>
             <div>
               <div class="sdk-name">Java</div>
-              <div class="sdk-sub">conductor-oss/java-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/java-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
           <a
-            href="https://github.com/conductor-oss/javascript-sdk"
+            href="https://github.com/agentmesh-oss/javascript-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1773,12 +1773,12 @@
             </div>
             <div>
               <div class="sdk-name">TypeScript</div>
-              <div class="sdk-sub">conductor-oss/javascript-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/javascript-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
           <a
-            href="https://github.com/conductor-oss/csharp-sdk"
+            href="https://github.com/agentmesh-oss/csharp-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1790,11 +1790,11 @@
             </div>
             <div>
               <div class="sdk-name">.NET</div>
-              <div class="sdk-sub">conductor-oss/csharp-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/csharp-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
-          <a href="https://github.com/conductor-oss/go-sdk" target="_blank" class="sdk-card reveal">
+          <a href="https://github.com/agentmesh-oss/go-sdk" target="_blank" class="sdk-card reveal">
             <div class="sdk-icon">
               <img
                 src="https://cdn.prod.website-files.com/6572bd8c27ee5db3eb91f4b3/678a25111b9e7323a0d7f881_Go%20Logo.svg"
@@ -1803,12 +1803,12 @@
             </div>
             <div>
               <div class="sdk-name">Go</div>
-              <div class="sdk-sub">conductor-oss/go-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/go-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
           <a
-            href="https://github.com/conductor-oss/ruby-sdk"
+            href="https://github.com/agentmesh-oss/ruby-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1827,12 +1827,12 @@
             </div>
             <div>
               <div class="sdk-name">Ruby</div>
-              <div class="sdk-sub">conductor-oss/ruby-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/ruby-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
           <a
-            href="https://github.com/conductor-oss/rust-sdk"
+            href="https://github.com/agentmesh-oss/rust-sdk"
             target="_blank"
             class="sdk-card reveal"
           >
@@ -1863,7 +1863,7 @@
             </div>
             <div>
               <div class="sdk-name">Rust</div>
-              <div class="sdk-sub">conductor-oss/rust-sdk</div>
+              <div class="sdk-sub">agentmesh-oss/rust-sdk</div>
             </div>
             <div class="sdk-arr">→</div>
           </a>
@@ -1886,7 +1886,7 @@
 
         <div class="res-grid">
           <a
-            href="https://docs.conductor-oss.org/quickstart/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/quickstart/index.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -1899,14 +1899,14 @@
             <div>
               <div class="res-title">Quickstart Guide</div>
               <p class="res-desc">
-                Run Conductor locally, register a workflow, and execute it end to end.
+                Run AgentMesh locally, register a workflow, and execute it end to end.
               </p>
             </div>
             <div class="res-link">Start here →</div>
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/running/deploy.html"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/running/deploy.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -1919,14 +1919,14 @@
             <div>
               <div class="res-title">Self-Hosting</div>
               <p class="res-desc">
-                Deploy Conductor OSS with Docker, shared persistence, and production-ready topology.
+                Deploy AgentMesh OSS with Docker, shared persistence, and production-ready topology.
               </p>
             </div>
             <div class="res-link">Deploy OSS →</div>
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/cookbook/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/cookbook/index.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -1947,7 +1947,7 @@
           </a>
 
           <a
-            href="https://github.com/conductor-oss/conductor/releases"
+            href="https://github.com/agentmesh-oss/agentmesh/releases"
             target="_blank"
             class="res-card reveal"
           >
@@ -1971,12 +1971,12 @@
 
     <div class="divider"></div>
 
-    <!-- ═══════════════════════ CONDUCTOR MODEL ═══════════════════════ -->
+    <!-- ═══════════════════════ AGENTMESH MODEL ═══════════════════════ -->
     <section class="sec sec-alt">
       <div class="wrap">
         <div class="sec-header reveal">
           <div class="sec-label">Four Pillars</div>
-          <h2 class="sec-title">Why Conductor is stronger when systems change in production</h2>
+          <h2 class="sec-title">Why AgentMesh is stronger when systems change in production</h2>
           <p class="sec-sub">
             The real advantage is not just durability. It is durable orchestration that can evolve
             independently, adapt at runtime, span any language boundary, and absorb AI-native
@@ -1986,7 +1986,7 @@
 
         <div class="res-grid">
           <a
-            href="https://docs.conductor-oss.org/architecture/json-native.html"
+            href="https://agentmesh-oss.github.io/agentmesh/architecture/json-native.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2008,7 +2008,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/ai/dynamic-workflows.html"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/ai/dynamic-workflows.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2029,7 +2029,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/ai/llm-orchestration.html"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/ai/llm-orchestration.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2053,7 +2053,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/documentation/clientsdks/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/documentation/clientsdks/index.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2094,7 +2094,7 @@
           <div class="feat-card reveal">
             <div class="feat-thumb">
               <a
-                href="https://docs.conductor-oss.org/architecture/durable-execution.html"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/durable-execution.html"
                 target="_blank"
               >
                 <img
@@ -2114,7 +2114,7 @@
                 </div>
               </div>
               <a
-                href="https://docs.conductor-oss.org/architecture/durable-execution.html"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/durable-execution.html"
                 target="_blank"
                 class="feat-link"
               >
@@ -2126,7 +2126,7 @@
           <div class="feat-card reveal">
             <div class="feat-thumb">
               <a
-                href="https://docs.conductor-oss.org/architecture/durable-execution.html#replay-and-recovery"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/durable-execution.html#replay-and-recovery"
                 target="_blank"
               >
                 <img
@@ -2145,7 +2145,7 @@
                 </div>
               </div>
               <a
-                href="https://docs.conductor-oss.org/architecture/durable-execution.html#replay-and-recovery"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/durable-execution.html#replay-and-recovery"
                 target="_blank"
                 class="feat-link"
               >
@@ -2157,7 +2157,7 @@
           <div class="feat-card reveal">
             <div class="feat-thumb">
               <a
-                href="https://docs.conductor-oss.org/architecture/json-native.html"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/json-native.html"
                 target="_blank"
               >
                 <img
@@ -2177,7 +2177,7 @@
                 </div>
               </div>
               <a
-                href="https://docs.conductor-oss.org/architecture/json-native.html"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/json-native.html"
                 target="_blank"
                 class="feat-link"
               >
@@ -2189,7 +2189,7 @@
           <div class="feat-card reveal">
             <div class="feat-thumb">
               <a
-                href="https://docs.conductor-oss.org/architecture/json-native.html#diffable-versioning"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/json-native.html#diffable-versioning"
                 target="_blank"
               >
                 <img
@@ -2209,7 +2209,7 @@
                 </div>
               </div>
               <a
-                href="https://docs.conductor-oss.org/architecture/json-native.html#diffable-versioning"
+                href="https://agentmesh-oss.github.io/agentmesh/architecture/json-native.html#diffable-versioning"
                 target="_blank"
                 class="feat-link"
               >
@@ -2237,7 +2237,7 @@
 
         <div class="res-grid">
           <a
-            href="https://docs.conductor-oss.org/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/index.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2257,7 +2257,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/architecture/durable-execution.html"
+            href="https://agentmesh-oss.github.io/agentmesh/architecture/durable-execution.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2277,7 +2277,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/cookbook/index.html"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/cookbook/index.html"
             target="_blank"
             class="res-card reveal"
           >
@@ -2298,7 +2298,7 @@
           </a>
 
           <a
-            href="https://docs.conductor-oss.org/devguide/faq.html#how-is-conductor-different-from-temporal"
+            href="https://agentmesh-oss.github.io/agentmesh/devguide/faq.html#how-is-agentmesh-different-from-temporal"
             target="_blank"
             class="res-card reveal"
           >
@@ -2309,7 +2309,7 @@
               />
             </div>
             <div>
-              <div class="res-title">Why Conductor</div>
+              <div class="res-title">Why AgentMesh</div>
               <p class="res-desc">
                 Read the reasoning behind independent workflow upgrades, runtime-defined
                 orchestration, native AI primitives, and polyglot workers.
@@ -2351,7 +2351,7 @@
                 patterns.
               </p>
               <a
-                href="https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
+                href="https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
                 target="_blank"
                 class="comm-cta"
               >
@@ -2366,7 +2366,7 @@
 
           <div class="comm-card reveal">
             <a
-              href="https://github.com/conductor-oss/conductor"
+              href="https://github.com/agentmesh-oss/agentmesh"
               target="_blank"
               class="comm-img-wrap"
             >
@@ -2383,7 +2383,7 @@
               </p>
               <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px">
                 <a
-                  href="https://github.com/conductor-oss/conductor"
+                  href="https://github.com/agentmesh-oss/agentmesh"
                   target="_blank"
                   class="comm-cta"
                   style="text-decoration: none"
@@ -2392,11 +2392,11 @@
                 </a>
                 <a
                   class="github-button"
-                  href="https://github.com/conductor-oss/conductor"
+                  href="https://github.com/agentmesh-oss/agentmesh"
                   data-color-scheme="no-preference: dark; light: dark; dark: dark;"
                   data-size="large"
                   data-show-count="true"
-                  aria-label="Star conductor-oss/conductor on GitHub"
+                  aria-label="Star agentmesh-oss/agentmesh on GitHub"
                   >Star</a
                 >
               </div>
@@ -2418,7 +2418,7 @@
                 policies.
               </p>
               <a
-                href="https://github.com/conductor-oss/conductor/blob/main/CONTRIBUTING.md"
+                href="https://github.com/agentmesh-oss/agentmesh/blob/main/CONTRIBUTING.md"
                 target="_blank"
                 class="comm-cta comm-cta-blue"
               >
@@ -2437,40 +2437,40 @@
           <div class="footer-brand">
             <img
               class="footer-logo"
-              src="https://cdn.prod.website-files.com/6572bd8c27ee5db3eb91f4b3/657349f6b74e4f7dab1b979b_Conductor-Logo_RW.png"
-              alt="Conductor"
+              src="img/logo.svg"
+              alt="AgentMesh"
             />
             <p class="footer-tagline">Open Source Workflow and Agent Orchestration Platform</p>
-            <p class="footer-copy">Copyright 2026 © Conductor OSS Contributors</p>
+            <p class="footer-copy">Copyright 2026 © AgentMesh OSS Contributors</p>
           </div>
 
           <div class="footer-cols">
             <div class="footer-col">
               <div class="footer-col-head">Resources</div>
-              <a href="https://docs.conductor-oss.org/index.html" target="_blank">Docs</a>
-              <a href="https://docs.conductor-oss.org/quickstart/index.html" target="_blank"
+              <a href="https://agentmesh-oss.github.io/agentmesh/index.html" target="_blank">Docs</a>
+              <a href="https://agentmesh-oss.github.io/agentmesh/quickstart/index.html" target="_blank"
                 >Quickstart</a
               >
-              <a href="https://github.com/conductor-oss/conductor/releases" target="_blank"
+              <a href="https://github.com/agentmesh-oss/agentmesh/releases" target="_blank"
                 >Releases</a
               >
-              <a href="https://github.com/conductor-oss/conductor/security/policy" target="_blank"
+              <a href="https://github.com/agentmesh-oss/agentmesh/security/policy" target="_blank"
                 >Security</a
               >
             </div>
             <div class="footer-col">
               <div class="footer-col-head">Community</div>
-              <a href="https://github.com/conductor-oss/conductor" target="_blank">GitHub</a>
-              <a href="https://github.com/conductor-oss/conductor/discussions" target="_blank"
+              <a href="https://github.com/agentmesh-oss/agentmesh" target="_blank">GitHub</a>
+              <a href="https://github.com/agentmesh-oss/agentmesh/discussions" target="_blank"
                 >Discussions</a
               >
               <a
-                href="https://join.slack.com/t/orkes-conductor/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
+                href="https://join.slack.com/t/orkes-agentmesh/shared_invite/zt-3dpcskdyd-W895bJDm8psAV7viYG3jFA"
                 target="_blank"
                 >Slack</a
               >
               <a
-                href="https://github.com/conductor-oss/conductor/blob/main/CONTRIBUTING.md"
+                href="https://github.com/agentmesh-oss/agentmesh/blob/main/CONTRIBUTING.md"
                 target="_blank"
                 >Contributing</a
               >
@@ -2481,7 +2481,7 @@
 
       <div class="footer-end">
         <div class="wrap">
-          Originally created at AgentMesh. Maintained in the open by the Conductor OSS community.
+          Originally created at AgentMesh. Maintained in the open by the AgentMesh OSS community.
         </div>
       </div>
     </footer>
@@ -2586,10 +2586,10 @@
         const ctx = canvas.getContext('2d');
 
         function tc() {
-          /* Orange accent — matches docs.conductor-oss.org Zinc+Orange theme */
+          /* Clay/coral accent matching the new theme design */
           return document.documentElement.dataset.theme === 'light'
-            ? [234, 88, 12] /* #ea580c — deeper orange on light bg */
-            : [249, 115, 22]; /* #f97316 — brand orange on dark bg */
+            ? [217, 119, 87] /* #d97757 — terracotta on light bg */
+            : [228, 124, 110]; /* #e47c6e — coral on dark bg */
         }
         let W, H, raf;
 

@@ -1,6 +1,8 @@
-export * from './core/Message';
-export * from './core/ObservableQueue';
-export * from './config/AMQPConstants';
-export * from './config/AMQPSettings';
-export * from './AMQPConnection';
-export * from './AMQPObservableQueue';
+export * from './core/Message.js';
+export * from './core/ObservableQueue.js';
+export * from './config/AMQPConstants.js';
+export * from './config/AMQPSettings.js';
+export * from './AMQPConnection.js';
+export * from './AMQPObservableQueue.js';
+export * from './AMQPQueueDAO.js';
+

@@ -1,28 +1,42 @@
 #
-# agentmesh:ui - AgentMesh UI
+# agentmesh:ui -- AgentMesh Operator Console (React/Vite)
 #
-FROM node:20-alpine
-LABEL maintainer="Orkes OSS <oss@orkes.io>"
+# Two-stage build:
+#   1. builder  -- installs deps and builds the Vite production bundle
+#   2. runtime  -- lightweight static file server
+#
+# Build (from project root):
+#   docker build -f docker/ui/Dockerfile -t agentmesh:ui .
+#
+# Run:
+#   docker run -p 5173:5173 agentmesh:ui
+#
+FROM node:20-alpine AS builder
 
-# Install the required packages for the node build
-# to run on alpine
-RUN apk update && apk add --no-cache python3 py3-pip make g++
+WORKDIR /app
 
-# A directory within the virtualized Docker environment
-# Becomes more relevant when using Docker Compose later
-WORKDIR /usr/src/app
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copies package.json to Docker environment in a separate layer as a performance optimization
+# Copy package manifest for layer caching
 COPY ./ui/package.json ./
 
-# Installs all node packages. Cached unless package.json changes
-RUN yarn install && mkdir -p public && cp -r node_modules/monaco-editor public/
+RUN pnpm install --frozen-lockfile
 
-# Copies everything else over to Docker environment
-# node_modules excluded in .dockerignore.
+# Copy UI source
 COPY ./ui .
 
-# Include monaco sources into bundle (instead of using CDN)
-ENV REACT_APP_MONACO_EDITOR_USING_CDN=false
-ENV REACT_APP_ENABLE_ERRORS_INSPECTOR=true
-CMD [ "yarn", "start" ]
+# Build the Vite production bundle
+RUN pnpm build
+
+# --- Runtime: serve static assets with a lightweight HTTP server ---
+FROM node:20-alpine AS runtime
+
+RUN npm install -g serve@latest
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 5173
+
+CMD ["serve", "-s", "dist", "-l", "5173"]

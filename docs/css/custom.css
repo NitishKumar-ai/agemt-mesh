@@ -1,36 +1,37 @@
 /* ==========================================================================
-   Conductor Docs — Zinc + Orange Theme (Light + Dark)
-   Inter × IBM Plex Mono
+   AgentMesh Docs — Anthropic-Inspired Clay Theme (Light + Dark)
+   Poppins × Lora × IBM Plex Mono
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 /* ---------- Tokens — Light (default) ---------- */
 :root {
-  --c-bg: #ffffff;
-  --c-bg-secondary: #f4f4f5;
-  --c-bg-tertiary: #e4e4e7;
-  --c-border: #d4d4d8;
-  --c-border-dim: #e4e4e7;
-  --c-text: #09090b;
-  --c-text-muted: #52525b;
-  --c-text-dim: #71717a;
-  --c-accent: #f97316;
-  --c-accent-hover: #ea580c;
-  --c-blue: #3b82f6;
+  --c-bg: #fffaf0; /* Cream canvas */
+  --c-bg-secondary: #faf5e8; /* Secondary surface */
+  --c-bg-tertiary: #f5f0e0; /* Tertiary surface */
+  --c-border: #e5e2db; /* Clay border */
+  --c-border-dim: #ebe6d6;
+  --c-text: #0a0a0a; /* Headings / dark text */
+  --c-text-muted: #3a3a3a; /* Body text */
+  --c-text-dim: #6a6a6a; /* Muted text */
+  --c-accent: #d97757; /* Terracotta/Clay accent */
+  --c-accent-hover: #c05638;
+  --c-blue: #ff6b5a; /* Coral links */
   --c-green: #22c55e;
-  --c-header-bg: rgba(255, 255, 255, 0.85);
+  --c-header-bg: rgba(255, 250, 240, 0.9);
 
-  --font-body: 'Inter', -apple-system, 'system-ui', sans-serif;
+  --font-body: 'Lora', Georgia, serif;
+  --font-heading: 'Poppins', -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
 
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
 
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 16px rgba(10, 10, 10, 0.04);
+  --shadow-elevated: 0 12px 40px rgba(10, 10, 10, 0.08);
 
   /* MkDocs Material overrides */
   --md-primary-fg-color: var(--c-bg);
@@ -39,23 +40,26 @@
   --md-accent-fg-color: var(--c-accent);
   --md-typeset-font-size: 0.85rem;
   --md-default-bg-color: var(--c-bg);
-  --md-default-fg-color: var(--c-text);
-  --md-default-fg-color--light: var(--c-text-muted);
+  --md-default-fg-color: var(--c-text-muted);
+  --md-default-fg-color--light: var(--c-text-dim);
   --md-default-fg-color--lighter: var(--c-text-dim);
   --md-default-fg-color--lightest: var(--c-border);
 }
 
 /* ---------- Tokens — Dark (slate) ---------- */
 [data-md-color-scheme='slate'] {
-  --c-bg: #09090b;
-  --c-bg-secondary: #18181b;
-  --c-bg-tertiary: #27272a;
-  --c-border: #3f3f46;
-  --c-border-dim: #27272a;
-  --c-text: #fafafa;
-  --c-text-muted: #a1a1aa;
-  --c-text-dim: #71717a;
-  --c-header-bg: rgba(9, 9, 11, 0.85);
+  --c-bg: #181818; /* Obsidian canvas */
+  --c-bg-secondary: #222222;
+  --c-bg-tertiary: #111111;
+  --c-border: #303030;
+  --c-border-dim: #2b2b2b;
+  --c-text: #f2f2f2;
+  --c-text-muted: #d0d0d0;
+  --c-text-dim: #9b9b9b;
+  --c-accent: #e47c6e; /* Coral accent */
+  --c-accent-hover: #ffb084;
+  --c-blue: #ffb084;
+  --c-header-bg: rgba(24, 24, 24, 0.9);
 
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.4);
@@ -92,7 +96,7 @@ body {
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3) !important;
 }
 .md-header__title {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-size: 16px;
   font-weight: 600;
   color: var(--c-text) !important;
@@ -112,7 +116,7 @@ body {
   border-bottom: 1px solid var(--c-border);
 }
 .md-tabs__link {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-size: 14px;
   font-weight: 500;
   color: var(--c-text-dim) !important;
@@ -126,7 +130,7 @@ body {
 
 /* ---------- Typography (docs pages) ---------- */
 .md-typeset h1 {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-weight: 700 !important;
   font-size: 28px !important;
   color: var(--c-text) !important;
@@ -135,7 +139,7 @@ body {
   margin-bottom: 10px !important;
 }
 .md-typeset h2 {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-weight: 600 !important;
   font-size: 22px !important;
   color: var(--c-text) !important;
@@ -146,7 +150,7 @@ body {
   border-bottom: none;
 }
 .md-typeset h3 {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-weight: 600 !important;
   font-size: 18px !important;
   color: var(--c-text) !important;
@@ -154,7 +158,7 @@ body {
   margin-bottom: 8px;
 }
 .md-typeset h4 {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-heading) !important;
   font-weight: 600 !important;
   font-size: 15px !important;
   letter-spacing: 0.02em;
@@ -468,8 +472,8 @@ label.md-nav__link {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--c-accent);
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   padding: 4px 14px;
   border-radius: 100px;
   margin-bottom: 16px;
@@ -571,7 +575,7 @@ label.md-nav__link {
 .btn-primary:hover {
   background: var(--c-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
 }
 .btn-arrow {
   transition: transform 0.2s;
@@ -623,7 +627,7 @@ a.repo-link:hover {
   border-color: var(--c-accent) !important;
   box-shadow:
     var(--shadow-elevated),
-    0 0 20px rgba(249, 115, 22, 0.15) !important;
+    0 0 20px rgba(99, 102, 241, 0.15) !important;
   transform: translateY(-2px);
   color: var(--c-text) !important;
 }
@@ -917,7 +921,7 @@ code.hero-terminal {
 }
 .feature-card.feature-accent {
   border-color: var(--c-accent);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.06) 0%, var(--c-bg-secondary) 100%);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, var(--c-bg-secondary) 100%);
 }
 .feature-tag {
   font-family: var(--font-mono);
@@ -979,7 +983,7 @@ code.hero-terminal {
 }
 .lang-logos a:hover {
   border-color: var(--c-accent);
-  background: rgba(249, 115, 22, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   transform: translateY(-1px);
 }
 .lang-logos img {
@@ -1210,7 +1214,7 @@ code.hero-terminal {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--c-accent);
-  background: rgba(249, 115, 22, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   padding: 2px 8px;
   border-radius: 100px;
   margin-left: 8px;

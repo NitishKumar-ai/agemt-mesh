@@ -60,8 +60,11 @@ export class LlmChatComplete extends WorkflowSystemTask {
         if (this.budgetManager && response.tokenUsed) {
           const agentId = inputData.agentId;
           if (agentId) {
-            // Very naive cost calculation, in reality this depends on the model
-            const estimatedCostUsd = (response.tokenUsed / 1000) * 0.002;
+            const estimatedCostUsd = this.modelClient.calculateCost(
+              inputData.model || 'unknown',
+              response.promptTokens || 0,
+              response.completionTokens || 0
+            );
             await this.budgetManager.recordUsage(agentId, response.tokenUsed, estimatedCostUsd);
           }
         }

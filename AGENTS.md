@@ -4,103 +4,115 @@ Instructions for AI coding agents working on the AgentMesh codebase.
 
 ## Project Overview
 
-AgentMesh is an open-source, distributed workflow orchestration engine designed for microservices.
-It uses a pluggable architecture with interface-based abstractions for persistence, queuing, and indexing.
-The project is a TypeScript monorepo managed by `pnpm`.
+AgentMesh is an open-source, durable workflow orchestration engine with pluggable persistence and storage backends.
+It is a TypeScript monorepo managed by `pnpm` with 38+ workspace packages.
 
 ## Setup Commands
 
-| Command           | Description                     |
-| ----------------- | ------------------------------- |
-| `pnpm build`      | Build the entire project        |
-| `pnpm test`       | Run all tests                   |
-| `pnpm lint`       | Run linting checks              |
-| `pnpm lint --fix` | Apply code formatting fixes     |
+| Command | Description |
+|---------|-------------|
+| `pnpm build` | Build the entire project (37+ packages) |
+| `pnpm test` | Run all unit tests (contract tests need Docker) |
+| `pnpm --filter <pkg> test` | Test a single package |
+| `pnpm lint` | Run linting checks |
 
 ## Code Style
 
-- AgentMesh is pluggable: when introducing new concepts, always use an **interface-based approach**
-- Core interfaces and domain models are defined in `@agentmesh/core` or `@agentmesh/common`
+- Use **interface-based approach** for all pluggable components
+- Core interfaces go in `@agentmesh/common` (domain) or `@agentmesh/common-persistence` (DAOs)
+- Storage interfaces go in `@agentmesh/common-storage` (ExternalPayloadStorage, FileStorage)
 - Follow existing patterns in the codebase for consistency
-- Do not use emojis such as ✅ in the code, logs, or comments. Keep comments professional
-- When adding new logic, comment the algorithm, design, etc.
+- Do not use emojis in code, logs, or comments
+- When adding new logic, comment the algorithm/design decisions
+- Avoid mocks in tests — use real implementations when possible
 
 ## Architecture Guidelines
 
 ### Module Structure
 
-- **core**: Contains interfaces, domain models, and core business logic
-- **common**: Shared utilities and base models
-- **ai**: AI provider integrations (Anthropic, Gemini, etc.)
-- **agent-runtime**: Agent execution logic and worker pools
-- **rest**: NestJS controllers and API definitions
-- **server-lite**: Lightweight server entry point using SQLite
-- **persistence modules**: Implementations of DAO interfaces (sqlite, postgres, redis, etc.)
-- **ui**: Agent Mesh React and TypeScript operator console
-- **ui-next**: Legacy workflow orchestration UI and component library
+| Layer | Packages | Purpose |
+|-------|----------|---------|
+| **Domain** | `common` | Zod schemas, enums, types for Task, Workflow, WorkflowDef |
+| **Interfaces** | `common-persistence` | DAO interfaces: ExecutionDAO, MetadataDAO, QueueDAO, etc. |
+| **Interfaces** | `common-storage` | FileStorage, ExternalPayloadStorage interfaces |
+| **Engine** | `core` | Workflow execution, system tasks, sweeper, decider |
+| **Agents** | `agent-runtime` | Agent worker pool, tool registry, LLM integration |
+| **AI** | `ai` | LLM providers (Anthropic, Gemini), model routing |
+| **REST API** | `rest` | NestJS controllers + services, Swagger |
+| **Server** | `server-lite` | NestJS bootstrap, SQLite + sync adapter |
+| **Persistence** | `*-persistence` | DAO implementations (sqlite, postgres, mysql, redis, cassandra, kafka, nats) |
+| **Queue** | `amqp-queue` | Pure AMQP QueueDAO (no DB delegate) |
+| **Queue** | `amqp` | Hybrid AMQP QueueDAO (delegates to DB for state) |
+| **Storage** | `*-storage` | ExternalPayloadStorage + FileStorage impls (gcs, local, postgres) |
+| **Proto** | `annotations` | @ProtoMessage/@ProtoField decorators |
+| **Proto** | `annotations-processor` | Protogen code generator (class-based models) |
+| **Proto** | `zod-proto-gen` | Zod-to-proto generator (scaffolded) |
+| **Frontend** | `ui` | Agent Mesh OS — React 19 + Vite + Tauri 2 + custom CSS |
+| **Frontend** | `ui-next` | Conductor UI — React 18 + MUI v7 + React Router v7 |
+| **Testing** | `chaos-suite` | Crash-recovery integration test (SIGKILL + restart) |
 
 ### Key Patterns
 
-- DAOs are defined as interfaces/abstract classes and implemented in persistence modules
-- System tasks are registered in the `SystemTaskRegistry`
-- Configuration is handled via environment variables (see `.env.example`)
+- **DAOs**: Interfaces in `common-persistence`, implementations in `*-persistence` packages. Each impl must implement the full interface.
+- **QueueDAO**: 18 methods. Hard methods (setUnackTimeout, postpone, etc.) use in-memory unack registry + background sweeper in non-DB implementations (Kafka, NATS, AMQP).
+- **System tasks**: Registered in `SystemTaskRegistry`. The `SyncSqliteAdapter` has a `pop()` method that wraps `popMessage()` for batch draining.
+- **Storage**: `ExternalPayloadStorage` for transparent JSON payload offloading; `FileStorage` for user-facing binary files.
+- **Configuration**: Environment variables (see `.env.example`).
+
+### Orchestration API (`/api/orchestration/*`)
+
+Added as a Conductor-compatible REST API layer. Endpoints:
+
+| Endpoint | Methods |
+|----------|---------|
+| `/api/orchestration/metadata/workflow` | GET (list), POST, PUT, DELETE |
+| `/api/orchestration/metadata/taskdef` | GET (list), POST, PUT, DELETE |
+| `/api/orchestration/workflow/search` | GET (search executions) |
+| `/api/orchestration/workflow/:id` | GET, DELETE |
+| `/api/orchestration/workflow/:id/tasks` | GET |
+| `/api/orchestration/tasks/search` | GET (task search) |
+| `/api/orchestration/tasks/queue/all` | GET (queue monitoring) |
+| `/api/orchestration/eventhandler` | GET (list), POST, DELETE |
+| `/api/orchestration/scheduler` | GET (list), POST, DELETE (in-memory storage) |
+| `/api/orchestration/schema` | GET (list), GET (stub) |
+| `/api/orchestration/eventqueues` | GET |
 
 ## Testing
 
-- **Avoid mocks**: Use real implementations whenever possible
-- **Test actual behavior**: Tests must verify real implementation logic, not duplicate it
-- **Use Vitest**: The project uses Vitest for unit and integration testing
-- **Cover concurrency**: Ensure async scenarios are tested
-- **Run tests before submitting**: `pnpm test` must pass
+- **Use Vitest** for unit and integration tests
+- **Contract tests** live in `common-persistence/test/` — run via Docker-based integration tests in each persistence module (e.g., `postgres-persistence/test/PostgresDAOs.test.ts`)
+- **Unit tests**: `src/**/*.test.ts` or `test/` in each module
+- **Contract tests** start Docker containers for the backing service (Postgres, Cassandra, Redis, Kafka, NATS)
+- Pre-existing failures: Postgres, Redis, Kafka, NATS contract tests fail without Docker (expected)
 
-### Test Locations
+### System Task Worker Caveat
 
-- Unit tests: `test/` or `src/**/*.test.ts` in each module
-- E2E tests: `e2e` or specialized test modules
+The `SystemTaskWorker` uses `SyncSqliteAdapter.pop()` (added fix) instead of the async `QueueDAO.pop()`. The `SyncSqliteAdapter` now has a batch `pop()` method that wraps the synchronous `popMessage()`.
 
 ## PR Guidelines
 
-- Submit PRs against the `main` branch
-- Use clear, descriptive commit messages
-- Run `pnpm lint` and `pnpm test` before pushing
-- Add or update tests for any code changes
-- Keep PRs focused—one logical change per PR
-
-## Security Considerations
-
-- Never commit secrets, API keys, or credentials
-- Be cautious with external dependencies—prefer well-maintained libraries
-- Follow secure coding practices for input validation and error handling
-- Review [SECURITY.md](SECURITY.md) for vulnerability reporting procedures
+- Submit PRs against `main` branch
+- Run `pnpm build` and `pnpm test` before pushing
+- Add/update tests for code changes
+- One logical change per PR
 
 ## Writing Documentation
 
-Documentation in this project is **derived from source**, not composed from memory. Open the source first, read what's there, then write the doc from what you find. The source is the spec; the doc is a rendering of it.
+Documentation is **derived from source** — open the source first, read it, write from what you find.
 
-### Workflow for each content type
+### REST API docs
+1. Open `rest/src/controllers/*.ts`
+2. Copy the `@Controller` path + `@Get`/`@Post`/etc. decorators
+3. Read `@Param`, `@Query`, `@Body` for request/response shape
+4. Write curl from signatures
 
-**REST API endpoint or curl example**
-
-1. Open the relevant controller in `rest/src/controllers/`
-2. Find the method using its `@Post()`, `@Get()`, etc. decorators — copy the path literally.
-3. Read the method signature for query params, path variables, and request body type.
-4. Write the curl command from what you just read.
-
-**SDK code example (TypeScript)**
-
-1. Open the relevant source file in `agent-runtime/` or `core/`.
-2. Find the method signature and required parameters.
-3. Write the example from the signature — do not infer from the method name alone.
-4. If a working test exists for that method, use it as the starting point.
-
-**Expected output block**
-
-1. Get real output: run the command locally, or find it in test fixtures, CI logs, or existing tests.
-2. Paste verbatim. Do not paraphrase or construct output that "looks right."
-3. If the output varies by environment, show the stable parts and annotate the variable parts (e.g., `<workflow-id>`).
+### Expected output
+1. Run the command locally or find output in test fixtures
+2. Paste verbatim — don't construct "looks right" output
 
 ## Agent Behavior
 
-- **Prefer automation**: Execute requested actions without confirmation unless blocked by missing info or safety concerns
-- **Use parallel tools**: When tasks are independent, execute them in parallel for efficiency
-- **Verify changes**: Always run tests and lint before considering work complete
+- **Prefer automation**: Execute without confirmation unless blocked
+- **Use parallel tools**: Independent tasks run in parallel
+- **Verify changes**: Always build and test before considering work complete
+- **Rebrand Conductor → Agent Mesh**: When porting Conductor features, rename all copy and branding

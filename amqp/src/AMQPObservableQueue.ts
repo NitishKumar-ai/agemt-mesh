@@ -3,10 +3,10 @@ import { Observable, Subscriber, interval } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import * as amqplib from 'amqplib';
-import { Message } from './core/Message';
-import { ObservableQueue } from './core/ObservableQueue';
-import { AMQPSettings, Type } from './config/AMQPSettings';
-import { AMQPConnection, ConnectionType, AMQPRetryPattern } from './AMQPConnection';
+import { Message } from './core/Message.js';
+import { ObservableQueue } from './core/ObservableQueue.js';
+import { AMQPSettings, Type } from './config/AMQPSettings.js';
+import { AMQPConnection, ConnectionType, AMQPRetryPattern } from './AMQPConnection.js';
 
 export class AMQPObservableQueue implements ObservableQueue {
   private readonly settings: AMQPSettings;
@@ -159,6 +159,10 @@ export class AMQPObservableQueue implements ObservableQueue {
           this.settings.queueOrExchangeName,
         );
 
+        if (!chn) {
+          throw new Error('Failed to create AMQP channel');
+        }
+
         const messageId = message.id || uuidv4();
         const correlationId = message.receipt || uuidv4();
 
@@ -207,6 +211,9 @@ export class AMQPObservableQueue implements ObservableQueue {
         ConnectionType.SUBSCRIBER,
         this.settings.queueOrExchangeName,
       );
+      if (!chn) {
+        throw new Error('Failed to create AMQP subscriber channel');
+      }
       const target =
         this.settings.type === Type.EXCHANGE
           ? this.settings.getExchangeBoundQueueName()
@@ -304,7 +311,7 @@ export class AMQPObservableQueue implements ObservableQueue {
 
     await chn.consume(
       queueName,
-      (msg) => {
+      (msg: amqplib.ConsumeMessage | null) => {
         if (msg) {
           const message: Message = {
             id: msg.properties.messageId || uuidv4(),
@@ -341,7 +348,7 @@ export class AMQPObservableQueue implements ObservableQueue {
 
     await chn.consume(
       queueName,
-      (msg) => {
+      (msg: amqplib.ConsumeMessage | null) => {
         if (msg) {
           const message: Message = {
             id: msg.properties.messageId || uuidv4(),

@@ -10,10 +10,10 @@ const { ProtoFile } = require('../dist/proto-file');
 
 @ProtoMessage()
 class SmokeTest {
-  @ProtoField({ id: 1 })
+  @ProtoField({ id: 1, type: 'string' })
   name!: string;
 
-  @ProtoField({ id: 2 })
+  @ProtoField({ id: 2, type: 'bigint' })
   count!: bigint;
 }
 

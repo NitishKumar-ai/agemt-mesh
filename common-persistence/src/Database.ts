@@ -104,6 +104,154 @@ export interface WorkflowToTaskTable extends BaseEntity {
   task_id: string;
 }
 
+
+export interface AgentSessionTable {
+  run_id: string;
+  agent_id: string;
+  started_at: number;
+  updated_at: number;
+  last_step: string;
+  status: string;
+  step_count: number;
+}
+
+export interface AgentStepTable {
+  id: Generated<number>;
+  run_id: string;
+  agent_id: string;
+  step: string;
+  status: string;
+  created_at: number;
+}
+
+export interface DlqEventTable {
+  id: Generated<number>;
+  run_id: string;
+  agent_id: string;
+  error: string;
+  created_at: number;
+}
+
+export interface ApprovalTable {
+  id: Generated<number>;
+  run_id: string;
+  payload: string;
+  status: string;
+  risk_level: string;
+  requesting_agent: string;
+  created_at: number;
+}
+
+export interface ApprovalHistoryTable {
+  id: Generated<number>;
+  approval_id: number;
+  action: string;
+  actor: string;
+  payload: string;
+  created_at: number;
+}
+
+export interface SafetyVerdictTable {
+  id: Generated<number>;
+  run_id: string;
+  agent_id: string;
+  frame_hash: string;
+  verdict: string;
+  confidence: number;
+  reasoning: string;
+  checks: string;
+  risk_tier: string;
+  recursion_depth: number;
+  counterfactual_flag: number;
+  critic_model: string;
+  eval_duration_ms: number;
+  created_at: number;
+}
+
+export interface SafetyEscalationTable {
+  id: Generated<number>;
+  run_id: string;
+  agent_id: string;
+  frame_hash: string;
+  verdict_id: number | null;
+  escalation_type: string;
+  resolved: number;
+  resolved_by: string | null;
+  resolution: string | null;
+  created_at: number;
+  resolved_at: number | null;
+}
+
+export interface MarketingCampaignTable {
+  id: Generated<number>;
+  source_finding_id: number | null;
+  name: string;
+  audience: string;
+  finding_summary: string;
+  value_proposition: string | null;
+  channel: string;
+  status: string;
+  subject: string | null;
+  body: string | null;
+  approval_note: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface MarketingAuditEventTable {
+  id: Generated<number>;
+  entity_type: string;
+  entity_id: number;
+  action: string;
+  actor: string;
+  payload: string;
+  created_at: number;
+}
+
+export interface SecurityFindingTable {
+  id: Generated<number>;
+  source_agent: string;
+  title: string;
+  summary: string;
+  evidence: string;
+  severity: string;
+  repository: string | null;
+  status: string;
+  verified_by: string | null;
+  verified_at: number | null;
+  created_at: number;
+}
+
+export interface DashboardScheduleTable {
+  id: Generated<number>;
+  name: string;
+  prompt: string;
+  interval: string;
+  enabled: number;
+  next_run_at: number | null;
+  last_run_at: number | null;
+  last_status: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ConnectionTable {
+  id: string;
+  provider_id: string;
+  connector_type: string;
+  status: string;
+  config: string;
+  metadata: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface KillswitchMetaTable {
+  key: string;
+  engaged_by: string | null;
+  updated_at: number;
+}
+
 export interface Database {
   meta_task_def: MetaTaskDefTable;
   meta_workflow_def: MetaWorkflowDefTable;
@@ -120,4 +268,17 @@ export interface Database {
   workflow_pending: WorkflowPendingTable;
   workflow_def_to_workflow: WorkflowDefToWorkflowTable;
   workflow_to_task: WorkflowToTaskTable;
+  agent_sessions: AgentSessionTable;
+  agent_steps: AgentStepTable;
+  dlq_events: DlqEventTable;
+  approvals: ApprovalTable;
+  approval_history: ApprovalHistoryTable;
+  safety_verdicts: SafetyVerdictTable;
+  safety_escalations: SafetyEscalationTable;
+  marketing_campaigns: MarketingCampaignTable;
+  marketing_audit_events: MarketingAuditEventTable;
+  security_findings: SecurityFindingTable;
+  dashboard_schedules: DashboardScheduleTable;
+  connections: ConnectionTable;
+  killswitch_meta: KillswitchMetaTable;
 }

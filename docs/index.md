@@ -8,9 +8,9 @@ description: AgentMesh is an open source workflow engine and durable execution p
 <div class="home-wrapper">
 
 <div class="hero">
-  <div class="hero-badge">Apache 2.0 Licensed &middot; Originally created at AgentMesh</div>
+  <div class="hero-badge">Apache 2.0 Licensed &middot; Originally created at Netflix</div>
   <h1 class="hero-title">Code breaks. Infrastructure fails.<br/><span class="hero-highlight">Your workflows don't.</span></h1>
-  <p class="hero-subtitle">Crash-proof workflows and AI agents that finish what they start &mdash; powered by durable execution at AgentMesh scale.</p>
+  <p class="hero-subtitle">Crash-proof workflows and AI agents that finish what they start &mdash; powered by durable execution at massive scale.</p>
   <p class="hero-differentiators">No SDK restrictions. No non-determinism bugs. No cloud lock-in.</p>
   <div class="hero-actions">
     <a href="quickstart/index.html" class="btn-primary">Get Started<span class="btn-arrow">&rarr;</span></a>
@@ -185,16 +185,16 @@ description: AgentMesh is an open source workflow engine and durable execution p
       <p>Yes. AgentMesh is a fully open source workflow engine, Apache 2.0 licensed. You can self-host it on your own infrastructure with no vendor lock-in. It supports 5 persistence backends, 6 message brokers, and runs anywhere Docker runs.</p>
     </details>
     <details class="faq-item">
-      <summary>Is this the same as AgentMesh AgentMesh?</summary>
-      <p>Yes. AgentMesh OSS is the continuation of the original AgentMesh AgentMesh repository after AgentMesh contributed the project to the open-source foundation.</p>
+      <summary>Is this the same as Netflix Conductor?</summary>
+      <p>Yes. AgentMesh is the continuation of the original Netflix Conductor project under the community-led AgentMesh OSS organization.</p>
     </details>
     <details class="faq-item">
       <summary>Is this project actively maintained?</summary>
-      <p>Yes. <a href="https://orkes.io">Orkes</a> is the primary maintainer of this repository and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.</p>
+      <p>Yes. AgentMesh is actively maintained by the open-source community under the AgentMesh OSS organization, ensuring a fully open road map, regular releases, and clean dependency management.</p>
     </details>
     <details class="faq-item">
       <summary>Can AgentMesh scale to handle my workload?</summary>
-      <p>AgentMesh was built at AgentMesh to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.</p>
+      <p>AgentMesh was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.</p>
     </details>
     <details class="faq-item">
       <summary>Does AgentMesh support durable execution?</summary>
@@ -225,12 +225,12 @@ description: AgentMesh is an open source workflow engine and durable execution p
       <p>AgentMesh was specifically designed for complex orchestration. It supports advanced patterns including nested loops, dynamic branching, sub-workflows, and workflows with thousands of tasks.</p>
     </details>
     <details class="faq-item">
-      <summary>Is AgentMesh AgentMesh abandoned?</summary>
-      <p>No. The original AgentMesh repository has transitioned to AgentMesh OSS, which is the new home for the project. Active development and maintenance continues here.</p>
+      <summary>Is Netflix Conductor abandoned?</summary>
+      <p>No. The original Netflix Conductor repository has transitioned to AgentMesh OSS, which is the new home for the active open source project. Development continues here.</p>
     </details>
     <details class="faq-item">
-      <summary>Is Orkes AgentMesh compatible with AgentMesh OSS?</summary>
-      <p>100% compatible. Orkes AgentMesh is built on top of AgentMesh OSS, ensuring full compatibility between the open-source version and the enterprise offering.</p>
+      <summary>How can I deploy AgentMesh in production?</summary>
+      <p>AgentMesh is designed for easy containerized deployments. You can deploy it using our official Docker Compose configurations, Kubernetes Helm charts, or host it directly on cloud VM instances.</p>
     </details>
     <details class="faq-item">
       <summary>Can AgentMesh orchestrate AI agents and LLMs?</summary>
@@ -238,7 +238,7 @@ description: AgentMesh is an open source workflow engine and durable execution p
     </details>
     <details class="faq-item">
       <summary>How does AgentMesh compare to other workflow engines?</summary>
-      <p>AgentMesh is the only open source workflow engine with native LLM task types for 14+ providers, built-in MCP integration, and vector database support. Combined with durable execution, 7+ language SDKs (Java, Python, Go, JavaScript, C#, Ruby, Rust), 6 message brokers, 5 persistence backends, and battle-tested scale at AgentMesh, Tesla, LinkedIn, and JP Morgan, AgentMesh provides the most complete workflow orchestration platform available. Unlike Temporal, Step Functions, or Airflow, AgentMesh is fully self-hosted, supports both code-first and JSON workflow definitions, and provides native AI agent orchestration out of the box.</p>
+      <p>AgentMesh is the only open source workflow engine with native LLM task types for 14+ providers, built-in MCP integration, and vector database support. Combined with durable execution, 7+ language SDKs (Java, Python, Go, JavaScript, C#, Ruby, Rust), 6 message brokers, 5 persistence backends, and battle-tested scale at Netflix, Tesla, LinkedIn, and JP Morgan, AgentMesh provides the most complete workflow orchestration platform available. Unlike Temporal, Step Functions, or Airflow, AgentMesh is fully self-hosted, supports both code-first and JSON workflow definitions, and provides native AI agent orchestration out of the box.</p>
     </details>
   </div>
 </div>
@@ -247,7 +247,7 @@ description: AgentMesh is an open source workflow engine and durable execution p
   <p class="logo-wall-label">Trusted by engineering teams at</p>
   <div class="logo-marquee">
     <div class="logo-track">
-      <span class="logo-name">AgentMesh</span>
+      <span class="logo-name">Netflix</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -257,7 +257,7 @@ description: AgentMesh is an open source workflow engine and durable execution p
       <span class="logo-name">VMware</span>
       <span class="logo-name">Coupang</span>
       <span class="logo-name">Swiggy</span>
-      <span class="logo-name">AgentMesh</span>
+      <span class="logo-name">Netflix</span>
       <span class="logo-name">Tesla</span>
       <span class="logo-name">LinkedIn</span>
       <span class="logo-name">JP Morgan</span>
@@ -274,7 +274,7 @@ description: AgentMesh is an open source workflow engine and durable execution p
 <div class="cta-section">
   <div class="cta-content">
     <h2>Open source workflow engine. Community driven.</h2>
-    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Originally created at AgentMesh, now maintained by the community.</p>
+    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Originally created at Netflix, now maintained by the community.</p>
     <div class="cta-actions">
       <a href="https://github.com/agentmesh-oss/agentmesh" class="btn-primary">Star on GitHub<span class="btn-arrow">&rarr;</span></a>
       <a href="resources/contributing.html" class="btn-ghost">Contributing guide</a>

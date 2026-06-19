@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Phase 8 — Blue/Green Deploy Script
+# AgentMesh Blue/Green Deploy Script
 #
 # Usage:
 #   ./deploy/blue-green-deploy.sh <IMAGE_TAG>
 #
 # Required env vars:
-#   CONTAINER_RUNTIME  — docker (default) or podman
-#   HEALTH_URL         — URL to poll for readiness (default: http://localhost:8080/health)
-#   PORT_BLUE          — host port for the blue slot (default: 8080)
-#   PORT_GREEN         — host port for the green slot (default: 8081)
-#   DATA_DIR           — path to the data directory (default: ./data)
+#   CONTAINER_RUNTIME  -- docker (default) or podman
+#   HEALTH_URL         -- URL to poll for readiness (default: http://localhost:8080/health)
+#   PORT_BLUE          -- host port for the blue slot (default: 8080)
+#   PORT_GREEN         -- host port for the green slot (default: 8081)
+#   DATA_DIR           -- path to the data directory (default: ./data)
+#
+# Optional env vars (forwarded to the container):
+#   ANTHROPIC_API_KEY  -- Anthropic API key for Claude models
+#   GEMINI_API_KEY     -- Google Gemini API key
+#   OPENAI_API_KEY     -- OpenAI API key
+#   E2B_API_KEY        -- E2B sandbox API key
+#   DB_TYPE            -- Database type: sqlite (default) or postgres
+#   DB_HOST            -- Postgres host (only when DB_TYPE=postgres)
+#   DB_PORT            -- Postgres port (only when DB_TYPE=postgres)
+#   DB_USER            -- Postgres user (only when DB_TYPE=postgres)
+#   DB_PASS            -- Postgres password (only when DB_TYPE=postgres)
+#   DB_NAME            -- Postgres database name (only when DB_TYPE=postgres)
 #
 # What it does:
 #   1. Detect which slot (blue/green) is currently "live" (serving PORT_BLUE).
@@ -21,14 +33,14 @@
 #   5. Remove the old container.
 #
 # This approach requires no external load balancer for single-host deployments.
-# For Kubernetes: use a standard rolling update — this script is for bare-metal
+# For Kubernetes: use a standard rolling update -- this script is for bare-metal
 # or single-VM production environments.
 # ---------------------------------------------------------------------------
 
 set -euo pipefail
 
 TAG="${1:?Usage: $0 <IMAGE_TAG>}"
-IMAGE="conductor-agent:${TAG}"
+IMAGE="agentmesh:${TAG}"
 
 RUNTIME="${CONTAINER_RUNTIME:-docker}"
 HEALTH_URL="${HEALTH_URL:-http://localhost:8080/health}"
@@ -41,8 +53,8 @@ HEALTH_TIMEOUT=60
 # Interval between health check attempts (seconds)
 HEALTH_INTERVAL=3
 
-BLUE_NAME="conductor-blue"
-GREEN_NAME="conductor-green"
+BLUE_NAME="agentmesh-blue"
+GREEN_NAME="agentmesh-green"
 
 log() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*"; }
 
@@ -66,7 +78,7 @@ wait_healthy() {
   while [[ $(date +%s) -lt $deadline ]]; do
     local body
     body=$(curl -sf --max-time 3 "${url}" 2>/dev/null || true)
-    if echo "${body}" | grep -q '"status":"UP"'; then
+    if echo "${body}" | grep -q '"status":"OK"'; then
       log "Health check passed."
       return 0
     fi
@@ -77,20 +89,43 @@ wait_healthy() {
   return 1
 }
 
+# Build the list of -e flags for optional environment variables.
+# Only forwards variables that are set in the host environment.
+build_env_flags() {
+  local flags=()
+  local vars=(
+    ANTHROPIC_API_KEY GEMINI_API_KEY OPENAI_API_KEY E2B_API_KEY
+    LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY LANGFUSE_BASE_URL
+    DB_TYPE DB_HOST DB_PORT DB_USER DB_PASS DB_NAME
+    QUEUE_PROVIDER RABBITMQ_URL
+  )
+  for var in "${vars[@]}"; do
+    if [[ -n "${!var:-}" ]]; then
+      flags+=(-e "${var}=${!var}")
+    fi
+  done
+  echo "${flags[@]}"
+}
+
 run_slot() {
   local name="$1"
   local port="$2"
 
   mkdir -p "${DATA_DIR}"
 
+  local env_flags
+  env_flags=$(build_env_flags)
+
+  # shellcheck disable=SC2086
   "$RUNTIME" run -d \
     --name "${name}" \
     --restart unless-stopped \
     -p "${port}:8080" \
     -v "${DATA_DIR}:/data" \
     -e "NODE_ENV=production" \
-    -e "DB_PATH=/data/agent-mesh.db" \
+    -e "DB_PATH=/data/agentmesh.sqlite" \
     -e "PORT=8080" \
+    ${env_flags} \
     "${IMAGE}"
   log "Started container ${name} on port ${port}."
 }
@@ -110,7 +145,7 @@ stop_slot() {
 # Determine live slot
 # ---------------------------------------------------------------------------
 
-log "=== Conductor Blue/Green Deploy ==="
+log "=== AgentMesh Blue/Green Deploy ==="
 log "Image : ${IMAGE}"
 log "Runtime: ${RUNTIME}"
 
@@ -127,7 +162,7 @@ elif container_running "$GREEN_NAME"; then
   IDLE_SLOT="$BLUE_NAME"
   IDLE_PORT="$PORT_BLUE"
 else
-  # Cold start — nothing is running
+  # Cold start -- nothing is running
   log "No live slot detected. Cold-starting on blue slot."
   run_slot "$BLUE_NAME" "$PORT_BLUE"
   wait_healthy "${HEALTH_URL}"

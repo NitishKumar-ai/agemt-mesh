@@ -1138,6 +1138,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
   private scheduleTask(workflow: WorkflowModel, tasks: TaskModel[]): boolean {
     let startedSystemTasks = false;
+    let tasksToBeQueued: TaskModel[] = [];
 
     try {
       if (!tasks || tasks.length === 0) return false;
@@ -1156,7 +1157,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
       this.executionDAOFacade.createTasks(tasks);
 
       const systemTasks = tasks.filter((t) => this.systemTaskRegistry.isSystemTask(t.taskType));
-      const tasksToBeQueued = tasks.filter(
+      tasksToBeQueued = tasks.filter(
         (t) => !this.systemTaskRegistry.isSystemTask(t.taskType),
       );
 
@@ -1171,15 +1172,29 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
         }
 
         if (!workflowSystemTask.isAsync()) {
+          let startResult: Promise<void> | void;
           try {
-            workflowSystemTask.start(workflow, task, this);
+            startResult = workflowSystemTask.start(workflow, task, this);
           } catch (e) {
             throw new Error(
               `Unable to start system task: ${task.taskType}, {id: ${task.taskId}, name: ${task.taskDefName}}`,
             );
           }
           startedSystemTasks = true;
-          this.executionDAOFacade.updateTask(task);
+          if (startResult && typeof (startResult as Promise<void>).then === 'function') {
+            (startResult as Promise<void>)
+              .then(() => this.executionDAOFacade.updateTask(task))
+              .catch((e) => {
+                task.status = 'FAILED';
+                task.reasonForIncompletion = String((e as Error)?.message ?? e);
+                this.executionDAOFacade.updateTask(task);
+              })
+              .then(() => {
+                this.queueDAO.push(DECIDER_QUEUE, workflow.workflowId, EXPEDITED_PRIORITY, 0);
+              });
+          } else {
+            this.executionDAOFacade.updateTask(task);
+          }
         } else {
           tasksToBeQueued.push(task);
         }
@@ -1192,7 +1207,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     }
 
     try {
-      this.addTasksToQueue(tasks.filter((t) => !this.systemTaskRegistry.isSystemTask(t.taskType)));
+      this.addTasksToQueue(tasksToBeQueued);
     } catch {
       // ignore queue errors
     }

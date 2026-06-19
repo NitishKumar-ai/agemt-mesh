@@ -1,4 +1,9 @@
-version: '3.8'
+# ---------------------------------------------------------------------------
+# AgentMesh -- Root docker-compose for local development
+#
+# Starts the server with Postgres and Redis.
+# Usage: docker compose up -d --build
+# ---------------------------------------------------------------------------
 
 services:
   server:
@@ -6,9 +11,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '${PORT:-3000}:3000'
+      - '${PORT:-8080}:8080'
     environment:
       - NODE_ENV=production
+      - PORT=8080
       - DB_TYPE=postgres
       - DB_HOST=db
       - DB_PORT=5432
@@ -17,11 +23,11 @@ services:
       - DB_NAME=${DB_NAME:-agentmesh}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - E2B_API_KEY=${E2B_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - E2B_API_KEY=${E2B_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-}
     depends_on:
       db:
         condition: service_healthy
@@ -29,10 +35,16 @@ services:
         condition: service_healthy
     volumes:
       - ./data:/app/data
-    restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:8080/health | grep -q OK || exit 1']
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: postgres:16
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASS:-postgres}
@@ -46,7 +58,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -59,7 +71,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: always
+    restart: unless-stopped
 
 volumes:
   postgres_data:

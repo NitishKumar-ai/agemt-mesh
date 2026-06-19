@@ -2,15 +2,24 @@
 
 ## AgentMesh UI
 
-This Dockerfile create the agentmesh:ui image
+This Dockerfile builds the AgentMesh Operator Console (React/Vite).
 
 ## Building the image
 
-Run the following commands from the project root.
+Run the following commands from the project root:
 
-`docker build -f docker/ui/Dockerfile -t agentmesh:ui .`
+```bash
+docker build -f docker/ui/Dockerfile -t agentmesh:ui .
+```
 
-## Running the agentmesh server
+## Running the UI
 
-- With localhost agentmesh server: `docker run -p 5000:5000 -d -t agentmesh:ui`
-- With external agentmesh server: `docker run -p 5000:5000 -d -t -e "WF_SERVER=http://agentmesh-server:8080" agentmesh:ui`
+```bash
+# With default localhost API server (http://localhost:8080):
+docker run -p 5173:5173 agentmesh:ui
+
+# With a remote API server:
+docker run -p 5173:5173 -e "VITE_API_URL=http://agentmesh-server:8080" agentmesh:ui
+```
+
+The UI will be available at `http://localhost:5173`.

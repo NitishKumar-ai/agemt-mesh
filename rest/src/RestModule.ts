@@ -6,6 +6,8 @@ import { AdminResource } from './controllers/AdminResource.js';
 import { EventResource } from './controllers/EventResource.js';
 import { WorkflowBulkResource } from './controllers/WorkflowBulkResource.js';
 import { HealthResource, START_TIME, VERSION, DB_PROBE } from './controllers/HealthResource.js';
+import { OrchestrationController } from './controllers/OrchestrationController.js';
+import { OrchestrationService } from './services/OrchestrationService.js';
 import { VersionResource } from './controllers/VersionResource.js';
 
 import { WorkflowService } from './services/WorkflowService.js';
@@ -36,6 +38,7 @@ export class RestModule {
         WorkflowBulkResource,
         HealthResource,
         VersionResource,
+        OrchestrationController,
       ],
       providers: [
         {
@@ -64,6 +67,12 @@ export class RestModule {
           provide: VersionService,
           useFactory: (version) => new VersionService(version),
           inject: [VERSION],
+        },
+        {
+          provide: OrchestrationService,
+          useFactory: (executionDAO, metadataDAO, queueDAO) =>
+            new OrchestrationService(executionDAO, metadataDAO, queueDAO),
+          inject: [EXECUTION_DAO, METADATA_DAO, QUEUE_DAO],
         },
         {
           provide: AdminService,

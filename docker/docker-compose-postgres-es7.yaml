@@ -1,85 +1,96 @@
-version: '2.3'
+# AgentMesh - Postgres + Redis Stack
+#
+# NOTE: This file previously configured Postgres + Elasticsearch 7.
+# Elasticsearch is no longer part of the AgentMesh architecture.
+# This file now provides a Postgres + Redis variant identical in
+# purpose to docker-compose.yaml but kept for backward compatibility
+# with existing scripts that reference this filename.
+#
+# Services:
+#   - agentmesh-server:   Node.js/NestJS server (server-lite)
+#   - agentmesh-postgres: PostgreSQL 16 persistence backend
+#   - agentmesh-redis:    Redis 7 queue/cache backend
+#
+# Usage (from repo root):
+#   docker compose -f docker/docker-compose-postgres-es7.yaml up -d
 
 services:
   agentmesh-server:
-    environment:
-      - CONFIG_PROP=config-postgres-es7.properties
     image: agentmesh:server
     container_name: agentmesh-server
     build:
       context: ../
       dockerfile: docker/server/Dockerfile
-      args:
-        YARN_OPTS: ${YARN_OPTS}
+    environment:
+      - NODE_ENV=production
+      - DB_TYPE=postgres
+      - DB_HOST=agentmesh-postgres
+      - DB_PORT=5432
+      - DB_USER=agentmesh
+      - DB_PASSWORD=agentmesh
+      - DB_NAME=agentmesh
+      - REDIS_HOST=agentmesh-redis
+      - REDIS_PORT=6379
     networks:
       - internal
     ports:
-      - 8000:8080
-      - 8127:5000
+      - '8080:8080'
     healthcheck:
-      test: ['CMD', 'curl', '-I', '-XGET', 'http://localhost:8080/health']
-      interval: 60s
-      timeout: 30s
-      retries: 12
-    links:
-      - agentmesh-postgres:postgresdb
-      - agentmesh-elasticsearch:es
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
     depends_on:
       agentmesh-postgres:
         condition: service_healthy
-      agentmesh-elasticsearch:
+      agentmesh-redis:
         condition: service_healthy
     logging:
       driver: 'json-file'
       options:
-        max-size: '1k'
+        max-size: '10m'
         max-file: '3'
 
   agentmesh-postgres:
     image: postgres:16
+    container_name: agentmesh-postgres
     environment:
       - POSTGRES_USER=agentmesh
       - POSTGRES_PASSWORD=agentmesh
+      - POSTGRES_DB=agentmesh
     volumes:
       - pgdata-agentmesh:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
-      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/5432'
+      test: ['CMD-SHELL', 'pg_isready -U agentmesh']
       interval: 5s
       timeout: 5s
       retries: 12
     logging:
       driver: 'json-file'
       options:
-        max-size: '1k'
+        max-size: '10m'
         max-file: '3'
 
-  agentmesh-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
-    environment:
-      - 'ES_JAVA_OPTS=-Xms512m -Xmx1024m'
-      - xpack.security.enabled=false
-      - discovery.type=single-node
+  agentmesh-redis:
+    image: redis:7-alpine
+    container_name: agentmesh-redis
     volumes:
-      - esdata-agentmesh:/usr/share/elasticsearch/data
+      - redis-agentmesh:/data
     networks:
       - internal
     healthcheck:
-      test: curl http://localhost:9200/_cluster/health -o /dev/null
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 5s
       retries: 12
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '1k'
-        max-file: '3'
 
 volumes:
   pgdata-agentmesh:
     driver: local
-  esdata-agentmesh:
+  redis-agentmesh:
     driver: local
 
 networks:

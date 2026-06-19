@@ -1,8 +1,9 @@
 import * as Handlebars from 'handlebars';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ProtoFile } from './proto-file';
-import { AbstractMessage } from './abstract-message';
+import { ProtoFile } from './proto-file.js';
+import { AbstractMessage } from './abstract-message.js';
+import { PROTO_MESSAGE_KEY } from '@agentmesh/annotations';
 
 const GENERATOR_NAME = '@agentmesh/annotations-processor';
 
@@ -101,12 +102,16 @@ export class ProtoGen {
   }
 
   processModule(modulePath: string): void {
-    const mod = require(modulePath);
-    for (const key of Object.keys(mod)) {
-      const exported = mod[key];
+    let mod = require(modulePath);
+    // Support nested default modules or TypeScript compiled ES module structure
+    if (mod && mod.default && typeof mod.default === 'object') {
+      mod = mod.default;
+    }
+    
+    const checkAndPush = (exported: any) => {
       if (typeof exported === 'function') {
         try {
-          const ann = Reflect.getMetadata('ProtoMessage', exported);
+          const ann = Reflect.getMetadata(PROTO_MESSAGE_KEY, exported);
           if (ann !== undefined) {
             console.log(`protogen: found ${exported.name}`);
             this.protoFiles.push(
@@ -121,6 +126,14 @@ export class ProtoGen {
         } catch {
           // skip non-class exports
         }
+      }
+    };
+
+    if (typeof mod === 'function') {
+      checkAndPush(mod);
+    } else if (mod && typeof mod === 'object') {
+      for (const key of Object.keys(mod)) {
+        checkAndPush(mod[key]);
       }
     }
   }

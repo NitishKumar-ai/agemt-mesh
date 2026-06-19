@@ -87,3 +87,4 @@ export { SubWorkflowTaskMapper } from './execution/mappers/SubWorkflowTaskMapper
 export { SwitchTaskMapper } from './execution/mappers/SwitchTaskMapper.js';
 export { TerminateTaskMapper } from './execution/mappers/TerminateTaskMapper.js';
 export { WaitTaskMapper } from './execution/mappers/WaitTaskMapper.js';
+export { UserDefinedTaskMapper } from './execution/mappers/UserDefinedTaskMapper.js';

@@ -2,8 +2,10 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src/main/typescript"
+    "rootDir": "./src",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
   },
-  "include": ["src/main/typescript/**/*", "src/test/typescript/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

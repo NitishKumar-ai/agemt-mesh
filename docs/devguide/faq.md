@@ -20,11 +20,11 @@ No. The original AgentMesh repository has transitioned to AgentMesh OSS, which i
 
 ### Is this project actively maintained?
 
-Yes. Orkes is the primary maintainer of this repository and offers an enterprise SaaS platform for AgentMesh across all major cloud providers.
+Yes. AgentMesh is actively maintained by the open-source community under the AgentMesh OSS organization, ensuring a fully open road map, regular releases, and clean dependency management.
 
-### Is Orkes AgentMesh compatible with AgentMesh OSS?
+### How can I deploy AgentMesh in production?
 
-100% compatible. Orkes AgentMesh is built on top of AgentMesh OSS, ensuring full compatibility between the open-source version and the enterprise offering.
+AgentMesh is designed for easy containerized deployments. You can deploy it using our official Docker Compose configurations, Kubernetes Helm charts, or host it directly on cloud VM instances.
 
 ### Are workflows always asynchronous?
 

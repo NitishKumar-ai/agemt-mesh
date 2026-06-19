@@ -1,64 +1,71 @@
-# CLAUDE.md — agentmesh (server repo)
+# CLAUDE.md — AgentMesh
 
-Instructions for Claude Code working in this repository.
+Instructions for AI coding agents working on the AgentMesh monorepo.
+
+## Project Overview
+
+AgentMesh is a TypeScript monorepo (pnpm workspaces) implementing a durable workflow orchestration engine. It consists of:
+
+- **Backend**: NestJS REST API + SQLite persistence (server-lite on port 3000/8080)
+- **Frontends**: 
+  - `ui/` — Agent Mesh OS (React 19 + Vite + Tauri 2 desktop app)
+  - `ui-next/` — Conductor UI (React 18 + MUI + React Router, legacy)
+- **Agent runtime**: In-process agent execution with LLM providers (Anthropic, Gemini)
+
+## Key Source Locations
+
+| Content | Where to look |
+|---------|---------------|
+| REST API controllers | `rest/src/controllers/*.ts` (NestJS `@Controller`) |
+| Orchestration API | `rest/src/controllers/OrchestrationController.ts` (`/api/orchestration/*`) |
+| Agent Mesh OS frontend | `ui/src/` (React 19, custom CSS, lucide icons) |
+| Conductor UI frontend | `ui-next/src/` (React 18, MUI v7, React Router v7) |
+| API client (ui) | `ui/src/lib/api.ts` (Agent API) + `ui/src/lib/conductorApi.ts` (orchestration) |
+| Server entry point | `server-lite/src/index.ts` (NestJS bootstrap) |
+| Storage interfaces | `common-persistence/src/` |
+| Domain models | `common/src/models/` (Zod schemas) |
+| Storage implementations | `sqlite-persistence/`, `postgres-persistence/`, `cassandra-persistence/`, etc. |
+| Workflow engine | `core/src/execution/` |
+| Agent runtime | `agent-runtime/src/` |
+| Chaos tests | `chaos-suite/chaos.test.ts` (crash-recovery test) |
+
+## Build & Test Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm build` | Build all 37+ workspace packages |
+| `pnpm test` | Run all unit tests (contract tests need Docker) |
+| `pnpm --filter <pkg> test` | Test a single package |
+| `pnpm lint` | Lint all packages |
+| `cd ui && pnpm dev` | Start frontend dev server (port 5173) |
+| `node server-lite/dist/index.js` | Start backend (port 3000, or `PORT=8080`) |
+
+## Architecture Decisions
+
+- **Storage backends**: DAO interfaces in `common-persistence`, impls in `*-persistence` packages
+- **Storage backends (files)**: `ExternalPayloadStorage` + `FileStorage` interfaces in `common-storage`, impls in `*-storage` packages
+- **Protobuf**: `@agentmesh/annotations` decorators + `annotations-processor` for class-based models; `zod-proto-gen` (scaffolded) for Zod-based models
+- **Queues**: `QueueDAO` interface with 7+ implementations (SQLite, Postgres, Redis, Kafka, NATS, AMQP, Cassandra)
+- **Frontend routing**: Legacy Agent Mesh pages use `useState<PageKey>`; new Conductor pages use `react-router-dom` under `/workflows`, `/tasks`, `/events`, `/schedulers`
 
 ## Writing Documentation
 
-Documentation in this project is **derived from source**, not composed from memory or intuition. The workflow is: open the source → read what's there → write the doc from what you find. The source is the spec; the doc is a rendering of it.
+Documentation is **derived from source**, not composed from memory. Open the source first, read it, then write.
 
-Concrete reason this matters: a curl equivalent for `agentmesh workflow start --sync` was once written as `POST /api/workflow/{name}/run` — an endpoint that does not exist. Opening `WorkflowResource.java` first would have given the correct path (`POST /api/workflow/execute/{name}/{version}`) immediately.
+### Workflow for each content type
 
-### For each content type, start here
-
-**REST endpoint or curl example**
-
-1. Open the controller: `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/`
-2. Find the method by its `@PostMapping`/`@GetMapping` annotation — copy the path literally.
-3. Read the method signature for query params, path variables, and request body.
+**REST API endpoint or curl example**
+1. Open the controller: `rest/src/controllers/` — TypeScript NestJS `@Controller('api/...')`
+2. Copy the path from the decorator literally.
+3. Read `@Get`, `@Post`, `@Param`, `@Query`, `@Body` for the signature.
 4. Write the curl from what you just read.
 
-**CLI command or flag**
-
-1. Open `agentmesh-cli/cmd/*.go` (separate repo under this workspace).
-2. Find the `cobra.Command` for the subcommand and read its `Flags()` declarations.
-3. Write the example from what you just read — flag names, types, and defaults.
-
-**SDK code example (Python, JS, Java, Go)**
-
-1. Open the SDK source file for the method you're documenting.
-2. Read the method signature and required parameters.
-3. If a working test exists for that method, use it as the starting point.
-4. Write from the signature — do not infer from the method name alone.
-
 **Expected output block**
-
-1. Get real output: run the command, or find it in test fixtures or CI logs.
+1. Get real output: run the command locally, or find it in test fixtures or CI logs.
 2. Paste verbatim. Do not construct output that "looks right."
-3. For variable fields (IDs, timestamps), use annotated placeholders like `<workflow-id>`.
 
-**Editing an existing section**
+## Modifying the CLAUDE.md
 
-- Before changing anything, read every code block and command in the section.
-- Verify each one using the steps above, not just the block you plan to change.
-- Fix anything you find while you're there.
+This file should be kept in sync with the actual project structure. When adding major new packages or changing the architecture, update the source locations and commands above.
 
-### When you can't verify
-
-If a running server or CLI is unavailable:
-
-- Add `<!-- TODO: verify against live server -->` in the file.
-- Note it explicitly in the PR description.
-- Do not write an unverified example and leave it unmarked.
-
-### Key source locations
-
-| Content                   | Where to look                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------- |
-| REST API routes           | `rest/src/main/java/com/agentmesh/agentmesh/rest/controllers/`                              |
-| Workflow sync execution   | `WorkflowResource.java` → `executeWorkflow()` at `@PostMapping("execute/{name}/{version}")` |
-| Task routes               | `TaskResource.java`                                                                         |
-| CLI subcommands and flags | `agentmesh-cli/cmd/workflow.go`, `cmd/task.go`, etc.                                        |
-
-## Other Guidelines
-
-See [AGENTS.md](AGENTS.md) for full project conventions: code style, testing, dependency pinning, PR guidelines.
+See [AGENTS.md](AGENTS.md) for full project conventions.

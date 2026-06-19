@@ -2,11 +2,19 @@
   "name": "@agentmesh/local-file-storage",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src/",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentmesh/common-storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.4.5",
+    "vitest": "^2.0.0"
   }
 }

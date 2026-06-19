@@ -1,16 +1,20 @@
 {
-  "name": "amqp",
+  "name": "@agentmesh/amqp",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
     "amqplib": "^2.0.1",
     "rxjs": "^7.8.2",
     "uuid": "^14.0.0"

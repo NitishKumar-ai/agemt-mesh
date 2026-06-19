@@ -339,4 +339,18 @@ export class SyncSqliteAdapter {
     }
     return null;
   }
+
+  /**
+   * Batch pop — wraps popMessage to match the engine's QueueDAO interface.
+   * Called by SystemTaskWorker to drain async system tasks (JOIN, HTTP, etc.).
+   */
+  async pop(queueName: string, count: number, _timeout: number): Promise<string[]> {
+    const ids: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const id = this.popMessage(queueName);
+      if (id === null) break;
+      ids.push(id);
+    }
+    return ids;
+  }
 }

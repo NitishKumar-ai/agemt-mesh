@@ -1,7 +1,14 @@
+# AgentMesh - Port Override
+#
+# Use this file as a compose override to remap the default server port.
+#
+# Usage (from repo root):
+#   docker compose -f docker/docker-compose.yaml \
+#                  -f docker/docker-compose-port-override.yaml up -d
+#
+# This maps host port 8000 to container port 8080.
+
 services:
   agentmesh-server:
     ports:
       - '8000:8080'
-      - '8127:5000'
-  agentmesh-postgres:
-    image: postgres:16

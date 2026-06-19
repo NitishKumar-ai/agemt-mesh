@@ -13,7 +13,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@agentmesh/annotations": "file:../annotations",
+    "@agentmesh/annotations": "workspace:*",
     "handlebars": "^4.7.8",
     "reflect-metadata": "^0.2.2"
   },

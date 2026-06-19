@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0.1] - 2026-06-20
+
+### Added
+- Added `zod-proto-gen` package for introspecting Zod schemas and converting them to Protobuf declarations.
+- Integrated `HttpTask` and `JsonJqTransform` system tasks into the server-lite runtime.
+- Added conditional check for AMQPQueueDAO in server-lite based on `QUEUE_PROVIDER=amqp`.
+- Added unit tests for `findZodSchemas` in `zod-proto-gen` with passing status.
+
+### Fixed
+- Fixed critical shadowing bug in `WorkflowExecutorOps.scheduleTask` preventing non-system tasks from being queued and executed.
+- Fixed TS compilation errors in `zod-proto-gen` package due to ZodTypeDef type assertions and CLI arguments.
+- Fixed SQLite WAL journal mode pragma to only apply when DB path is not `:memory:`.
+
 ## [0.1.0.0] - 2026-06-18
 
 ### Added

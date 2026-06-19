@@ -1,90 +1,110 @@
 # AgentMesh Docker Builds
 
-## Pre-built docker images
+## Quick Start
 
-AgentMesh server with support for the following backend:
+```bash
+# Start with Postgres + Redis (recommended for production)
+docker compose -f docker/docker-compose.yaml up -d --build
 
-1. Redis
-2. Postgres
-3. Mysql
-4. Cassandra
-
-### Docker File for Server and UI
-
-[Docker Image Source for Server with UI](server/Dockerfile)
-
-### Configuration Guide for AgentMesh Server
-
-AgentMesh uses a persistent store for managing state.  
-The choice of backend is quite flexible and can be configured at runtime using `agentmesh.db.type` property.
-
-Refer to the table below for various supported backend and required configurations to enable each of them.
-
-> [!IMPORTANT]
->
-> See [config.properties](docker/server/config/config.properties) for the required properties for each of the backends.
->
-> | Backend   | Property                           |
-> | --------- | ---------------------------------- |
-> | postgres  | agentmesh.db.type=postgres         |
-> | redis     | agentmesh.db.type=redis_standalone |
-> | mysql     | agentmesh.db.type=mysql            |
-> | cassandra | agentmesh.db.type=cassandra        |
-
-AgentMesh is using Elasticsearch or OpenSearch for indexing the workflow data.
-Currently, Elasticsearch 7 and OpenSearch 2.x/3.x are supported.
-
-We welcome community contributions for other indexing backends.
-
-**Note:** Docker images use Elasticsearch 7 by default. Elasticsearch 6 and OpenSearch 1.x are deprecated.
-
-## Helm Charts
-
-TODO: Link to the helm charts
-
-## Run Docker Compose Locally
-
-### Use the docker-compose to bring up the local agentmesh server.
-
-| Docker Compose                                                 | Description                               |
-| -------------------------------------------------------------- | ----------------------------------------- |
-| [docker-compose.yaml](docker-compose.yaml)                     | Redis + Elasticsearch 7                   |
-| [docker-compose-postgres.yaml](docker-compose-postgres.yaml)   | Postgres + Elasticsearch 7                |
-| [docker-compose-mysql.yaml](docker-compose-mysql.yaml)         | Mysql + Elasticsearch 7                   |
-| [docker-compose-redis-os.yaml](docker-compose-redis-os.yaml)   | Redis + OpenSearch 2.x (legacy - use os2) |
-| [docker-compose-redis-os2.yaml](docker-compose-redis-os2.yaml) | Redis + OpenSearch 2.x                    |
-| [docker-compose-redis-os3.yaml](docker-compose-redis-os3.yaml) | Redis + OpenSearch 3.x                    |
-
-### Network errors during UI build with yarn
-
-It has been observed, that the UI build may fail with an error message like
-
-```
-> [linux/arm64 ui-builder 5/7] RUN yarn install && cp -r node_modules/monaco-editor public/ && yarn build:
-269.9     at Object.onceWrapper (node:events:633:28)
-269.9     at TLSSocket.emit (node:events:531:35)
-269.9     at Socket._onTimeout (node:net:590:8)
-269.9     at listOnTimeout (node:internal/timers:573:17)
-269.9     at process.processTimers (node:internal/timers:514:7)
-269.9 info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
-281.2 info There appears to be trouble with your network connection. Retrying...
-313.5 info There appears to be trouble with your network connection. Retrying...
-920.3 info There appears to be trouble with your network connection. Retrying...
-953.6 info There appears to be trouble with your network connection. Retrying...
+# Start with SQLite only (simplest, good for development)
+docker build -t agentmesh:server -f docker/server/Dockerfile .
+docker run -p 8080:8080 -v $(pwd)/data:/data agentmesh:server
 ```
 
-This does not necessarily mean, that the network is unavailable, but can be caused by too high latency, as well. `yarn` accepts the option `--network-timeout <#ms>` to set a custom timeout in milliseconds.
+## Pre-built Docker Images
 
-For passing arguments to `yarn`, in [this Dockerfile](server/Dockerfile) the _optional_ build arg `YARN_OPTS` has been added. This argument will be added to each `yarn` call.
+### Server Only (API)
 
-When using one of the `docker-compose-*` files, you can set this via the environment variable `YARN_OPTS`, e.g.:
+[docker/server/Dockerfile](server/Dockerfile) -- AgentMesh server with NestJS API.
 
+```bash
+docker build -t agentmesh:server -f docker/server/Dockerfile .
 ```
-YARN_OPTS='--network-timeout 10000000' docker compose -f docker-compose.yaml up
+
+### Server + UI
+
+[docker/server/Dockerfile.next](server/Dockerfile.next) -- AgentMesh server with the
+React Operator Console bundled. The NestJS server serves both the API and the UI
+from a single process.
+
+```bash
+docker build -t agentmesh:server-next -f docker/server/Dockerfile.next .
 ```
 
-When building a Docker image using `docker`, you must call it like e.g.
+### UI Only (Development)
 
+[docker/ui/Dockerfile](ui/Dockerfile) -- Standalone React UI for development.
+
+```bash
+docker build -f docker/ui/Dockerfile -t agentmesh:ui .
+docker run -p 5173:5173 agentmesh:ui
 ```
-docker build --build-arg='YARN_OPTS=--network-timeout 10000000' .. -f server/Dockerfile -t oss-agentmesh:v3.21.9
+
+## Configuration
+
+AgentMesh is configured entirely via environment variables. No property files needed.
+
+See [server/config/README.md](server/config/README.md) for the full reference, or
+`.env.example` in the project root.
+
+### Key Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | HTTP server port |
+| `DB_PATH` | `./data/agentmesh.sqlite` | SQLite database path |
+| `DB_TYPE` | `sqlite` | Database backend: `sqlite` or `postgres` |
+| `ANTHROPIC_API_KEY` | -- | Anthropic Claude API key |
+| `GEMINI_API_KEY` | -- | Google Gemini API key |
+
+### Database Backends
+
+| Backend | Status | Configuration |
+|---------|--------|---------------|
+| SQLite | Default | Set `DB_PATH` |
+| PostgreSQL | Supported | Set `DB_TYPE=postgres` + `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME` |
+
+## Docker Compose Variants
+
+### Active Stacks
+
+| Compose File | Description |
+|--------------|-------------|
+| [docker-compose.yaml](docker-compose.yaml) | Postgres + Redis (recommended) |
+| [docker-compose-postgres.yaml](docker-compose-postgres.yaml) | Postgres only |
+| [docker-compose-postgres-e2e.yaml](docker-compose-postgres-e2e.yaml) | E2E test stack |
+| [docker-compose-ui-e2e.yaml](docker-compose-ui-e2e.yaml) | UI E2E test stack |
+
+### Utilities
+
+| Compose File | Description |
+|--------------|-------------|
+| [docker-compose-port-override.yaml](docker-compose-port-override.yaml) | Override the default port mapping |
+
+### Deprecated (Not Supported in TypeScript Rewrite)
+
+The following compose files reference backends that are not yet available in the
+TypeScript rewrite. They contain deprecation notices:
+
+- `docker-compose-mysql.yaml`
+- `docker-compose-cassandra-es7.yaml`
+- `docker-compose-es8.yaml`
+- `docker-compose-redis-os.yaml` / `redis-os2.yaml` / `redis-os3.yaml`
+
+## Health Check
+
+The server exposes a health endpoint:
+
+```bash
+curl http://localhost:8080/health
+# {"status":"OK","version":"0.1.0.0","uptime":42}
+```
+
+## CI Docker Image
+
+[docker/ci/Dockerfile](ci/Dockerfile) runs the full CI pipeline (install, build,
+test, lint) inside a container:
+
+```bash
+docker build -f docker/ci/Dockerfile .
 ```

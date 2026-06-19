@@ -1,4 +1,4 @@
-import { AMQPConstants } from './AMQPConstants';
+import { AMQPConstants } from './AMQPConstants.js';
 
 export enum Type {
   QUEUE = 'amqp_queue',
@@ -50,7 +50,7 @@ export class AMQPSettings {
     if (match[1]) {
       this.type = match[1].toLowerCase() === Type.EXCHANGE ? Type.EXCHANGE : Type.QUEUE;
     }
-    this.queueOrExchangeName = match[2];
+    this.queueOrExchangeName = match[2] ?? '';
     this.eventName = queueURI;
 
     if (match[3]) {

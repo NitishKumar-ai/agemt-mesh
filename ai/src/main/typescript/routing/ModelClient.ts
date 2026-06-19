@@ -44,4 +44,33 @@ export class ModelClient {
 
     return this.provider.getModel(input);
   }
+
+  /**
+   * Calculates the cost in USD based on the model used, prompt tokens, and completion tokens.
+   */
+  public calculateCost(model: string, promptTokens: number, completionTokens: number): number {
+    const lowerModel = model.toLowerCase();
+    
+    // Default prices per 1M tokens (input / output)
+    let inputPricePerM = 3.00;
+    let outputPricePerM = 15.00;
+
+    if (lowerModel.includes('claude-3-7-sonnet') || lowerModel.includes('claude-3.7-sonnet')) {
+      inputPricePerM = 3.00;
+      outputPricePerM = 15.00;
+    } else if (lowerModel.includes('gemini-2.5-flash') || lowerModel.includes('gemini-2.5-flash')) {
+      inputPricePerM = 0.075;
+      outputPricePerM = 0.30;
+    } else if (lowerModel.includes('gemini-1.5-flash')) {
+      inputPricePerM = 0.075;
+      outputPricePerM = 0.30;
+    } else if (lowerModel.includes('haiku')) {
+      inputPricePerM = 0.25;
+      outputPricePerM = 1.25;
+    }
+
+    const inputCost = (promptTokens / 1_000_000) * inputPricePerM;
+    const outputCost = (completionTokens / 1_000_000) * outputPricePerM;
+    return inputCost + outputCost;
+  }
 }
