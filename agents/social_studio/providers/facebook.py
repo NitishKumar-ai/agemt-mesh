@@ -297,7 +297,7 @@ class FacebookProvider(SocialProvider):
             f"{BASE_URL}/{page_id}",
             access_token=access_token,
             params={
-                "fields": "fan_count,insights.metric(page_impressions,page_post_engagements).since({}).until({})".format(
+                "fields": "fan_count,insights.metric(page_impressions,page_engaged_users).since({}).until({})".format(
                     int(date_range[0].timestamp()),
                     int(date_range[1].timestamp()),
                 ),
@@ -317,6 +317,6 @@ class FacebookProvider(SocialProvider):
         return AccountMetrics(
             followers=body.get("fan_count", 0),
             impressions=metrics_data.get("page_impressions", 0),
-            engagements=metrics_data.get("page_post_engagements", 0),
+            engagements=metrics_data.get("page_engaged_users", 0),
             extra=metrics_data,
         )

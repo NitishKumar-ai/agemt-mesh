@@ -242,10 +242,11 @@ async def generate_for_platform(
     topic: str,
     tone: str,
     brand_voice: str,
+    generate_image: bool = False,
 ) -> dict:
     """
     Generate content for a single platform using Gemini.
-    Returns dict with: platform, content, hashtags, char_count, status
+    Returns dict with: platform, content, hashtags, char_count, status, image_url (optional)
     """
     try:
         rules = PLATFORM_RULES.get(platform)
@@ -270,7 +271,7 @@ async def generate_for_platform(
             platform, len(raw), elapsed_ms
         )
 
-        return {
+        result = {
             "platform": platform,
             "label": rules["label"],
             "content": body,
@@ -280,6 +281,35 @@ async def generate_for_platform(
             "status": "draft",
             "error": None,
         }
+
+        # Generate image if requested and for visual platforms
+        if generate_image and platform in ("instagram_login", "facebook", "twitter", "linkedin"):
+            from .imagen_client import generate_image, is_imagen_enabled
+            import os
+            import secrets
+            
+            if is_imagen_enabled():
+                try:
+                    # Create image prompt from topic
+                    image_prompt = f"Create a professional, eye-catching social media image about: {topic}. Style: modern, clean, vibrant colors. No text in image."
+                    
+                    # Generate unique filename
+                    filename = f"social_studio_{platform}_{secrets.token_hex(8)}.png"
+                    output_path = os.path.join("generated_images", filename)
+                    
+                    # Generate image
+                    img_result = generate_image(image_prompt, output_path)
+                    
+                    if img_result.get("status") == "complete":
+                        result["image_url"] = f"/generated_images/{filename}"
+                        result["image_path"] = output_path
+                        logger.info(f"social_studio.image_generated platform={platform} path={output_path}")
+                    else:
+                        logger.warning(f"social_studio.image_failed platform={platform} error={img_result.get('message')}")
+                except Exception as img_err:
+                    logger.error(f"social_studio.image_error platform={platform} error={img_err}")
+
+        return result
 
     except Exception as e:
         logger.error("social_studio.generate_failed platform=%s error=%s", platform, e)
@@ -300,6 +330,7 @@ async def generate_all_platforms(
     tone: str,
     brand_voice: str,
     platforms: list[str],
+    generate_image: bool = False,
 ) -> AsyncIterator[dict]:
     """
     Async generator that yields results for each platform as they complete.
@@ -307,7 +338,7 @@ async def generate_all_platforms(
     """
     tasks = {
         platform: asyncio.create_task(
-            generate_for_platform(platform, topic, tone, brand_voice)
+            generate_for_platform(platform, topic, tone, brand_voice, generate_image)
         )
         for platform in platforms
     }

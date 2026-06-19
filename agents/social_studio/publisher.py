@@ -65,6 +65,7 @@ def publish_platform_post(
     access_token: str,
     platform_credentials: Optional[dict] = None,
     account_id: Optional[int] = None,
+    media_urls: Optional[list[str]] = None,
 ) -> dict:
     """
     Publish a single platform post.
@@ -93,7 +94,15 @@ def publish_platform_post(
     if platform == "facebook" and "page_id" in creds:
         payload_extra["page_id"] = creds["page_id"]
     
-    payload = PublishContent(text=full_text, post_type=PostType.TEXT, extra=payload_extra)
+    # Determine post type based on media
+    post_type = PostType.IMAGE if media_urls else PostType.TEXT
+    
+    payload = PublishContent(
+        text=full_text,
+        post_type=post_type,
+        media_urls=media_urls or [],
+        extra=payload_extra
+    )
 
     t0 = time.time()
     status_code = None

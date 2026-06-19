@@ -375,6 +375,7 @@ export type SSPlatformPost = {
   shares?: number;
   reach?: number;
   impressions?: number;
+  image_url?: string; // Generated image URL
 };
 
 export type SSPublishLog = {

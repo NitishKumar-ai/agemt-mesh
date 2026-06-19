@@ -46,9 +46,9 @@ py setup_dlq.py
 # Linux/macOS: dbos migrate && python setup_dlq.py
 ```
 
-### 4. Start Backend and Frontend
+### 4. Start Backend, Frontend, and Ngrok
 
-Run these in **two separate terminals** from the repo root:
+Run these in **three separate terminals** from the repo root:
 
 **Terminal 1 — Backend (FastAPI on port 8000):**
 ```bash
@@ -62,12 +62,20 @@ cd frontend
 npm run dev
 ```
 
+**Terminal 3 — Ngrok (HTTPS tunnel for OAuth callbacks):**
+```bash
+ngrok http 8000
+```
+
+After starting ngrok, copy the HTTPS URL (e.g., `https://abc123.ngrok-free.dev`) and update `BACKEND_URL` in your `.env` file. This is required for OAuth callbacks from social media platforms.
+
 Open **http://127.0.0.1:5173/** for the UI. The Vite dev server proxies `/api`, `/stream`, and `/webhook` to the backend at `http://127.0.0.1:8000`.
 
 | Service  | URL                      | Command |
 |----------|--------------------------|---------|
 | Frontend | http://127.0.0.1:5173/   | `cd frontend && npm run dev` |
 | Backend  | http://127.0.0.1:8000/   | `py -m uvicorn api:app --reload --host 127.0.0.1 --port 8000` |
+| Ngrok    | Check terminal output    | `ngrok http 8000` |
 
 ### 5. Production Frontend Build
 

@@ -38,6 +38,7 @@ async def _autopost_one_platform(
     tone: str,
     voice: str,
     publish_now: bool,
+    generate_image: bool = False,
 ) -> dict:
     from agents.social_studio.content_generator import generate_for_platform
     from agents.social_studio.publisher import publish_platform_post
@@ -52,7 +53,7 @@ async def _autopost_one_platform(
         "status": "Writing",
     })
 
-    gen = await generate_for_platform(platform, topic, tone, voice)
+    gen = await generate_for_platform(platform, topic, tone, voice, generate_image)
     if gen.get("status") == "failed" or not gen.get("content"):
         err = gen.get("error") or "Content generation returned empty text"
         _emit(run_id, "autopost_platform_failed", {
@@ -62,13 +63,19 @@ async def _autopost_one_platform(
         })
         return {"platform": platform, "success": False, "error": err, "step": "write"}
 
-    post_ids = ss_create_posts(run_id, topic, tone, [{
+    post_data = {
         "platform": platform,
         "account_id": account_id,
         "content": gen["content"],
         "hashtags": gen.get("hashtags", ""),
         "char_count": gen.get("char_count", 0),
-    }])
+    }
+    
+    # Add image URL if generated
+    if gen.get("image_url"):
+        post_data["image_url"] = gen["image_url"]
+    
+    post_ids = ss_create_posts(run_id, topic, tone, [post_data])
     post_id = post_ids[0]
 
     if not publish_now:
@@ -85,6 +92,7 @@ async def _autopost_one_platform(
             "post_id": post_id,
             "status": "scheduled",
             "caption_preview": gen["content"][:200],
+            "image_url": gen.get("image_url"),
             "step": "scheduled",
         }
 
@@ -109,6 +117,7 @@ async def _autopost_one_platform(
         platform=platform,
         content=gen["content"],
         hashtags=gen.get("hashtags", ""),
+        media_urls=[gen["image_path"]] if gen.get("image_path") else None,
         access_token=token,
         account_id=account_id,
     )
@@ -124,6 +133,7 @@ async def _autopost_one_platform(
         "caption_preview": gen["content"][:200],
         "content": gen["content"],
         "hashtags": gen.get("hashtags", ""),
+        "image_url": gen.get("image_url"),
         "step": "published" if pub.get("success") else "publish",
         "external_post_id": pub.get("platform_post_id"),
         "published_at": datetime.now(timezone.utc).isoformat() if pub.get("success") else None,
@@ -139,6 +149,7 @@ async def run_autopost(
     platforms: Optional[list[str]] = None,
     account_map: Optional[dict[str, int]] = None,
     publish_now: bool = True,
+    generate_image: bool = True,
     run_id: Optional[str] = None,
 ) -> dict:
     """
@@ -191,6 +202,7 @@ async def run_autopost(
             tone=tone,
             voice=voice,
             publish_now=publish_now,
+            generate_image=generate_image,
         )
         for platform in targets
     ])

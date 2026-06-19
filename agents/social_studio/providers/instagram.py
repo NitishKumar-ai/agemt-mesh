@@ -78,17 +78,12 @@ class InstagramProvider(SocialProvider):
 
     @property
     def required_scopes(self) -> list[str]:
-        # Instagram Graph API uses Facebook OAuth with Instagram-specific scopes
-        # In Development Mode, you can use these without App Review
-        # See: https://developers.facebook.com/docs/instagram-api/overview
         return [
             "instagram_basic",
-            "pages_show_list",
-            "pages_read_engagement",
-            "business_management",  # Required for Instagram Business accounts
+            "instagram_content_publish",
+            "instagram_manage_comments",
+            "instagram_manage_insights",
         ]
-        # Note: instagram_content_publish, instagram_manage_comments, etc.
-        # require App Review for production but may work in Development Mode
 
     @property
     def rate_limits(self) -> RateLimitConfig:

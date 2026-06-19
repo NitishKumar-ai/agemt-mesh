@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { SSAccount, SSPlatformPost, SSPlatformMeta } from "../lib/types";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 
 export function SocialStudioPage() {
   const [activeTab, setActiveTab] = useState<"connections" | "generate" | "analytics" | "calendar" | "ideas">("connections");
@@ -178,7 +181,8 @@ export function SocialStudioPage() {
 const PLATFORM_META: Record<string, { label: string; description: string; color: string; bg: string; icon: string }> = {
   linkedin:         { label: "LinkedIn (Personal)",   description: "Personal profile",              color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
   linkedin_company: { label: "LinkedIn (Company)",    description: "Company Pages & analytics",     color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
-  instagram:        { label: "Instagram",              description: "Photos, Reels & Stories",       color: "#e1306c", bg: "#fce4ef", icon: "📸" },
+  instagram:        { label: "Instagram",              description: "Via Facebook Page (Business)",  color: "#e1306c", bg: "#fce4ef", icon: "📸" },
+  instagram_login:  { label: "Instagram (Direct)",    description: "Professional account, no FB Page required", color: "#c13584", bg: "#f9e5f5", icon: "📷" },
   bluesky:          { label: "Bluesky",                description: "AT Protocol",                   color: "#0085ff", bg: "#e0f0ff", icon: "🦋" },
   threads:          { label: "Threads",                description: "Text & Media",                  color: "#000000", bg: "#f0f0f0", icon: "@" },
   twitter:          { label: "Twitter / X",            description: "Short-form posts",              color: "#1da1f2", bg: "#e8f6fe", icon: "𝕏" },
@@ -311,7 +315,7 @@ function ConnectionsTab({ accounts, platforms, reloadAccounts }: { accounts: SSA
   if (view === "form") {
     const meta = PLATFORM_META[selectedPlatform] || { label: selectedPlatform, color: "#666", bg: "#eee", icon: "?", description: "" };
     const isLinkedIn = selectedPlatform === "linkedin" || selectedPlatform === "linkedin_company";
-    const isOAuth = ["linkedin", "linkedin_company", "instagram", "threads", "facebook", "twitter", "tiktok", "youtube"].includes(selectedPlatform);
+    const isOAuth = ["linkedin", "linkedin_company", "instagram", "instagram_login", "threads", "facebook", "twitter", "tiktok", "youtube"].includes(selectedPlatform);
     const isBluesky = selectedPlatform === "bluesky";
     
     return (
@@ -833,6 +837,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
   const [agentRunning, setAgentRunning] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [scheduleInterval, setScheduleInterval] = useState("daily");
+  const [generateImage, setGenerateImage] = useState(true);
   const [runId, setRunId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, SSPlatformPost>>({});
   const [agentResults, setAgentResults] = useState<Array<{
@@ -847,8 +852,10 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     platform_post_id?: string;
     external_post_id?: string;
     published_at?: string;
+    image_url?: string;
   }>>([]);
   const [publishProof, setPublishProof] = useState<PublishProof | null>(null);
+  const [agentLogs, setAgentLogs] = useState<Array<{event: string, agent: string, message: string}>>([]);
   const proofRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -935,6 +942,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
             char_count: (r.content || r.caption_preview || "").length,
             status: r.success ? "published" : "failed",
             platform_post_url: r.url,
+            image_url: r.image_url,
           } as SSPlatformPost;
         }
       });
@@ -975,16 +983,36 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     setDrafts({});
     setAgentResults([]);
     setPublishProof(null);
+    setAgentLogs([]);
     try {
       const accountMap = buildAccountMap();
       const res = await api.ssGenerate({ topic, tone, brand_voice: brandVoice, platforms: selectedPlatforms, account_map: accountMap });
       setRunId(res.run_id);
 
       const params = new URLSearchParams({
-        topic, tone, brand_voice: brandVoice, platforms: selectedPlatforms.join(","), account_map: JSON.stringify(accountMap)
+        topic, tone, brand_voice: brandVoice,
+        platforms: selectedPlatforms.join(","),
+        account_map: JSON.stringify(accountMap),
+        generate_image: generateImage ? "true" : "false",
       });
       const es = new EventSource(`/api/social-studio/generate/${res.run_id}/stream?${params.toString()}`);
 
+      const logs: any[] = [];
+      es.addEventListener("agent_status", (e) => {
+        const data = JSON.parse(e.data);
+        logs.push(data);
+        setAgentLogs([...logs]);
+      });
+      es.addEventListener("media_done", (e) => {
+        const data = JSON.parse(e.data);
+        setDrafts(prev => {
+          const next = { ...prev };
+          Object.keys(next).forEach(k => {
+            next[k] = { ...next[k], image_url: data.image_url };
+          });
+          return next;
+        });
+      });
       es.addEventListener("platform_done", (e) => {
         const data = JSON.parse(e.data);
         setDrafts(prev => ({ ...prev, [data.platform]: data }));
@@ -1098,8 +1126,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
         }
       `}</style>
 
-      {/* Image Generation Section */}
-      <ImageGenerationSection />
+      {/* War Room + Draft Cards rendered below */}
 
       <div className="ss-gen-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
@@ -1119,12 +1146,13 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div style={{ gridColumn: "1 / -1" }}>
-            <label className="ss-gen-label">Topic / Brief</label>
+            <label className="ss-gen-label">Topic / Brief — or paste a URL to research</label>
             <textarea
               className="ss-gen-textarea"
               value={topic}
               onChange={e => setTopic(e.target.value)}
-              placeholder="e.g. Why durable agents beat brittle task queues for production AI"
+              placeholder="e.g. Why durable agents beat brittle task queues — or paste https://... to research it"
+              style={{ minHeight: 80 }}
             />
           </div>
           <div>
@@ -1144,6 +1172,29 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
               onChange={e => setBrandVoice(e.target.value)}
               placeholder="Technical, no fluff, founder voice…"
             />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0" }}>
+            <button
+              type="button"
+              onClick={() => setGenerateImage(!generateImage)}
+              style={{
+                width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer", position: "relative",
+                background: generateImage ? "#7c3aed" : "var(--surface-strong)",
+                transition: "background 0.2s",
+                flexShrink: 0,
+              }}
+              aria-label="Toggle image generation"
+            >
+              <span style={{
+                position: "absolute", top: 3, left: generateImage ? 21 : 3,
+                width: 16, height: 16, borderRadius: "50%", background: "#fff",
+                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)"
+              }} />
+            </button>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>Generate AI Image</div>
+              <div style={{ fontSize: 11, color: "var(--muted)" }}>Art Director agent auto-creates a matching visual via Imagen 3</div>
+            </div>
           </div>
         </div>
 
@@ -1192,11 +1243,11 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
             )}
           </button>
           <button
-            className="ss-secondary-btn"
+            className="ss-agent-cta"
             onClick={handleGenerate}
             disabled={generating || agentRunning || !selectedPlatforms.length}
           >
-            {generating ? "Drafting…" : "Drafts only (review first)"}
+            {generating ? "Agents Working..." : "Deploy Campaign Team"}
           </button>
           <select
             className="ss-gen-select"
@@ -1266,6 +1317,38 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
         )}
       </div>
 
+      {generating && (
+        <div style={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 16, padding: 20, marginBottom: 24, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, maxHeight: 250, overflowY: "auto", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, borderBottom: "1px dashed #333", paddingBottom: 12 }}>
+            <span style={{ display: "inline-block", width: 8, height: 8, background: "#22c55e", borderRadius: "50%", boxShadow: "0 0 10px #22c55e" }} />
+            <span style={{ color: "#fff", fontWeight: 700, letterSpacing: 1 }}>AGENT WAR ROOM</span>
+            <span style={{ color: "#666", fontSize: 11, marginLeft: "auto" }}>MULTI-AGENT PIPELINE</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {agentLogs.length === 0 ? (
+              <div style={{ color: "#555" }}>Booting agent framework...</div>
+            ) : (
+              agentLogs.map((log, i) => {
+                let color = "#8b5cf6"; // Coordinator
+                if (log.agent === "Researcher") color = "#3b82f6";
+                else if (log.agent === "Strategist") color = "#eab308";
+                else if (log.agent === "Copywriter") color = "#10b981";
+                else if (log.agent === "Editor") color = "#ef4444";
+                else if (log.agent === "Art Director") color = "#ec4899";
+                
+                return (
+                  <div key={i} style={{ display: "flex", gap: 12, lineHeight: 1.4 }}>
+                    <span style={{ color, fontWeight: 700, minWidth: 110, flexShrink: 0 }}>[{log.agent}]</span>
+                    <span style={{ color: "#e2e8f0" }}>{log.message}</span>
+                  </div>
+                );
+              })
+            )}
+            <div ref={(el) => el && el.scrollIntoView()} />
+          </div>
+        </div>
+      )}
+
       {(Object.keys(drafts).length > 0 || generating) && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16, paddingBottom: 24 }}>
           {(generating ? selectedPlatforms : Object.keys(drafts)).map(p => {
@@ -1287,8 +1370,24 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
                     <div style={{ textAlign: "center", color: "var(--muted)", paddingTop: 40 }}>Agent writing…</div>
                   ) : draft ? (
                     <>
-                      <div>{draft.caption || draft.content}</div>
-                      {draft.hashtags && <div style={{ color: "#0a66c2", marginTop: 12 }}>{draft.hashtags}</div>}
+                      {draft.image_url && (
+                        <div style={{ margin: "-16px -16px 16px -16px", background: "#000" }}>
+                          <img 
+                            src={draft.image_url} 
+                            alt="Generated content" 
+                            style={{ 
+                              width: "100%", 
+                              maxHeight: p.includes("instagram") ? 400 : 280,
+                              objectFit: "cover",
+                              display: "block"
+                            }} 
+                          />
+                        </div>
+                      )}
+                      <div style={{ fontFamily: ["twitter", "threads", "instagram", "instagram_login"].includes(p) ? "system-ui, -apple-system, sans-serif" : "inherit" }}>
+                        {draft.caption || draft.content}
+                      </div>
+                      {draft.hashtags && <div style={{ color: p.includes("instagram") ? "#00376b" : "#0a66c2", marginTop: 12 }}>{draft.hashtags}</div>}
                     </>
                   ) : null}
                 </div>
@@ -1343,20 +1442,66 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
 
 // ── Analytics Tab ───────────────────────────────────────────────────────────
 
+const PLATFORM_COLORS: Record<string, string> = {
+  threads:          "#000000",
+  facebook:         "#1877f2",
+  instagram:        "#e1306c",
+  instagram_login:  "#c13584",
+  linkedin:         "#0a66c2",
+  linkedin_company: "#0a66c2",
+  twitter:          "#1da1f2",
+  bluesky:          "#0085ff",
+  tiktok:           "#ff0050",
+  youtube:          "#ff0000",
+};
+
+const METRIC_CHIPS = [
+  { key: "followers",   label: "Audience"     },
+  { key: "impressions", label: "Impressions"  },
+  { key: "reach",       label: "Reach"        },
+  { key: "engagements", label: "Engagements"  },
+];
+
+function fmtNum(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000)     return (n / 1_000).toFixed(1) + "K";
+  return String(n);
+}
+
+function fmtDelta(delta: number): { sign: string; color: string } {
+  if (delta > 0)  return { sign: `+${fmtNum(delta)}`, color: "#10b981" };
+  if (delta < 0)  return { sign: fmtNum(delta),        color: "#ef4444" };
+  return           { sign: "—",                         color: "#94a3b8" };
+}
+
+
 function AnalyticsTab({ accounts }: { accounts: SSAccount[] }) {
-  const [summary, setSummary] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
+  const [summary, setSummary]             = useState<any>(null);
+  const [timeseries, setTimeseries]       = useState<any[]>([]);
+  const [posts, setPosts]                 = useState<any[]>([]);
+  const [loading, setLoading]             = useState(true);
+  const [syncing, setSyncing]             = useState(false);
+  const [activeMetric, setActiveMetric]   = useState("followers");
+  const [selectedAccount, setSelectedAccount] = useState<number | null>(null);
+
+  useEffect(() => { loadAll(); }, []);
 
   useEffect(() => {
-    loadSummary();
-  }, []);
+    if (selectedAccount !== null) loadTimeseries();
+  }, [selectedAccount, activeMetric]);
 
-  const loadSummary = async () => {
+  const loadAll = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await api.ssAnalyticsSummary();
-      setSummary(res);
+      const [sumRes, postsRes] = await Promise.all([
+        api.ssAnalyticsSummary(),
+        api.ssAnalyticsPosts(20),
+      ]);
+      setSummary(sumRes);
+      setPosts(postsRes.posts);
+      if (sumRes.accounts?.length > 0) {
+        setSelectedAccount(sumRes.accounts[0].id);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -1364,11 +1509,23 @@ function AnalyticsTab({ accounts }: { accounts: SSAccount[] }) {
     }
   };
 
+  const loadTimeseries = async () => {
+    if (selectedAccount === null) return;
+    try {
+      const res = await api.ssAnalyticsTimeseries(selectedAccount, activeMetric, 30);
+      // Reshape [{date, value}] for recharts
+      const shaped = (res.data || []).map((d: any) => ({ date: d.date?.slice(5), value: d.value }));
+      setTimeseries(shaped);
+    } catch (e) {
+      console.error("timeseries error", e);
+    }
+  };
+
   const handleSync = async () => {
     setSyncing(true);
     try {
       await api.ssAnalyticsSync();
-      await loadSummary();
+      await loadAll();
     } catch (e) {
       console.error(e);
       alert("Sync failed");
@@ -1377,83 +1534,255 @@ function AnalyticsTab({ accounts }: { accounts: SSAccount[] }) {
     }
   };
 
-  if (loading) return <div className="p-10 text-center animate-pulse">Loading Analytics...</div>;
-  if (!summary) return <div>Error loading analytics</div>;
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", flexDirection: "column", gap: 12, color: "#64748b" }}>
+      <div style={{ fontSize: 28 }}>📊</div>
+      <div style={{ fontSize: 14, fontWeight: 500 }}>Loading Analytics…</div>
+    </div>
+  );
+  if (!summary) return <div style={{ padding: 32, color: "#ef4444" }}>Error loading analytics</div>;
+
+  const totals = summary.totals || {};
+  const kpis = [
+    { label: "Total Audience",    key: "followers",   icon: "👥" },
+    { label: "Total Impressions", key: "impressions", icon: "👁️" },
+    { label: "Total Reach",       key: "reach",       icon: "📡" },
+    { label: "Total Engagements", key: "engagements", icon: "💬" },
+  ];
+
+  const activeColor = "#6366f1";
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="font-title">Performance Overview</h2>
-        <button onClick={handleSync} disabled={syncing} className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-6 py-2 rounded-full text-sm font-medium text-slate-900 dark:text-slate-100 transition-colors">
-          {syncing ? "Syncing..." : "Sync Live Data"}
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <style>{`
+        .an-card { background: var(--surface-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; overflow: hidden; }
+        .an-chip { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border, #e2e8f0); background: var(--surface-card, #fff); color: #64748b; transition: all .15s; }
+        .an-chip:hover { border-color: #6366f1; color: #6366f1; }
+        .an-chip.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+        .an-th { padding: 10px 16px; font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; background: var(--surface-raised, #f8fafc); border-bottom: 1px solid var(--border, #e2e8f0); text-align: left; white-space: nowrap; }
+        .an-th.r { text-align: right; }
+        .an-td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border, #f1f5f9); vertical-align: middle; }
+        .an-td.r { text-align: right; font-variant-numeric: tabular-nums; }
+        .an-tr:last-child .an-td { border-bottom: none; }
+        .an-tr:hover .an-td { background: var(--surface-raised, #f8fafc); }
+        .plt-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; }
+        .post-link { color: #6366f1; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+        .post-link:hover { text-decoration: underline; }
+        .acct-pill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border, #e2e8f0); background: var(--surface-card, #fff); color: #64748b; transition: all .15s; white-space: nowrap; }
+        .acct-pill:hover { border-color: #6366f1; color: #6366f1; }
+        .acct-pill.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Performance Overview</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#94a3b8" }}>Last 30 days · {summary.accounts?.length || 0} connected account{summary.accounts?.length !== 1 ? "s" : ""}</p>
+        </div>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 999, border: "1.5px solid #6366f1", background: syncing ? "#e0e7ff" : "#6366f1", color: "#fff", fontWeight: 600, fontSize: 14, cursor: syncing ? "default" : "pointer", transition: "all .15s" }}
+        >
+          {syncing ? "⏳ Syncing…" : "⟳ Sync Live Data"}
         </button>
       </div>
 
-      {/* Hero KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Audience", val: summary.totals.followers },
-          { label: "Total Reach", val: summary.totals.reach },
-          { label: "Total Impressions", val: summary.totals.impressions },
-          { label: "Total Engagements", val: summary.totals.engagements },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-[var(--surface-card,#ffffff)] dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{kpi.label}</div>
-            <div className="text-3xl font-bold">{kpi.val.toLocaleString()}</div>
-          </div>
-        ))}
+      {/* KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 16 }}>
+        {kpis.map(kpi => {
+          const val = totals[kpi.key] ?? 0;
+          return (
+            <div key={kpi.key} className="an-card" style={{ padding: "20px 24px" }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.icon}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 6 }}>{kpi.label}</div>
+              <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink, #1e293b)" }}>{fmtNum(val)}</div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Top Posts Table */}
-      <div className="bg-[var(--surface-card,#ffffff)] dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-title text-xl">Top Performing Posts</h3>
+      {/* Hero Chart */}
+      <div className="an-card">
+        <div style={{ padding: "20px 24px 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>
+                {METRIC_CHIPS.find(c => c.key === activeMetric)?.label} · last 30 days
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>
+                {timeseries.length > 0 ? fmtNum(timeseries[timeseries.length - 1]?.value ?? 0) : "—"}
+              </div>
+            </div>
+            {/* Account selector pills */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {summary.accounts?.map((a: any) => (
+                <button key={a.id} className={`acct-pill ${selectedAccount === a.id ? "active" : ""}`}
+                  onClick={() => setSelectedAccount(a.id)}>
+                  {a.display_name || a.username || a.platform}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Metric filter chips */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {METRIC_CHIPS.map(chip => (
+              <button key={chip.key} className={`an-chip ${activeMetric === chip.key ? "active" : ""}`}
+                onClick={() => setActiveMetric(chip.key)}>
+                {chip.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-4 font-medium">Post Preview</th>
-                <th className="p-4 font-medium">Platform</th>
-                <th className="p-4 font-medium">Published</th>
-                <th className="p-4 font-medium text-right">Reach</th>
-                <th className="p-4 font-medium text-right">Engagements</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-              {summary.top_posts.map((p: any) => {
-                const eng = p.likes + p.comments + p.shares;
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="p-4">
-                      <div className="line-clamp-2 max-w-md text-slate-600 dark:text-slate-300">
-                        {p.caption || p.content || 'No content'}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {p.platform}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm text-slate-500">
-                      {p.published_at ? new Date(p.published_at).toLocaleDateString() : 'Draft'}
-                    </td>
-                    <td className="p-4 text-right">
-                      {p.reach?.toLocaleString() || 0}
-                    </td>
-                    <td className="p-4 text-right">
-                      {eng.toLocaleString()}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* Area chart */}
+        <div style={{ width: "100%", height: 260, paddingBottom: 8 }}>
+          {timeseries.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={timeseries} margin={{ top: 4, right: 24, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={activeColor} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={activeColor} stopOpacity={0}    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, #f1f5f9)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={fmtNum} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={42} />
+                <Tooltip
+                  formatter={(v: any) => [fmtNum(v), METRIC_CHIPS.find(c => c.key === activeMetric)?.label]}
+                  contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 13 }}
+                />
+                <Area type="monotone" dataKey="value" stroke={activeColor} strokeWidth={2.5}
+                  fill="url(#areaGrad)" dot={false} activeDot={{ r: 5, strokeWidth: 0, fill: activeColor }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 13 }}>
+              No timeseries data yet — click Sync Live Data to pull metrics.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Per-account breakdown */}
+      {summary.accounts?.length > 0 && (
+        <div className="an-card">
+          <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--border, #e2e8f0)", fontWeight: 700, fontSize: 16 }}>
+            Account Breakdown
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th className="an-th">Account</th>
+                  <th className="an-th">Platform</th>
+                  <th className="an-th r">Followers</th>
+                  <th className="an-th r">Impressions</th>
+                  <th className="an-th r">Reach</th>
+                  <th className="an-th r">Engagements</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.accounts.map((acct: any) => {
+                  const m = acct.metrics || {};
+                  const color = PLATFORM_COLORS[acct.platform] || "#64748b";
+                  return (
+                    <tr key={acct.id} className="an-tr">
+                      <td className="an-td">
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          {acct.avatar_url && <img src={acct.avatar_url} alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />}
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 13 }}>{acct.display_name || acct.username}</div>
+                            <div style={{ fontSize: 11, color: "#94a3b8" }}>@{acct.username}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="an-td">
+                        <span className="plt-badge" style={{ background: color }}>
+                          {acct.platform}
+                        </span>
+                      </td>
+                      <td className="an-td r">{fmtNum(m.followers?.value ?? acct.follower_count ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(m.impressions?.value ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(m.reach?.value ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(m.engagements?.value ?? 0)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Top Posts Table */}
+      <div className="an-card">
+        <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--border, #e2e8f0)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>Top Performing Posts</div>
+          <div style={{ fontSize: 12, color: "#94a3b8" }}>Top {posts.length} by engagement</div>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          {posts.length === 0 ? (
+            <div style={{ padding: "40px 24px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
+              No published posts yet. Publish content to see analytics here.
+            </div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th className="an-th">Post</th>
+                  <th className="an-th">Platform</th>
+                  <th className="an-th">Published</th>
+                  <th className="an-th r">❤️ Likes</th>
+                  <th className="an-th r">💬 Comments</th>
+                  <th className="an-th r">🔁 Shares</th>
+                  <th className="an-th r">📡 Reach</th>
+                  <th className="an-th">Link</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((p: any) => {
+                  const color = PLATFORM_COLORS[p.platform] || "#64748b";
+                  const delta = fmtDelta((p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0));
+                  return (
+                    <tr key={p.id} className="an-tr">
+                      <td className="an-td" style={{ maxWidth: 300 }}>
+                        <div style={{ fontSize: 13, color: "var(--ink)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                          {p.caption || p.content || "—"}
+                        </div>
+                        {p.account_name && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>{p.account_name}</div>}
+                      </td>
+                      <td className="an-td">
+                        <span className="plt-badge" style={{ background: color }}>{p.platform}</span>
+                      </td>
+                      <td className="an-td" style={{ fontSize: 12, color: "#94a3b8", whiteSpace: "nowrap" }}>
+                        {p.published_at ? new Date(p.published_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "Draft"}
+                      </td>
+                      <td className="an-td r" style={{ fontWeight: 600 }}>{fmtNum(p.likes ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(p.comments ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(p.shares ?? 0)}</td>
+                      <td className="an-td r">{fmtNum(p.reach ?? 0)}</td>
+                      <td className="an-td">
+                        {p.platform_post_url ? (
+                          <a href={p.platform_post_url} target="_blank" rel="noopener noreferrer" className="post-link">
+                            View ↗
+                          </a>
+                        ) : (
+                          <span style={{ color: "#cbd5e1", fontSize: 12 }}>—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
 // ── Calendar Tab ───────────────────────────────────────────────────────────
 

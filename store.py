@@ -420,7 +420,8 @@ def init_business_tables(engine=None) -> None:
                 video_category_id TEXT DEFAULT '22',
                 made_for_kids INTEGER DEFAULT 0,
                 video_source TEXT DEFAULT 'upload',
-                veo3_prompt TEXT
+                veo3_prompt TEXT,
+                image_url TEXT
             )
         """))
         conn.execute(text(
@@ -1611,7 +1612,7 @@ def ss_update_follower_count(account_id: int, follower_count: int) -> None:
 def ss_create_posts(run_id: str, topic: str, tone: str, posts: list[dict]) -> list[int]:
     """
     Bulk-insert generated posts for a run. posts is a list of dicts with keys:
-    platform, account_id (optional), content, hashtags, char_count.
+    platform, account_id (optional), content, hashtags, char_count, image_url (optional).
     Returns list of inserted row ids.
     """
     # Insert a single parent row
@@ -1626,8 +1627,8 @@ def ss_create_posts(run_id: str, topic: str, tone: str, posts: list[dict]) -> li
     for p in posts:
         row_id = DBOS.sql_session.execute(text(
             "INSERT INTO ss_platform_posts "
-            "(post_id, account_id, platform, caption, hashtags, char_count, status) "
-            "VALUES (:pid, :aid, :plt, :content, :hashtags, :cc, 'draft') RETURNING id"
+            "(post_id, account_id, platform, caption, hashtags, char_count, status, image_url) "
+            "VALUES (:pid, :aid, :plt, :content, :hashtags, :cc, 'draft', :img_url) RETURNING id"
         ), {
             "pid": parent_id,
             "aid": p.get("account_id"),
@@ -1635,6 +1636,7 @@ def ss_create_posts(run_id: str, topic: str, tone: str, posts: list[dict]) -> li
             "content": p.get("content", ""),
             "hashtags": p.get("hashtags", ""),
             "cc": p.get("char_count", 0),
+            "img_url": p.get("image_url"),
         }).scalar()
         ids.append(row_id)
     return ids
@@ -1850,7 +1852,7 @@ def ss_list_platform_posts(run_id: Optional[str] = None,
         f"SELECT pp.id, pp.post_id, pp.account_id, pp.platform, pp.caption, "
         f"pp.hashtags, pp.char_count, pp.status, pp.platform_post_id, "
         f"pp.platform_post_url, pp.publish_error, pp.scheduled_at, pp.published_at, "
-        f"pp.retry_count, ssp.run_id, ssp.topic, ssp.tone "
+        f"pp.retry_count, pp.image_url, ssp.run_id, ssp.topic, ssp.tone "
         f"FROM ss_platform_posts pp "
         f"JOIN social_studio_posts ssp ON ssp.id=pp.post_id "
         f"{where} "
@@ -1865,7 +1867,7 @@ def ss_get_platform_post(pp_id: int) -> Optional[dict]:
         "SELECT pp.id, pp.post_id, pp.account_id, pp.platform, pp.caption, "
         "pp.hashtags, pp.char_count, pp.status, pp.platform_post_id, "
         "pp.platform_post_url, pp.publish_error, pp.scheduled_at, pp.published_at, "
-        "pp.retry_count, ssp.run_id, ssp.topic, ssp.tone "
+        "pp.retry_count, pp.image_url, ssp.run_id, ssp.topic, ssp.tone "
         "FROM ss_platform_posts pp "
         "JOIN social_studio_posts ssp ON ssp.id=pp.post_id "
         "WHERE pp.id=:id"

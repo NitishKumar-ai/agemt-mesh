@@ -192,8 +192,7 @@ class LinkedInProvider(SocialProvider):
     # ------------------------------------------------------------------
 
     def get_profile(self, access_token: str) -> AccountProfile:
-        # Use OpenID Connect userinfo endpoint (works with openid+profile scopes
-        # granted by "Sign In with LinkedIn using OpenID Connect" product).
+        # Use OpenID Connect userinfo endpoint
         resp = self._request(
             "GET",
             f"{API_BASE}/v2/userinfo",
@@ -201,14 +200,30 @@ class LinkedInProvider(SocialProvider):
             headers=LINKEDIN_HEADERS,
         )
         data = resp.json()
-        # OIDC userinfo fields
         name = data.get("name") or (
             f"{data.get('given_name', '')} {data.get('family_name', '')}".strip()
         )
+        sub = data.get("sub", "")
+        
+        # Attempt to fetch follower count if token has permission
+        follower_count = 0
+        if sub:
+            try:
+                ns_resp = self._request(
+                    "GET",
+                    f"{API_BASE}/v2/networkSizes/urn:li:person:{sub}?edgeType=MemberFollowedByMember",
+                    access_token=access_token,
+                    headers=LINKEDIN_HEADERS,
+                )
+                follower_count = ns_resp.json().get("firstDegreeSize", 0)
+            except Exception as e:
+                logger.debug(f"Could not fetch linkedin follower count (likely due to OIDC scopes): {e}")
+
         return AccountProfile(
-            platform_id=data.get("sub", ""),
+            platform_id=sub,
             name=name,
             avatar_url=data.get("picture"),
+            follower_count=follower_count,
             extra=data,
         )
 

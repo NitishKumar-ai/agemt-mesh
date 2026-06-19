@@ -65,6 +65,15 @@ class ThreadsProvider(SocialProvider):
 
     @property
     def required_scopes(self) -> list[str]:
+        """Required OAuth scopes for Threads API.
+        
+        threads_basic: Required for all Threads endpoints
+        threads_content_publish: Required for publishing endpoints
+        threads_manage_insights: Required for insights endpoints
+        threads_manage_replies: Required for managing replies
+        
+        Note: Requires Threads Tester role (accepted in Threads app settings)
+        """
         return [
             "threads_basic",
             "threads_content_publish",
@@ -85,6 +94,11 @@ class ThreadsProvider(SocialProvider):
     # ------------------------------------------------------------------
 
     def get_auth_url(self, redirect_uri: str, state: str) -> str:
+        """Generate Threads OAuth authorization URL.
+        
+        Note: Threads requires specific parameters and may need the app to be
+        in specific mode (Development vs Live) with proper redirect URIs configured.
+        """
         params = {
             "client_id": self.credentials["client_id"],
             "redirect_uri": redirect_uri,
@@ -92,7 +106,13 @@ class ThreadsProvider(SocialProvider):
             "scope": ",".join(self.required_scopes),
             "response_type": "code",
         }
-        return f"{AUTH_URL}?{urlencode(params)}"
+        url = f"{AUTH_URL}?{urlencode(params)}"
+        
+        # Log for debugging
+        import logging
+        logging.getLogger(__name__).info(f"Threads OAuth URL: {url[:100]}... (client_id={self.credentials.get('client_id', 'MISSING')})")
+        
+        return url
 
     def exchange_code(self, code: str, redirect_uri: str) -> OAuthTokens:
         resp = self._request(
@@ -268,10 +288,26 @@ class ThreadsProvider(SocialProvider):
         )
         publish_body = publish_resp.json()
         thread_id = publish_body.get("id", "")
+
+        permalink_url = None
+        if thread_id:
+            try:
+                link_resp = self._request(
+                    "GET",
+                    f"{API_BASE}/{thread_id}",
+                    access_token=access_token,
+                    params={"fields": "permalink_url"}
+                )
+                permalink_url = link_resp.json().get("permalink_url")
+            except Exception as e:
+                logger.warning(f"Could not fetch permalink_url for thread {thread_id}: {e}")
+
         return PublishResult(
             platform_post_id=thread_id,
+            url=permalink_url,
             extra=publish_body,
         )
+
 
     def _publish_carousel(
         self,
@@ -342,8 +378,23 @@ class ThreadsProvider(SocialProvider):
         )
         publish_body = publish_resp.json()
         thread_id = publish_body.get("id", "")
+
+        permalink_url = None
+        if thread_id:
+            try:
+                link_resp = self._request(
+                    "GET",
+                    f"{API_BASE}/{thread_id}",
+                    access_token=access_token,
+                    params={"fields": "permalink_url"}
+                )
+                permalink_url = link_resp.json().get("permalink_url")
+            except Exception as e:
+                logger.warning(f"Could not fetch permalink_url for thread {thread_id}: {e}")
+
         return PublishResult(
             platform_post_id=thread_id,
+            url=permalink_url,
             extra=publish_body,
         )
 

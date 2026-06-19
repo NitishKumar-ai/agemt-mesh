@@ -140,9 +140,15 @@ DBOS(
 ROOT_DIR = pathlib.Path(__file__).parent
 FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 FRONTEND_ASSETS = FRONTEND_DIST / "assets"
+GENERATED_IMAGES = ROOT_DIR / "generated_images"
 
 if FRONTEND_ASSETS.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="frontend-assets")
+
+# Mount generated images directory
+if not GENERATED_IMAGES.exists():
+    GENERATED_IMAGES.mkdir(parents=True, exist_ok=True)
+app.mount("/generated_images", StaticFiles(directory=str(GENERATED_IMAGES)), name="generated-images")
 
 DBOS.launch()
 
@@ -1442,7 +1448,8 @@ from agents.social_studio.providers.linkedin import LinkedInProvider
 @app.get("/api/social-studio/oauth/{platform}/login")
 async def ss_oauth_login(platform: str):
     """Start OAuth flow."""
-    redirect_uri = f"http://localhost:8000/api/social-studio/oauth/{platform}/callback"
+    backend_url = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+    redirect_uri = f"{backend_url}/api/social-studio/oauth/{platform}/callback"
     
     if platform == "linkedin":
         client_id = os.environ.get("LINKEDIN_CLIENT_ID")
@@ -1474,7 +1481,11 @@ async def ss_oauth_login(platform: str):
         from agents.social_studio.providers.threads import ThreadsProvider
         client_id = os.environ.get("THREADS_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
         if not client_id:
-            raise HTTPException(500, "THREADS_APP_ID or FACEBOOK_APP_ID not set")
+            raise HTTPException(500, "THREADS_APP_ID or FACEBOOK_APP_ID not set in environment")
+        
+        import logging
+        logging.getLogger(__name__).info(f"Threads OAuth starting with client_id: {client_id[:10]}...")
+        
         provider = ThreadsProvider(credentials={"client_id": client_id})
         url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_threads")
         return RedirectResponse(url)
@@ -1533,7 +1544,8 @@ async def ss_oauth_login(platform: str):
 @app.get("/api/social-studio/oauth/{platform}/callback")
 async def ss_oauth_callback(platform: str, code: str = "", state: str = "", error: str = "", error_description: str = ""):
     """Handle OAuth callback."""
-    frontend_url = "http://localhost:5173/"
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    frontend_url = f"{frontend_url}/"
 
     # If the user cancelled or platform returned an error
     if error:
@@ -1541,7 +1553,8 @@ async def ss_oauth_callback(platform: str, code: str = "", state: str = "", erro
     if not code:
         return RedirectResponse(f"{frontend_url}?oauth_error=no_code")
 
-    redirect_uri = f"http://localhost:8000/api/social-studio/oauth/{platform}/callback"
+    backend_url = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+    redirect_uri = f"{backend_url}/api/social-studio/oauth/{platform}/callback"
     
     try:
         if platform == "linkedin":
@@ -1576,11 +1589,9 @@ async def ss_oauth_callback(platform: str, code: str = "", state: str = "", erro
                 return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
             
             provider = InstagramLoginProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            # exchange_code() already exchanges for a long-lived token internally
             tokens = provider.exchange_code(code, redirect_uri)
-            # Exchange for long-lived token
-            long_lived = provider.refresh_token(tokens.access_token)
-            profile = provider.get_profile(long_lived.access_token)
-            tokens = long_lived
+            profile = provider.get_profile(tokens.access_token)
             
         elif platform == "threads":
             from agents.social_studio.providers.threads import ThreadsProvider
@@ -1952,22 +1963,41 @@ async def ss_api_generate_stream(run_id: str, request: Request):
     except Exception:
         account_map = {}
 
-    from agents.social_studio.content_generator import generate_all_platforms
+    generate_image_str = request.query_params.get("generate_image", "true")
+    generate_image = generate_image_str.lower() not in ("false", "0", "no")
+
+    from agents.social_studio.marketing_team import run_marketing_team
 
     async def event_gen():
         yield {"event": "start", "data": json.dumps({"run_id": run_id, "platforms": platforms})}
         try:
-            async for result in generate_all_platforms(topic, tone, brand_voice, platforms):
-                platform = result["platform"]
-                # Persist to DB
-                existing = ss_list_platform_posts(run_id=run_id, platform=platform)
-                if existing:
-                    ss_update_platform_post_caption(
-                        existing[0]["id"],
-                        result.get("content", ""),
-                        result.get("hashtags", "")
-                    )
-                yield {"event": "platform_done", "data": json.dumps(result)}
+            async for result in run_marketing_team(topic, tone, brand_voice, platforms, generate_image=generate_image):
+                if result.get("event") == "platform_done":
+                    platform = result["data"]["platform"]
+                    # Persist to DB
+                    existing = ss_list_platform_posts(run_id=run_id, platform=platform)
+                    if existing:
+                        ss_update_platform_post_caption(
+                            existing[0]["id"],
+                            result["data"].get("content", ""),
+                            result["data"].get("hashtags", "")
+                        )
+                    yield {"event": "platform_done", "data": json.dumps(result["data"])}
+                elif result.get("event") == "media_done":
+                    # Attach generated image to all platform posts for this run
+                    for p in platforms:
+                        existing = ss_list_platform_posts(run_id=run_id, platform=p)
+                        if existing:
+                            from store import conn, text
+                            conn.execute(
+                                text("UPDATE ss_platform_posts SET image_url = :url, veo3_prompt = :prompt WHERE id = :id"),
+                                {"url": result["data"]["image_url"], "prompt": result["data"]["prompt"], "id": existing[0]["id"]}
+                            )
+                            conn.commit()
+                    yield {"event": "media_done", "data": json.dumps(result["data"])}
+                elif result.get("event") == "agent_status":
+                    yield {"event": "agent_status", "data": json.dumps(result)}
+
             yield {"event": "complete", "data": json.dumps({"run_id": run_id})}
         except Exception as e:
             yield {"event": "error", "data": json.dumps({"error": str(e)})}
@@ -2027,6 +2057,7 @@ async def ss_api_patch_post(post_id: int, payload: dict):
 async def ss_api_publish_post(post_id: int):
     """Publish a platform post immediately via provider API."""
     from agents.social_studio.publisher import publish_platform_post
+    import os
 
     post = ss_get_platform_post(post_id)
     if not post:
@@ -2039,6 +2070,17 @@ async def ss_api_publish_post(post_id: int):
     if not token:
         raise HTTPException(400, "No connected account token for this post. Connect an account first.")
 
+    # Collect media URLs from the post
+    media_urls = []
+    if post.get("image_url"):
+        # Convert relative URL to absolute public URL for platforms like Instagram
+        image_url = post["image_url"]
+        if image_url.startswith("/"):
+            # Relative URL - convert to absolute using BACKEND_URL
+            backend_url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
+            image_url = backend_url.rstrip("/") + image_url
+        media_urls.append(image_url)
+
     result = publish_platform_post(
         platform_post_id=post_id,
         platform=post["platform"],
@@ -2046,6 +2088,7 @@ async def ss_api_publish_post(post_id: int):
         hashtags=post.get("hashtags", ""),
         access_token=token,
         account_id=account_id,
+        media_urls=media_urls if media_urls else None,
     )
     return result
 
@@ -2384,7 +2427,7 @@ async def ss_api_serve_media(file_id: str):
 async def ss_api_autopost(payload: dict):
     """
     Generate content from a topic and publish immediately.
-    Body: {topic, tone?, brand_voice?, platforms?: ["linkedin"], account_map?, publish_now?: true}
+    Body: {topic, tone?, brand_voice?, platforms?: ["linkedin"], account_map?, publish_now?: true, generate_image?: true}
     """
     from agents.social_studio.autoposter import run_autopost
 
@@ -2405,6 +2448,7 @@ async def ss_api_autopost(payload: dict):
     brand_voice = payload.get("brand_voice", "")
     account_map = payload.get("account_map") or {}
     publish_now = payload.get("publish_now", True)
+    generate_image = payload.get("generate_image", True)
 
     try:
         result = await run_autopost(
@@ -2414,6 +2458,7 @@ async def ss_api_autopost(payload: dict):
             platforms=platforms,
             account_map=account_map,
             publish_now=publish_now,
+            generate_image=generate_image,
         )
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -2494,10 +2539,10 @@ async def ss_api_analytics_posts(limit: int = 20):
 
 
 @app.post("/api/social-studio/analytics/sync")
-async def ss_api_analytics_sync():
+def ss_api_analytics_sync():
     """Trigger a live analytics pull from all connected platform accounts."""
     from agents.social_studio.analytics import sync_all_accounts
-    results = await asyncio.get_event_loop().run_in_executor(None, sync_all_accounts)
+    results = sync_all_accounts()
     synced = sum(1 for r in results if not r.get("error"))
     failed = len(results) - synced
     return {"synced": synced, "failed": failed, "details": results}

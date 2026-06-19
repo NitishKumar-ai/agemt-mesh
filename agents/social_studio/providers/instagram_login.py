@@ -146,7 +146,6 @@ class InstagramLoginProvider(SocialProvider):
         )
         body = resp.json()
         short_lived_token = body.get("access_token")
-        
         logger.info(
             "IG-Login step 1: status=%s keys=%s user_id=%s token=%s len=%d",
             resp.status_code,
@@ -155,7 +154,6 @@ class InstagramLoginProvider(SocialProvider):
             (short_lived_token[:6] + "...") if short_lived_token else None,
             len(short_lived_token) if short_lived_token else 0,
         )
-        
         if not short_lived_token:
             raise OAuthError(
                 f"Instagram token exchange failed: {body}",
@@ -168,14 +166,12 @@ class InstagramLoginProvider(SocialProvider):
 
     def _exchange_for_long_lived_token(self, short_lived_token: str) -> OAuthTokens:
         url = f"{GRAPH_HOST}/access_token"
-        
         logger.info(
             "IG-Login step 2: GET %s client_id=%s token=%s",
             url,
             self.credentials.get("client_id"),
             short_lived_token[:6] + "...",
         )
-        
         resp = self._request(
             "GET",
             url,
@@ -187,14 +183,12 @@ class InstagramLoginProvider(SocialProvider):
             },
         )
         body = resp.json()
-        
         if "access_token" not in body:
             raise OAuthError(
                 f"Instagram long-lived token exchange failed: {body}",
                 platform=self.platform_name,
                 raw_response=body,
             )
-
         token = body["access_token"]
         return OAuthTokens(
             access_token=token,
@@ -220,14 +214,12 @@ class InstagramLoginProvider(SocialProvider):
             },
         )
         body = resp.json()
-        
         if "access_token" not in body:
             raise OAuthError(
                 f"Instagram token refresh failed: {body}",
                 platform=self.platform_name,
                 raw_response=body,
             )
-
         token = body["access_token"]
         return OAuthTokens(
             access_token=token,
@@ -251,7 +243,6 @@ class InstagramLoginProvider(SocialProvider):
             },
         )
         data = resp.json()
-        
         return AccountProfile(
             platform_id=str(data.get("user_id", data.get("id", ""))),
             name=data.get("name", data.get("username", "")),
@@ -278,7 +269,6 @@ class InstagramLoginProvider(SocialProvider):
 
     def _publish_single(self, access_token: str, content: PublishContent) -> PublishResult:
         payload: dict = {}
-
         if content.text:
             payload["caption"] = content.text
 

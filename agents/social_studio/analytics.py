@@ -25,10 +25,16 @@ ACCOUNT_METRICS = [
 PLATFORM_SUPPORTED_METRICS: dict[str, list[str]] = {
     "bluesky": ["followers"],
     "linkedin": ["followers", "impressions", "reach", "engagements"],
+    "linkedin_company": ["followers", "impressions", "reach", "engagements"],
     "instagram": ["followers", "impressions", "reach", "engagements", "saves", "profile_views"],
+    "instagram_login": ["followers", "impressions", "reach", "engagements", "saves", "profile_views"],
     "threads": ["followers", "impressions", "reach", "engagements"],
     "twitter": ["followers", "impressions", "engagements", "profile_views"],
+    "facebook": ["followers", "impressions", "reach", "engagements"],
+    "tiktok": ["followers", "impressions", "reach", "engagements"],
+    "youtube": ["followers", "impressions", "reach", "engagements", "profile_views"],
 }
+
 
 
 def sync_account_analytics(account_id: int, platform: str, access_token: str) -> dict:
