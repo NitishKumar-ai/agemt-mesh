@@ -10,6 +10,8 @@
  */
 
 import CodeIcon from "@mui/icons-material/Code";
+import DashboardIcon from "@mui/icons-material/DashboardOutlined";
+import SmartToyIcon from "@mui/icons-material/SmartToyOutlined";
 import PlayIcon from "@mui/icons-material/PlayArrowOutlined";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import SupportIcon from "@mui/icons-material/Support";
@@ -41,6 +43,8 @@ const hideScheduler = !featureFlags.isEnabled(FEATURES.SCHEDULER);
 const CORE_SIDEBAR_POSITIONS = {
   // Root level (top-level menu items)
   ROOT: {
+    dashboardItem: 50,
+    agentsItem: 75,
     executionsSubMenu: 100,
     runWorkflow: 200,
     definitionsSubMenu: 300,
@@ -80,6 +84,28 @@ export function getCoreSidebarItems(open: boolean): MenuItemType[] {
   const H = CORE_SIDEBAR_POSITIONS.HELP;
 
   return [
+    // Dashboard
+    {
+      id: "dashboardItem",
+      title: "Dashboard",
+      icon: <DashboardIcon />,
+      linkTo: "/",
+      shortcuts: [],
+      hotkeys: "",
+      hidden: false,
+      position: R.dashboardItem,
+    },
+    // Agents
+    {
+      id: "agentsItem",
+      title: "Agents",
+      icon: <SmartToyIcon />,
+      linkTo: "/agents",
+      shortcuts: [],
+      hotkeys: "",
+      hidden: false,
+      position: R.agentsItem,
+    },
     // Executions submenu - core items only
     {
       id: "executionsSubMenu",

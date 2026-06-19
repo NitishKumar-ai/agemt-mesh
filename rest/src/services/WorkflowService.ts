@@ -120,6 +120,10 @@ export class WorkflowService {
   }
 
   async terminateWorkflow(workflowId: string, reason?: string): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.terminateWorkflow(workflowId, reason ?? 'terminated via API');
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const workflow: any = await this.executionDAO.getWorkflow(workflowId, false);
     if (!workflow) throw new Error(`Workflow ${workflowId} not found`);
@@ -130,6 +134,10 @@ export class WorkflowService {
   }
 
   async pauseWorkflow(workflowId: string): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.pauseWorkflow(workflowId);
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const workflow: any = await this.executionDAO.getWorkflow(workflowId, false);
     if (!workflow) throw new Error(`Workflow ${workflowId} not found`);
@@ -138,6 +146,10 @@ export class WorkflowService {
   }
 
   async resumeWorkflow(workflowId: string): Promise<void> {
+    if (this.workflowExecutor) {
+      this.workflowExecutor.resumeWorkflow(workflowId);
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const workflow: any = await this.executionDAO.getWorkflow(workflowId, false);
     if (!workflow) throw new Error(`Workflow ${workflowId} not found`);

@@ -1,142 +1,136 @@
-// ui-next/src/pages/Dashboard.tsx
-import { Box, CircularProgress, Grid, Paper, Typography, Button } from "@mui/material";
-import { Play as PlayIcon, ArrowClockwise as RefreshIcon } from "@phosphor-icons/react";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import {
+  Play as PlayIcon,
+  ArrowClockwise as RefreshIcon,
+} from "@phosphor-icons/react";
 import { DataTable, Heading } from "components";
 import { SnackbarMessage } from "components/ui/SnackbarMessage";
 import SectionContainer from "components/ui/layout/SectionContainer";
 import SectionHeader from "components/layout/SectionHeader";
 import SectionHeaderActions from "components/ui/layout/SectionHeaderActions";
 import NoDataComponent from "components/ui/NoDataComponent";
-import StatusBadge from "components/StatusBadge";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "react-query";
-import { api } from "../lib/api";
-import { ColumnCustomType } from "components/ui/DataTable/types";
-import { WorkflowExecutionStatus } from "types/Execution"; // Assuming this type exists
 import { useNavigate } from "react-router-dom";
 import { RUN_WORKFLOW_URL } from "utils/constants/route";
+import { api, WorkflowSummary } from "../lib/api";
+import { PopoverMessage } from "types/Messages";
+import { ColumnCustomType } from "components/ui/DataTable/types";
 
-interface HealthStatus {
-  status: string;
-}
-
-interface Workflow {
-  workflowId: string;
-  workflowName: string;
-  status: WorkflowExecutionStatus;
-  startTime: number;
-  endTime?: number;
-  // Add other workflow properties as needed
-}
+const STATUS_COLORS: Record<string, "success" | "error" | "warning" | "info" | "default"> = {
+  COMPLETED: "success",
+  FAILED: "error",
+  TIMED_OUT: "error",
+  RUNNING: "info",
+  PAUSED: "warning",
+  TERMINATED: "default",
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [toastMessage, setToastMessage] = useState(null);
+  const [toastMessage, setToastMessage] = useState<PopoverMessage | null>(null);
 
-  const { data: health, isLoading: isLoadingHealth, refetch: refetchHealth } = useQuery<HealthStatus>(
+  const { data: health, isLoading: isLoadingHealth, refetch: refetchHealth } = useQuery(
     "healthStatus",
     api.getHealth,
     {
-      refetchInterval: 5000, // Refresh health every 5 seconds
-      onError: (error: any) => {
-        setToastMessage({
-          text: `Failed to fetch health status: ${error.message}`,
-          severity: "error",
-        });
+      refetchInterval: 5000,
+      onError: (err: any) => {
+        setToastMessage({ text: `Health check failed: ${err.message}`, severity: "error" });
       },
     }
   );
 
-  const { data: workflows, isLoading: isLoadingWorkflows, refetch: refetchWorkflows } = useQuery<Workflow[]>(
+  const { data: workflows, isLoading: isLoadingWorkflows, refetch: refetchWorkflows } = useQuery<WorkflowSummary[]>(
     "workflows",
     () => api.listWorkflows(),
     {
-      refetchInterval: 10000, // Refresh workflows every 10 seconds
-      onError: (error: any) => {
-        setToastMessage({
-          text: `Failed to fetch workflows: ${error.message}`,
-          severity: "error",
-        });
+      refetchInterval: 10000,
+      onError: (err: any) => {
+        setToastMessage({ text: `Failed to fetch workflows: ${err.message}`, severity: "error" });
       },
     }
   );
 
-  const workflowCounts = useMemo(() => {
-    const counts = { running: 0, completed: 0, failed: 0, total: 0 };
-    if (workflows) {
-      counts.total = workflows.length;
-      workflows.forEach((wf) => {
-        if (wf.status === WorkflowExecutionStatus.RUNNING) counts.running++;
-        else if (wf.status === WorkflowExecutionStatus.COMPLETED) counts.completed++;
-        else if (wf.status === WorkflowExecutionStatus.FAILED) counts.failed++;
-      });
+  const counts = useMemo(() => {
+    const base = { running: 0, completed: 0, failed: 0, total: 0 };
+    if (!workflows) return base;
+    base.total = workflows.length;
+    for (const wf of workflows) {
+      if (wf.status === "RUNNING") base.running++;
+      else if (wf.status === "COMPLETED") base.completed++;
+      else if (wf.status === "FAILED" || wf.status === "TIMED_OUT") base.failed++;
     }
-    return counts;
+    return base;
   }, [workflows]);
 
-  const recentWorkflows = useMemo(() => {
-    if (workflows) {
-      return [...workflows]
-        .sort((a, b) => b.startTime - a.startTime)
-        .slice(0, 10);
-    }
-    return [];
-  }, [workflows]);
+  const recentWorkflows = useMemo(
+    () => [...(workflows ?? [])].sort((a, b) => b.startTime - a.startTime).slice(0, 10),
+    [workflows]
+  );
 
-  const workflowColumns = useMemo(
+  const columns = useMemo(
     () => [
       {
-        id: "workflowName",
-        name: "workflowName",
-        label: "Workflow Name",
+        id: "workflowType",
+        name: "workflowType",
+        label: "Workflow",
         renderer: (val: string) => <Heading level={3}>{val}</Heading>,
-        tooltip: "The name of the workflow",
       },
       {
         id: "workflowId",
         name: "workflowId",
         label: "ID",
-        tooltip: "Unique identifier for the workflow",
       },
       {
         id: "status",
         name: "status",
         label: "Status",
-        renderer: (val: WorkflowExecutionStatus) => <StatusBadge status={val} />,
-        tooltip: "Current status of the workflow",
+        renderer: (val: string) => (
+          <Chip label={val} size="small" color={STATUS_COLORS[val] ?? "default"} />
+        ),
       },
       {
         id: "startTime",
         name: "startTime",
-        label: "Start Time",
+        label: "Started",
         type: ColumnCustomType.DATE,
-        tooltip: "When the workflow started",
       },
       {
         id: "endTime",
         name: "endTime",
-        label: "End Time",
+        label: "Ended",
         type: ColumnCustomType.DATE,
-        tooltip: "When the workflow ended",
       },
-      // Add action to view workflow details
       {
         id: "actions",
         name: "actions",
-        label: "Actions",
+        label: "",
         sortable: false,
         searchable: false,
-        grow: 0.5,
-        minWidth: "100px",
-        renderer: (_: string, workflow: Workflow) => (
-          <Button onClick={() => navigate(`/execution/${workflow.workflowId}`)} size="small" variant="outlined">
+        grow: 0.4,
+        minWidth: "80px",
+        renderer: (_: string, wf: WorkflowSummary) => (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => navigate(`/execution/${wf.workflowId}`)}
+          >
             View
           </Button>
         ),
       },
     ],
-    [navigate],
+    [navigate]
   );
 
   return (
@@ -147,8 +141,8 @@ export default function Dashboard() {
 
       {toastMessage && (
         <SnackbarMessage
-          autoHideDuration={3000}
-          id="dashboard-toast-message"
+          autoHideDuration={4000}
+          id="dashboard-toast"
           message={toastMessage.text}
           severity={toastMessage.severity}
           onDismiss={() => setToastMessage(null)}
@@ -168,7 +162,7 @@ export default function Dashboard() {
                 startIcon: <PlayIcon />,
               },
               {
-                label: "Refresh All",
+                label: "Refresh",
                 color: "secondary",
                 onClick: () => { refetchHealth(); refetchWorkflows(); },
                 startIcon: <RefreshIcon />,
@@ -177,60 +171,77 @@ export default function Dashboard() {
           />
         }
       />
+
       <SectionContainer>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-              <Heading level={2}>Server Health</Heading>
-              {isLoadingHealth ? (
-                <CircularProgress size={20} />
-              ) : (
-                <Typography variant="h6" color={health?.status === "UP" ? "green" : "red"}>
-                  Status: {health?.status || "UNKNOWN"}
-                </Typography>
-              )}
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-              <Heading level={2}>Workflow Overview</Heading>
-              <Grid container spacing={2}>
-                <Grid item xs={4}>
-                  <Typography variant="body1">Running: {workflowCounts.running}</Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography variant="body1">Completed: {workflowCounts.completed}</Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography variant="body1">Failed: {workflowCounts.failed}</Typography>
-                </Grid>
-              </Grid>
-              <Typography variant="body1" sx={{ mt: 2 }}>Total Workflows: {workflowCounts.total}</Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Heading level={2}>Recent Workflow Executions (Last 10)</Heading>
-              {isLoadingWorkflows ? (
-                <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                  <CircularProgress />
-                </Box>
-              ) : recentWorkflows.length > 0 ? (
-                <DataTable
-                  localStorageKey="recentWorkflowsTable"
-                  keyField="workflowId"
-                  data={recentWorkflows}
-                  columns={workflowColumns}
-                  defaultShowColumns={["workflowName", "status", "startTime", "endTime", "actions"]}
-                  noDataComponent={<NoDataComponent title="No Recent Workflows" description="No workflows have been executed recently." />}
-                  pagination={{enabled:false}}
-                />
-              ) : (
-                <NoDataComponent title="No Recent Workflows" description="No workflows have been executed recently." />
-              )}
-            </Paper>
-          </Grid>
-        </Grid>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={3} sx={{ mb: 3 }}>
+          {/* Server Health */}
+          <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
+            <Heading level={2}>Server Health</Heading>
+            {isLoadingHealth ? (
+              <CircularProgress size={20} />
+            ) : (
+              <Typography
+                variant="h6"
+                color={health?.status === "OK" ? "success.main" : "error.main"}
+              >
+                {health?.status ?? "UNKNOWN"}
+                {health?.version ? (
+                  <Typography component="span" variant="caption" sx={{ ml: 1 }} color="text.secondary">
+                    v{health.version}
+                  </Typography>
+                ) : null}
+              </Typography>
+            )}
+          </Paper>
+
+          {/* Workflow Counts */}
+          <Paper variant="outlined" sx={{ p: 2, flex: 2 }}>
+            <Heading level={2}>Workflow Overview</Heading>
+            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+              <Box>
+                <Typography variant="h4" color="info.main">{counts.running}</Typography>
+                <Typography variant="body2" color="text.secondary">Running</Typography>
+              </Box>
+              <Box>
+                <Typography variant="h4" color="success.main">{counts.completed}</Typography>
+                <Typography variant="body2" color="text.secondary">Completed</Typography>
+              </Box>
+              <Box>
+                <Typography variant="h4" color="error.main">{counts.failed}</Typography>
+                <Typography variant="body2" color="text.secondary">Failed</Typography>
+              </Box>
+              <Box>
+                <Typography variant="h4">{counts.total}</Typography>
+                <Typography variant="body2" color="text.secondary">Total</Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Stack>
+
+        {/* Recent Executions */}
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Heading level={2}>Recent Workflow Executions</Heading>
+          {isLoadingWorkflows ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : recentWorkflows.length > 0 ? (
+            <DataTable
+              localStorageKey="dashboardRecentWorkflows"
+              keyField="workflowId"
+              data={recentWorkflows}
+              columns={columns}
+              noDataComponent={
+                <NoDataComponent title="No Workflows" description="No workflow executions yet." />
+              }
+            />
+          ) : (
+            <NoDataComponent
+              title="No Workflows"
+              description="No workflow executions yet. Start a workflow to see it here."
+            />
+          )}
+        </Paper>
       </SectionContainer>
     </>
   );

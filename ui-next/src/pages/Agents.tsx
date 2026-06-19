@@ -1,111 +1,98 @@
-// ui-next/src/pages/Agents.tsx
-import { Box, Tooltip, IconButton, Button, CircularProgress, Dialog, DialogTitle, DialogContent, TextField, DialogActions } from "@mui/material";
-import { Play as PlayIcon, Trash as DeleteIcon, Monitor as MonitorIcon, ArrowClockwise as RefreshIcon } from "@phosphor-icons/react";
+import {
+  Box,
+  Chip,
+  Tooltip,
+  IconButton,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
+  Typography,
+  Alert,
+} from "@mui/material";
+import {
+  Play as PlayIcon,
+  ArrowClockwise as RefreshIcon,
+  Warning as WarningIcon,
+  CheckCircle as CheckCircleIcon,
+} from "@phosphor-icons/react";
 import { DataTable, Paper, Heading } from "components";
 import { SnackbarMessage } from "components/ui/SnackbarMessage";
 import SectionContainer from "components/ui/layout/SectionContainer";
 import SectionHeader from "components/layout/SectionHeader";
 import SectionHeaderActions from "components/ui/layout/SectionHeaderActions";
 import NoDataComponent from "components/ui/NoDataComponent";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
-import { api } from "../lib/api";
-import { useQuery } from "react-query";
-import { ColumnCustomType } from "components/ui/DataTable/types";
-import ConfirmChoiceDialog from "components/ui/dialogs/ConfirmChoiceDialog";
+import { api, Agent } from "../lib/api";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import { PopoverMessage } from "types/Messages";
 
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-  // Add other agent properties as needed
-}
-
 export default function Agents() {
-  const [runAgentModalOpen, setRunAgentModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [inputJson, setInputJson] = useState('{}');
+  const [goal, setGoal] = useState("");
+  const [context, setContext] = useState("");
+  const [killswitchReason, setKillswitchReason] = useState("");
+  const [killswitchDialogOpen, setKillswitchDialogOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<PopoverMessage | null>(null);
   const [eventLog, setEventLog] = useState<any[]>([]);
-  const [confirmDelete, setConfirmDelete] = useState<{
-    confirmDelete: boolean;
-    agentId: string;
-    agentName: string;
-  } | null>(null);
 
-
-  const { data: agents, isLoading, refetch } = useQuery<Agent[]>(
+  const { data: agents, isLoading: agentsLoading, refetch: refetchAgents } = useQuery<Agent[]>(
     "agents",
     api.listAgents,
+    { refetchInterval: 15000 }
+  );
+
+  const { data: killswitch, refetch: refetchKillswitch } = useQuery(
+    "killswitch",
+    api.getKillswitch,
+    { refetchInterval: 10000 }
+  );
+
+  const runMutation = useMutation(
+    ({ agentId, goal, context }: { agentId: string; goal: string; context: string }) =>
+      api.runAgent(agentId, { goal, context }),
     {
-      refetchInterval: 15000, // Refresh agents list every 15 seconds
+      onSuccess: (data) => {
+        setToastMessage({ text: `Agent started — workflow ${data.workflowId}`, severity: "success" });
+        setRunDialogOpen(false);
+        setGoal("");
+        setContext("");
+        refetchAgents();
+      },
+      onError: (err: any) => {
+        setToastMessage({ text: `Failed to start agent: ${err.message}`, severity: "error" });
+      },
+    }
+  );
+
+  const killswitchMutation = useMutation(
+    ({ engage, reason }: { engage: boolean; reason?: string }) =>
+      engage ? api.engageKillswitch(reason || "Manual stop") : api.releaseKillswitch(),
+    {
+      onSuccess: () => {
+        setToastMessage({ text: "Killswitch updated", severity: "success" });
+        setKillswitchDialogOpen(false);
+        setKillswitchReason("");
+        refetchKillswitch();
+      },
+      onError: (err: any) => {
+        setToastMessage({ text: `Killswitch action failed: ${err.message}`, severity: "error" });
+      },
     }
   );
 
   useEffect(() => {
     const unsubscribe = api.subscribeToEvents((event) => {
-      setEventLog((prevLog) => {
-        const newLog = [event, ...prevLog].slice(0, 10); // Keep last 10 events
-        return newLog;
-      });
+      setEventLog((prev) => [event, ...prev].slice(0, 20));
     });
     return () => unsubscribe();
   }, []);
-
-  const handleRunAgentClick = (agent: Agent) => {
-    setSelectedAgent(agent);
-    setRunAgentModalOpen(true);
-    setInputJson('{}'); // Reset input JSON
-  };
-
-  const handleRunAgent = async () => {
-    if (!selectedAgent) return;
-    try {
-      const input = JSON.parse(inputJson);
-      await api.runAgent(selectedAgent.id, input);
-      setToastMessage({
-        text: `Agent ${selectedAgent.name} started successfully!`,
-        severity: "success",
-      });
-      setRunAgentModalOpen(false);
-      refetch(); // Refresh agent list in case status changes
-    } catch (error: any) {
-      setToastMessage({
-        text: `Failed to start agent ${selectedAgent.name}: ${error.message}`,
-        severity: "error",
-      });
-    }
-  };
-
-  const handleDeleteAgentClick = (agent: Agent) => {
-    setConfirmDelete({
-      confirmDelete: true,
-      agentId: agent.id,
-      agentName: agent.name,
-    });
-  };
-
-  const handleDeleteAgent = async () => {
-    if (!confirmDelete) return;
-    try {
-      // Assuming there's a deleteAgent API call, if not, this will need adjustment
-      // await api.deleteAgent(confirmDelete.agentId);
-      setToastMessage({
-        text: `Agent ${confirmDelete.agentName} deleted successfully! (Simulated)`,
-        severity: "success",
-      });
-      setConfirmDelete(null);
-      refetch();
-    } catch (error: any) {
-      setToastMessage({
-        text: `Failed to delete agent ${confirmDelete.agentName}: ${error.message}`,
-        severity: "error",
-      });
-      setConfirmDelete(null);
-    }
-  };
-
 
   const columns = useMemo(
     () => [
@@ -114,20 +101,34 @@ export default function Agents() {
         name: "name",
         label: "Agent Name",
         renderer: (val: string) => <Heading level={3}>{val}</Heading>,
-        tooltip: "The name of the agent",
       },
       {
         id: "description",
         name: "description",
         label: "Description",
         grow: 2,
-        tooltip: "Description of the agent",
       },
       {
-        id: "id",
-        name: "id",
+        id: "agentId",
+        name: "agentId",
         label: "ID",
-        tooltip: "Unique identifier for the agent",
+      },
+      {
+        id: "status",
+        name: "status",
+        label: "Status",
+        renderer: (val: string) => (
+          <Chip
+            label={val}
+            size="small"
+            color={val === "running" ? "success" : "default"}
+          />
+        ),
+      },
+      {
+        id: "modelExecute",
+        name: "modelExecute",
+        label: "Model",
       },
       {
         id: "actions",
@@ -136,25 +137,30 @@ export default function Agents() {
         sortable: false,
         searchable: false,
         grow: 0.5,
-        minWidth: "150px",
+        minWidth: "80px",
         renderer: (_: string, agent: Agent) => (
-          <Box sx={{ display: "flex", justifyContent: "space-evenly" }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             <Tooltip title="Run Agent">
-              <IconButton onClick={() => handleRunAgentClick(agent)} size="small">
-                <PlayIcon size={22} />
-              </IconButton>
+              <span>
+                <IconButton
+                  onClick={() => {
+                    setSelectedAgent(agent);
+                    setGoal("");
+                    setContext("");
+                    setRunDialogOpen(true);
+                  }}
+                  size="small"
+                  disabled={agent.status === "running"}
+                >
+                  <PlayIcon size={20} />
+                </IconButton>
+              </span>
             </Tooltip>
-            {/* Add delete action if applicable */}
-            {/* <Tooltip title="Delete Agent">
-              <IconButton onClick={() => handleDeleteAgentClick(agent)} size="small" color="error">
-                <DeleteIcon size={20} />
-              </IconButton>
-            </Tooltip> */}
           </Box>
         ),
       },
     ],
-    [],
+    []
   );
 
   return (
@@ -165,36 +171,28 @@ export default function Agents() {
 
       {toastMessage && (
         <SnackbarMessage
-          autoHideDuration={3000}
-          id="agent-toast-message"
+          autoHideDuration={4000}
+          id="agent-toast"
           message={toastMessage.text}
           severity={toastMessage.severity}
           onDismiss={() => setToastMessage(null)}
         />
       )}
 
-      {confirmDelete && (
-        <ConfirmChoiceDialog
-          handleConfirmationValue={(selectedChoice) => {
-            if (selectedChoice) {
-              handleDeleteAgent();
-            } else {
-              setConfirmDelete(null);
-            }
-          }}
-          message={
-            <>
-              Are you sure you want to delete Agent{" "}
-              <strong style={{ color: "red" }}>{confirmDelete.agentName}</strong>? This cannot be undone.
-              <div style={{ marginTop: "15px" }}>
-                Please type <strong>{confirmDelete.agentName}</strong> to confirm.
-              </div>
-            </>
-          }
-          header={"Deletion Confirmation"}
-          isInputConfirmation
-          valueToBeDeleted={confirmDelete.agentName}
-        />
+      {/* Killswitch banner */}
+      {killswitch?.engaged && (
+        <Alert severity="error" sx={{ mx: 2, mt: 2 }} icon={<WarningIcon />}>
+          <strong>Killswitch is ENGAGED</strong> — all agents are halted.
+          <Button
+            size="small"
+            sx={{ ml: 2 }}
+            variant="outlined"
+            color="inherit"
+            onClick={() => killswitchMutation.mutate({ engage: false })}
+          >
+            Release
+          </Button>
+        </Alert>
       )}
 
       <SectionHeader
@@ -204,18 +202,31 @@ export default function Agents() {
           <SectionHeaderActions
             buttons={[
               {
+                label: killswitch?.engaged ? "Release Killswitch" : "Engage Killswitch",
+                color: killswitch?.engaged ? "secondary" : "error" as any,
+                onClick: () => {
+                  if (killswitch?.engaged) {
+                    killswitchMutation.mutate({ engage: false });
+                  } else {
+                    setKillswitchDialogOpen(true);
+                  }
+                },
+                startIcon: <WarningIcon />,
+              },
+              {
                 label: "Refresh",
                 color: "secondary",
-                onClick: () => refetch(),
+                onClick: () => refetchAgents(),
                 startIcon: <RefreshIcon />,
               },
             ]}
           />
         }
       />
+
       <SectionContainer>
         <Paper id="agents-table-wrapper" variant="outlined">
-          {isLoading ? (
+          {agentsLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
@@ -224,20 +235,20 @@ export default function Agents() {
               localStorageKey="agentsTable"
               quickSearchEnabled
               quickSearchPlaceholder="Search agents"
-              keyField="id"
+              keyField="agentId"
               data={agents}
               columns={columns}
               noDataComponent={
                 <NoDataComponent
                   title="No Agents Found"
-                  description="There are no registered agents. Agents allow you to automate tasks and workflows."
+                  description="No registered agents. Agents are registered via the agent-runtime."
                 />
               }
             />
           ) : (
             <NoDataComponent
               title="No Agents Found"
-              description="There are no registered agents. Agents allow you to automate tasks and workflows."
+              description="No registered agents. Start server-lite to seed demo agents."
             />
           )}
         </Paper>
@@ -245,53 +256,90 @@ export default function Agents() {
 
       <SectionHeader title="Live Event Feed" />
       <SectionContainer>
-        <Paper variant="outlined" sx={{ p: 2, maxHeight: 300, overflow: 'auto' }}>
+        <Paper variant="outlined" sx={{ p: 2, maxHeight: 280, overflow: "auto" }}>
           {eventLog.length === 0 ? (
-            <NoDataComponent title="No Events Yet" description="Waiting for live events..." />
+            <Typography variant="body2" color="text.secondary">
+              Waiting for events from SSE stream…
+            </Typography>
           ) : (
-            <Box sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-              {eventLog.map((event, index) => (
-                <div key={index}>{JSON.stringify(event, null, 2)}</div>
+            <Box sx={{ fontFamily: "monospace", fontSize: 12, whiteSpace: "pre-wrap" }}>
+              {eventLog.map((event, i) => (
+                <Box key={i} sx={{ mb: 1, pb: 1, borderBottom: "1px solid", borderColor: "divider" }}>
+                  {JSON.stringify(event, null, 2)}
+                </Box>
               ))}
             </Box>
           )}
         </Paper>
       </SectionContainer>
 
-
-      <Dialog open={runAgentModalOpen} onClose={() => setRunAgentModalOpen(false)} fullWidth maxWidth="sm">
+      {/* Run Agent Dialog */}
+      <Dialog open={runDialogOpen} onClose={() => setRunDialogOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Run Agent: {selectedAgent?.name}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Input JSON"
-            multiline
-            rows={10}
+            label="Goal"
             fullWidth
-            value={inputJson}
-            onChange={(e) => setInputJson(e.target.value)}
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
             margin="normal"
-            variant="outlined"
-            InputProps={{ style: { fontFamily: 'monospace' } }}
-            error={!isJsonValid(inputJson)}
-            helperText={!isJsonValid(inputJson) ? 'Invalid JSON' : ''}
+            placeholder="What should this agent accomplish?"
+            required
+          />
+          <TextField
+            label="Context (optional)"
+            multiline
+            rows={4}
+            fullWidth
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            margin="normal"
+            placeholder="Additional context, data, or instructions for the agent"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRunAgentModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleRunAgent} disabled={!isJsonValid(inputJson)} variant="contained" color="primary">
-            Run
+          <Button onClick={() => setRunDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (!selectedAgent) return;
+              runMutation.mutate({ agentId: selectedAgent.agentId, goal, context });
+            }}
+            disabled={!goal.trim() || runMutation.isLoading}
+            variant="contained"
+            color="primary"
+          >
+            {runMutation.isLoading ? "Starting…" : "Run"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Killswitch Engage Dialog */}
+      <Dialog open={killswitchDialogOpen} onClose={() => setKillswitchDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Engage Killswitch</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This will immediately halt all running agents.
+          </Alert>
+          <TextField
+            label="Reason"
+            fullWidth
+            value={killswitchReason}
+            onChange={(e) => setKillswitchReason(e.target.value)}
+            placeholder="Why are you engaging the killswitch?"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setKillswitchDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => killswitchMutation.mutate({ engage: true, reason: killswitchReason })}
+            variant="contained"
+            color="error"
+            disabled={killswitchMutation.isLoading}
+          >
+            Engage
           </Button>
         </DialogActions>
       </Dialog>
     </>
   );
 }
-
-const isJsonValid = (str: string) => {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
-  return true;
-};

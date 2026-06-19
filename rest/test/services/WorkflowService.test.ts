@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
@@ -10,6 +10,7 @@ import {
 } from '@agentmesh/sqlite-persistence';
 import { WorkflowService } from '../../src/services/WorkflowService.js';
 import type { WorkflowDef } from '@agentmesh/common';
+import type { WorkflowExecutor } from '@agentmesh/core';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createDb(): any {
@@ -188,5 +189,57 @@ describe('WorkflowService', () => {
     await service.terminateRemove(wfId);
     const wf = await service.getWorkflow(wfId);
     expect(wf).toBeUndefined();
+  });
+});
+
+describe('WorkflowService with a wired WorkflowExecutor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let db: any;
+  let service: WorkflowService;
+  let executor: WorkflowExecutor;
+
+  beforeAll(async () => {
+    db = createDb();
+    await InitialSchemaMigration.up(db);
+    const executionDAO = new SqliteExecutionDAO(db);
+    const metadataDAO = new SqliteMetadataDAO(db);
+    const queueDAO = new SqliteQueueDAO(db);
+    executor = {
+      pauseWorkflow: vi.fn(),
+      resumeWorkflow: vi.fn(),
+      terminateWorkflow: vi.fn(),
+    } as unknown as WorkflowExecutor;
+    service = new WorkflowService(executionDAO, metadataDAO, queueDAO, executor);
+  });
+
+  afterAll(async () => {
+    await db.destroy();
+  });
+
+  it('pauseWorkflow delegates to the executor instead of writing the DAO directly', async () => {
+    await service.pauseWorkflow('wf-1');
+    expect(executor.pauseWorkflow).toHaveBeenCalledWith('wf-1');
+  });
+
+  it('resumeWorkflow delegates to the executor instead of writing the DAO directly', async () => {
+    await service.resumeWorkflow('wf-1');
+    expect(executor.resumeWorkflow).toHaveBeenCalledWith('wf-1');
+  });
+
+  it('terminateWorkflow delegates to the executor instead of writing the DAO directly', async () => {
+    await service.terminateWorkflow('wf-1', 'because');
+    expect(executor.terminateWorkflow).toHaveBeenCalledWith('wf-1', 'because');
+  });
+
+  it('terminateWorkflow defaults the reason when delegating to the executor', async () => {
+    await service.terminateWorkflow('wf-1');
+    expect(executor.terminateWorkflow).toHaveBeenCalledWith('wf-1', 'terminated via API');
+  });
+
+  it('propagates an invalid-transition error thrown by the executor instead of swallowing it', async () => {
+    (executor.resumeWorkflow as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      throw new Error('The workflow wf-1 is not PAUSED so cannot resume. Current status is RUNNING');
+    });
+    await expect(service.resumeWorkflow('wf-1')).rejects.toThrow('cannot resume');
   });
 });
