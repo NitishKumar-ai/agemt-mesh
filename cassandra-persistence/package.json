@@ -13,9 +13,14 @@
   "dependencies": {
     "@agentmesh/common": "workspace:*",
     "@agentmesh/common-persistence": "workspace:*",
-    "cassandra-driver": "^4.7.2"
+    "cassandra-driver": "^4.9.0",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "@types/cassandra-driver": "^4.2.4"
+    "@types/cassandra-driver": "^4.2.4",
+    "@types/node": "^25.9.3",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
