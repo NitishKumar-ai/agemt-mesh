@@ -1,4 +1,5 @@
 export * from './models/index.js';
+export * from './types/index.js';
 export * from './AIModel.js';
 export * from './AIModelProvider.js';
 export * from './LLMHelper.js';

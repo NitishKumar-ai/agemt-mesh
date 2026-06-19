@@ -103,6 +103,13 @@ export default defineConfig(({ mode }) => {
             "http://localhost:8080",
           changeOrigin: true,
         },
+        "/health": {
+          target:
+            process.env.VITE_WF_SERVER ||
+            env.VITE_WF_SERVER ||
+            "http://localhost:8080",
+          changeOrigin: true,
+        },
         "/swagger-ui": {
           target:
             process.env.VITE_WF_SERVER ||
@@ -123,6 +130,10 @@ export default defineConfig(({ mode }) => {
       port: 1234,
       proxy: {
         "/api": {
+          target: env.VITE_WF_SERVER || "http://localhost:8080",
+          changeOrigin: true,
+        },
+        "/health": {
           target: env.VITE_WF_SERVER || "http://localhost:8080",
           changeOrigin: true,
         },

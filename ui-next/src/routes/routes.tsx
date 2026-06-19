@@ -67,6 +67,8 @@ import KitchenSink from "../pages/kitchensink/KitchenSink";
 import ThemeSampler from "../pages/kitchensink/ThemeSampler";
 import TaskQueue from "../pages/queueMonitor/TaskQueue";
 import { Schedule } from "../pages/scheduler";
+import Agents from "../pages/Agents";
+import Dashboard from "../pages/Dashboard";
 
 /**
  * Core authenticated routes (OSS)
@@ -133,10 +135,10 @@ const getCoreAuthenticatedRoutes = () => [
     element: <EventHandlerDefinition />,
   },
 
-  // Scheduler Definitions
+  // Agents
   {
-    path: SCHEDULER_DEFINITION_URL.BASE,
-    element: <ScheduleDefinitions />,
+    path: "/agents",
+    element: <Agents />,
   },
   {
     path: SCHEDULER_DEFINITION_URL.NAME,
@@ -202,7 +204,7 @@ const getIndexRoute = (isPlayground: boolean) => {
   }
   return {
     index: true,
-    element: <WorkflowSearch />,
+    element: <Dashboard />,
   };
 };
 

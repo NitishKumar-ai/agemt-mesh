@@ -70,11 +70,19 @@ import {
   SwitchTaskMapper,
   TerminateTaskMapper,
   WaitTaskMapper,
+  WorkflowStatusListener,
+  TaskStatusListener,
 } from '@agentmesh/core';
 import { TelemetryService } from '@agentmesh/telemetry';
 import { SandboxSystemTask } from '@agentmesh/sandbox';
+import {
+  WorkflowEventPublisher,
+  WorkflowEventListener,
+} from '@agentmesh/workflow-event-listener';
+import { TaskStatusListener as TaskStatusListenerImpl } from '@agentmesh/task-status-listener';
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
 import { MetadataMapperAdapter } from './MetadataMapperAdapter.js';
+import { DocumentLoader, JsonSchemaValidator } from '@agentmesh/ai';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -188,8 +196,15 @@ async function main(): Promise<void> {
 
   // --- Sync Engine Adapters ---
   console.log('Initializing sync adapters...');
-  const syncAdapter = new SyncSqliteAdapter(sqliteDb as any);
-  const metadataMapper = new MetadataMapperAdapter(sqliteDb as any);
+  type SQLiteDb = {
+    prepare(sql: string): {
+      run(...args: unknown[]): { changes: number };
+      get(...args: unknown[]): unknown;
+      all(...args: unknown[]): unknown[];
+    };
+  };
+  const syncAdapter = new SyncSqliteAdapter(sqliteDb as unknown as SQLiteDb);
+  const metadataMapper = new MetadataMapperAdapter(sqliteDb as unknown as SQLiteDb);
 
   // --- AI Module Initialisation ---
   console.log('Initializing AI modules...');
@@ -204,16 +219,16 @@ async function main(): Promise<void> {
   const modelClient = new ModelClient(aiProvider);
 
   // Minimal implementations for LLMHelper requirements
-  const noopLoader = {
+  const noopLoader: DocumentLoader = {
     supports: () => false,
     download: () => new Uint8Array(),
     upload: () => 'noop',
   };
-  const noopValidator = {
+  const noopValidator: JsonSchemaValidator = {
     validate: () => [],
   };
 
-  const llms = new LLMs([noopLoader as any], noopValidator as any, aiProvider);
+  const llms = new LLMs([noopLoader], noopValidator, aiProvider);
   const budgetManager = new BudgetManager();
 
   // --- AgentMesh Execution Engine Wiring ---
@@ -235,8 +250,8 @@ async function main(): Promise<void> {
     new Switch(),
     new Terminate(),
     new Wait(),
-    new LlmChatComplete(llms as any, modelClient as any, telemetry as any, budgetManager as any),
-    new LlmGenerateEmbeddings(llms as any, modelClient as any, telemetry as any),
+    new LlmChatComplete(llms, modelClient, telemetry as any, budgetManager),
+    new LlmGenerateEmbeddings(llms, modelClient, telemetry as any),
     new SandboxSystemTask(cfg.e2bApiKey || 'dummy-key', ['api.github.com']),
   ];
 
@@ -256,42 +271,63 @@ async function main(): Promise<void> {
   };
 
   const deciderService = new DeciderService({
-    taskMappers: taskMappers as any,
+    taskMappers,
     systemTaskRegistry: systemTaskRegistry as any,
   });
 
+  // --- Eventing: wire WorkflowEventPublisher + listeners ---
+  const workflowEventPublisher = new WorkflowEventPublisher();
+  const workflowEventListener = new WorkflowEventListener(workflowEventPublisher, queueDAO, {
+    includePauseResumeEvents: true,
+  });
+  workflowEventListener.start();
+
+  const taskStatusListenerImpl = new TaskStatusListenerImpl(queueDAO);
+  taskStatusListenerImpl.start();
+
+  const workflowStatusListener: WorkflowStatusListener = {
+    onWorkflowStartedIfEnabled: (wf) => workflowEventPublisher.publishStarted(wf as any),
+    onWorkflowCompletedIfEnabled: (wf) => workflowEventPublisher.publishCompleted(wf as any),
+    onWorkflowTerminatedIfEnabled: (wf) => workflowEventPublisher.publishTerminated(wf as any),
+    onWorkflowFinalizedIfEnabled: () => {},
+    onWorkflowPausedIfEnabled: (wf) => workflowEventPublisher.publishPaused(wf as any),
+    onWorkflowResumedIfEnabled: (wf) => workflowEventPublisher.publishResumed(wf as any),
+    onWorkflowRestartedIfEnabled: () => {},
+    onWorkflowRetriedIfEnabled: () => {},
+    onWorkflowRerunIfEnabled: () => {},
+  };
+
+  const taskStatusListener: TaskStatusListener = {
+    onTaskCompletedIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskCanceledIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskFailedIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskFailedWithTerminalErrorIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskTimedOutIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskInProgressIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+    onTaskScheduledIfEnabled: (t) =>
+      taskStatusListenerImpl.emit('taskStatusChanged', { task: t as any }),
+  };
+
   const executorOps = new WorkflowExecutorOps({
-    deciderService: deciderService as any,
+    deciderService,
     queueDAO: syncAdapter as any,
     executionDAOFacade: syncAdapter as any,
-    metadataMapperService: metadataMapper as any,
-    workflowStatusListener: {
-      onWorkflowStartedIfEnabled: () => {},
-      onWorkflowCompletedIfEnabled: () => {},
-      onWorkflowTerminatedIfEnabled: () => {},
-      onWorkflowFinalizedIfEnabled: () => {},
-      onWorkflowPausedIfEnabled: () => {},
-      onWorkflowResumedIfEnabled: () => {},
-      onWorkflowRestartedIfEnabled: () => {},
-      onWorkflowRetriedIfEnabled: () => {},
-      onWorkflowRerunIfEnabled: () => {},
-    } as any,
-    taskStatusListener: {
-      onTaskCompletedIfEnabled: () => {},
-      onTaskCanceledIfEnabled: () => {},
-      onTaskFailedIfEnabled: () => {},
-      onTaskFailedWithTerminalErrorIfEnabled: () => {},
-      onTaskTimedOutIfEnabled: () => {},
-      onTaskInProgressIfEnabled: () => {},
-      onTaskScheduledIfEnabled: () => {},
-    } as any,
+    metadataMapperService: metadataMapper,
+    workflowStatusListener,
+    taskStatusListener,
     systemTaskRegistry: systemTaskRegistry as any,
     executionLockService: {
       acquireLock: () => true,
       acquireLockWithLease: () => true,
       releaseLock: () => {},
       deleteLock: () => {},
-    } as any,
+    },
     properties: {
       activeWorkerLastPollTimeout: 10000,
       workflowOffsetTimeout: 1,
@@ -324,7 +360,7 @@ async function main(): Promise<void> {
       acquireLockWithLease: () => true,
       releaseLock: () => {},
       deleteLock: () => {},
-    } as any,
+    },
   });
 
   // Start sweeper loop
@@ -599,16 +635,34 @@ async function main(): Promise<void> {
     pollIntervalMs: 10000,
   });
 
-  // Dummy LLM for testing
-  const dummyLlm = async (model: string, prompt: string) => {
-    console.log(`[LLM ${model}] received prompt length ${prompt.length}`);
-    return JSON.stringify({ action: 'finish', result: 'Agent executed successfully.' });
+  // Real LLM function — falls back to stub when no API keys are configured
+  const hasAiKeys = !!(cfg.anthropicApiKey || cfg.geminiApiKey);
+  if (!hasAiKeys) {
+    console.warn('[LLM] No ANTHROPIC_API_KEY or GEMINI_API_KEY set — agents will use stub LLM');
+  }
+  const agentLlm = async (model: string, prompt: string): Promise<string> => {
+    if (!hasAiKeys) {
+      console.log(`[LLM stub ${model}] prompt length ${prompt.length}`);
+      return JSON.stringify({ action: 'finish', result: 'Agent executed successfully (stub).' });
+    }
+    try {
+      const fakeTask = { taskId: 'agent-llm', workflowInstanceId: 'agent' } as any;
+      const response = await llms.chatComplete(fakeTask, {
+        model,
+        messages: [{ role: 'user', content: prompt }],
+      } as any);
+      const text = (response as any)?.result ?? (response as any)?.content ?? JSON.stringify(response);
+      return typeof text === 'string' ? text : JSON.stringify(text);
+    } catch (err) {
+      console.error(`[LLM ${model}] error:`, err);
+      return JSON.stringify({ action: 'finish', result: 'LLM call failed, aborting.' });
+    }
   };
 
   const agentWorkerPool = new AgentWorkerPool(
     taskService as never,
     workflowService as never,
-    dummyLlm,
+    agentLlm,
     llms as any,
     modelClient as any,
     killswitch,
@@ -666,6 +720,14 @@ async function main(): Promise<void> {
     name: 'database',
     shutdown: async () => {
       await db.destroy();
+    },
+  });
+
+  processManager.register({
+    name: 'event-listeners',
+    shutdown: async () => {
+      workflowEventListener.stop();
+      taskStatusListenerImpl.stop();
     },
   });
 

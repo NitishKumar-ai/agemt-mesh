@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo "Running lint and format checks..."
+pnpm lint --fix
+pnpm format
+
+# Re-add any files that were modified
+git diff --name-only --cached | xargs -r git add

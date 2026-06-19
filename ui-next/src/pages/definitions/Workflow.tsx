@@ -40,7 +40,7 @@ import { featureFlags, FEATURES } from "utils/flags";
 import useCustomPagination from "utils/hooks/useCustomPagination";
 import { usePushHistory } from "utils/hooks/usePushHistory";
 import { logger } from "utils/logger";
-import { useActionWithPath, useWorkflowDefs } from "utils/query";
+import { api } from "../../lib/api";
 import { createSearchableTags, tryToJson } from "utils/utils";
 import { getUniqueWorkflows } from "utils/workflow";
 import CloneWorkflowDialog from "./dialog/CloneWorkflowDialog";
@@ -288,6 +288,40 @@ export default function WorkflowDefinitions() {
                   }}
                 >
                   <PlayIcon size={22} />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title={"Pause workflow"}>
+                <IconButton
+                  id={`pause-${workflowRowData.name}-btn`}
+                  disabled={isTrialExpired}
+                  onClick={() => {
+                    setConfirmPause({
+                      confirmPause: true,
+                      workflowId: workflowRowData.name, // Assuming name is used as ID for simplicity
+                      workflowName: workflowRowData.name,
+                    });
+                  }}
+                  size="small"
+                >
+                  <PauseIcon size={20} />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title={"Resume workflow"}>
+                <IconButton
+                  id={`resume-${workflowRowData.name}-btn`}
+                  disabled={isTrialExpired}
+                  onClick={() => {
+                    setConfirmResume({
+                      confirmResume: true,
+                      workflowId: workflowRowData.name, // Assuming name is used as ID for simplicity
+                      workflowName: workflowRowData.name,
+                    });
+                  }}
+                  size="small"
+                >
+                  <PlayCircleIcon size={20} />
                 </IconButton>
               </Tooltip>
 
