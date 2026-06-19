@@ -48,7 +48,7 @@ export async function generateProto(
 /**
  * Walk a Zod schema and return its field descriptors.
  */
-function describeSchema(
+export function describeSchema(
   schema: ZodType,
   _visited: Set<string>,
 ): Array<{ name: string; protoType: string; protoIndex: number }> {
@@ -62,7 +62,7 @@ function describeSchema(
 
   if ((inner._def as any).typeName !== 'ZodObject') return fields;
 
-  const shape = (inner._def as any).shape as Record<string, ZodType> | undefined;
+  const shape = (inner as any).shape as Record<string, ZodType> | undefined;
   if (!shape) return fields;
 
   let index = 1;
@@ -78,7 +78,7 @@ function describeSchema(
 /**
  * Map a Zod type to a Protobuf type string.
  */
-function zodTypeToProto(schema: ZodType): string {
+export function zodTypeToProto(schema: ZodType): string {
   let inner = schema;
   while ((inner._def as any).typeName === 'ZodOptional' || (inner._def as any).typeName === 'ZodDefault' || (inner._def as any).typeName === 'ZodEffects') {
     inner = (inner._def as any).innerType ?? (inner._def as any).schema ?? inner;

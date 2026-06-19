@@ -25,6 +25,7 @@ import {
   type TaskMapper,
   TaskMapperContext,
   SimpleTaskMapper,
+  UserDefinedTaskMapper,
   ForkJoinTaskMapper,
   SwitchTaskMapper,
   TerminateTaskMapper,
@@ -263,6 +264,51 @@ describe('SimpleTaskMapper', () => {
     expect(tasks[0]!.taskType).toBe('SIMPLE');
     expect(tasks[0]!.referenceTaskName).toBe('ref1');
     expect(tasks[0]!.status).toBe('SCHEDULED');
+  });
+});
+
+describe('UserDefinedTaskMapper', () => {
+  it('creates a custom task model using the workflow task type', () => {
+    const mapper = new UserDefinedTaskMapper();
+    expect(mapper.getTaskType()).toBe('USER_DEFINED');
+
+    const wfTask: WorkflowTask = {
+      name: 'test_custom_task',
+      taskReferenceName: 'ref1',
+      type: 'CUSTOM_SYSTEM_TASK',
+      inputParameters: { val: 42 },
+      startDelay: 0,
+      optional: false,
+      asyncComplete: false,
+      permissive: false,
+      joinOn: [],
+      defaultCase: [],
+      decisionCases: {},
+      forkTasks: [],
+      loopOver: [],
+      defaultExclusiveJoinTask: [],
+      onStateChange: {},
+    };
+    const wf = createWorkflowModel({ workflowId: 'wf1', workflowName: 'test' });
+    const ctx = new TaskMapperContext({
+      workflowModel: wf,
+      workflowTask: wfTask,
+      taskInput: wfTask.inputParameters,
+      taskDefinition: null,
+      retryCount: 0,
+      retryTaskId: null,
+      taskId: 'task1',
+      deciderService: null as any,
+    });
+
+    const tasks = mapper.getMappedTasks(ctx);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0]!.taskType).toBe('CUSTOM_SYSTEM_TASK');
+    expect(tasks[0]!.taskDefName).toBe('test_custom_task');
+    expect(tasks[0]!.referenceTaskName).toBe('ref1');
+    expect(tasks[0]!.status).toBe('SCHEDULED');
+    expect(tasks[0]!.inputData).toEqual({ val: 42 });
+    expect(tasks[0]!.startTime).toBeGreaterThan(0);
   });
 });
 
