@@ -12,7 +12,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "start": "node server-lite/dist/index.js",
-    "start:all": "cd ui-next && pnpm install && pnpm build && cd .. && pnpm build && pnpm start",
+    "start:all": "pnpm --filter agent-mesh-frontend build && pnpm build && pnpm start",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "prettier --write .",

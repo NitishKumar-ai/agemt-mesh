@@ -6,6 +6,7 @@ import type { WorkflowExecutor } from '@agentmesh/core';
 import type { ExecutionDAO, MetadataDAO, QueueDAO } from '@agentmesh/common-persistence';
 
 export interface StartWorkflowRequest {
+  workflowId?: string;
   name: string;
   version?: number;
   correlationId?: string;
@@ -32,20 +33,30 @@ export class WorkflowService {
   ) {}
 
   async startWorkflow(req: StartWorkflowRequest): Promise<string> {
+    console.log('[WorkflowService] startWorkflow called, executor exists:', !!this.workflowExecutor);
     if (this.workflowExecutor) {
-      return this.workflowExecutor.startWorkflow({
-        name: req.name,
-        version: req.version ?? 1,
-        workflowInput: req.input ?? {},
-        correlationId: req.correlationId,
-        priority: req.priority ?? 0,
-        taskToDomain: req.taskToDomain ?? undefined,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workflowDefinition: (req.workflowDef as any) ?? null,
-      });
+      try {
+        const id = await this.workflowExecutor.startWorkflow({
+          workflowId: req.workflowId,
+          name: req.name,
+          version: req.version ?? 1,
+          workflowInput: req.input ?? {},
+          correlationId: req.correlationId,
+          priority: req.priority ?? 0,
+          taskToDomain: req.taskToDomain ?? undefined,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          workflowDefinition: (req.workflowDef as any) ?? null,
+        });
+        console.log('[WorkflowService] startWorkflow returning ID via executor:', id);
+        return id;
+      } catch (err) {
+        console.error('[WorkflowService] Error starting workflow via executor:', err);
+        throw err;
+      }
     }
 
     // Fallback: manual creation (no engine wired)
+    console.log('[WorkflowService] Running fallback workflow start');
     let def: WorkflowDef;
     if (req.workflowDef) {
       def = req.workflowDef;
@@ -59,7 +70,7 @@ export class WorkflowService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const workflow = createWorkflowModel() as any;
-    workflow.workflowId = randomUUID();
+    workflow.workflowId = req.workflowId || randomUUID();
     workflow.workflowName = def.name;
     workflow.workflowType = def.name;
     workflow.workflowVersion = def.version;
@@ -77,6 +88,7 @@ export class WorkflowService {
       }
     }
 
+    console.log('[WorkflowService] startWorkflow returning ID via fallback:', workflow.workflowId);
     return workflow.workflowId;
   }
 

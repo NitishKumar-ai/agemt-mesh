@@ -148,6 +148,7 @@ async function sweeperLoop(
     try {
       const workflowId = syncAdapter.popMessage(DECIDER_QUEUE);
       if (workflowId) {
+        console.log('[Sweeper] Popped workflow ID from decider queue:', workflowId);
         await sweeper.sweep(workflowId);
       } else {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -160,8 +161,19 @@ async function sweeperLoop(
   console.log('Sweeper loop stopped');
 }
 
-async function main(): Promise<void> {
+export async function bootstrapServer(options?: {
+  barrier?: { hold(): Promise<void> };
+  dbPath?: string;
+  port?: number;
+  installSignalHandlers?: boolean;
+}): Promise<{ app: any; close: () => Promise<void> }> {
   const cfg = loadConfig();
+  if (options?.dbPath !== undefined) {
+    cfg.dbPath = options.dbPath;
+  }
+  if (options?.port !== undefined) {
+    cfg.port = options.port;
+  }
 
   printBanner(cfg);
 
@@ -193,6 +205,42 @@ async function main(): Promise<void> {
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);
   const queueDAO = new SqliteQueueDAO(db as never);
+
+  // --- Proxies and variables for NestJS middleware registration ---
+  let activeAgentExecutor: any = null;
+  const lazyAgentExecutor = new Proxy({} as any, {
+    get(target, prop, receiver) {
+      return Reflect.get(activeAgentExecutor || target, prop, receiver);
+    }
+  });
+
+  const eventBus = new InProcessEventBus();
+  const killswitch = new DbKillswitch(db as never);
+  const agentRegistry = new AgentRegistry();
+
+  const cronScheduler = new CronScheduler({
+    db: db as never,
+    onFire: async (schedule: any) => {
+      console.log(`[Cron] Firing schedule ${schedule.name} for agent ${schedule.agentId}`);
+      const def = agentRegistry.get(schedule.agentId);
+      if (def) {
+        lazyAgentExecutor.startWorkflow({
+          name: def.name,
+          version: 1,
+          input: { agentId: schedule.agentId },
+        });
+      }
+    },
+    pollIntervalMs: 10000,
+  });
+
+  const agentRouter = createAgentRouter(
+    agentRegistry,
+    eventBus,
+    killswitch,
+    cronScheduler,
+    lazyAgentExecutor as any,
+  );
 
   // --- Sync Engine Adapters ---
   console.log('Initializing sync adapters...');
@@ -386,6 +434,7 @@ async function main(): Promise<void> {
       dbProbe,
       startTime,
       workflowExecutor: executorOps as any,
+      agentRouter,
     }),
     { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] },
   );
@@ -412,8 +461,6 @@ async function main(): Promise<void> {
   const workflowService = app.get(WorkflowService);
   const taskService = app.get(TaskService);
 
-  const eventBus = new InProcessEventBus();
-  const killswitch = new DbKillswitch(db as never);
   const systemTools = new ToolRegistry();
 
   // Register tools for all agents
@@ -433,8 +480,8 @@ async function main(): Promise<void> {
     systemTools.register(tool);
   }
 
-  const agentRegistry = new AgentRegistry();
   const agentExecutor = new AgentWorkflowExecutor(taskService as never, workflowService as never);
+  activeAgentExecutor = agentExecutor;
 
   // Register CommitGuard reference agent
   agentRegistry.register(
@@ -618,22 +665,7 @@ async function main(): Promise<void> {
     }),
   );
 
-  const cronScheduler = new CronScheduler({
-    db: db as never,
-    onFire: async (schedule: any) => {
-      console.log(`[Cron] Firing schedule ${schedule.name} for agent ${schedule.agentId}`);
-      // Create a workflow for this agent
-      const def = agentRegistry.get(schedule.agentId);
-      if (def) {
-        agentExecutor.startWorkflow({
-          name: def.name,
-          version: 1,
-          input: { agentId: schedule.agentId },
-        });
-      }
-    },
-    pollIntervalMs: 10000,
-  });
+  // cronScheduler is already initialized and started below
 
   // Real LLM function — falls back to stub when no API keys are configured
   const hasAiKeys = !!(cfg.anthropicApiKey || cfg.geminiApiKey);
@@ -643,7 +675,7 @@ async function main(): Promise<void> {
   const agentLlm = async (model: string, prompt: string): Promise<string> => {
     if (!hasAiKeys) {
       console.log(`[LLM stub ${model}] prompt length ${prompt.length}`);
-      return JSON.stringify({ action: 'finish', result: 'Agent executed successfully (stub).' });
+      return JSON.stringify({ thought: 'Done', tool: 'finish', args: { result: 'Agent executed successfully (stub).' } });
     }
     try {
       const fakeTask = { taskId: 'agent-llm', workflowInstanceId: 'agent' } as any;
@@ -655,7 +687,7 @@ async function main(): Promise<void> {
       return typeof text === 'string' ? text : JSON.stringify(text);
     } catch (err) {
       console.error(`[LLM ${model}] error:`, err);
-      return JSON.stringify({ action: 'finish', result: 'LLM call failed, aborting.' });
+      return JSON.stringify({ thought: 'Failed', tool: 'finish', args: { result: 'LLM call failed, aborting.' } });
     }
   };
 
@@ -670,19 +702,11 @@ async function main(): Promise<void> {
     systemTools,
     telemetry as any,
     budgetManager as any,
+    1000,
+    options?.barrier,
   );
   agentWorkerPool.start();
   cronScheduler.start();
-
-  const agentRouter = createAgentRouter(
-    agentRegistry,
-    eventBus,
-    killswitch,
-    cronScheduler,
-    agentExecutor as never,
-  );
-
-  expressApp.use('/api/agents', agentRouter);
 
   console.log('Initializing NestJS app...');
   await app.init();
@@ -692,6 +716,17 @@ async function main(): Promise<void> {
   console.log(`Listening on http://localhost:${cfg.port}`);
 
   const processManager = new ProcessManager();
+
+  // Registered first so it shuts down LAST (ProcessManager.shutdown() runs
+  // targets in reverse/LIFO order). Every other target below may still issue
+  // DB queries while stopping (in-flight queue polls, pending decider sweeps),
+  // so the database connection must outlive all of them.
+  processManager.register({
+    name: 'database',
+    shutdown: async () => {
+      await db.destroy();
+    },
+  });
 
   processManager.register({
     name: 'http-server',
@@ -717,13 +752,6 @@ async function main(): Promise<void> {
   });
 
   processManager.register({
-    name: 'database',
-    shutdown: async () => {
-      await db.destroy();
-    },
-  });
-
-  processManager.register({
     name: 'event-listeners',
     shutdown: async () => {
       workflowEventListener.stop();
@@ -738,10 +766,21 @@ async function main(): Promise<void> {
     },
   });
 
-  processManager.installSignalHandlers();
+  if (options?.installSignalHandlers ?? true) {
+    processManager.installSignalHandlers();
+  }
+
+  return {
+    app,
+    close: async () => {
+      await processManager.shutdown();
+    },
+  };
 }
 
-main().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test') {
+  bootstrapServer().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}

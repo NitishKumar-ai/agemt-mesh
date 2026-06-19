@@ -132,6 +132,8 @@ export class SyncSqliteAdapter {
     const row = this.stmtGetWorkflow.get(workflowId) as { json_data: string } | undefined;
     if (!row) return null;
     const wf: WorkflowModel = JSON.parse(row.json_data);
+    wf.failedReferenceTaskNames = new Set((wf.failedReferenceTaskNames as any) || []);
+    wf.failedTaskNames = new Set((wf.failedTaskNames as any) || []);
     if (includeTasks) {
       const taskRows = this.stmtGetTasksForWorkflow.all(workflowId) as Array<{
         json_data: string;
@@ -157,6 +159,10 @@ export class SyncSqliteAdapter {
   createWorkflow(workflow: WorkflowModel): void {
     const tasks = workflow.tasks;
     workflow.tasks = [];
+    const origFailedRef = workflow.failedReferenceTaskNames;
+    const origFailedTask = workflow.failedTaskNames;
+    (workflow as any).failedReferenceTaskNames = Array.from(origFailedRef || []);
+    (workflow as any).failedTaskNames = Array.from(origFailedTask || []);
     try {
       this.stmtInsertWorkflow.run(
         workflow.workflowId,
@@ -173,12 +179,18 @@ export class SyncSqliteAdapter {
       }
     } finally {
       workflow.tasks = tasks;
+      workflow.failedReferenceTaskNames = origFailedRef;
+      workflow.failedTaskNames = origFailedTask;
     }
   }
 
   updateWorkflow(workflow: WorkflowModel): void {
     const tasks = workflow.tasks;
     workflow.tasks = [];
+    const origFailedRef = workflow.failedReferenceTaskNames;
+    const origFailedTask = workflow.failedTaskNames;
+    (workflow as any).failedReferenceTaskNames = Array.from(origFailedRef || []);
+    (workflow as any).failedTaskNames = Array.from(origFailedTask || []);
     try {
       this.stmtUpdateWorkflow.run(JSON.stringify(workflow), workflow.workflowId);
       if (isWorkflowTerminal(workflow.status!)) {
@@ -188,6 +200,8 @@ export class SyncSqliteAdapter {
       }
     } finally {
       workflow.tasks = tasks;
+      workflow.failedReferenceTaskNames = origFailedRef;
+      workflow.failedTaskNames = origFailedTask;
     }
   }
 
@@ -285,6 +299,7 @@ export class SyncSqliteAdapter {
   // ── QueueDAO ────────────────────────────────────────────────────────────
 
   push(queueName: string, id: string, priority: number, delaySeconds: number): void {
+    console.log(`[SyncSqliteAdapter] Push: queue=${queueName}, id=${id}, priority=${priority}, delay=${delaySeconds}s`);
     this.stmtEnsureQueue.run(queueName);
     this.stmtPushQueueMessage.run(queueName, id, priority, String(delaySeconds));
   }
@@ -294,10 +309,12 @@ export class SyncSqliteAdapter {
   }
 
   remove(queueName: string, id: string): void {
+    console.log(`[SyncSqliteAdapter] Remove: queue=${queueName}, id=${id}`);
     this.stmtRemoveQueueMessage.run(queueName, id);
   }
 
   postpone(queueName: string, id: string, _priority: number, delaySeconds: number): void {
+    console.log(`[SyncSqliteAdapter] Postpone: queue=${queueName}, id=${id}, delay=${delaySeconds}s`);
     this.stmtPostpone.run(String(delaySeconds), queueName, id);
   }
 
@@ -315,8 +332,11 @@ export class SyncSqliteAdapter {
 
   popMessage(queueName: string): string | null {
     const row = this.stmtPopMessage.get(queueName) as { message_id: string } | undefined;
-    if (!row) return null;
-    this.stmtMarkPopped.run(queueName, row.message_id);
-    return row.message_id;
+    if (row) {
+      console.log(`[SyncSqliteAdapter] Popped: queue=${queueName}, id=${row.message_id}`);
+      this.stmtMarkPopped.run(queueName, row.message_id);
+      return row.message_id;
+    }
+    return null;
   }
 }

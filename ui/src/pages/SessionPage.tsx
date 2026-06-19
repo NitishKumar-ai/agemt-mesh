@@ -47,12 +47,16 @@ export function SessionPage({
   githubStatus,
   onGitHubStatusChange,
   activeSessionId,
+  onWorkflowSelect,
+  activeWorkflowId,
 }: {
   events: MeshEvent[];
   streamState: 'connected' | 'reconnecting' | 'closed';
   githubStatus?: GitHubStatus;
   onGitHubStatusChange: (status: GitHubStatus) => void;
   activeSessionId?: string | null;
+  onWorkflowSelect?: (id: string | null) => void;
+  activeWorkflowId?: string | null;
 }) {
   const [workflowId, setWorkflowId] = useState<string>();
   const [running, setRunning] = useState(false);
@@ -150,6 +154,9 @@ export function SessionPage({
     try {
       const response = await api.runWorkflow(prompt);
       setWorkflowId(response.workflow_id);
+      if (onWorkflowSelect) {
+        onWorkflowSelect(response.workflow_id);
+      }
 
       // Store session title
       const title = prompt.length > 60 ? prompt.slice(0, 60) + '…' : prompt;
@@ -382,7 +389,7 @@ export function SessionPage({
         />
         <Composer running={running} onSubmit={submitPrompt} />
       </section>
-      <ContextPane events={sessionEvents} workflowId={workflowId} />
+      <ContextPane events={sessionEvents} workflowId={workflowId} onWorkflowSelect={onWorkflowSelect} />
     </div>
   );
 }

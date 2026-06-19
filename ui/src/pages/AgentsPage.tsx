@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Bot, Play, RefreshCw, Search, Shield, Terminal, Zap } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
-import { api } from '../lib/api';
-import type { AgentInfo } from '../lib/types';
+import { serverLiteApi } from '../lib/serverLiteApi';
+import type { AgentSummary } from '../lib/serverLiteTypes';
 
 const ICONS: Record<string, typeof Bot> = {
   commitguard: Shield,
@@ -44,8 +44,12 @@ function statusDot(status: string) {
   );
 }
 
-export function AgentsPage() {
-  const [agents, setAgents] = useState<AgentInfo[]>([]);
+interface AgentsPageProps {
+  onWorkflowSelect: (id: string | null) => void;
+}
+
+export function AgentsPage({ onWorkflowSelect }: AgentsPageProps) {
+  const [agents, setAgents] = useState<AgentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [runTarget, setRunTarget] = useState<string | null>(null);
   const [goal, setGoal] = useState('');
@@ -55,8 +59,8 @@ export function AgentsPage() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api.listAgents();
-      setAgents(res.agents);
+      const res = await serverLiteApi.listAgents();
+      setAgents(res);
     } finally {
       setLoading(false);
     }
@@ -66,11 +70,16 @@ export function AgentsPage() {
     if (!runTarget || !goal) return;
     setLaunching(true);
     try {
-      await api.runAgent(runTarget, goal, context);
+      const res = await serverLiteApi.runAgent(runTarget, goal, context);
       setRunTarget(null);
       setGoal('');
       setContext('');
+      if (res && res.workflowId) {
+        onWorkflowSelect(res.workflowId);
+      }
       void load();
+    } catch (e: any) {
+      alert(e.message || 'Failed to run agent');
     } finally {
       setLaunching(false);
     }
@@ -170,7 +179,7 @@ export function AgentsPage() {
               </p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {agent.capabilities.map((cap) => (
+                {agent.capabilities.map((cap: string) => (
                   <span
                     key={cap}
                     style={{

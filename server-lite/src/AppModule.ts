@@ -1,7 +1,8 @@
-import { Module, DynamicModule, Global } from '@nestjs/common';
+import { Module, DynamicModule, Global, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import express from 'express';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,19 +30,24 @@ export interface AppModuleOptions {
   dbProbe?: () => Promise<void>;
   startTime: number;
   workflowExecutor?: WorkflowExecutor;
+  agentRouter?: any;
 }
 
 @Global()
 @Module({})
-export class AppModule {
+export class AppModule implements NestModule {
+  private static agentRouter: any = null;
+
   static register(options: AppModuleOptions): DynamicModule {
+    console.log('[AppModule] Register called, agentRouter exists:', !!options.agentRouter);
+    AppModule.agentRouter = options.agentRouter || null;
     return {
       module: AppModule,
       imports: [
         RestModule.forRoot(),
         ServeStaticModule.forRoot({
-          rootPath: path.resolve(__dirname, '../../ui-next/dist'),
-          exclude: ['/api/(.*)', '/swagger-ui/(.*)', '/health', '/api-docs/(.*)'],
+          rootPath: path.resolve(__dirname, '../../ui/dist'),
+          exclude: ['/api/*path', '/swagger-ui/*path', '/health', '/api-docs/*path'],
         }),
       ],
       providers: [
@@ -65,5 +71,12 @@ export class AppModule {
         WORKFLOW_EXECUTOR,
       ],
     };
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    console.log('[AppModule] Configure called, agentRouter exists:', !!AppModule.agentRouter);
+    if (AppModule.agentRouter) {
+      consumer.apply(AppModule.agentRouter).forRoutes('/api/agents', '/api/agents/*path');
+    }
   }
 }

@@ -16,9 +16,11 @@ const TYPE_FILTERS = ['all', 'plan', 'execute', 'review', 'approval', 'error', '
 export function ActivityPage({
   events,
   streamState,
+  onWorkflowSelect,
 }: {
   events: MeshEvent[];
   streamState: string;
+  onWorkflowSelect?: (id: string | null) => void;
 }) {
   const [search, setSearch] = useState('');
   const [agentFilter, setAgentFilter] = useState<string>('all');
@@ -193,21 +195,44 @@ export function ActivityPage({
                 </pre>
               )}
               {isExpanded && (
-                <pre
-                  style={{
-                    margin: '8px 0 0',
-                    padding: '12px 14px',
-                    background: 'var(--surface-card)',
-                    borderRadius: 12,
-                    fontSize: 12,
-                    overflow: 'auto',
-                    maxHeight: 300,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {JSON.stringify(event.payload, null, 2)}
-                </pre>
+                <div style={{ marginTop: '8px' }}>
+                  {onWorkflowSelect && !!(event.payload.workflowId || event.payload.workflow_id) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onWorkflowSelect(String(event.payload.workflowId || event.payload.workflow_id));
+                      }}
+                      style={{
+                        marginBottom: '8px',
+                        padding: '4px 10px',
+                        background: 'var(--brand-teal)',
+                        border: 'none',
+                        borderRadius: '4px',
+                        color: '#000',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Inspect Workflow
+                    </button>
+                  )}
+                  <pre
+                    style={{
+                      margin: 0,
+                      padding: '12px 14px',
+                      background: 'var(--surface-card)',
+                      borderRadius: 12,
+                      fontSize: 12,
+                      overflow: 'auto',
+                      maxHeight: 300,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {JSON.stringify(event.payload, null, 2)}
+                  </pre>
+                </div>
               )}
             </article>
           );

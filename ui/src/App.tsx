@@ -31,11 +31,16 @@ import { SettingsPage } from './pages/SettingsPage';
 import { connectEventStream } from './lib/events';
 import { api } from './lib/api';
 import type { GitHubStatus, KillswitchState, MeshEvent, PageKey } from './lib/types';
+import { WorkflowInspector } from './components/WorkflowInspector';
 
 export function App() {
   const [page, setPage] = useState<PageKey>('session');
   const [sessionKey, setSessionKey] = useState(0);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('workflow');
+  });
   const [events, setEvents] = useState<MeshEvent[]>([]);
   const [streamState, setStreamState] = useState<'connected' | 'reconnecting' | 'closed'>(
     'reconnecting',
@@ -55,6 +60,26 @@ export function App() {
     setActiveSessionId(runId);
     setPage('session');
   }
+
+  const handleWorkflowSelect = (workflowId: string | null) => {
+    setActiveWorkflowId(workflowId);
+    const url = new URL(window.location.href);
+    if (workflowId) {
+      url.searchParams.set('workflow', workflowId);
+    } else {
+      url.searchParams.delete('workflow');
+    }
+    window.history.pushState({}, '', url.toString());
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveWorkflowId(params.get('workflow'));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     return connectEventStream(
@@ -99,39 +124,49 @@ export function App() {
   );
 
   return (
-    <AppShell
-      page={page}
-      onPageChange={handlePageChange}
-      navItems={navItems}
-      streamState={streamState}
-      githubStatus={githubStatus}
-      killswitch={killswitch}
-      onKillswitchChange={setKillswitch}
-      activeSessionId={activeSessionId}
-      onSessionSelect={handleSessionSelect}
-    >
-      {page === 'session' && (
-        <SessionPage
-          key={sessionKey}
-          events={events}
-          streamState={streamState}
-          githubStatus={githubStatus}
-          onGitHubStatusChange={setGithubStatus}
-          activeSessionId={activeSessionId}
+    <>
+      <AppShell
+        page={page}
+        onPageChange={handlePageChange}
+        navItems={navItems}
+        streamState={streamState}
+        githubStatus={githubStatus}
+        killswitch={killswitch}
+        onKillswitchChange={setKillswitch}
+        activeSessionId={activeSessionId}
+        onSessionSelect={handleSessionSelect}
+      >
+        {page === 'session' && (
+          <SessionPage
+            key={sessionKey}
+            events={events}
+            streamState={streamState}
+            githubStatus={githubStatus}
+            onGitHubStatusChange={setGithubStatus}
+            activeSessionId={activeSessionId}
+            onWorkflowSelect={handleWorkflowSelect}
+            activeWorkflowId={activeWorkflowId}
+          />
+        )}
+        {page === 'sessions' && <SessionsPage />}
+        {page === 'workflows' && <WorkflowsPage activeWorkflowId={activeWorkflowId} onWorkflowSelect={handleWorkflowSelect} />}
+        {page === 'approvals' && <ApprovalsPage events={events} />}
+        {page === 'agents' && <AgentsPage onWorkflowSelect={handleWorkflowSelect} />}
+        {page === 'commitguard' && <CommitGuardPage />}
+        {page === 'marketing' && <MarketingPage />}
+        {page === 'tasks' && <TasksPage />}
+        {page === 'schedules' && <SchedulesPage />}
+        {page === 'activity' && <ActivityPage events={events} streamState={streamState} onWorkflowSelect={handleWorkflowSelect} />}
+        {page === 'safety' && <SafetyPage />}
+        {page === 'connections' && <ConnectionsPage />}
+        {page === 'settings' && <SettingsPage />}
+      </AppShell>
+      {activeWorkflowId && (
+        <WorkflowInspector
+          workflowId={activeWorkflowId}
+          onClose={() => handleWorkflowSelect(null)}
         />
       )}
-      {page === 'sessions' && <SessionsPage />}
-      {page === 'workflows' && <WorkflowsPage />}
-      {page === 'approvals' && <ApprovalsPage events={events} />}
-      {page === 'agents' && <AgentsPage />}
-      {page === 'commitguard' && <CommitGuardPage />}
-      {page === 'marketing' && <MarketingPage />}
-      {page === 'tasks' && <TasksPage />}
-      {page === 'schedules' && <SchedulesPage />}
-      {page === 'activity' && <ActivityPage events={events} streamState={streamState} />}
-      {page === 'safety' && <SafetyPage />}
-      {page === 'connections' && <ConnectionsPage />}
-      {page === 'settings' && <SettingsPage />}
-    </AppShell>
+    </>
   );
 }

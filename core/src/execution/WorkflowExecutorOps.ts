@@ -12,6 +12,8 @@ import {
   isWorkflowSuccessful,
   isBuiltInTask,
   TaskType,
+  NotFoundException,
+  ConflictException,
 } from '@agentmesh/common';
 import type { WorkflowExecutor, StartWorkflowInput, TaskResult } from './WorkflowExecutor.js';
 import type { TaskModel, WorkflowModel } from './types.js';
@@ -221,13 +223,13 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
 
   retry(workflowId: string, resumeSubworkflowTasks: boolean): void {
     const workflow = this.executionDAOFacade.getWorkflowModel(workflowId, true);
-    if (!workflow) throw new Error(`Workflow ${workflowId} not found`);
+    if (!workflow) throw new NotFoundException(`Workflow ${workflowId} not found`);
 
     if (!isWorkflowTerminal(workflow.status)) {
-      throw new Error(`Workflow is still running. status=${workflow.status}`);
+      throw new ConflictException(`Workflow is still running. status=${workflow.status}`);
     }
     if (workflow.tasks.length === 0) {
-      throw new Error('Workflow has not started yet');
+      throw new ConflictException('Workflow has not started yet');
     }
 
     if (resumeSubworkflowTasks) {
@@ -485,7 +487,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     if (!workflow) return;
 
     if (workflow.status === 'COMPLETED') {
-      throw new Error('Cannot terminate a COMPLETED workflow.');
+      throw new ConflictException('Cannot terminate a COMPLETED workflow.');
     }
     if (workflow.status === 'TERMINATED') return;
 
@@ -972,7 +974,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
       if (!workflow) return;
 
       if (isWorkflowTerminal(workflow.status)) {
-        throw new Error(`Workflow ${workflowId} has ended, status cannot be updated.`);
+        throw new ConflictException(`Workflow ${workflowId} has ended, status cannot be updated.`);
       }
       if (workflow.status === 'PAUSED') return;
 
@@ -995,7 +997,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
     if (!workflow) return;
 
     if (workflow.status !== 'PAUSED') {
-      throw new Error(
+      throw new ConflictException(
         `The workflow ${workflowId} is not PAUSED so cannot resume. Current status is ${workflow.status}`,
       );
     }
@@ -1432,6 +1434,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
       taskToDomain: input.taskToDomain ?? null,
       ownerApp: 'unknown',
       event: input.event ?? null,
+      workflowDefinition: (input.workflowDefinition as any) ?? null,
     });
 
     try {
@@ -1483,6 +1486,7 @@ export class WorkflowExecutorOps implements WorkflowExecutor {
         parentWorkflowTaskId: input.parentWorkflowTaskId ?? null,
         taskToDomain: input.taskToDomain ?? null,
         ownerApp: 'unknown',
+        workflowDefinition: (input.workflowDefinition as any) ?? null,
       });
 
       createAttempted = true;

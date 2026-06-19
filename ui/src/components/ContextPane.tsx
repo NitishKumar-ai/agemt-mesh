@@ -14,7 +14,7 @@ import { shortTime } from '../lib/format';
 
 type Tab = 'details' | 'files' | 'diff' | 'logs' | 'artifacts' | 'events';
 
-export function ContextPane({ events, workflowId }: { events: MeshEvent[]; workflowId?: string }) {
+export function ContextPane({ events, workflowId, onWorkflowSelect }: { events: MeshEvent[]; workflowId?: string; onWorkflowSelect?: (id: string | null) => void }) {
   const [tab, setTab] = useState<Tab>('details');
   const latestApproval = events.find((event) => event.eventType.includes('approval'));
 
@@ -55,7 +55,32 @@ export function ContextPane({ events, workflowId }: { events: MeshEvent[]; workf
             </div>
             <div>
               <dt>Workflow</dt>
-              <dd>{workflowId ?? 'Not started'}</dd>
+              <dd style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {workflowId ? (
+                  <>
+                    <span style={{ fontFamily: 'monospace' }}>{workflowId}</span>
+                    {onWorkflowSelect && (
+                      <button 
+                        onClick={() => onWorkflowSelect(workflowId)}
+                        style={{
+                          padding: '2px 8px',
+                          background: 'var(--brand-teal)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          color: '#000',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Inspect
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  'Not started'
+                )}
+              </dd>
             </div>
             <div>
               <dt>Mode</dt>

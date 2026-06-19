@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { WorkflowModel } from '@agentmesh/common';
+import { NotFoundException, ConflictException } from '@agentmesh/common';
 import { WorkflowService } from '../services/WorkflowService.js';
 
 @ApiTags('workflows')
@@ -20,13 +21,43 @@ import { WorkflowService } from '../services/WorkflowService.js';
 export class WorkflowResource {
   constructor(private readonly workflowService: WorkflowService) {}
 
+  private mapWorkflowError(err: Error): never {
+    // Typed errors (thrown by WorkflowExecutorOps and the newer WorkflowService
+    // paths) map by class, not by message wording — durable across message
+    // changes. Substring matching below is a fallback only for the DAO-fallback
+    // paths that still throw plain Error and haven't been migrated yet.
+    if (err instanceof NotFoundException) {
+      throw new HttpException(err.message, HttpStatus.NOT_FOUND);
+    }
+    if (err instanceof ConflictException) {
+      throw new HttpException(err.message, HttpStatus.CONFLICT);
+    }
+
+    const msg = err.message;
+    if (msg.toLowerCase().includes('not found')) {
+      throw new HttpException(msg, HttpStatus.NOT_FOUND);
+    }
+    if (
+      msg.toLowerCase().includes('already') ||
+      msg.toLowerCase().includes('still') ||
+      msg.toLowerCase().includes('terminal') ||
+      msg.toLowerCase().includes('not in') ||
+      msg.toLowerCase().includes('cannot terminate') ||
+      msg.toLowerCase().includes('unable to') ||
+      msg.toLowerCase().includes('not started')
+    ) {
+      throw new HttpException(msg, HttpStatus.CONFLICT);
+    }
+    throw new HttpException(msg, HttpStatus.BAD_REQUEST);
+  }
+
   @Post()
   async startWorkflow(@Body() body: any): Promise<string> {
     try {
       const workflowId = await this.workflowService.startWorkflow(body);
       return workflowId;
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -47,7 +78,7 @@ export class WorkflowResource {
       });
       return await this.workflowService.getWorkflow(workflowId);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -67,7 +98,7 @@ export class WorkflowResource {
       });
       return workflowId;
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -89,7 +120,7 @@ export class WorkflowResource {
       const status = statusStr ? statusStr.split(',').map((s) => s.trim()) : undefined;
       return await this.workflowService.getWorkflowTasks(workflowId, s, c, status);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -120,7 +151,7 @@ export class WorkflowResource {
     try {
       await this.workflowService.decideWorkflow(workflowId);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -129,7 +160,7 @@ export class WorkflowResource {
     try {
       await this.workflowService.pauseWorkflow(workflowId);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -138,7 +169,7 @@ export class WorkflowResource {
     try {
       await this.workflowService.resumeWorkflow(workflowId);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -147,7 +178,7 @@ export class WorkflowResource {
     try {
       return await this.workflowService.rerunWorkflow(workflowId, body);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -160,7 +191,7 @@ export class WorkflowResource {
       const useLatest = useLatestStr === 'true';
       await this.workflowService.restartWorkflow(workflowId, useLatest);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -173,7 +204,7 @@ export class WorkflowResource {
       const resumeSub = resumeSubStr === 'true';
       await this.workflowService.retryWorkflow(workflowId, resumeSub);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -182,7 +213,7 @@ export class WorkflowResource {
     try {
       await this.workflowService.resetWorkflow(workflowId);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -194,7 +225,7 @@ export class WorkflowResource {
     try {
       await this.workflowService.terminateWorkflow(workflowId, reason);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -207,7 +238,7 @@ export class WorkflowResource {
       const archiveWorkflow = archiveStr !== 'false';
       await this.workflowService.deleteWorkflow(workflowId, archiveWorkflow);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 
@@ -221,7 +252,7 @@ export class WorkflowResource {
       const archiveWorkflow = archiveStr !== 'false';
       await this.workflowService.terminateRemove(workflowId, reason, archiveWorkflow);
     } catch (err) {
-      throw new HttpException((err as Error).message, HttpStatus.BAD_REQUEST);
+      this.mapWorkflowError(err as Error);
     }
   }
 }
