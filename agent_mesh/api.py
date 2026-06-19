@@ -118,7 +118,9 @@ DBOS(
 )
 
 ROOT_DIR = pathlib.Path(__file__).parent
-FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
+# The product console lives at the repository root so the TypeScript UI can be
+# built and deployed independently from the deprecated Python implementation.
+FRONTEND_DIST = ROOT_DIR.parent / "ui" / "dist"
 FRONTEND_ASSETS = FRONTEND_DIST / "assets"
 
 if FRONTEND_ASSETS.exists():

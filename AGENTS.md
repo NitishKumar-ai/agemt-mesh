@@ -36,7 +36,8 @@ The project is a TypeScript monorepo managed by `pnpm`.
 - **rest**: NestJS controllers and API definitions
 - **server-lite**: Lightweight server entry point using SQLite
 - **persistence modules**: Implementations of DAO interfaces (sqlite, postgres, redis, etc.)
-- **ui-next**: React-based user interface
+- **ui**: Agent Mesh React and TypeScript operator console
+- **ui-next**: Legacy workflow orchestration UI and component library
 
 ### Key Patterns
 

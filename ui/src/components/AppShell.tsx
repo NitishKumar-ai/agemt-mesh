@@ -1,7 +1,8 @@
 import type { ComponentType, ReactNode } from 'react';
 import {
-  ChevronDown,
+  Command,
   Github,
+  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -9,7 +10,7 @@ import {
   Settings,
   ShieldAlert,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import type { GitHubStatus, KillswitchState, PageKey } from '../lib/types';
 import { SessionHistory } from './SessionHistory';
@@ -54,6 +55,20 @@ export function AppShell({
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 860px)');
+    const syncSidebar = () => setOpen(!media.matches);
+    syncSidebar();
+    media.addEventListener('change', syncSidebar);
+    return () => media.removeEventListener('change', syncSidebar);
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      setOpen(false);
+    }
+  }, [page]);
+
   const toggleKillswitch = async () => {
     if (!killswitch) return;
 
@@ -82,6 +97,7 @@ export function AppShell({
   const primaryNav = navItems.filter((item) => PRIMARY_KEYS.includes(item.key));
   const toolsNav = navItems.filter((item) => TOOLS_KEYS.includes(item.key));
   const systemNav = navItems.filter((item) => SYSTEM_KEYS.includes(item.key));
+  const activeItem = navItems.find((item) => item.key === page);
 
   function renderNavButton(item: NavItem) {
     const Icon = item.icon;
@@ -108,9 +124,23 @@ export function AppShell({
         </div>
       )}
 
+      {open && (
+        <button
+          className="sidebar-scrim"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
       <aside className="sidebar">
         <div className="sidebar-head">
-          <span className="app-wordmark">Agent Mesh</span>
+          <span className="app-wordmark">
+            <span className="app-mark">
+              <Command size={15} />
+            </span>
+            Agent Mesh
+          </span>
           <button
             className="bare-icon"
             type="button"
@@ -133,21 +163,21 @@ export function AppShell({
 
         {/* Navigation sections */}
         <nav className="sidebar-nav">
-          {/* Primary section */}
+          <span className="nav-section-label">Workspace</span>
           {primaryNav.map(renderNavButton)}
 
-          {/* Tools divider + section */}
           {toolsNav.length > 0 && (
             <>
               <div className="nav-section-divider" />
+              <span className="nav-section-label">Agents and tools</span>
               {toolsNav.map(renderNavButton)}
             </>
           )}
 
-          {/* System divider + section */}
           {systemNav.length > 0 && (
             <>
               <div className="nav-section-divider" />
+              <span className="nav-section-label">System</span>
               {systemNav.map(renderNavButton)}
             </>
           )}
@@ -202,10 +232,19 @@ export function AppShell({
               onClick={() => setOpen(true)}
               title="Open sidebar"
             >
-              <PanelLeftOpen size={18} />
+              <Menu size={18} />
             </button>
           )}
+          <div className="header-context">
+            <span>Agent Mesh</span>
+            <i>/</i>
+            <strong>{activeItem?.label ?? 'Session'}</strong>
+          </div>
           <div className="header-spacer" />
+          <span className={`header-stream header-stream--${streamState}`}>
+            <i />
+            {streamState === 'connected' ? 'Live' : streamState}
+          </span>
           <button
             className={`header-killswitch ${killswitch?.engaged ? 'header-killswitch--engaged' : ''}`}
             type="button"

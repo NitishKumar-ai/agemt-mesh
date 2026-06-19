@@ -191,46 +191,15 @@ export function SessionPage({
   if (!taskStarted) {
     return (
       <div className="task-home">
-        <div className="home-content" style={{ position: 'relative' }}>
-          <img
-            src="/hero_mesh_robot.png"
-            alt="3D Robot"
-            style={{
-              position: 'absolute',
-              right: -240,
-              top: -80,
-              width: 420,
-              height: 420,
-              objectFit: 'contain',
-              pointerEvents: 'none',
-              zIndex: -1,
-              filter: 'drop-shadow(0 20px 40px rgba(255,77,139,0.15))',
-            }}
-          />
-          <img
-            src="/hero_data_nodes.png"
-            alt="3D Nodes"
-            style={{
-              position: 'absolute',
-              left: -280,
-              top: 180,
-              width: 320,
-              height: 320,
-              objectFit: 'contain',
-              pointerEvents: 'none',
-              zIndex: -1,
-              filter: 'drop-shadow(0 20px 40px rgba(184,164,237,0.15))',
-            }}
-          />
-
+        <div className="home-content">
           <div className="hero-kicker">
             <Sparkles size={16} />
-            Autonomous engineering, with you in control
+            Autonomous engineering workspace
           </div>
-          <h1 style={{ position: 'relative', zIndex: 1 }}>What should we work on?</h1>
-          <p style={{ position: 'relative', zIndex: 1 }}>
-            Describe a task, connect a repository, and watch Agent Mesh plan, execute, and review
-            the work.
+          <h1>What can I help you build?</h1>
+          <p>
+            Ask Agent Mesh to inspect a repository, implement a change, run an audit, or coordinate
+            a durable workflow.
           </p>
 
           <form
@@ -243,7 +212,7 @@ export function SessionPage({
             <textarea
               value={homePrompt}
               onChange={(event) => setHomePrompt(event.target.value)}
-              placeholder="Help me fix..."
+              placeholder="Describe a task or ask a question"
               rows={3}
             />
             <div className="hero-prompt-footer">
@@ -334,7 +303,7 @@ export function SessionPage({
           )}
 
           <section className="home-section">
-            <h2>Try Agent Mesh out</h2>
+            <h2>Start with a task</h2>
             <div className="quick-starts">
               {quickStarts.map(({ label, prompt, icon: Icon }) => (
                 <button type="button" key={label} onClick={() => void submitPrompt(prompt)}>

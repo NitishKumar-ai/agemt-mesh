@@ -45,10 +45,10 @@ Navigate to `http://localhost:8000/`
 
 ### 4. Run the TypeScript Frontend
 
-The production frontend now lives in `frontend/` as a Vite + React + TypeScript app.
+The production frontend lives in the repository-level `ui/` directory as a Vite + React + TypeScript app.
 
 ```bash
-cd frontend
+cd ../ui
 npm install
 npm run dev
 ```
@@ -58,11 +58,11 @@ Open `http://127.0.0.1:5173/`. The dev server proxies `/api`, `/stream`, and `/w
 To build the frontend for FastAPI to serve:
 
 ```bash
-cd frontend
+cd ../ui
 npm run build
 ```
 
-When `frontend/dist` exists, FastAPI serves it at `/`; otherwise it falls back to the legacy `dashboard.html`.
+When `ui/dist` exists, FastAPI serves it at `/`; otherwise it falls back to the legacy `dashboard.html`.
 
 ## Connect GitHub
 

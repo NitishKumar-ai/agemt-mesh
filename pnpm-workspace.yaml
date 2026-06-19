@@ -1,4 +1,5 @@
 packages:
+  - 'ui'
   - 'agent-runtime'
   - 'common'
   - 'common-persistence'
