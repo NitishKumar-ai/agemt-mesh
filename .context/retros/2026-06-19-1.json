@@ -1,0 +1,45 @@
+{
+  "date": "2026-06-19",
+  "window": "7d",
+  "metrics": {
+    "commits": 29,
+    "contributors": 1,
+    "prs_merged": 4,
+    "insertions": 18169,
+    "deletions": 2136,
+    "net_loc": 16033,
+    "logical_sloc_added": 15631,
+    "test_loc": 849,
+    "test_ratio": 0.0467,
+    "active_days": 4,
+    "sessions": 5,
+    "deep_sessions": 1,
+    "avg_session_minutes": 25,
+    "loc_per_session_hour": 9850,
+    "feat_pct": 0.4483,
+    "fix_pct": 0.1034,
+    "peak_hour": 1,
+    "ai_assisted_commits": 16
+  },
+  "authors": {
+    "Nitish": {
+      "commits": 29,
+      "insertions": 18169,
+      "deletions": 2136,
+      "test_ratio": 0.0467,
+      "top_area": "criticgate_eval/"
+    }
+  },
+  "version_range": [
+    "0.1.0",
+    "0.1.0"
+  ],
+  "streak_days": 0,
+  "tweetable": "June 12-19: 29 commits, 15.6k logical SLOC, 4.7% tests, 4 merged branches, peak: 1am | 55% AI-assisted",
+  "test_health": {
+    "total_test_files": 15,
+    "tests_added_this_period": 8,
+    "regression_test_commits": 0,
+    "test_files_changed": 8
+  }
+}
