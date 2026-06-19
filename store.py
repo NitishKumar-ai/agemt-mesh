@@ -411,7 +411,16 @@ def init_business_tables(engine=None) -> None:
                 retry_count INTEGER DEFAULT 0,
                 next_retry_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                media_type TEXT DEFAULT 'TEXT',
+                video_file_path TEXT,
+                thumbnail_file_path TEXT,
+                video_duration_seconds INTEGER,
+                privacy_status TEXT DEFAULT 'public',
+                video_category_id TEXT DEFAULT '22',
+                made_for_kids INTEGER DEFAULT 0,
+                video_source TEXT DEFAULT 'upload',
+                veo3_prompt TEXT
             )
         """))
         conn.execute(text(
@@ -435,6 +444,31 @@ def init_business_tables(engine=None) -> None:
         """))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS idx_ssplog_pp ON ss_publish_log(platform_post_id)"
+        ))
+        # Video upload tracking table
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ss_video_uploads (
+                id TEXT PRIMARY KEY,
+                platform_post_id INTEGER REFERENCES ss_platform_posts(id),
+                file_path TEXT NOT NULL,
+                file_size_bytes INTEGER NOT NULL,
+                duration_seconds INTEGER,
+                format TEXT,
+                resolution TEXT,
+                upload_progress_bytes INTEGER DEFAULT 0,
+                upload_status TEXT DEFAULT 'pending',
+                source TEXT DEFAULT 'upload',
+                veo3_prompt TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                uploaded_at TIMESTAMP,
+                deleted_at TIMESTAMP
+            )
+        """))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssvid_pp ON ss_video_uploads(platform_post_id)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_ssvid_status ON ss_video_uploads(upload_status)"
         ))
         # Flexible metric-key daily snapshots (from brightbean pattern)
         conn.execute(text("""
@@ -1933,6 +1967,203 @@ def ss_get_publish_log(platform_post_id: int) -> list:
         "FROM ss_publish_log WHERE platform_post_id=:ppid ORDER BY created_at DESC"
     ), {"ppid": platform_post_id}).fetchall()
     return [dict(r._mapping) for r in rows]
+
+
+# ── Social Studio — Video Upload Tracking ────────────────────────────────────
+
+@DBOS.transaction()
+def ss_create_video_upload(
+    file_id: str,
+    file_path: str,
+    file_size: int,
+    duration: Optional[int] = None,
+    format: Optional[str] = None,
+    resolution: Optional[str] = None,
+    source: str = "upload",
+    veo3_prompt: Optional[str] = None,
+) -> dict:
+    """Store video upload metadata."""
+    DBOS.sql_session.execute(text(
+        "INSERT INTO ss_video_uploads "
+        "(id, file_path, file_size_bytes, duration_seconds, format, resolution, source, veo3_prompt) "
+        "VALUES (:id, :fp, :fs, :dur, :fmt, :res, :src, :prompt)"
+    ), {
+        "id": file_id,
+        "fp": file_path,
+        "fs": file_size,
+        "dur": duration,
+        "fmt": format,
+        "res": resolution,
+        "src": source,
+        "prompt": veo3_prompt,
+    })
+    return {"file_id": file_id, "file_path": file_path}
+
+
+@DBOS.transaction()
+def ss_get_video_upload(file_id: str) -> Optional[dict]:
+    """Retrieve video upload by ID."""
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, platform_post_id, file_path, file_size_bytes, duration_seconds, "
+        "format, resolution, upload_progress_bytes, upload_status, source, veo3_prompt, "
+        "created_at, uploaded_at, deleted_at "
+        "FROM ss_video_uploads WHERE id=:fid"
+    ), {"fid": file_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
+def ss_update_upload_progress(file_id: str, uploaded_bytes: int) -> None:
+    """Update upload progress for resumable uploads."""
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_video_uploads SET upload_progress_bytes=:bytes WHERE id=:fid"
+    ), {"bytes": uploaded_bytes, "fid": file_id})
+
+
+@DBOS.transaction()
+def ss_mark_video_uploaded(file_id: str) -> None:
+    """Mark video upload complete."""
+    DBOS.sql_session.execute(text(
+        "UPDATE ss_video_uploads SET upload_status='completed', "
+        "uploaded_at=CURRENT_TIMESTAMP WHERE id=:fid"
+    ), {"fid": file_id})
+
+
+@DBOS.transaction()
+def ss_create_image_upload(
+    file_id: str,
+    file_path: str,
+    file_size: int,
+    width: int,
+    height: int,
+    format: str = "PNG",
+    source: str = "upload",
+    prompt: Optional[str] = None,
+) -> dict:
+    """Store image upload metadata (reuses video uploads table)."""
+    DBOS.sql_session.execute(text(
+        "INSERT INTO ss_video_uploads "
+        "(id, file_path, file_size_bytes, format, resolution, source, veo3_prompt, upload_status) "
+        "VALUES (:id, :fp, :fs, :fmt, :res, :src, :prompt, 'completed')"
+    ), {
+        "id": file_id,
+        "fp": file_path,
+        "fs": file_size,
+        "fmt": format,
+        "res": f"{width}x{height}",
+        "src": source,
+        "prompt": prompt,
+    })
+    return {"file_id": file_id, "file_path": file_path}
+
+
+@DBOS.transaction()
+def ss_cleanup_old_videos() -> int:
+    """Delete video files older than 7 days. Returns count deleted."""
+    import os
+    from datetime import datetime, timedelta
+    
+    cutoff = (datetime.now() - timedelta(days=7)).isoformat()
+    rows = DBOS.sql_session.execute(text(
+        "SELECT id, file_path, thumbnail_file_path FROM ss_video_uploads "
+        "WHERE created_at < :cutoff AND deleted_at IS NULL"
+    ), {"cutoff": cutoff}).fetchall()
+    
+    count = 0
+    for row in rows:
+        file_id = row[0]
+        file_path = row[1]
+        thumb_path = row[2]
+        
+        # Delete video file
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                count += 1
+            except Exception:
+                pass
+        
+        # Delete thumbnail file
+        if thumb_path and os.path.exists(thumb_path):
+            try:
+                os.remove(thumb_path)
+            except Exception:
+                pass
+        
+        # Mark as deleted in database
+        DBOS.sql_session.execute(text(
+            "UPDATE ss_video_uploads SET deleted_at=CURRENT_TIMESTAMP WHERE id=:fid"
+        ), {"fid": file_id})
+    
+    return count
+
+
+@DBOS.transaction()
+def ss_delete_video_file(file_path: str, thumbnail_path: Optional[str] = None) -> None:
+    """Delete video and thumbnail files immediately after successful upload."""
+    import os
+    
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+    
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        try:
+            os.remove(thumbnail_path)
+        except Exception:
+            pass
+
+
+@DBOS.transaction()
+def ss_create_platform_post_with_video(
+    post_id: int,
+    account_id: int,
+    platform: str,
+    caption: str,
+    hashtags: str,
+    video_file_id: str,
+    thumbnail_file_id: Optional[str],
+    metadata: dict,
+) -> int:
+    """Create platform_post with video metadata."""
+    video_upload = ss_get_video_upload(video_file_id)
+    if not video_upload:
+        raise ValueError(f"Video upload {video_file_id} not found")
+    
+    thumbnail_path = None
+    if thumbnail_file_id:
+        thumb_upload = ss_get_video_upload(thumbnail_file_id)
+        if thumb_upload:
+            thumbnail_path = thumb_upload["file_path"]
+    
+    result = DBOS.sql_session.execute(text(
+        "INSERT INTO ss_platform_posts "
+        "(post_id, account_id, platform, caption, hashtags, char_count, status, "
+        "media_type, video_file_path, thumbnail_file_path, video_duration_seconds, "
+        "privacy_status, video_category_id, made_for_kids, video_source, veo3_prompt) "
+        "VALUES (:pid, :aid, :plat, :cap, :ht, :cc, :st, :mt, :vfp, :tfp, :dur, :priv, :cat, :kd, :src, :prompt) "
+        "RETURNING id"
+    ), {
+        "pid": post_id,
+        "aid": account_id,
+        "plat": platform,
+        "cap": caption,
+        "ht": hashtags,
+        "cc": len(caption),
+        "st": "draft",
+        "mt": metadata.get("post_type", "VIDEO"),
+        "vfp": video_upload["file_path"],
+        "tfp": thumbnail_path,
+        "dur": video_upload.get("duration_seconds"),
+        "priv": metadata.get("privacy", "public"),
+        "cat": metadata.get("category_id", "22"),
+        "kd": 1 if metadata.get("made_for_kids") else 0,
+        "src": video_upload.get("source", "upload"),
+        "prompt": video_upload.get("veo3_prompt"),
+    })
+    return result.fetchone()[0]
 
 
 # ── Social Studio — Metric Snapshots ─────────────────────────────────────────

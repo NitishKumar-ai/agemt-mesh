@@ -14,8 +14,10 @@ from loop import AgentLoop, LoopConfig, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
-# Model name config — defaults
-MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash")
+from llm_models import STABLE_GEMINI, normalize_gemini_model
+
+# Model name config — defaults (preview slugs auto-map to stable 2.5 Flash)
+MODEL_PLAN    = normalize_gemini_model(os.getenv("MODEL_PLAN", STABLE_GEMINI))
 MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
 
 @dataclass

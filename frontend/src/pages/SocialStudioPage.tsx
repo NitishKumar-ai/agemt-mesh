@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { SSAccount, SSPlatformPost, SSPlatformMeta } from "../lib/types";
 
@@ -178,10 +178,13 @@ export function SocialStudioPage() {
 const PLATFORM_META: Record<string, { label: string; description: string; color: string; bg: string; icon: string }> = {
   linkedin:         { label: "LinkedIn (Personal)",   description: "Personal profile",              color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
   linkedin_company: { label: "LinkedIn (Company)",    description: "Company Pages & analytics",     color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
-  instagram:        { label: "Instagram",              description: "For accounts linked to Facebook",color: "#e1306c", bg: "#fce4ef", icon: "📸" },
+  instagram:        { label: "Instagram",              description: "Photos, Reels & Stories",       color: "#e1306c", bg: "#fce4ef", icon: "📸" },
   bluesky:          { label: "Bluesky",                description: "AT Protocol",                   color: "#0085ff", bg: "#e0f0ff", icon: "🦋" },
   threads:          { label: "Threads",                description: "Text & Media",                  color: "#000000", bg: "#f0f0f0", icon: "@" },
   twitter:          { label: "Twitter / X",            description: "Short-form posts",              color: "#1da1f2", bg: "#e8f6fe", icon: "𝕏" },
+  facebook:         { label: "Facebook",               description: "Pages & Groups",                color: "#1877f2", bg: "#e7f3ff", icon: "f" },
+  tiktok:           { label: "TikTok",                 description: "Short-form videos",             color: "#000000", bg: "#f0f0f0", icon: "🎵" },
+  youtube:          { label: "YouTube",                description: "Videos & Shorts",               color: "#ff0000", bg: "#ffe5e5", icon: "▶" },
 };
 
 // ── Connections Tab ─────────────────────────────────────────────────────────
@@ -307,6 +310,10 @@ function ConnectionsTab({ accounts, platforms, reloadAccounts }: { accounts: SSA
   // ── Connect form / OAuth view ──
   if (view === "form") {
     const meta = PLATFORM_META[selectedPlatform] || { label: selectedPlatform, color: "#666", bg: "#eee", icon: "?", description: "" };
+    const isLinkedIn = selectedPlatform === "linkedin" || selectedPlatform === "linkedin_company";
+    const isOAuth = ["linkedin", "linkedin_company", "instagram", "threads", "facebook", "twitter", "tiktok", "youtube"].includes(selectedPlatform);
+    const isBluesky = selectedPlatform === "bluesky";
+    
     return (
       <div style={{ maxWidth: 520 }}>
         <style>{`
@@ -367,6 +374,36 @@ function ConnectionsTab({ accounts, platforms, reloadAccounts }: { accounts: SSA
                 </div>
               )}
             </div>
+          </div>
+        ) : isOAuth && !isLinkedIn ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>
+              Connect your {meta.label} account securely via OAuth. You&apos;ll be redirected to {meta.label} to authorize access.
+            </p>
+            <button 
+              className="connect-btn" 
+              onClick={() => window.location.assign(`/api/social-studio/oauth/${selectedPlatform}/login`)}
+              style={{ background: meta.color, color: "white", border: "none" }}>
+              Connect with {meta.label} →
+            </button>
+          </div>
+        ) : isBluesky ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: "#e0f0ff", border: "1.5px solid #99d5ff", borderRadius: 10, padding: "12px 14px", marginBottom: 8, fontSize: 13, color: "#0066cc", lineHeight: 1.6 }}>
+              <strong style={{ display: "block", marginBottom: 4 }}>ℹ️ Bluesky uses App Passwords</strong>
+              1. Go to Settings → App Passwords in Bluesky<br/>
+              2. Create a new app password<br/>
+              3. Enter your handle and app password below
+            </div>
+            <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div><label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#444" }}>Handle (e.g., username.bsky.social)</label>
+                <input className="field-input" placeholder="username.bsky.social" value={username} onChange={e => setUsername(e.target.value)} required /></div>
+              <div><label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "#444" }}>App Password</label>
+                <input className="field-input" type="password" placeholder="xxxx-xxxx-xxxx-xxxx" value={accessToken} onChange={e => setAccessToken(e.target.value)} required /></div>
+              <button className="connect-btn" type="submit" disabled={loading} style={{ marginTop: 8 }}>
+                {loading ? "Connecting..." : "Connect →"}
+              </button>
+            </form>
           </div>
         ) : (
           <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -456,6 +493,335 @@ function ConnectionsTab({ accounts, platforms, reloadAccounts }: { accounts: SSA
 
 // ── Generate Tab ────────────────────────────────────────────────────────────
 
+type PublishProofItem = {
+  platform: string;
+  label: string;
+  success: boolean;
+  url?: string;
+  externalPostId?: string;
+  dbPostId?: number;
+  error?: string;
+  publishedAt?: string;
+};
+
+type PublishProof = {
+  topic: string;
+  runId?: string;
+  completedAt: string;
+  items: PublishProofItem[];
+};
+
+function formatProofTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function PublishProofBanner({
+  proof,
+  onDismiss,
+}: {
+  proof: PublishProof;
+  onDismiss: () => void;
+}) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const published = proof.items.filter(i => i.success);
+  const failed = proof.items.filter(i => !i.success);
+  const allOk = published.length > 0 && failed.length === 0;
+
+  const copyLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(url);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      alert("Could not copy — select the link manually.");
+    }
+  };
+
+  return (
+    <div
+      style={{
+        borderRadius: 20,
+        border: `2px solid ${allOk ? "#22c55e" : failed.length && !published.length ? "#ef4444" : "#e8b94a"}`,
+        background: allOk ? "rgba(34,197,94,0.08)" : failed.length && !published.length ? "rgba(239,68,68,0.06)" : "rgba(232,185,74,0.08)",
+        padding: "20px 24px",
+        marginTop: 20,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: published.length ? 16 : 0 }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 4 }}>
+            {allOk ? "✓ Published live" : published.length ? "Partially published" : "Publish failed"}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>
+            Topic: <span style={{ color: "var(--ink)", fontWeight: 500 }}>{proof.topic}</span>
+            {" · "}
+            {formatProofTime(proof.completedAt)}
+            {proof.runId && (
+              <> · Run <code style={{ fontSize: 11, background: "var(--surface-soft)", padding: "2px 6px", borderRadius: 4 }}>{proof.runId.slice(0, 12)}…</code></>
+            )}
+          </div>
+        </div>
+        <button type="button" onClick={onDismiss} className="ss-secondary-btn" style={{ padding: "6px 12px", fontSize: 12, flexShrink: 0 }}>
+          Dismiss
+        </button>
+      </div>
+
+      {published.map(item => (
+        <div
+          key={item.platform}
+          style={{
+            background: "#fff",
+            border: "1px solid rgba(34,197,94,0.35)",
+            borderRadius: 14,
+            padding: "16px 18px",
+            marginBottom: 10,
+          }}
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#15803d" }}>
+              {item.label} — confirmed on platform
+            </div>
+            {item.url && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    background: "#0a66c2",
+                    color: "#fff",
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  Open live post ↗
+                </a>
+                <button
+                  type="button"
+                  className="ss-secondary-btn"
+                  style={{ padding: "10px 14px", fontSize: 13 }}
+                  onClick={() => copyLink(item.url!)}
+                >
+                  {copied === item.url ? "Copied!" : "Copy link"}
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, fontSize: 12, color: "var(--muted)" }}>
+            {item.externalPostId && (
+              <div>
+                <span style={{ fontWeight: 600 }}>Platform ID</span>
+                <div style={{ fontFamily: "monospace", fontSize: 11, wordBreak: "break-all", color: "var(--ink)", marginTop: 2 }}>
+                  {item.externalPostId}
+                </div>
+              </div>
+            )}
+            {item.dbPostId != null && item.dbPostId > 0 && (
+              <div>
+                <span style={{ fontWeight: 600 }}>Studio record</span>
+                <div style={{ color: "var(--ink)", marginTop: 2 }}>Post #{item.dbPostId}</div>
+              </div>
+            )}
+            {item.publishedAt && (
+              <div>
+                <span style={{ fontWeight: 600 }}>Published at</span>
+                <div style={{ color: "var(--ink)", marginTop: 2 }}>{formatProofTime(item.publishedAt)}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {failed.map(item => (
+        <div
+          key={item.platform + (item.error || "")}
+          style={{
+            background: "#fff",
+            border: "1px solid rgba(239,68,68,0.35)",
+            borderRadius: 14,
+            padding: "14px 18px",
+            marginBottom: 8,
+            fontSize: 13,
+          }}
+        >
+          <div style={{ fontWeight: 700, color: "#b91c1c", marginBottom: 4 }}>{item.label} — not published</div>
+          <div style={{ color: "var(--muted)" }}>{item.error || "Unknown error"}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+// ── Image Generation Section ────────────────────────────────────────────────
+
+function ImageGenerationSection() {
+  const [prompt, setPrompt] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<{file_id: string; file_path: string; width: number; height: number} | null>(null);
+  const [error, setError] = useState("");
+
+  const handleGenerate = async () => {
+    if (!prompt.trim()) {
+      setError("Please enter a prompt");
+      return;
+    }
+    if (prompt.length > 1000) {
+      setError("Prompt too long (max 1000 characters)");
+      return;
+    }
+
+    setGenerating(true);
+    setError("");
+    setGeneratedImage(null);
+
+    try {
+      const res = await api.ssImagenGenerate({ prompt: prompt.trim() });
+      setGeneratedImage(res);
+    } catch (err: any) {
+      setError(err?.message || "Failed to generate image");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleClear = () => {
+    setPrompt("");
+    setGeneratedImage(null);
+    setError("");
+  };
+
+  return (
+    <div className="ss-gen-card" style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 className="font-title" style={{ marginBottom: 6 }}>✨ AI Image Generation</h2>
+        <p style={{ fontSize: 14, color: "var(--muted)" }}>
+          Generate images with Google Imagen 3 — powered by gemini-3.1-flash-image
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: generatedImage ? "1fr 1fr" : "1fr", gap: 20 }}>
+        <div>
+          <label className="ss-gen-label">Image Prompt</label>
+          <textarea
+            className="ss-gen-textarea"
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            placeholder="Describe the image you want to generate... (e.g., 'A serene mountain landscape at sunset with vibrant colors')"
+            style={{ minHeight: generatedImage ? 200 : 120 }}
+            disabled={generating}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: prompt.length > 1000 ? "#ef4444" : "var(--muted)" }}>
+              {prompt.length} / 1000 characters
+            </span>
+            {generatedImage && (
+              <button
+                onClick={handleClear}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--muted)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                Clear & Start Over
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleGenerate}
+            disabled={generating || !prompt.trim() || prompt.length > 1000}
+            style={{
+              marginTop: 16,
+              width: "100%",
+              background: generating ? "var(--surface-strong)" : "#7c3aed",
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px 20px",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: generating ? "not-allowed" : "pointer",
+              opacity: generating || !prompt.trim() ? 0.6 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10
+            }}
+          >
+            {generating ? (
+              <><span style={{ animation: "spin 1s linear infinite" }}>⚙️</span> Generating Image...</>
+            ) : (
+              <>🎨 Generate Image</>
+            )}
+          </button>
+
+          {error && (
+            <div style={{
+              marginTop: 12,
+              padding: "12px 16px",
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid #ef4444",
+              borderRadius: 10,
+              color: "#ef4444",
+              fontSize: 13
+            }}>
+              {error}
+            </div>
+          )}
+        </div>
+
+        {generatedImage && (
+          <div>
+            <label className="ss-gen-label">Generated Image</label>
+            <div style={{
+              border: "2px solid var(--hairline)",
+              borderRadius: 16,
+              overflow: "hidden",
+              background: "#f9fafb"
+            }}>
+              <img
+                src={`/api/social-studio/media/${generatedImage.file_id}`}
+                alt="Generated"
+                style={{ width: "100%", display: "block" }}
+              />
+            </div>
+            <div style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              background: "rgba(124,58,237,0.1)",
+              borderRadius: 10,
+              fontSize: 12,
+              color: "var(--muted)"
+            }}>
+              <strong style={{ color: "#7c3aed" }}>✓ Ready to use</strong>
+              <br />
+              Dimensions: {generatedImage.width} × {generatedImage.height}px
+              <br />
+              File ID: <code style={{ fontSize: 11 }}>{generatedImage.file_id}</code>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Generate Tab ────────────────────────────────────────────────────────────
 
 function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlatformMeta>, accounts: SSAccount[] }) {
   const [topic, setTopic] = useState("");
@@ -477,7 +843,13 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     caption_preview?: string;
     content?: string;
     step?: string;
+    post_id?: number;
+    platform_post_id?: string;
+    external_post_id?: string;
+    published_at?: string;
   }>>([]);
+  const [publishProof, setPublishProof] = useState<PublishProof | null>(null);
+  const proofRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (connectedKeys.length) {
@@ -487,6 +859,12 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
       });
     }
   }, [accounts.length]);
+
+  useEffect(() => {
+    if (publishProof?.items.some(i => i.success) && proofRef.current) {
+      proofRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [publishProof]);
 
   const publishablePlatforms = selectedPlatforms.filter(p =>
     accounts.some(a => a.platform === p)
@@ -501,12 +879,32 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     return accountMap;
   };
 
+  const buildProofFromResults = (
+    results: typeof agentResults,
+    meta: { topic: string; runId?: string; completedAt?: string },
+  ): PublishProof => ({
+    topic: meta.topic,
+    runId: meta.runId,
+    completedAt: meta.completedAt || new Date().toISOString(),
+    items: results.map(r => ({
+      platform: r.platform,
+      label: platforms[r.platform]?.label ?? (r.platform === "all" ? "Agent" : r.platform),
+      success: !!r.success,
+      url: r.url,
+      externalPostId: r.external_post_id || r.platform_post_id,
+      dbPostId: r.post_id,
+      error: r.error,
+      publishedAt: r.published_at || meta.completedAt,
+    })),
+  });
+
   const handleAgentRun = async () => {
     if (!topic.trim()) return alert("Enter a topic first");
     if (!publishablePlatforms.length) {
       return alert("Connect at least one account for your selected platforms (Connections tab).");
     }
     setAgentRunning(true);
+    setPublishProof(null);
     setAgentResults(publishablePlatforms.map(p => ({ platform: p, step: "writing" })));
     setDrafts({});
     try {
@@ -520,6 +918,11 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
       });
       setRunId(res.run_id);
       setAgentResults(res.results);
+      setPublishProof(buildProofFromResults(res.results, {
+        topic: res.topic,
+        runId: res.run_id,
+        completedAt: new Date().toISOString(),
+      }));
       const draftMap: Record<string, SSPlatformPost> = {};
       res.results.forEach(r => {
         if (r.caption_preview || r.content) {
@@ -537,7 +940,10 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
       });
       setDrafts(draftMap);
     } catch (err: any) {
-      setAgentResults([{ platform: "all", success: false, error: err?.message || String(err), step: "failed" }]);
+      const msg = err?.message || String(err);
+      const failResults = [{ platform: "all", success: false, error: msg, step: "failed" }];
+      setAgentResults(failResults);
+      setPublishProof(buildProofFromResults(failResults, { topic: topic.trim() }));
     } finally {
       setAgentRunning(false);
     }
@@ -568,6 +974,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     setRunId(null);
     setDrafts({});
     setAgentResults([]);
+    setPublishProof(null);
     try {
       const accountMap = buildAccountMap();
       const res = await api.ssGenerate({ topic, tone, brand_voice: brandVoice, platforms: selectedPlatforms, account_map: accountMap });
@@ -609,12 +1016,38 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
     }
   };
 
-  const publishPost = async (postId: number) => {
+  const publishPost = async (postId: number, platformKey: string) => {
     try {
-      await api.ssPublishPost(postId);
+      const res = await api.ssPublishPost(postId);
+      const label = platforms[platformKey]?.label ?? platformKey;
+      if (res.success) {
+        setPublishProof({
+          topic: topic.trim() || "Draft post",
+          completedAt: new Date().toISOString(),
+          items: [{
+            platform: platformKey,
+            label,
+            success: true,
+            url: res.url,
+            externalPostId: res.platform_post_id,
+            dbPostId: postId,
+            publishedAt: new Date().toISOString(),
+          }],
+        });
+        setDrafts(prev => ({
+          ...prev,
+          [platformKey]: {
+            ...prev[platformKey],
+            status: "published",
+            platform_post_url: res.url,
+          } as SSPlatformPost,
+        }));
+      } else {
+        alert("Publish failed: " + (res.error || "Unknown error"));
+      }
       if (runId) loadRunPosts(runId);
-    } catch (e) {
-      alert("Publish failed: " + e);
+    } catch (e: any) {
+      alert("Publish failed: " + (e?.message || e));
     }
   };
 
@@ -664,6 +1097,9 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
           display: flex; flex-direction: column; overflow: hidden; min-height: 280px;
         }
       `}</style>
+
+      {/* Image Generation Section */}
+      <ImageGenerationSection />
 
       <div className="ss-gen-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
@@ -783,7 +1219,13 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
           </button>
         </div>
 
-        {(agentRunning || agentResults.length > 0) && (
+        {publishProof && !agentRunning && (
+          <div ref={proofRef}>
+            <PublishProofBanner proof={publishProof} onDismiss={() => setPublishProof(null)} />
+          </div>
+        )}
+
+        {(agentRunning || (agentResults.length > 0 && !publishProof)) && (
           <div className="ss-agent-pipeline">
             {(agentRunning ? publishablePlatforms : agentResults.map(r => r.platform)).map(p => {
               const meta = platforms[p] || { label: p, color: "#666" };
@@ -799,11 +1241,20 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
                   </div>
                   <div style={{ fontSize: 12, color: "var(--muted)" }}>
                     {active && "Writing → Publishing…"}
-                    {done && "Published ✓"}
+                    {done && (
+                      <>
+                        <span style={{ color: "#15803d", fontWeight: 600 }}>Live on {meta.label} ✓</span>
+                        {result?.url && (
+                          <a href={result.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "#0a66c2", marginTop: 6, display: "block", fontWeight: 600 }}>
+                            Verify on platform ↗
+                          </a>
+                        )}
+                      </>
+                    )}
                     {fail && (result?.error || "Failed")}
                     {result && !active && !done && !fail && "Queued"}
                   </div>
-                  {result?.url && (
+                  {result?.url && !done && (
                     <a href={result.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "#0a66c2", marginTop: 6, display: "block" }}>
                       View post →
                     </a>
@@ -842,15 +1293,41 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
                   ) : null}
                 </div>
                 {draft?.id ? (
-                  <div style={{ padding: "10px 16px", borderTop: "1px solid var(--hairline)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)" }}>{draft.status}</span>
-                    {(draft.status === "draft" || draft.status === "failed") && (
-                      <button onClick={() => publishPost(draft.id)} className="ss-secondary-btn" style={{ padding: "6px 12px", fontSize: 12 }}>
-                        Publish
-                      </button>
-                    )}
-                    {draft.status === "published" && draft.platform_post_url && (
-                      <a href={draft.platform_post_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 600, color: "#0a66c2" }}>View ↗</a>
+                  <div style={{ padding: "10px 16px", borderTop: "1px solid var(--hairline)", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {draft.status === "published" && draft.platform_post_url ? (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#15803d" }}>Published — live on {meta.label}</span>
+                        </div>
+                        <a
+                          href={draft.platform_post_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: "block",
+                            textAlign: "center",
+                            background: "#0a66c2",
+                            color: "#fff",
+                            padding: "10px 14px",
+                            borderRadius: 10,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            textDecoration: "none",
+                          }}
+                        >
+                          Open live post ↗
+                        </a>
+                      </>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)" }}>{draft.status}</span>
+                        {(draft.status === "draft" || draft.status === "failed") && (
+                          <button onClick={() => publishPost(draft.id, p)} className="ss-secondary-btn" style={{ padding: "6px 12px", fontSize: 12 }}>
+                            Publish
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 ) : null}

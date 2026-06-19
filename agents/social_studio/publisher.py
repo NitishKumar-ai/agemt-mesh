@@ -37,6 +37,23 @@ def _platform_credentials(platform: str, account_id: Optional[int] = None) -> di
         acct = ss_get_account(account_id)
         if acct and acct.get("account_id"):
             creds["org_id"] = acct["account_id"]
+    if platform == "facebook" and account_id:
+        # Pass page_id from stored account
+        from store import ss_get_account
+        acct = ss_get_account(account_id)
+        if acct and acct.get("account_id"):
+            creds["page_id"] = acct["account_id"]
+            import logging
+            logging.getLogger(__name__).info(f"Facebook page_id retrieved: {creds['page_id']}")
+        else:
+            import logging
+            logging.getLogger(__name__).warning(f"Facebook account_id not found for account {account_id}. Account data: {acct}")
+    if platform == "instagram_login":
+        creds["client_id"] = os.environ.get("INSTAGRAM_LOGIN_APP_ID", "")
+        creds["client_secret"] = os.environ.get("INSTAGRAM_LOGIN_APP_SECRET", "")
+    if platform == "youtube":
+        creds["client_id"] = os.environ.get("PLATFORM_GOOGLE_CLIENT_ID", "")
+        creds["client_secret"] = os.environ.get("PLATFORM_GOOGLE_CLIENT_SECRET", "")
     return creds
 
 
@@ -67,8 +84,16 @@ def publish_platform_post(
     if hashtags:
         full_text = f"{content}\n\n{hashtags}"
 
-    provider = _get_provider(platform, platform_credentials or _platform_credentials(platform, account_id))
-    payload = PublishContent(text=full_text, post_type=PostType.TEXT)
+    # Get platform credentials (either passed or computed)
+    creds = platform_credentials or _platform_credentials(platform, account_id)
+    provider = _get_provider(platform, creds)
+    
+    # Build payload with platform-specific extras
+    payload_extra = {}
+    if platform == "facebook" and "page_id" in creds:
+        payload_extra["page_id"] = creds["page_id"]
+    
+    payload = PublishContent(text=full_text, post_type=PostType.TEXT, extra=payload_extra)
 
     t0 = time.time()
     status_code = None
@@ -90,9 +115,9 @@ def publish_platform_post(
             duration_ms=duration_ms,
         )
         ss_mark_platform_post_published(
-            platform_post_id=platform_post_id,
-            ext_post_id=result.platform_post_id,
-            ext_post_url=result.url,
+            platform_post_id,
+            result.platform_post_id,
+            result.url,
         )
 
         logger.info(
@@ -133,15 +158,15 @@ def publish_platform_post(
                 datetime.now(timezone.utc) + timedelta(seconds=delay)
             ).isoformat()
             ss_mark_platform_post_failed(
-                platform_post_id=platform_post_id,
-                error=error_message,
+                platform_post_id,
+                error_message,
                 retryable=True,
                 next_retry_at=next_retry,
             )
         else:
             ss_mark_platform_post_failed(
-                platform_post_id=platform_post_id,
-                error=error_message,
+                platform_post_id,
+                error_message,
                 retryable=False,
                 next_retry_at=None,
             )

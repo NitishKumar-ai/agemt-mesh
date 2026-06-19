@@ -380,7 +380,10 @@ testConnection(connectionId: string) {
     });
   },
   ssPublishPost(id: number) {
-    return json<{ success: boolean; platform_post_id: string; url: string; error: string }>(`/api/social-studio/posts/${id}/publish`, { method: "POST" });
+    return json<{ success: boolean; platform_post_id?: string; url?: string; error?: string | null }>(
+      `/api/social-studio/posts/${id}/publish`,
+      { method: "POST" },
+    );
   },
   ssSchedulePost(id: number, scheduled_at: string) {
     return json<{ status: string; scheduled_at: string }>(`/api/social-studio/posts/${id}/schedule`, {
@@ -409,6 +412,8 @@ testConnection(connectionId: string) {
         caption_preview?: string;
         content?: string;
         step?: string;
+        external_post_id?: string;
+        published_at?: string;
       }>;
     }>("/api/social-studio/autopost", {
       method: "POST",
@@ -418,6 +423,12 @@ testConnection(connectionId: string) {
   ssAutopostSchedule(payload: { topic: string; interval?: string; name?: string }) {
     return json<{ status: string; task_id: number; interval: string; topic: string }>(
       "/api/social-studio/autopost/schedule",
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+  },
+  ssImagenGenerate(payload: { prompt: string }) {
+    return json<{ status: string; file_id: string; file_path: string; width: number; height: number; message: string }>(
+      "/api/social-studio/imagen/generate",
       { method: "POST", body: JSON.stringify(payload) },
     );
   },

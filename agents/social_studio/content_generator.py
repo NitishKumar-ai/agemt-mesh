@@ -62,8 +62,47 @@ PLATFORM_RULES: dict[str, dict] = {
             "Output only the post text, no preamble."
         ),
     },
+    "facebook": {
+        "label": "Facebook",
+        "char_limit": 5000,
+        "hashtag_count": "3-5",
+        "emoji": True,
+        "prompt": (
+            "Write a Facebook post about: {topic}\n"
+            "Brand voice: {brand_voice}\n"
+            "Tone: {tone}\n\n"
+            "Rules:\n"
+            "- Start with an attention-grabbing hook that stops the scroll\n"
+            "- 2-4 conversational paragraphs with line breaks\n"
+            "- Community-focused and engaging — build connection\n"
+            "- 1-2 emojis for personality (don't overdo it)\n"
+            "- Strong CTA: ask a question, encourage sharing, or invite reactions\n"
+            "- End with 3-5 hashtags on their own line\n"
+            "- Max 5000 characters (though 300-500 performs best)\n"
+            "Output only the post text, no preamble."
+        ),
+    },
     "instagram": {
         "label": "Instagram",
+        "char_limit": 2200,
+        "hashtag_count": "8-10",
+        "emoji": True,
+        "prompt": (
+            "Write an Instagram caption about: {topic}\n"
+            "Brand voice: {brand_voice}\n"
+            "Tone: {tone}\n\n"
+            "Rules:\n"
+            "- First sentence must stop the scroll — bold claim or hook question\n"
+            "- Tell a micro-story or share an insight in 100-150 words\n"
+            "- Add 1-2 tasteful emojis for visual breaks (not excessive)\n"
+            "- Clear CTA: save, share, comment, or 'link in bio'\n"
+            "- Two blank lines, then 8-10 niche-specific hashtags\n"
+            "- Max 2200 characters total\n"
+            "Output only the caption text, no preamble."
+        ),
+    },
+    "instagram_login": {
+        "label": "Instagram (Direct)",
         "char_limit": 2200,
         "hashtag_count": "8-10",
         "emoji": True,
@@ -164,15 +203,11 @@ def _truncate_to_limit(text: str, limit: int) -> str:
 
 # ── LLM call (LiteLLM — same stack as the rest of Agent Mesh) ───────────────
 
+from llm_models import resolve_gemini_model
+
+
 def _llm_model() -> str:
-    # Stable Gemini 2.5 Flash — best price/performance for agentic social content.
-    # https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash
-    model = os.environ.get("GEMINI_MODEL") or os.environ.get(
-        "MODEL_PLAN", "gemini/gemini-2.5-flash"
-    )
-    if not model.startswith("gemini/"):
-        model = f"gemini/{model}"
-    return model
+    return resolve_gemini_model()
 
 
 async def _generate_text(prompt: str) -> str:
@@ -183,8 +218,10 @@ async def _generate_text(prompt: str) -> str:
 
     def _call() -> str:
         import litellm
+        model = _llm_model()
+        logger.info("social_studio.llm model=%s", model)
         response = litellm.completion(
-            model=_llm_model(),
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
             temperature=0.85,

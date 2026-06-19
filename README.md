@@ -18,32 +18,58 @@ The primary MVP ships with a Git security agent (`CommitGuardAgent`), designed t
 ## Quickstart
 
 ### 1. Install Dependencies
+
+**Backend (Python):**
 ```bash
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
+# Linux/macOS: pip install -r requirements.txt
 ```
 
-### 2. Scaffold DBOS Database
-```bash
-dbos migrate
-python setup_dlq.py
-```
-
-### 3. Run the Dashboard
-```bash
-uvicorn api:app --reload
-```
-Navigate to `http://localhost:8000/`
-
-### 4. Run the TypeScript Frontend
-The production frontend now lives in `frontend/` as a Vite + React + TypeScript app.
-
+**Frontend (Node.js):**
 ```bash
 cd frontend
 npm install
+```
+
+### 2. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env with your API keys (GEMINI_API_KEY, ANTHROPIC_API_KEY, etc.)
+```
+
+The FastAPI app loads `.env` automatically on startup.
+
+### 3. Scaffold DBOS Database
+```bash
+py -m dbos migrate
+py setup_dlq.py
+# Linux/macOS: dbos migrate && python setup_dlq.py
+```
+
+### 4. Start Backend and Frontend
+
+Run these in **two separate terminals** from the repo root:
+
+**Terminal 1 — Backend (FastAPI on port 8000):**
+```bash
+py -m uvicorn api:app --reload --host 127.0.0.1 --port 8000
+# Linux/macOS: uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+**Terminal 2 — Frontend (Vite dev server on port 5173):**
+```bash
+cd frontend
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/`. The dev server proxies `/api`, `/stream`, and `/webhook` to the FastAPI backend on port `8000`.
+Open **http://127.0.0.1:5173/** for the UI. The Vite dev server proxies `/api`, `/stream`, and `/webhook` to the backend at `http://127.0.0.1:8000`.
+
+| Service  | URL                      | Command |
+|----------|--------------------------|---------|
+| Frontend | http://127.0.0.1:5173/   | `cd frontend && npm run dev` |
+| Backend  | http://127.0.0.1:8000/   | `py -m uvicorn api:app --reload --host 127.0.0.1 --port 8000` |
+
+### 5. Production Frontend Build
 
 To build the frontend for FastAPI to serve:
 
@@ -62,7 +88,7 @@ Agent Mesh uses a GitHub OAuth App to connect an account, list accessible reposi
 2. Set the homepage URL to `http://127.0.0.1:5173`.
 3. Set the authorization callback URL to `http://127.0.0.1:8000/api/github/callback`.
 4. Copy `.env.example` to `.env` and provide the OAuth client ID, client secret, and a Fernet encryption key.
-5. Export the variables before starting FastAPI. The current app does not automatically load `.env`.
+5. Restart the backend after editing `.env` (FastAPI loads it on startup).
 
 Generate the token-encryption key with:
 

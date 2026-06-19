@@ -29,8 +29,10 @@ class AgentMeshError(Exception):
         super().__init__(f"{problem} | Cause: {cause} | Fix: {fix} | Docs: {docs_link}")
 
 
+from llm_models import STABLE_GEMINI, normalize_gemini_model
+
 # Model name config — override via env vars; swap any tier with a config change.
-MODEL_PLAN    = os.getenv("MODEL_PLAN",    "gemini/gemini-2.5-flash")
+MODEL_PLAN    = normalize_gemini_model(os.getenv("MODEL_PLAN", STABLE_GEMINI))
 MODEL_EXECUTE = os.getenv("MODEL_EXECUTE", "anthropic/claude-sonnet-4-6")
 
 
@@ -469,9 +471,17 @@ def social_studio_publisher_daemon(scheduled_time: datetime, actual_time: dateti
         DBOS.start_workflow(run_publish_platform_post, post)
 
 
-@DBOS.step()
-def step_publish_platform_post(post: dict, token: str):
+@DBOS.workflow()
+def run_publish_platform_post(post: dict):
+    from store import ss_get_account_token, ss_mark_platform_post_failed
     from agents.social_studio.publisher import publish_platform_post
+    
+    token = ss_get_account_token(post["account_id"]) if post.get("account_id") else None
+    if not token:
+        ss_mark_platform_post_failed(post["id"], "No connected account token.", retryable=False)
+        return
+    
+    # Call publish_platform_post directly from workflow (it calls transactions internally)
     return publish_platform_post(
         platform_post_id=post["id"],
         platform=post["platform"],
@@ -483,29 +493,25 @@ def step_publish_platform_post(post: dict, token: str):
 
 
 @DBOS.workflow()
-def run_publish_platform_post(post: dict):
-    from store import ss_get_account_token, ss_mark_platform_post_failed
-    token = ss_get_account_token(post["account_id"]) if post.get("account_id") else None
-    if not token:
-        ss_mark_platform_post_failed(post["id"], "No connected account token.", retryable=False)
-        return
-    step_publish_platform_post(post, token)
-
-
-@DBOS.workflow()
 def run_social_studio_autopost_task(task_id: int, name: str, prompt: str, interval: str):
     import uuid
     run_id = f"autopost-{uuid.uuid4().hex[:8]}"
-    step_social_studio_autopost(run_id, prompt)
+    # Get connected accounts at workflow level (DBOS transaction context)
+    from store import ss_get_connected_accounts
+    accounts = ss_get_connected_accounts()
+    step_social_studio_autopost(run_id, prompt, accounts)
     from store import schedule_mark_ran
     schedule_mark_ran(task_id, "success", interval)
 
 
 @DBOS.step()
-def step_social_studio_autopost(run_id: str, prompt: str):
+def step_social_studio_autopost(run_id: str, prompt: str, accounts: list):
     import asyncio
     from agents.social_studio.autoposter import run_autopost
 
+    # Pass accounts to avoid needing transaction inside async context
+    account_map = {a["platform"]: a["id"] for a in accounts}
+    
     asyncio.run(run_autopost(
         prompt,
         tone="professional",
@@ -513,6 +519,7 @@ def step_social_studio_autopost(run_id: str, prompt: str):
         platforms=["linkedin"],
         publish_now=True,
         run_id=run_id,
+        account_map=account_map,
     ))
 
 

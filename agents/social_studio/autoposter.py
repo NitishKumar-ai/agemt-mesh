@@ -125,6 +125,8 @@ async def _autopost_one_platform(
         "content": gen["content"],
         "hashtags": gen.get("hashtags", ""),
         "step": "published" if pub.get("success") else "publish",
+        "external_post_id": pub.get("platform_post_id"),
+        "published_at": datetime.now(timezone.utc).isoformat() if pub.get("success") else None,
         **pub,
     }
 
@@ -152,11 +154,15 @@ async def run_autopost(
     if not topic:
         raise ValueError("topic is required")
 
-    accounts = ss_get_connected_accounts()
-    if not accounts:
-        raise ValueError("No connected social accounts. Connect at least one platform first.")
-
-    acct_map = account_map or {a["platform"]: a["id"] for a in accounts}
+    # Use provided account_map or fetch accounts
+    if account_map:
+        acct_map = account_map
+        accounts = []  # Not needed when account_map is provided
+    else:
+        accounts = ss_get_connected_accounts()
+        if not accounts:
+            raise ValueError("No connected social accounts. Connect at least one platform first.")
+        acct_map = {a["platform"]: a["id"] for a in accounts}
 
     if platforms:
         targets = [p for p in platforms if p in acct_map]

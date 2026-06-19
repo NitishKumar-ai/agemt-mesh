@@ -1,14 +1,14 @@
 import os
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 import json
 import asyncio
 import logging
 import pathlib
 import secrets
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Request, HTTPException, Query, File, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
 from pydantic import BaseModel
@@ -1424,8 +1424,12 @@ SS_PLATFORMS = {
     "linkedin":         {"label": "LinkedIn",             "char_limit": 3000, "color": "#0a66c2"},
     "linkedin_company": {"label": "LinkedIn (Company)",   "char_limit": 3000, "color": "#0a66c2"},
     "instagram":        {"label": "Instagram",            "char_limit": 2200, "color": "#e1306c"},
+    "instagram_login":  {"label": "Instagram (Direct)",   "char_limit": 2200, "color": "#c13584"},
     "threads":          {"label": "Threads",              "char_limit": 500,  "color": "#000000"},
     "twitter":          {"label": "Twitter / X",          "char_limit": 280,  "color": "#1da1f2"},
+    "facebook":         {"label": "Facebook",             "char_limit": 63206, "color": "#1877f2"},
+    "tiktok":           {"label": "TikTok",               "char_limit": 2200, "color": "#000000"},
+    "youtube":          {"label": "YouTube",              "char_limit": 5000, "color": "#ff0000"},
 }
 
 
@@ -1438,14 +1442,90 @@ from agents.social_studio.providers.linkedin import LinkedInProvider
 @app.get("/api/social-studio/oauth/{platform}/login")
 async def ss_oauth_login(platform: str):
     """Start OAuth flow."""
+    redirect_uri = f"http://localhost:8000/api/social-studio/oauth/{platform}/callback"
+    
     if platform == "linkedin":
         client_id = os.environ.get("LINKEDIN_CLIENT_ID")
         if not client_id:
             raise HTTPException(500, "LINKEDIN_CLIENT_ID not set")
         provider = LinkedInProvider(credentials={"client_id": client_id, "client_secret": ""})
-        # Store state in cookie or session in a real app, using hardcoded for demo
-        redirect_uri = "http://localhost:8000/api/social-studio/oauth/linkedin/callback"
         url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth")
+        return RedirectResponse(url)
+    
+    elif platform == "instagram":
+        from agents.social_studio.providers.instagram import InstagramProvider
+        client_id = os.environ.get("INSTAGRAM_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+        if not client_id:
+            raise HTTPException(500, "INSTAGRAM_APP_ID or FACEBOOK_APP_ID not set")
+        provider = InstagramProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_instagram")
+        return RedirectResponse(url)
+    
+    elif platform == "instagram_login":
+        from agents.social_studio.providers.instagram_login import InstagramLoginProvider
+        client_id = os.environ.get("INSTAGRAM_LOGIN_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+        if not client_id:
+            raise HTTPException(500, "INSTAGRAM_LOGIN_APP_ID not set")
+        provider = InstagramLoginProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_instagram_login")
+        return RedirectResponse(url)
+    
+    elif platform == "threads":
+        from agents.social_studio.providers.threads import ThreadsProvider
+        client_id = os.environ.get("THREADS_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+        if not client_id:
+            raise HTTPException(500, "THREADS_APP_ID or FACEBOOK_APP_ID not set")
+        provider = ThreadsProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_threads")
+        return RedirectResponse(url)
+    
+    elif platform == "facebook":
+        from agents.social_studio.providers.facebook import FacebookProvider
+        client_id = os.environ.get("FACEBOOK_APP_ID")
+        if not client_id:
+            raise HTTPException(500, "FACEBOOK_APP_ID not set")
+        provider = FacebookProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_facebook")
+        return RedirectResponse(url)
+    
+    elif platform == "twitter":
+        from agents.social_studio.providers.twitter import TwitterProvider
+        client_id = os.environ.get("TWITTER_API_KEY")
+        if not client_id:
+            raise HTTPException(500, "TWITTER_API_KEY not set")
+        provider = TwitterProvider(credentials={"client_id": client_id})
+        # Generate PKCE code verifier and store it (simplified for now)
+        import secrets
+        code_verifier = secrets.token_urlsafe(32)
+        # In production, store code_verifier in session/cache tied to state
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_twitter", code_challenge=code_verifier)
+        return RedirectResponse(url)
+    
+    elif platform == "tiktok":
+        from agents.social_studio.providers.tiktok import TikTokProvider
+        client_key = os.environ.get("TIKTOK_CLIENT_KEY")
+        if not client_key:
+            raise HTTPException(500, "TIKTOK_CLIENT_KEY not set")
+        provider = TikTokProvider(credentials={"client_id": client_key})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_tiktok")
+        return RedirectResponse(url)
+    
+    elif platform == "youtube":
+        from agents.social_studio.providers.youtube import YouTubeProvider
+        client_id = os.environ.get("PLATFORM_GOOGLE_CLIENT_ID")
+        if not client_id:
+            raise HTTPException(500, "PLATFORM_GOOGLE_CLIENT_ID not set")
+        provider = YouTubeProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_youtube")
+        return RedirectResponse(url)
+    
+    elif platform == "google_business":
+        from agents.social_studio.providers.google_business import GoogleBusinessProvider
+        client_id = os.environ.get("PLATFORM_GOOGLE_CLIENT_ID")
+        if not client_id:
+            raise HTTPException(500, "PLATFORM_GOOGLE_CLIENT_ID not set")
+        provider = GoogleBusinessProvider(credentials={"client_id": client_id})
+        url = provider.get_auth_url(redirect_uri=redirect_uri, state="mesh_oauth_google_business")
         return RedirectResponse(url)
     
     raise HTTPException(400, f"OAuth not implemented for {platform}")
@@ -1455,46 +1535,157 @@ async def ss_oauth_callback(platform: str, code: str = "", state: str = "", erro
     """Handle OAuth callback."""
     frontend_url = "http://localhost:5173/"
 
-    # If the user cancelled or LinkedIn returned an error
+    # If the user cancelled or platform returned an error
     if error:
         return RedirectResponse(f"{frontend_url}?oauth_error={error}&desc={error_description}")
     if not code:
         return RedirectResponse(f"{frontend_url}?oauth_error=no_code")
 
-    if platform == "linkedin":
-        client_id = os.environ.get("LINKEDIN_CLIENT_ID")
-        client_secret = os.environ.get("LINKEDIN_CLIENT_SECRET")
-        if not client_id or not client_secret:
-            return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
-        
-        provider = LinkedInProvider(credentials={"client_id": client_id, "client_secret": client_secret})
-        redirect_uri = "http://localhost:8000/api/social-studio/oauth/linkedin/callback"
-        
-        try:
+    redirect_uri = f"http://localhost:8000/api/social-studio/oauth/{platform}/callback"
+    
+    try:
+        if platform == "linkedin":
+            client_id = os.environ.get("LINKEDIN_CLIENT_ID")
+            client_secret = os.environ.get("LINKEDIN_CLIENT_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = LinkedInProvider(credentials={"client_id": client_id, "client_secret": client_secret})
             tokens = provider.exchange_code(code, redirect_uri)
             profile = provider.get_profile(tokens.access_token)
             
-            # Save to DB
-            ss_connect_account(
-                platform=platform,
-                account_id=profile.platform_id,
-                display_name=profile.name,
-                username=profile.handle or profile.name,
-                avatar_url=profile.avatar_url,
-                follower_count=profile.follower_count or 0,
-                access_token=tokens.access_token,
-                refresh_token=tokens.refresh_token,
-                token_expires_at=None,
-                scopes=tokens.scope
-            )
-            return RedirectResponse(f"{frontend_url}?oauth_success=linkedin")
-        except Exception as e:
-            import logging, traceback
-            logging.getLogger(__name__).error(f"LinkedIn OAuth failed: {e}\n{traceback.format_exc()}")
-            err_msg = str(e)[:200].replace(" ", "+")
-            return RedirectResponse(f"{frontend_url}?oauth_error=exchange_failed&detail={err_msg}")
+        elif platform == "instagram":
+            from agents.social_studio.providers.instagram import InstagramProvider
+            client_id = os.environ.get("INSTAGRAM_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+            client_secret = os.environ.get("INSTAGRAM_APP_SECRET") or os.environ.get("FACEBOOK_APP_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
             
-    raise HTTPException(400, f"OAuth not implemented for {platform}")
+            provider = InstagramProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            # Exchange short-lived for long-lived token
+            long_lived = provider.refresh_token(tokens.access_token)
+            profile = provider.get_profile(long_lived.access_token)
+            tokens = long_lived
+            
+        elif platform == "instagram_login":
+            from agents.social_studio.providers.instagram_login import InstagramLoginProvider
+            client_id = os.environ.get("INSTAGRAM_LOGIN_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+            client_secret = os.environ.get("INSTAGRAM_LOGIN_APP_SECRET") or os.environ.get("FACEBOOK_APP_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = InstagramLoginProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            # Exchange for long-lived token
+            long_lived = provider.refresh_token(tokens.access_token)
+            profile = provider.get_profile(long_lived.access_token)
+            tokens = long_lived
+            
+        elif platform == "threads":
+            from agents.social_studio.providers.threads import ThreadsProvider
+            client_id = os.environ.get("THREADS_APP_ID") or os.environ.get("FACEBOOK_APP_ID")
+            client_secret = os.environ.get("THREADS_APP_SECRET") or os.environ.get("FACEBOOK_APP_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = ThreadsProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            profile = provider.get_profile(tokens.access_token)
+            
+        elif platform == "facebook":
+            from agents.social_studio.providers.facebook import FacebookProvider
+            client_id = os.environ.get("FACEBOOK_APP_ID")
+            client_secret = os.environ.get("FACEBOOK_APP_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = FacebookProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            # Exchange for long-lived user token
+            long_lived = provider.refresh_token(tokens.access_token)
+            # Get profile and Page token
+            profile = provider.get_profile(long_lived.access_token)
+            tokens = long_lived
+            
+        elif platform == "twitter":
+            from agents.social_studio.providers.twitter import TwitterProvider
+            client_id = os.environ.get("TWITTER_API_KEY")
+            client_secret = os.environ.get("TWITTER_API_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = TwitterProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            # In production, retrieve code_verifier from session/cache
+            code_verifier = code  # Simplified - should match the one from login
+            tokens = provider.exchange_code(code, redirect_uri, code_verifier)
+            profile = provider.get_profile(tokens.access_token)
+            
+        elif platform == "tiktok":
+            from agents.social_studio.providers.tiktok import TikTokProvider
+            client_key = os.environ.get("TIKTOK_CLIENT_KEY")
+            client_secret = os.environ.get("TIKTOK_CLIENT_SECRET")
+            if not client_key or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = TikTokProvider(credentials={"client_id": client_key, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            profile = provider.get_profile(tokens.access_token)
+            
+        elif platform == "youtube":
+            from agents.social_studio.providers.youtube import YouTubeProvider
+            client_id = os.environ.get("PLATFORM_GOOGLE_CLIENT_ID")
+            client_secret = os.environ.get("PLATFORM_GOOGLE_CLIENT_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = YouTubeProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            profile = provider.get_profile(tokens.access_token)
+            
+        elif platform == "google_business":
+            from agents.social_studio.providers.google_business import GoogleBusinessProvider
+            client_id = os.environ.get("PLATFORM_GOOGLE_CLIENT_ID")
+            client_secret = os.environ.get("PLATFORM_GOOGLE_CLIENT_SECRET")
+            if not client_id or not client_secret:
+                return RedirectResponse(f"{frontend_url}?oauth_error=credentials_not_set")
+            
+            provider = GoogleBusinessProvider(credentials={"client_id": client_id, "client_secret": client_secret})
+            tokens = provider.exchange_code(code, redirect_uri)
+            profile = provider.get_profile(tokens.access_token)
+            
+        else:
+            raise HTTPException(400, f"OAuth not implemented for {platform}")
+        
+        # Save to DB
+        # For Facebook, we override with the Page token
+        token_to_save = tokens.access_token
+        if platform == "facebook":
+            page_token = profile.extra.get("page_access_token")
+            if page_token:
+                token_to_save = page_token
+            import logging
+            logging.getLogger(__name__).info(f"Facebook OAuth: page_id={profile.platform_id}, page_token={'[REDACTED]' if page_token else 'None'}")
+        
+        ss_connect_account(
+            platform=platform,
+            account_id=profile.platform_id,
+            display_name=profile.name,
+            username=profile.handle or profile.name,
+            avatar_url=profile.avatar_url,
+            follower_count=profile.follower_count or 0,
+            access_token=token_to_save,
+            refresh_token=tokens.refresh_token,
+            token_expires_at=None,
+            scopes=tokens.scope
+        )
+        return RedirectResponse(f"{frontend_url}?oauth_success={platform}")
+        
+    except Exception as e:
+        import logging, traceback
+        logging.getLogger(__name__).error(f"{platform.title()} OAuth failed: {e}\n{traceback.format_exc()}")
+        err_msg = str(e)[:200].replace(" ", "+")
+        return RedirectResponse(f"{frontend_url}?oauth_error=exchange_failed&detail={err_msg}")
 
 
 @app.get("/api/social-studio/oauth/linkedin_company/pages")
@@ -1571,6 +1762,47 @@ async def ss_linkedin_company_connect(payload: dict):
         scopes="w_organization_social,r_organization_social"
     )
     return {"status": "connected", "platform": "linkedin_company", "org_id": org_id}
+
+
+# ── Instagram Login Webhooks ──────────────────────────────────────────────────
+
+@app.get("/webhooks/instagram_login/")
+async def instagram_login_webhook_verify(
+    request: Request,
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_challenge: str = Query(None, alias="hub.challenge"),
+    hub_verify_token: str = Query(None, alias="hub.verify_token"),
+):
+    """
+    Webhook verification for Instagram Login (Instagram API).
+    Meta sends GET request to verify the webhook endpoint.
+    """
+    expected_token = os.getenv("INSTAGRAM_LOGIN_WEBHOOK_VERIFY_TOKEN", "")
+    
+    if hub_mode == "subscribe" and hub_verify_token == expected_token:
+        # Return the challenge to verify the webhook
+        return Response(content=hub_challenge, media_type="text/plain")
+    
+    # Verification failed
+    raise HTTPException(403, "Webhook verification failed")
+
+
+@app.post("/webhooks/instagram_login/")
+async def instagram_login_webhook_receive(request: Request):
+    """
+    Receive webhook events from Instagram Login (Instagram API).
+    Handles comments, mentions, and messages.
+    """
+    body = await request.json()
+    
+    # Log the webhook event
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Instagram Login webhook received: {body}")
+    
+    # TODO: Process webhook events (comments, mentions, messages)
+    # For now, just acknowledge receipt
+    return {"status": "received"}
 
 
 @app.get("/api/social-studio/accounts")
@@ -1831,6 +2063,321 @@ async def ss_api_schedule_post(post_id: int, payload: dict):
     return {"status": "scheduled", "scheduled_at": scheduled_at}
 
 
+# ── Video Upload ──────────────────────────────────────────────────────────────
+
+@app.post("/api/social-studio/upload-video")
+async def ss_api_upload_video(file: UploadFile = File(...)):
+    """
+    Upload video file for YouTube publishing.
+    
+    Validates format, size, and duration.
+    Stores in /tmp/social-studio-uploads/ with UUID filename.
+    Returns file_id for use in post creation.
+    """
+    import uuid
+    import subprocess
+    from pathlib import Path
+    
+    # Validate file format
+    valid_formats = {".mp4", ".mov", ".avi", ".wmv", ".flv", ".3gp", ".webm", ".mpeg", ".mpg"}
+    file_ext = Path(file.filename).suffix.lower()
+    
+    if file_ext not in valid_formats:
+        raise HTTPException(
+            400,
+            f"Unsupported format: {file_ext}. Supported: {', '.join(valid_formats)}"
+        )
+    
+    # Create upload directory
+    upload_dir = Path("/tmp/social-studio-uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    file_id = str(uuid.uuid4())
+    file_path = upload_dir / f"{file_id}{file_ext}"
+    
+    # Save uploaded file
+    try:
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        file_size = len(content)
+        
+        # Validate size (256GB max)
+        max_size = 256 * 1024 * 1024 * 1024  # 256GB in bytes
+        if file_size > max_size:
+            file_path.unlink()  # Delete file
+            raise HTTPException(
+                400,
+                f"File too large: {file_size / (1024**3):.2f}GB (max 256GB)"
+            )
+        
+        # Extract duration and resolution using ffprobe
+        try:
+            # Get duration
+            duration_result = subprocess.run(
+                [
+                    "ffprobe",
+                    "-v", "error",
+                    "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1",
+                    str(file_path)
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            duration_seconds = 0
+            if duration_result.returncode == 0:
+                duration_seconds = int(float(duration_result.stdout.strip()))
+            
+            # Validate duration (12 hours max)
+            max_duration = 12 * 60 * 60  # 12 hours in seconds
+            if duration_seconds > max_duration:
+                file_path.unlink()
+                raise HTTPException(
+                    400,
+                    f"Video too long: {duration_seconds / 3600:.1f}h (max 12h)"
+                )
+            
+            # Get resolution
+            resolution_result = subprocess.run(
+                [
+                    "ffprobe",
+                    "-v", "error",
+                    "-select_streams", "v:0",
+                    "-show_entries", "stream=width,height",
+                    "-of", "csv=p=0",
+                    str(file_path)
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            resolution = "unknown"
+            if resolution_result.returncode == 0:
+                resolution = resolution_result.stdout.strip().replace(",", "x")
+            
+        except Exception as e:
+            logger.warning(f"Could not extract video metadata: {e}")
+            duration_seconds = 0
+            resolution = "unknown"
+        
+        # Store in database
+        from store import ss_create_video_upload
+        ss_create_video_upload(
+            file_id=file_id,
+            file_path=str(file_path),
+            file_size=file_size,
+            duration=duration_seconds,
+            format=file_ext[1:].upper(),  # Remove dot
+            resolution=resolution,
+            source="upload",
+        )
+        
+        return {
+            "file_id": file_id,
+            "file_path": str(file_path),
+            "size": file_size,
+            "duration": duration_seconds,
+            "resolution": resolution,
+            "format": file_ext[1:].upper(),
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+
+
+@app.post("/api/social-studio/veo3/generate")
+async def ss_api_veo3_generate(request: Request):
+    """
+    Generate video from text prompt using Google Veo 3.
+    
+    Returns SSE stream with progress updates.
+    """
+    from sse_starlette.sse import EventSourceResponse
+    from agents.social_studio.veo3_client import generate_video, is_veo3_enabled
+    import uuid
+    import json
+    from pathlib import Path
+    
+    if not is_veo3_enabled():
+        raise HTTPException(
+            503,
+            "Google Veo 3 is not configured. Set GOOGLE_GENAI_API_KEY environment variable."
+        )
+    
+    body = await request.json()
+    prompt = body.get("prompt", "").strip()
+    
+    if not prompt:
+        raise HTTPException(400, "Prompt is required")
+    
+    if len(prompt) > 1000:
+        raise HTTPException(400, f"Prompt too long: {len(prompt)} chars (max 1000)")
+    
+    # Generate output path
+    file_id = str(uuid.uuid4())
+    upload_dir = Path("/tmp/social-studio-uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    output_path = str(upload_dir / f"{file_id}_veo3.mp4")
+    
+    async def event_generator():
+        try:
+            async for progress in generate_video(
+                prompt=prompt,
+                output_path=output_path,
+            ):
+                # Store in database when complete
+                if progress["status"] == "complete":
+                    from store import ss_create_video_upload
+                    import os
+                    
+                    file_size = os.path.getsize(output_path)
+                    
+                    ss_create_video_upload(
+                        file_id=file_id,
+                        file_path=output_path,
+                        file_size=file_size,
+                        duration=progress.get("duration", 0),
+                        format="MP4",
+                        source="veo3",
+                        veo3_prompt=prompt,
+                    )
+                    
+                    progress["file_id"] = file_id
+                
+                yield {
+                    "event": "progress",
+                    "data": json.dumps(progress)
+                }
+        except Exception as e:
+            logger.error(f"Veo 3 generation error: {e}")
+            yield {
+                "event": "error",
+                "data": json.dumps({"status": "error", "message": str(e)})
+            }
+    
+    return EventSourceResponse(event_generator())
+
+
+@app.get("/api/social-studio/video-upload/status/{file_id}")
+async def ss_api_video_upload_status(file_id: str):
+    """Check upload progress for resumable uploads."""
+    from store import ss_get_video_upload
+    
+    upload = ss_get_video_upload(file_id)
+    if not upload:
+        raise HTTPException(404, "Video upload not found")
+    
+    return {
+        "uploaded_bytes": upload.get("upload_progress_bytes", 0),
+        "total_bytes": upload.get("file_size_bytes", 0),
+        "percent": int((upload.get("upload_progress_bytes", 0) / upload.get("file_size_bytes", 1)) * 100),
+        "status": upload.get("upload_status", "pending"),
+    }
+
+
+@app.post("/api/social-studio/imagen/generate")
+async def ss_api_imagen_generate(request: Request):
+    """
+    Generate image from text prompt using Google Imagen 3.
+    
+    Body: {"prompt": str}
+    Returns: {"status": "complete"|"error", "file_id": str, "file_path": str, "width": int, "height": int}
+    """
+    from agents.social_studio.imagen_client import generate_image, is_imagen_enabled
+    import uuid
+    from pathlib import Path
+    
+    if not is_imagen_enabled():
+        raise HTTPException(
+            503,
+            "Google Imagen 3 is not configured. Set GOOGLE_GENAI_API_KEY environment variable."
+        )
+    
+    body = await request.json()
+    prompt = body.get("prompt", "").strip()
+    
+    if not prompt:
+        raise HTTPException(400, "Prompt is required")
+    
+    if len(prompt) > 1000:
+        raise HTTPException(400, f"Prompt too long: {len(prompt)} chars (max 1000)")
+    
+    # Generate output path
+    file_id = str(uuid.uuid4())
+    upload_dir = Path("/tmp/social-studio-uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    output_path = str(upload_dir / f"{file_id}_imagen.png")
+    
+    result = generate_image(
+        prompt=prompt,
+        output_path=output_path,
+    )
+    
+    if result["status"] == "error":
+        raise HTTPException(500, result["message"])
+    
+    # Store in database
+    from store import ss_create_image_upload
+    import os
+    
+    file_size = os.path.getsize(output_path)
+    
+    ss_create_image_upload(
+        file_id=file_id,
+        file_path=output_path,
+        file_size=file_size,
+        width=result.get("width", 0),
+        height=result.get("height", 0),
+        format="PNG",
+        source="imagen",
+        prompt=prompt,
+    )
+    
+    return {
+        "status": "complete",
+        "file_id": file_id,
+        "file_path": output_path,
+        "width": result.get("width", 0),
+        "height": result.get("height", 0),
+        "message": result["message"],
+    }
+
+
+@app.get("/api/social-studio/media/{file_id}")
+async def ss_api_serve_media(file_id: str):
+    """Serve generated images and videos."""
+    from pathlib import Path
+    import mimetypes
+    
+    # Check both imagen and veo3 file patterns
+    upload_dir = Path("/tmp/social-studio-uploads")
+    possible_files = [
+        upload_dir / f"{file_id}_imagen.png",
+        upload_dir / f"{file_id}_veo3.mp4",
+        upload_dir / f"{file_id}.png",
+        upload_dir / f"{file_id}.mp4",
+        upload_dir / f"{file_id}.jpg",
+        upload_dir / f"{file_id}.jpeg",
+    ]
+    
+    for file_path in possible_files:
+        if file_path.exists():
+            media_type = mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
+            return FileResponse(str(file_path), media_type=media_type)
+    
+    raise HTTPException(404, "Media file not found")
+
+
 # ── Auto-Post Agent ───────────────────────────────────────────────────────────
 
 @app.post("/api/social-studio/autopost")
@@ -1870,6 +2417,10 @@ async def ss_api_autopost(payload: dict):
         )
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except Exception as e:
+        import logging, traceback
+        logging.getLogger(__name__).error("autopost failed: %s\n%s", e, traceback.format_exc())
+        raise HTTPException(500, str(e))
 
     return result
 
