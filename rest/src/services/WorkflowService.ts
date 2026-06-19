@@ -293,30 +293,6 @@ export class WorkflowService {
     return new SearchResult(totalHits, results);
   }
 
-  async executeWorkflow(req: {
-    name: string;
-    version: number;
-    input: Record<string, unknown>;
-    requestId?: string;
-  }): Promise<WorkflowModel> {
-    const workflowId = await this.startWorkflow({
-      name: req.name,
-      version: req.version,
-      input: req.input,
-      correlationId: req.requestId,
-    });
-    const deadline = Date.now() + 30_000;
-    while (Date.now() < deadline) {
-      const wf = await this.executionDAO.getWorkflow(workflowId, true);
-      if (wf && ['COMPLETED', 'FAILED', 'TERMINATED'].includes(wf.status as string)) {
-        return wf as WorkflowModel;
-      }
-      await new Promise(r => setTimeout(r, 100));
-    }
-    const wf = await this.executionDAO.getWorkflow(workflowId, false);
-    return (wf ?? { workflowId, status: 'RUNNING' }) as WorkflowModel;
-  }
-
   async searchWorkflows(
     _start = 0,
     _size = 100,
