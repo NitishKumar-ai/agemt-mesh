@@ -4,8 +4,15 @@
     {
       "name": "agentmesh-ui",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "agentmesh-ui", "run", "dev"],
+      "runtimeArgs": ["--filter", "agent-mesh-frontend", "run", "dev"],
       "port": 1234,
+      "autoPort": false
+    },
+    {
+      "name": "server-lite",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@agentmesh/server-lite", "run", "dev"],
+      "port": 8080,
       "autoPort": false
     }
   ]

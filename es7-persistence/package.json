@@ -10,18 +10,14 @@
     "@agentmesh/common-persistence": "workspace:*",
     "@elastic/elasticsearch": "7.17.13"
   },
-  "devDependencies": {},
-  "scripts": {
-    "build": "tsc",
-    "lint": "eslint src/",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@elastic/elasticsearch": "^9.4.2"
-  },
   "devDependencies": {
     "@types/node": "^25.9.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "test": "vitest run"
   }
 }

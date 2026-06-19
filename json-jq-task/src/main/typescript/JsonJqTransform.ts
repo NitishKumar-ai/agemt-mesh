@@ -1,4 +1,4 @@
-import { WorkflowSystemTask, TaskModel, WorkflowModel, WorkflowExecutor } from '@conductor/core';
+import { WorkflowSystemTask, TaskModel, WorkflowModel, WorkflowExecutor } from '@agentmesh/core';
 
 export class JsonJqTransform extends WorkflowSystemTask {
   static readonly NAME = 'JSON_JQ_TRANSFORM';

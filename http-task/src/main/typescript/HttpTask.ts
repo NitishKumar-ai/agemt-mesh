@@ -1,4 +1,4 @@
-import { WorkflowSystemTask, TaskModel, WorkflowModel, WorkflowExecutor } from "@conductor/core";
+import { WorkflowSystemTask, TaskModel, WorkflowModel, WorkflowExecutor } from "@agentmesh/core";
 
 export const TASK_TYPE_HTTP = "HTTP";
 export const REQUEST_PARAMETER_NAME = "http_request";
@@ -83,6 +83,9 @@ export class HttpTask extends WorkflowSystemTask {
   }
 
   protected async httpCall(input: HttpInput): Promise<HttpResponse> {
+    if (!input.uri) {
+      throw new Error("Missing HTTP URI");
+    }
     const headers = new Headers();
     if (input.contentType) {
       headers.set("Content-Type", input.contentType);
@@ -117,11 +120,10 @@ export class HttpTask extends WorkflowSystemTask {
     }
 
     try {
-      const init = {
+      const init: RequestInit = {
         method: input.method,
         headers,
         signal: abortController.signal,
-        body: undefined
       };
 
       if (input.body !== undefined && input.body !== null && input.method !== "GET" && input.method !== "HEAD") {
@@ -133,10 +135,10 @@ export class HttpTask extends WorkflowSystemTask {
       }
 
       const res = await fetch(input.uri, init);
-      
-      const response = {
+
+      const response: HttpResponse = {
         body: null,
-        headers: {},
+        headers: {} as Record<string, string[]>,
         statusCode: res.status,
         reasonPhrase: res.statusText
       };

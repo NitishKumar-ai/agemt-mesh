@@ -5,5 +5,5 @@
     "rootDir": "./src/main/typescript"
   },
   "include": ["src/main/typescript/**/*", "src/test/typescript/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/test/**/*"]
 }
