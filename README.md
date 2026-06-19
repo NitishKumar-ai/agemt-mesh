@@ -1,4 +1,4 @@
-# AgentMesh (TypeScript Workflow Engine)
+# AgentMesh
 
 An autonomous, durable agent mesh built on a TypeScript port of the Netflix Conductor workflow engine.
 
@@ -47,13 +47,7 @@ The server will be available at `http://localhost:8080`.
 The live dashboard is available at the root: `http://localhost:8080/index.html`.
 Swagger documentation is available at `http://localhost:8080/api/docs`.
 
-## Transformation Status
 
-We are currently in the process of porting from the original Java Conductor implementation.
-
-**Current Status:** ✅ Phase 7 (Sandboxing) Completed.
-
-See [docs/transformation.md](./docs/transformation.md) for the full roadmap and technical details.
 
 ## Development
 
@@ -61,6 +55,4 @@ See [docs/transformation.md](./docs/transformation.md) for the full roadmap and 
 - **Testing**: `pnpm test`
 - **Format**: `pnpm format`
 
-## License
 
-Apache License 2.0 (matches original Netflix Conductor).
