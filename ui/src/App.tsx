@@ -7,6 +7,7 @@ import {
   Files,
   Link2,
   Megaphone,
+  MessageCircleQuestion,
   PlayCircle,
   Settings,
   Shield,
@@ -26,6 +27,7 @@ import { MarketingPage } from './pages/MarketingPage';
 import { CommitGuardPage } from './pages/CommitGuardPage';
 import { AgentsPage } from './pages/AgentsPage';
 import { ConnectionsPage } from './pages/ConnectionsPage';
+import { AskPage } from './pages/AskPage';
 import { SafetyPage } from './pages/SafetyPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { connectEventStream } from './lib/events';
@@ -111,6 +113,7 @@ export function App() {
         badge: events.some((e) => e.eventType.includes('approval')),
       },
       { key: 'agents' as const, label: 'Agents', icon: Bot },
+      { key: 'ask' as const, label: 'Ask', icon: MessageCircleQuestion },
       { key: 'safety' as const, label: 'Safety', icon: Shield },
       { key: 'commitguard' as const, label: 'CommitGuard', icon: ShieldCheck },
       { key: 'marketing' as const, label: 'Marketing', icon: Megaphone },
@@ -152,6 +155,7 @@ export function App() {
         {page === 'workflows' && <WorkflowsPage activeWorkflowId={activeWorkflowId} onWorkflowSelect={handleWorkflowSelect} />}
         {page === 'approvals' && <ApprovalsPage events={events} />}
         {page === 'agents' && <AgentsPage onWorkflowSelect={handleWorkflowSelect} />}
+        {page === 'ask' && <AskPage />}
         {page === 'commitguard' && <CommitGuardPage />}
         {page === 'marketing' && <MarketingPage />}
         {page === 'tasks' && <TasksPage />}
