@@ -5,13 +5,16 @@ import { google } from 'googleapis';
 export class GoogleDriveConnector implements Connector {
   name = 'gdrive';
   supportsWebhook = true;
+  config: ConnectorConfig;
 
   constructor(
     private clientId: string,
     private clientSecret: string,
     private refreshToken: string,
-    private config: ConnectorConfig = { enabled: true }
-  ) {}
+    config: ConnectorConfig = { enabled: true }
+  ) {
+    this.config = config;
+  }
 
   async bootstrap(): Promise<void> {
     // Initialize OAuth client and fetch historical files
@@ -32,8 +35,7 @@ export class GoogleDriveConnector implements Connector {
       const drive = google.drive({ version: 'v3', auth });
 
       // Get changes since the given date
-      const response = await drive.changes.list({
-        spaces: 'drive',
+      const response = await drive.files.list({
         orderBy: 'modifiedTime',
         includeItemsFromAllDrives: true,
         supportsAllDrives: true,
@@ -41,7 +43,7 @@ export class GoogleDriveConnector implements Connector {
       });
 
       const files = response.data.files || [];
-      episodes.push(...files.map((file) => this.fileToEpisode(file)));
+      episodes.push(...files.map((file: any) => this.fileToEpisode(file)));
 
     } catch (error) {
       console.error('Error fetching Google Drive changes:', error);
@@ -51,10 +53,28 @@ export class GoogleDriveConnector implements Connector {
     return episodes;
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    // Placeholder implementation
-    return episodes;
+  async fetchObject(sourceId: string): Promise<IEpisode> {
+    try {
+      const auth = new google.auth.OAuth2(
+        this.clientId,
+        this.clientSecret,
+        'https://oauth2.googleapis.com/token'
+      );
+      auth.setCredentials({ refresh_token: this.refreshToken });
+
+      const drive = google.drive({ version: 'v3', auth });
+
+      const response = await drive.files.get({
+        fileId: sourceId,
+        fields: '*',
+        supportsAllDrives: true,
+      });
+
+      return this.fileToEpisode(response.data);
+    } catch (error) {
+      console.error('Error fetching Google Drive object:', error);
+      throw error;
+    }
   }
 
   private fileToEpisode(file: any): IEpisode {

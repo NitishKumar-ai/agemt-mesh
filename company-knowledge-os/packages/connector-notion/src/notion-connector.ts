@@ -5,11 +5,14 @@ import axios from 'axios';
 export class NotionConnector implements Connector {
   name = 'notion';
   supportsWebhook = true;
+  config: ConnectorConfig;
 
   constructor(
     private token: string,
-    private config: ConnectorConfig = { enabled: true }
-  ) {}
+    config: ConnectorConfig = { enabled: true }
+  ) {
+    this.config = config;
+  }
 
   async bootstrap(): Promise<void> {
     // Fetch historical pages
@@ -41,7 +44,7 @@ export class NotionConnector implements Connector {
       );
 
       const results = response.data.results || [];
-      episodes.push(...results.map((page) => this.pageToEpisode(page)));
+      episodes.push(...results.map((page: any) => this.pageToEpisode(page)));
 
     } catch (error) {
       console.error('Error fetching Notion changes:', error);
@@ -51,10 +54,23 @@ export class NotionConnector implements Connector {
     return episodes;
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    // Placeholder implementation
-    return episodes;
+  async fetchObject(sourceId: string): Promise<IEpisode> {
+    try {
+      const response = await axios.get(
+        `https://api.notion.com/v1/pages/${sourceId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            'Notion-Version': '2022-06-28',
+          },
+        }
+      );
+
+      return this.pageToEpisode(response.data);
+    } catch (error) {
+      console.error('Error fetching Notion object:', error);
+      throw error;
+    }
   }
 
   private pageToEpisode(page: any): IEpisode {

@@ -5,13 +5,16 @@ import { google } from 'googleapis';
 export class GmailConnector implements Connector {
   name = 'gmail';
   supportsWebhook = true;
+  config: ConnectorConfig;
 
   constructor(
     private clientId: string,
     private clientSecret: string,
     private refreshToken: string,
-    private config: ConnectorConfig = { enabled: true }
-  ) {}
+    config: ConnectorConfig = { enabled: true }
+  ) {
+    this.config = config;
+  }
 
   async bootstrap(): Promise<void> {
     // Initialize OAuth client and fetch historical emails
@@ -49,10 +52,27 @@ export class GmailConnector implements Connector {
     return episodes;
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    // Placeholder implementation
-    return episodes;
+  async fetchObject(sourceId: string): Promise<IEpisode> {
+    try {
+      const auth = new google.auth.OAuth2(
+        this.clientId,
+        this.clientSecret,
+        'https://oauth2.googleapis.com/token'
+      );
+      auth.setCredentials({ refresh_token: this.refreshToken });
+
+      const gmail = google.gmail({ version: 'v1', auth });
+
+      const response = await gmail.users.messages.get({
+        userId: 'me',
+        id: sourceId,
+      });
+
+      return this.messageToEpisode(response.data);
+    } catch (error) {
+      console.error('Error fetching Gmail object:', error);
+      throw error;
+    }
   }
 
   private messageToEpisode(msg: any): IEpisode {
