@@ -29,7 +29,7 @@ yarn.lock
 secrets/signing-key
 
 # local builds
-lib/
+/lib/
 build/
 */build/
 

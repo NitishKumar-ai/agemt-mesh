@@ -55,7 +55,7 @@ export function Executions() {
                     <td className="cell-mono">{exec.workflowId?.slice(0, 12)}…</td>
                     <td className="cell-name">{exec.workflowName}</td>
                     <td>{exec.workflowVersion}</td>
-                    <td><span className={`badge ${STATUS_COLORS[exec.status] || ''}`}>{exec.status}</span></td>
+                    <td><span className={`badge ${(exec.status && STATUS_COLORS[exec.status]) || ''}`}>{exec.status}</span></td>
                     <td>{exec.createTime ? new Date(exec.createTime).toLocaleString() : '—'}</td>
                     <td>{duration}</td>
                     <td>{exec.correlationId || '—'}</td>

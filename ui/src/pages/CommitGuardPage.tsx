@@ -137,7 +137,7 @@ export function CommitGuardPage() {
     setProgress({ step: 'queued', progress_pct: 0 });
 
     try {
-      const res = await api.runCommitGuardScan(repoUrl.trim(), maxFindings);
+      const res = await api.runCommitGuardScan({ repo_url: repoUrl.trim(), max_findings: maxFindings });
       setJobId(res.job_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start scan');

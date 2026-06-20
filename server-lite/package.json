@@ -27,6 +27,8 @@
     "@agentmesh/telemetry": "workspace:*",
     "@agentmesh/workflow-event-listener": "workspace:*",
     "@agentmesh/task-status-listener": "workspace:*",
+    "@agentmesh/graph-service": "workspace:*",
+    "@agentmesh/workflow-service": "workspace:*",
     "@nestjs/common": "^11.1.27",
     "@nestjs/core": "^11.1.27",
     "@nestjs/platform-express": "^11.1.27",

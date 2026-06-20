@@ -4,9 +4,14 @@ Instructions for AI coding agents working on the AgentMesh monorepo.
 
 ## Project Overview
 
-AgentMesh is a TypeScript monorepo (pnpm workspaces) implementing a durable workflow orchestration engine. It consists of:
+AgentMesh is pivoting from a pure workflow orchestration engine into a **"company brain"**: a permission-aware, temporal memory graph that ingests internal sources (docs, Slack, email, calendar, GitHub PRs) and serves deduplicated, cited answers to humans and AI agents. The original orchestration engine is retained as the durable execution substrate underneath the new memory/ingestion pipelines.
+
+It consists of:
 
 - **Backend**: NestJS REST API + SQLite persistence (server-lite on port 3000/8080)
+- **Memory graph**: `graph-service` — NestJS service backed by Neo4j (in-memory fallback), bitemporal fact storage, entity correction loop
+- **Retrieval/answer layer**: `workflow-service` — `TrustWorkflowService`, confidence calibration, citation validation, abstention-on-contradiction
+- **Knowledge OS**: `company-knowledge-os/` — separate pnpm/turbo workspace defining `Fact`/`Episode`/`Entity` Zod models and the `Connector` interface for source ingestion (Slack/email/Gdrive/calendar/PRs) — connectors are not yet implemented
 - **Frontends**: 
   - `ui/` — Agent Mesh OS (React 19 + Vite + Tauri 2 desktop app)
   - `ui-next/` — Conductor UI (React 18 + MUI + React Router, legacy)
@@ -18,6 +23,10 @@ AgentMesh is a TypeScript monorepo (pnpm workspaces) implementing a durable work
 |---------|---------------|
 | REST API controllers | `rest/src/controllers/*.ts` (NestJS `@Controller`) |
 | Orchestration API | `rest/src/controllers/OrchestrationController.ts` (`/api/orchestration/*`) |
+| Temporal fact graph | `graph-service/src/` — `GraphService.ingestNode()`, `ingestFact()`, `getFactsCurrent()`, `getFactsAsOf()`, `applyCorrection()` |
+| Company-brain retrieval workflows | `workflow-service/src/` — `TrustWorkflowService`, `retrieveAndAnswer()` |
+| Knowledge models + connectors | `company-knowledge-os/packages/*` — `Fact`/`Episode`/`Entity` schemas, `Connector` interface (stub only) |
+| Vector store / Hyper DAO interfaces | `common-persistence/src/interfaces/` — `VectorStoreDAO`, `HyperDAO` (interfaces only, no implementation yet) |
 | Agent Mesh OS frontend | `ui/src/` (React 19, custom CSS, lucide icons) |
 | Conductor UI frontend | `ui-next/src/` (React 18, MUI v7, React Router v7) |
 | API client (ui) | `ui/src/lib/api.ts` (Agent API) + `ui/src/lib/conductorApi.ts` (orchestration) |
@@ -25,9 +34,17 @@ AgentMesh is a TypeScript monorepo (pnpm workspaces) implementing a durable work
 | Storage interfaces | `common-persistence/src/` |
 | Domain models | `common/src/models/` (Zod schemas) |
 | Storage implementations | `sqlite-persistence/`, `postgres-persistence/`, `cassandra-persistence/`, etc. |
-| Workflow engine | `core/src/execution/` |
+| Workflow engine (execution substrate) | `core/src/execution/` |
 | Agent runtime | `agent-runtime/src/` |
 | Chaos tests | `chaos-suite/chaos.test.ts` (crash-recovery test) |
+
+## Company-Brain Build Status
+
+What exists vs. what's missing for the memory-graph pivot (see `graph-service`, `workflow-service`, `company-knowledge-os`):
+
+- **Done**: bitemporal fact graph, fact supersession, human correction/entity-merge loop, confidence-calibrated retrieval workflows, citation validation, abstention on contradiction.
+- **Missing**: real source connectors (Slack/email/Gdrive/calendar/GitHub PR ingestion is unimplemented), vector/embedding search (`VectorStoreDAO` has no backing implementation), permission enforcement (only a `permissions_hash` field exists, no policy engine), cross-source deduplication/entity-resolution beyond manual correction.
+- **Build order**: (1) one real connector end-to-end, (2) wire `VectorStoreDAO` to a vector store, (3) permission evaluation in `graph-service` query paths, (4) automated dedup/entity-resolution orchestrator.
 
 ## Build & Test Commands
 

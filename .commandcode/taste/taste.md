@@ -1,6 +1,7 @@
 # Taste (Continuously Learned by [CommandCode][cmd])
 
 [cmd]: https://commandcode.ai/
+
 
 # typescript
 - Use TypeScript for frontend code instead of plain HTML/JS. Confidence: 0.70

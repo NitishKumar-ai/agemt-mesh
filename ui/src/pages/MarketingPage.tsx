@@ -77,7 +77,7 @@ export function MarketingPage() {
       for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 3000));
         const updated = await api.listMarketingCampaigns();
-        const campaign = updated.campaigns.find((c) => c.id === id);
+        const campaign = updated.campaigns.find((c: any) => c.id === id);
         if (campaign?.subject) {
           setCampaigns(updated.campaigns);
           break;

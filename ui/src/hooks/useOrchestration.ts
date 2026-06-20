@@ -1,22 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { conductorApi } from '../lib/conductorApi';
-import type {
-  WorkflowDef, TaskDef, WorkflowExecution, EventHandler, Schedule,
-} from '../lib/conductorTypes';
+import { orchestrationApi } from '../lib/orchestrationApi';
 
 // ── Workflow Definitions ────────────────────────────────────────────────
 
 export function useWorkflowDefs() {
   return useQuery({
     queryKey: ['workflowDefs'],
-    queryFn: conductorApi.listWorkflowDefs,
+    queryFn: orchestrationApi.listWorkflowDefs,
   });
 }
 
 export function useWorkflowDef(name: string, version?: number) {
   return useQuery({
     queryKey: ['workflowDef', name, version],
-    queryFn: () => conductorApi.getWorkflowDef(name, version),
+    queryFn: () => orchestrationApi.getWorkflowDef(name, version),
     enabled: !!name,
   });
 }
@@ -24,7 +21,7 @@ export function useWorkflowDef(name: string, version?: number) {
 export function useSaveWorkflowDef() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: conductorApi.saveWorkflowDef,
+    mutationFn: orchestrationApi.saveWorkflowDef,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workflowDefs'] }),
   });
 }
@@ -34,14 +31,14 @@ export function useSaveWorkflowDef() {
 export function useTaskDefs() {
   return useQuery({
     queryKey: ['taskDefs'],
-    queryFn: conductorApi.listTaskDefs,
+    queryFn: orchestrationApi.listTaskDefs,
   });
 }
 
 export function useTaskDef(name: string) {
   return useQuery({
     queryKey: ['taskDef', name],
-    queryFn: () => conductorApi.getTaskDef(name),
+    queryFn: () => orchestrationApi.getTaskDef(name),
     enabled: !!name,
   });
 }
@@ -49,7 +46,7 @@ export function useTaskDef(name: string) {
 export function useSaveTaskDef() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: conductorApi.saveTaskDef,
+    mutationFn: orchestrationApi.saveTaskDef,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['taskDefs'] }),
   });
 }
@@ -59,14 +56,14 @@ export function useSaveTaskDef() {
 export function useExecutions(params?: Record<string, string>) {
   return useQuery({
     queryKey: ['executions', params],
-    queryFn: () => conductorApi.searchExecutions(params),
+    queryFn: () => orchestrationApi.searchExecutions(params),
   });
 }
 
 export function useExecution(id: string) {
   return useQuery({
     queryKey: ['execution', id],
-    queryFn: () => conductorApi.getExecution(id),
+    queryFn: () => orchestrationApi.getExecution(id),
     enabled: !!id,
   });
 }
@@ -76,7 +73,7 @@ export function useExecution(id: string) {
 export function useEventHandlers() {
   return useQuery({
     queryKey: ['eventHandlers'],
-    queryFn: conductorApi.listEventHandlers,
+    queryFn: orchestrationApi.listEventHandlers,
   });
 }
 
@@ -85,7 +82,7 @@ export function useEventHandlers() {
 export function useSchedules() {
   return useQuery({
     queryKey: ['schedules'],
-    queryFn: conductorApi.listSchedules,
+    queryFn: orchestrationApi.listSchedules,
   });
 }
 
@@ -94,7 +91,7 @@ export function useSchedules() {
 export function useTaskQueues() {
   return useQuery({
     queryKey: ['taskQueues'],
-    queryFn: conductorApi.getTaskQueues,
+    queryFn: orchestrationApi.getTaskQueues,
     refetchInterval: 10_000,
   });
 }
@@ -102,7 +99,7 @@ export function useTaskQueues() {
 export function useEventQueues() {
   return useQuery({
     queryKey: ['eventQueues'],
-    queryFn: conductorApi.getEventQueues,
+    queryFn: orchestrationApi.getEventQueues,
     refetchInterval: 10_000,
   });
 }

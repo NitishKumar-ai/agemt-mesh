@@ -88,14 +88,7 @@ import { TaskStatusListener as TaskStatusListenerImpl } from '@agentmesh/task-st
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
 import { MetadataMapperAdapter } from './MetadataMapperAdapter.js';
 import { DocumentLoader, JsonSchemaValidator } from '@agentmesh/ai';
-import express from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import cors from 'cors';
 import morgan from 'morgan';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 interface Config {
   port: number;
@@ -224,6 +217,40 @@ export async function bootstrapServer(options?: {
   const queueDAO = cfg.queueProvider === 'amqp' && cfg.rabbitmqUrl
     ? new AMQPQueueDAO(baseQueueDAO, cfg.rabbitmqUrl)
     : baseQueueDAO;
+
+  // Auto-register workflow definitions for standard agents
+  const registerWorkflowDefIfNotExist = async (name: string, taskType: string) => {
+    try {
+      const existing = await metadataDAO.getWorkflowDef(name, 1);
+      if (!existing) {
+        await metadataDAO.createWorkflowDef({
+          name,
+          version: 1,
+          tasks: [
+            {
+              name: taskType,
+              taskReferenceName: `${taskType}_ref`,
+              type: 'SIMPLE',
+              inputParameters: {},
+            }
+          ],
+          inputParameters: [],
+          outputParameters: {},
+          schemaVersion: 2,
+        } as any);
+        console.log(`[Bootstrap] Registered workflow definition for ${name}`);
+      }
+    } catch (err) {
+      console.error(`[Bootstrap] Error registering workflow definition for ${name}:`, err);
+    }
+  };
+
+  await registerWorkflowDefIfNotExist('CommitGuard', 'commit_guard_task');
+  await registerWorkflowDefIfNotExist('Marketing Agent', 'marketing_task');
+  await registerWorkflowDefIfNotExist('Scheduler Agent', 'scheduler_task');
+  await registerWorkflowDefIfNotExist('Self-Heal Agent', 'self_heal_task');
+  await registerWorkflowDefIfNotExist('Research Agent', 'research_task');
+
 
   // --- Proxies and variables for NestJS middleware registration ---
   let activeAgentExecutor: any = null;
@@ -746,7 +773,7 @@ export async function bootstrapServer(options?: {
 
   console.log('Initializing NestJS app...');
   await app.init();
-  const server = app.getHttpServer();
+  app.getHttpServer();
   console.log('Starting HTTP server...');
   await app.listen(cfg.port);
   console.log(`Listening on http://localhost:${cfg.port}`);

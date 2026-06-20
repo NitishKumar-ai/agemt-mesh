@@ -131,8 +131,8 @@ export function ApprovalsPage({ events }: { events?: any[] }) {
         if (a.status !== 'pending' && b.status === 'pending') return 1;
 
         const risks = { critical: 4, high: 3, medium: 2, low: 1 };
-        const riskA = risks[a.risk_level] || 0;
-        const riskB = risks[b.risk_level] || 0;
+        const riskA = risks[a.risk_level as keyof typeof risks] || 0;
+        const riskB = risks[b.risk_level as keyof typeof risks] || 0;
         if (riskA !== riskB) return riskB - riskA;
 
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -433,7 +433,7 @@ export function ApprovalsPage({ events }: { events?: any[] }) {
                         </div>
                       </div>
 
-                      {approval.history?.map((h, i) => (
+                      {approval.history?.map((h: any, i: number) => (
                         <div
                           key={i}
                           style={{
@@ -473,7 +473,7 @@ export function ApprovalsPage({ events }: { events?: any[] }) {
                         </div>
                       ))}
 
-                      {isExpired && !approval.history?.some((h) => h.action === 'expired') && (
+                      {isExpired && !approval.history?.some((h: any) => h.action === 'expired') && (
                         <div
                           style={{
                             display: 'flex',
@@ -524,7 +524,7 @@ export function ApprovalsPage({ events }: { events?: any[] }) {
                         <div style={{ animation: 'fadeIn 200ms ease' }}>
                           <p className="body-sm" style={{ marginBottom: '16px', fontWeight: 600 }}>
                             Are you sure you want to{' '}
-                            {confirming.action === 'approve' ? 'approve' : 'reject'} this action?
+                            {confirming!.action === 'approve' ? 'approve' : 'reject'} this action?
                           </p>
                           <div style={{ marginBottom: '16px' }}>
                             <label
@@ -556,16 +556,16 @@ export function ApprovalsPage({ events }: { events?: any[] }) {
                               style={{
                                 flex: 1,
                                 background:
-                                  confirming.action === 'approve'
+                                  confirming!.action === 'approve'
                                     ? 'var(--primary)'
                                     : 'var(--brand-coral)',
                               }}
                               disabled={!!deciding}
-                              onClick={() => onDecide(approval, confirming.action === 'approve')}
+                              onClick={() => onDecide(approval, confirming!.action === 'approve')}
                             >
                               {deciding === approval.id
                                 ? 'Processing...'
-                                : `Confirm ${confirming.action}`}
+                                : `Confirm ${confirming!.action}`}
                             </button>
                             <button
                               className="secondary-button"

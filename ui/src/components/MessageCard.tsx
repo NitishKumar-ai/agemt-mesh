@@ -26,26 +26,26 @@ export function MessageCard({ message, onApprove }: Props) {
   const [collapsed, setCollapsed] = useState(message.metadata?.collapsed ?? true);
 
   // Determine avatar and styling based on role
-  const avatarIcon = {
+  const avatarIcon = (({
     user: <UserRound size={16} />,
     agent: <Terminal size={16} />,
     system: <AlertTriangle size={14} />,
     tool: <Wrench size={14} />,
     approval: <ShieldAlert size={16} />,
-  }[message.role];
+  }) as any)[message.role];
 
-  const roleLabel = {
+  const roleLabel = (({
     user: 'You',
     agent: 'Agent Mesh',
     system: 'System',
     tool: message.metadata?.toolName || 'Tool',
     approval: 'Approval Required',
-  }[message.role];
+  }) as any)[message.role];
 
   // Render code blocks if present
   function renderCodeBlocks() {
     if (!message.metadata?.codeBlocks?.length) return null;
-    return message.metadata.codeBlocks.map((block, i) => (
+    return message.metadata.codeBlocks.map((block: any, i: number) => (
       <div key={i} className="msg-code-block">
         <div className="msg-code-header">
           <Code2 size={12} />
@@ -61,7 +61,7 @@ export function MessageCard({ message, onApprove }: Props) {
     if (!message.metadata?.files?.length) return null;
     return (
       <div className="msg-files">
-        {message.metadata.files.map((f, i) => (
+        {message.metadata.files.map((f: any, i: number) => (
           <span key={i} className="msg-file-tag">
             <FileCode2 size={11} />
             {f.split('/').pop()}
@@ -146,7 +146,7 @@ export function MessageCard({ message, onApprove }: Props) {
           {message.status && <StatusBadge status={message.status} />}
         </div>
         <div className="message-body">
-          {message.body.split('\n').map((line, i) => {
+          {message.body.split('\n').map((line: any, i: number) => {
             // Basic inline code rendering
             if (line.startsWith('```')) return null;
             return <p key={i}>{line || '\u00A0'}</p>;

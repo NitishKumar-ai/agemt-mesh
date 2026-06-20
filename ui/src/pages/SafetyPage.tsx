@@ -251,7 +251,7 @@ export function SafetyPage() {
             {Object.entries(stats.by_risk_tier).map(([tier, count]) => (
               <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <RiskPill tier={tier} />
-                <span style={{ fontSize: 15, fontWeight: 500 }}>{count}</span>
+                <span style={{ fontSize: 15, fontWeight: 500 }}>{count as any}</span>
               </div>
             ))}
           </div>

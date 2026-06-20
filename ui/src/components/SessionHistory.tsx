@@ -90,7 +90,7 @@ export function SessionHistory({ activeSessionId, onSelect }: Props) {
     if (stored) return stored;
     // Derive title from last_step or agent_id
     if (s.last_step && s.last_step !== 'start') {
-      return s.last_step.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      return s.last_step.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
     }
     return `${s.agent_id} session`;
   }

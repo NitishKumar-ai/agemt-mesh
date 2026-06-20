@@ -85,7 +85,7 @@ export function SessionPage({
         if (!cancelled) {
           setLoadedSteps(res.steps);
           // Convert steps to messages for display
-          const stepMessages: SessionMessage[] = res.steps.map((step, i) => ({
+          const stepMessages: SessionMessage[] = res.steps.map((step: any, i: number) => ({
             id: `step-${step.id}`,
             role: 'agent' as const,
             title: step.step,
@@ -120,7 +120,7 @@ export function SessionPage({
         api.listImportedRepositories(),
       ]);
       setRepositories(available.repositories);
-      setImportedIds(new Set(imported.repositories.map((repo) => repo.id)));
+      setImportedIds(new Set(imported.repositories.map((repo: any) => repo.id)));
     } catch (error) {
       setRepoError(error instanceof Error ? error.message : 'Could not load repositories');
     }

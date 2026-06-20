@@ -2,7 +2,6 @@ import { Module, DynamicModule, Global, NestModule, MiddlewareConsumer } from '@
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import express from 'express';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +17,9 @@ import {
   DB_PROBE,
 } from '@agentmesh/rest';
 import type { WorkflowExecutor } from '@agentmesh/core';
+
+import { GraphController, TemporalController, CorrectionController } from '@agentmesh/graph-service';
+import { WorkflowController } from '@agentmesh/workflow-service';
 
 export const WORKFLOW_EXECUTOR = WORKFLOW_EXECUTOR_TOKEN;
 
@@ -49,6 +51,12 @@ export class AppModule implements NestModule {
           rootPath: path.resolve(__dirname, '../../ui/dist'),
           exclude: ['/api/*path', '/swagger-ui/*path', '/health', '/api-docs/*path'],
         }),
+      ],
+      controllers: [
+        GraphController,
+        TemporalController,
+        CorrectionController,
+        WorkflowController,
       ],
       providers: [
         { provide: EXECUTION_DAO, useValue: options.executionDAO },

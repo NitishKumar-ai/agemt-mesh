@@ -109,7 +109,7 @@ export function ConnectionsPage() {
     setSaving(true);
     setError(null);
     try {
-      await api.createConnection(connectTarget, config, metadata);
+      await api.createConnection({ provider_id: connectTarget, config, metadata });
       setConnectTarget(null);
       setConfig({});
       setMetadata({});
@@ -224,7 +224,7 @@ export function ConnectionsPage() {
                     </div>
                   ) : (
                     <>
-                      {c?.config_schema?.map((field) => (
+                      {c?.config_schema?.map((field: any) => (
                         <div className="form-group" key={field.name}>
                           <label className="form-label">{field.label}</label>
                           {field.type === 'textarea' ? (

@@ -4,8 +4,9 @@ Instructions for AI coding agents working on the AgentMesh codebase.
 
 ## Project Overview
 
-AgentMesh is an open-source, durable workflow orchestration engine with pluggable persistence and storage backends.
-It is a TypeScript monorepo managed by `pnpm` with 38+ workspace packages.
+AgentMesh is pivoting from a pure workflow orchestration engine into a **company brain**: a permission-aware, temporal memory graph that ingests internal sources (docs, Slack, email, calendar, GitHub PRs), deduplicates them, and serves cited, confidence-calibrated answers to humans and AI agents. The durable orchestration engine (`core`, `common-persistence`, `*-persistence`) is retained as the execution substrate beneath the new memory/ingestion pipelines (`graph-service`, `workflow-service`, `company-knowledge-os`).
+
+It is a TypeScript monorepo managed by `pnpm` with 38+ workspace packages. Note: `company-knowledge-os/` is its own nested pnpm/turbo workspace, not part of the root `pnpm-workspace.yaml`.
 
 ## Setup Commands
 
@@ -36,6 +37,9 @@ It is a TypeScript monorepo managed by `pnpm` with 38+ workspace packages.
 | **Interfaces** | `common-persistence` | DAO interfaces: ExecutionDAO, MetadataDAO, QueueDAO, etc. |
 | **Interfaces** | `common-storage` | FileStorage, ExternalPayloadStorage interfaces |
 | **Engine** | `core` | Workflow execution, system tasks, sweeper, decider |
+| **Memory graph** | `graph-service` | Bitemporal temporal fact graph (Neo4j + in-memory fallback), entity correction loop |
+| **Retrieval** | `workflow-service` | `TrustWorkflowService` — confidence-calibrated retrieval workflows, citation validation, abstention on contradiction |
+| **Knowledge OS** | `company-knowledge-os` | Separate workspace: `Fact`/`Episode`/`Entity` Zod models, `Connector` interface (Slack/email/Gdrive/calendar/PR — unimplemented stubs) |
 | **Agents** | `agent-runtime` | Agent worker pool, tool registry, LLM integration |
 | **AI** | `ai` | LLM providers (Anthropic, Gemini), model routing |
 | **REST API** | `rest` | NestJS controllers + services, Swagger |
