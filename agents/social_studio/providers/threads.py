@@ -483,3 +483,58 @@ class ThreadsProvider(SocialProvider):
                 "raw": data,
             },
         )
+
+    def get_account_metrics(self, access_token: str, date_range: tuple[datetime, datetime]) -> AccountMetrics:
+        """Fetch account-level metrics for Threads.
+        
+        Requires `threads_read` scope.
+        """
+        user_id_resp = self._request(
+            "GET",
+            f"{API_BASE}/me",
+            access_token=access_token,
+            params={"fields": "id"},
+        )
+        user_id = user_id_resp.json().get("id", "")
+        if not user_id:
+            return AccountMetrics(followers=0, reach=0, impressions=0, engagements=0)
+
+        metrics_str = "views,likes,replies,reposts,quotes,followers_count"
+        
+        try:
+            resp = self._request(
+                "GET",
+                f"{API_BASE}/{user_id}/threads_insights",
+                access_token=access_token,
+                params={
+                    "metric": metrics_str,
+                    "since": int(date_range[0].timestamp()),
+                    "until": int(date_range[1].timestamp()),
+                },
+            )
+            body = resp.json()
+            data = body.get("data", [])
+
+            metrics: dict[str, int] = {}
+            for item in data:
+                name = item.get("name", "")
+                values = item.get("values", [])
+                if values:
+                    # Sum across all days in the response
+                    metrics[name] = sum(v.get("value", 0) for v in values)
+
+            return AccountMetrics(
+                impressions=metrics.get("views", 0),
+                reach=metrics.get("views", 0), # Threads doesn't expose unique reach yet
+                followers=metrics.get("followers_count", 0),
+                engagements=(
+                    metrics.get("likes", 0)
+                    + metrics.get("replies", 0)
+                    + metrics.get("reposts", 0)
+                    + metrics.get("quotes", 0)
+                ),
+                extra={"raw": data},
+            )
+        except Exception as e:
+            logger.warning(f"Failed to fetch threads account metrics: {e}")
+            return AccountMetrics(followers=0, reach=0, impressions=0, engagements=0)

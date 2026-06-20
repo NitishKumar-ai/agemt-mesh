@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
-import { CalendarClock, Check, History, Loader2, Megaphone, ShieldCheck, Sparkles } from "lucide-react";
+import { CalendarClock, Check, History, Loader2, Megaphone, Radio, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
+import { CampaignWarRoom } from "../components/CampaignWarRoom";
 import { api } from "../lib/api";
 import type { MarketingAuditEvent, MarketingCampaign, SecurityFinding } from "../lib/types";
 
@@ -29,6 +30,9 @@ export function MarketingPage() {
   const [busy, setBusy] = useState<number>();
   // Track which campaigns have a pipeline running (workflow_id → campaign_id)
   const [pipelines, setPipelines] = useState<Record<number, string>>({});
+  // Autonomous commit-to-campaign run: the active War Room (workflow_id + mode)
+  const [activeRun, setActiveRun] = useState<{ runId: string; goLive: boolean } | null>(null);
+  const [goLive, setGoLive] = useState(false);
 
   async function load() {
     const [campaignResponse, findingResponse, auditResponse] = await Promise.all([
@@ -105,6 +109,16 @@ export function MarketingPage() {
     }
   }
 
+  async function runCampaign(id: number) {
+    setBusy(id);
+    try {
+      const res = await api.commitFindingToCampaign(id, goLive);
+      setActiveRun({ runId: res.workflow_id, goLive: res.go_live });
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
   function useFinding(finding: SecurityFinding) {
     setForm({
       name: `${finding.title} campaign`,
@@ -124,10 +138,29 @@ export function MarketingPage() {
         description="Turn verified security findings into responsible outreach drafts. Nothing is sent automatically."
       />
 
+      {activeRun && (
+        <CampaignWarRoom
+          runId={activeRun.runId}
+          goLive={activeRun.goLive}
+          onClose={() => setActiveRun(null)}
+          onDone={() => void load()}
+        />
+      )}
+
       <section className="finding-inbox">
         <div className="finding-inbox-head">
-          <div><span>CommitGuard handoff</span><h2>Security findings</h2><p>Only verified findings can become campaign evidence.</p></div>
-          <strong>{findings.filter((finding) => finding.status === "verified").length} verified</strong>
+          <div><span>CommitGuard handoff</span><h2>Security findings</h2><p>Verified findings launch an autonomous campaign — researched, drafted, compliance-checked, then one approval click to publish.</p></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button
+              type="button"
+              onClick={() => setGoLive(!goLive)}
+              title={goLive ? "Live: approved campaigns post to real platforms" : "Dry-run: full pipeline, no real post"}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 9999, cursor: "pointer", border: `1px solid ${goLive ? "var(--error)" : "var(--hairline)"}`, background: goLive ? "color-mix(in srgb, var(--error) 8%, transparent)" : "var(--canvas)", color: goLive ? "var(--error)" : "var(--muted)", fontWeight: 600, fontSize: 13 }}
+            >
+              <Radio size={14} />{goLive ? "Go Live: ON" : "Go Live: OFF (dry-run)"}
+            </button>
+            <strong>{findings.filter((finding) => finding.status === "verified").length} verified</strong>
+          </div>
         </div>
         <div className="finding-list">
           {findings.length === 0 && <div className="empty-card">No findings have been handed off from CommitGuard yet.</div>}
@@ -144,7 +177,13 @@ export function MarketingPage() {
                 {finding.status === "review_required" ? (
                   <button className="secondary-button" disabled={busy === finding.id} onClick={() => void verifyFinding(finding.id)}><ShieldCheck size={14} />Verify</button>
                 ) : (
-                  <button className="primary-button" onClick={() => useFinding(finding)}><Megaphone size={14} />Use finding</button>
+                  <>
+                    <button className="primary-button" disabled={busy === finding.id || !!activeRun} onClick={() => void runCampaign(finding.id)}>
+                      {busy === finding.id ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Zap size={14} />}
+                      Run Campaign
+                    </button>
+                    <button className="secondary-button" onClick={() => useFinding(finding)}><Megaphone size={14} />Use finding</button>
+                  </>
                 )}
               </div>
             </article>

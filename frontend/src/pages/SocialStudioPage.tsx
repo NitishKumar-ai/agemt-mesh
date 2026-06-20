@@ -137,16 +137,23 @@ export function SocialStudioPage() {
           <h1 className="font-display mb-1">Social Studio</h1>
           <p className="text-sm text-slate-500">Manage connections, generate content, and track performance.</p>
         </div>
-        <div className="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-full">
+        <div style={{ display: "flex", gap: 6, alignItems: "center", background: "#F9FAFB", padding: "6px", borderRadius: 12 }}>
           {(["connections", "generate", "analytics", "calendar", "ideas"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? "bg-white dark:bg-slate-700 shadow text-slate-900"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                background: activeTab === tab ? "#FFFFFF" : "transparent",
+                color: activeTab === tab ? "#111827" : "#6B7280",
+                boxShadow: activeTab === tab ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+              }}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
@@ -178,17 +185,17 @@ export function SocialStudioPage() {
 
 // ── Platform metadata for Connect page ──────────────────────────────────────
 
-const PLATFORM_META: Record<string, { label: string; description: string; color: string; bg: string; icon: string }> = {
-  linkedin:         { label: "LinkedIn (Personal)",   description: "Personal profile",              color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
-  linkedin_company: { label: "LinkedIn (Company)",    description: "Company Pages & analytics",     color: "#0a66c2", bg: "#e8f1fb", icon: "in" },
-  instagram:        { label: "Instagram",              description: "Via Facebook Page (Business)",  color: "#e1306c", bg: "#fce4ef", icon: "📸" },
-  instagram_login:  { label: "Instagram (Direct)",    description: "Professional account, no FB Page required", color: "#c13584", bg: "#f9e5f5", icon: "📷" },
-  bluesky:          { label: "Bluesky",                description: "AT Protocol",                   color: "#0085ff", bg: "#e0f0ff", icon: "🦋" },
-  threads:          { label: "Threads",                description: "Text & Media",                  color: "#000000", bg: "#f0f0f0", icon: "@" },
-  twitter:          { label: "Twitter / X",            description: "Short-form posts",              color: "#1da1f2", bg: "#e8f6fe", icon: "𝕏" },
-  facebook:         { label: "Facebook",               description: "Pages & Groups",                color: "#1877f2", bg: "#e7f3ff", icon: "f" },
-  tiktok:           { label: "TikTok",                 description: "Short-form videos",             color: "#000000", bg: "#f0f0f0", icon: "🎵" },
-  youtube:          { label: "YouTube",                description: "Videos & Shorts",               color: "#ff0000", bg: "#ffe5e5", icon: "▶" },
+const PLATFORM_META: Record<string, { label: string; description: string; color: string; bg: string; icon: string; logo?: string }> = {
+  linkedin:         { label: "LinkedIn (Personal)",   description: "Personal profile",              color: "#0a66c2", bg: "#e8f1fb", icon: "in", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" },
+  linkedin_company: { label: "LinkedIn (Company)",    description: "Company Pages & analytics",     color: "#0a66c2", bg: "#e8f1fb", icon: "in", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" },
+  instagram:        { label: "Instagram",              description: "Via Facebook Page (Business)",  color: "#e1306c", bg: "#fce4ef", icon: "📸", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" },
+  instagram_login:  { label: "Instagram (Direct)",    description: "Professional account, no FB Page required", color: "#c13584", bg: "#f9e5f5", icon: "📷", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" },
+  bluesky:          { label: "Bluesky",                description: "AT Protocol",                   color: "#0085ff", bg: "#e0f0ff", icon: "🦋", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/bluesky.svg" },
+  threads:          { label: "Threads",                description: "Text & Media",                  color: "#000000", bg: "#f0f0f0", icon: "@", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/threads.svg" },
+  twitter:          { label: "Twitter / X",            description: "Short-form posts",              color: "#1da1f2", bg: "#e8f6fe", icon: "𝕏", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/x.svg" },
+  facebook:         { label: "Facebook",               description: "Pages & Groups",                color: "#1877f2", bg: "#e7f3ff", icon: "f", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" },
+  tiktok:           { label: "TikTok",                 description: "Short-form videos",             color: "#000000", bg: "#f0f0f0", icon: "🎵", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/tiktok.svg" },
+  youtube:          { label: "YouTube",                description: "Videos & Shorts",               color: "#ff0000", bg: "#ffe5e5", icon: "▶", logo: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/youtube.svg" },
 };
 
 // ── Connections Tab ─────────────────────────────────────────────────────────
@@ -435,58 +442,156 @@ function ConnectionsTab({ accounts, platforms, reloadAccounts }: { accounts: SSA
         <h2 className="font-title">Connected Accounts</h2>
         <button
           onClick={() => setView("connect")}
-          style={{ background: "#fef3ec", color: "#d4622a", border: "1.5px solid #f5c9a8", borderRadius: 999, padding: "9px 22px", fontWeight: 600, fontSize: 14, cursor: "pointer", transition: "background 0.15s" }}
-          onMouseEnter={e => (e.currentTarget.style.background = "#fde8d8")}
-          onMouseLeave={e => (e.currentTarget.style.background = "#fef3ec")}
+          style={{ 
+            background: "#111827", 
+            color: "#FFFFFF", 
+            border: "none", 
+            borderRadius: 8, 
+            padding: "10px 20px", 
+            fontWeight: 500, 
+            fontSize: 14, 
+            cursor: "pointer", 
+            transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: 6
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "#1F2937";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "#111827";
+          }}
         >
-          + Connect Account
+          <span>+</span> Connect Account
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {accounts.map(acct => {
-          const meta = PLATFORM_META[acct.platform] || { label: acct.platform, color: "#666", bg: "#eee", icon: acct.platform.charAt(0).toUpperCase(), description: "" };
+          const meta = PLATFORM_META[acct.platform] || { label: acct.platform, color: "#666", bg: "#eee", icon: acct.platform.charAt(0).toUpperCase(), description: "", logo: undefined };
           return (
-            <div key={acct.id} style={{ background: "#fff", border: "1.5px solid #f0ede8", borderRadius: 16, padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div key={acct.id} style={{ 
+              background: "#FFFFFF", 
+              border: "1px solid #E5E7EB", 
+              borderRadius: 12, 
+              padding: 20, 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 16,
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = meta.color; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                {acct.avatar_url ? (
-                  <img src={acct.avatar_url} alt={acct.display_name} style={{ width: 48, height: 48, borderRadius: 12, objectFit: "cover" }} />
-                ) : (
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: meta.bg, color: meta.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>
-                    {meta.icon}
+                {/* Platform logo */}
+                <div style={{ 
+                  width: 44, 
+                  height: 44, 
+                  borderRadius: 10, 
+                  background: "#F9FAFB",
+                  border: "1px solid #E5E7EB",
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  padding: 8
+                }}>
+                  {meta.logo ? (
+                    <img src={meta.logo} alt={meta.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  ) : (
+                    <span style={{ fontSize: 18, fontWeight: 700, color: meta.color }}>{meta.icon}</span>
+                  )}
+                </div>
+                
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {acct.display_name}
+                  </div>
+                  <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
+                    {meta.label}
+                  </div>
+                </div>
+                
+                {/* Status badge */}
+                <div style={{ 
+                  padding: "4px 10px", 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 600,
+                  background: acct.status === "active" ? "#D1FAE5" : "#FEE2E2",
+                  color: acct.status === "active" ? "#065F46" : "#991B1B",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4
+                }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: acct.status === "active" ? "#10B981" : "#EF4444" }} />
+                  {acct.status === "active" ? "Active" : "Idle"}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ flex: 1, background: "#F9FAFB", borderRadius: 8, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4, fontWeight: 500 }}>Followers</div>
+                  <div style={{ fontWeight: 600, fontSize: 16, color: "#111827" }}>
+                    {(acct.follower_count || 0).toLocaleString()}
+                  </div>
+                </div>
+                {acct.username && (
+                  <div style={{ flex: 1, background: "#F9FAFB", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4, fontWeight: 500 }}>Handle</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      @{acct.username}
+                    </div>
                   </div>
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{acct.display_name}</div>
-                  <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>@{acct.username || acct.platform}</div>
-                </div>
-                <div style={{ padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700, background: meta.bg, color: meta.color, whiteSpace: "nowrap" }}>{meta.label}</div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div style={{ background: "#faf9f7", borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 11, color: "#aaa", marginBottom: 3 }}>Followers</div>
-                  <div style={{ fontWeight: 700, fontSize: 18 }}>{(acct.follower_count || 0).toLocaleString()}</div>
-                </div>
-                <div style={{ background: "#faf9f7", borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 11, color: "#aaa", marginBottom: 3 }}>Status</div>
-                  <div style={{ fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 5, color: acct.status === "active" ? "#22c55e" : "#ef4444" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: acct.status === "active" ? "#22c55e" : "#ef4444", display: "inline-block" }} />
-                    {acct.status}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ borderTop: "1.5px solid #f5f3f0", paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
-                <button onClick={() => handleHealthCheck(acct.id)} style={{ background: "none", border: "none", color: "#d4622a", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Re-sync</button>
-                <button onClick={() => handleDisconnect(acct.id)} style={{ background: "none", border: "none", color: "#aaa", fontSize: 13, cursor: "pointer" }}>Disconnect</button>
+              {/* Actions */}
+              <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 12, display: "flex", gap: 8 }}>
+                <button 
+                  onClick={() => handleHealthCheck(acct.id)} 
+                  style={{ 
+                    flex: 1,
+                    background: "#F9FAFB", 
+                    border: "1px solid #E5E7EB", 
+                    borderRadius: 6,
+                    padding: "8px 12px",
+                    color: "#374151", 
+                    fontSize: 13, 
+                    fontWeight: 500, 
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#F3F4F6"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#F9FAFB"; }}
+                >
+                  ▶ Sync
+                </button>
+                <button 
+                  onClick={() => handleDisconnect(acct.id)} 
+                  style={{ 
+                    background: "transparent", 
+                    border: "none", 
+                    color: "#9CA3AF", 
+                    fontSize: 13, 
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    padding: "8px 12px"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#9CA3AF"; }}
+                >
+                  ✕
+                </button>
               </div>
             </div>
           );
         })}
         {accounts.length === 0 && (
-          <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "48px 0", color: "#bbb", border: "2px dashed #ece8e2", borderRadius: 16, fontSize: 15 }}>
-            No accounts connected yet. Click <strong style={{ color: "#d4622a" }}>+ Connect Account</strong> to start.
+          <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "48px 0", color: "#9CA3AF", border: "2px dashed #E5E7EB", borderRadius: 12, fontSize: 14 }}>
+            No accounts connected yet. Click <strong style={{ color: "#111827" }}>+ Connect Account</strong> to start.
           </div>
         )}
       </div>
@@ -933,6 +1038,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
       const draftMap: Record<string, SSPlatformPost> = {};
       res.results.forEach(r => {
         if (r.caption_preview || r.content) {
+          const resultWithImage = r as typeof r & { image_url?: string };
           draftMap[r.platform] = {
             id: r.post_id || 0,
             platform: r.platform,
@@ -942,7 +1048,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
             char_count: (r.content || r.caption_preview || "").length,
             status: r.success ? "published" : "failed",
             platform_post_url: r.url,
-            image_url: r.image_url,
+            image_url: resultWithImage.image_url,
           } as SSPlatformPost;
         }
       });
@@ -1318,7 +1424,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
       </div>
 
       {generating && (
-        <div style={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 16, padding: 20, marginBottom: 24, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, maxHeight: 250, overflowY: "auto", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)" }}>
+        <div style={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 16, padding: 20, marginBottom: 24, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, maxHeight: "70vh", overflowY: "auto", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, borderBottom: "1px dashed #333", paddingBottom: 12 }}>
             <span style={{ display: "inline-block", width: 8, height: 8, background: "#22c55e", borderRadius: "50%", boxShadow: "0 0 10px #22c55e" }} />
             <span style={{ color: "#fff", fontWeight: 700, letterSpacing: 1 }}>AGENT WAR ROOM</span>
@@ -1344,7 +1450,7 @@ function GenerateTab({ platforms, accounts }: { platforms: Record<string, SSPlat
                 );
               })
             )}
-            <div ref={(el) => el && el.scrollIntoView()} />
+            <div ref={(el) => { if (el) el.scrollIntoView(); }} />
           </div>
         </div>
       )}

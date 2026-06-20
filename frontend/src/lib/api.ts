@@ -65,6 +65,15 @@ export const api = {
     });
   },
 
+  commitFindingToCampaign(findingId: number, goLive = false) {
+    // Launches the autonomous commit-to-campaign workflow. Returns the workflow_id
+    // (== run_id) used to filter the War Room /stream and to approve via /api/approvals.
+    return json<{ status: string; workflow_id: string; finding_id: number; go_live: boolean }>(
+      `/api/marketing/findings/${findingId}/commit-to-campaign`,
+      { method: "POST", body: JSON.stringify({ go_live: goLive }) }
+    );
+  },
+
   createMarketingCampaign(payload: {
     name: string;
     audience: string;

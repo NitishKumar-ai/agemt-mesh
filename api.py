@@ -988,6 +988,30 @@ async def list_marketing_audit_events():
             e["payload"] = json.loads(e["payload"] or "{}")
     return {"events": events}
 
+
+@app.post("/api/marketing/findings/{finding_id}/commit-to-campaign")
+async def commit_finding_to_campaign(finding_id: int, payload: dict | None = None):
+    """
+    Autonomous commit-to-campaign: a verified finding becomes a live multi-platform
+    social campaign. Returns the workflow_id (== run_id) so the client can stream the
+    War Room via /stream (filter on payload.run_id) and approve via /api/approvals.
+
+    Body: {"go_live": bool}  (default false = dry-run: full pipeline, no real post)
+    """
+    from agents.marketing.campaign_pipeline import commit_to_campaign
+    from store import security_get_finding
+
+    finding = security_get_finding(finding_id)
+    if not finding:
+        raise HTTPException(status_code=404, detail="Finding not found")
+    if finding["status"] != "verified":
+        raise HTTPException(status_code=409, detail="Finding must be verified before launching a campaign")
+
+    go_live = bool((payload or {}).get("go_live", False))
+    handle = DBOS.start_workflow(commit_to_campaign, finding_id, go_live)
+    return {"status": "committing", "workflow_id": handle.workflow_id,
+            "finding_id": finding_id, "go_live": go_live}
+
 # ── Jules: Suggested Tasks ────────────────────────────────────────────────────
 
 @app.post("/api/tasks/scan")

@@ -56,16 +56,50 @@ class LinkedInCompanyProvider(LinkedInProvider):
         if not org_id:
             profile = self.get_profile(access_token)
             org_id = profile.platform_id
+        
+        follower_count = 0
+        impressions = 0
+        engagements = 0
+        reach = 0
+        
         try:
             org_urn = f"urn:li:organization:{org_id}"
-            resp = self._request("GET", f"{API_BASE}/v2/networkSizes/{org_urn}",
+            
+            # Fetch followers
+            resp_f = self._request("GET", f"{API_BASE}/v2/networkSizes/{org_urn}",
                 access_token=access_token,
                 headers=dict(**LINKEDIN_HEADERS, edgeType="CompanyFollowedByMember"))
-            data = resp.json()
-            follower_count = data.get("firstDegreeSize", 0)
-        except Exception:
-            follower_count = 0
-        return AccountMetrics(followers=follower_count, reach=0, impressions=0, engagements=0)
+            data_f = resp_f.json()
+            follower_count = data_f.get("firstDegreeSize", 0)
+            
+            # Fetch share statistics (impressions, engagements, etc) if date_range provided
+            if date_range:
+                start_time = int(date_range[0].timestamp() * 1000)
+                end_time = int(date_range[1].timestamp() * 1000)
+                resp_s = self._request(
+                    "GET",
+                    f"{API_BASE}/rest/organizationalEntityShareStatistics",
+                    access_token=access_token,
+                    headers=LINKEDIN_HEADERS,
+                    params={
+                        "q": "organizationalEntity",
+                        "organizationalEntity": org_urn,
+                        "timeIntervals.timeGranularityType": "DAY",
+                        "timeIntervals.timeRange.start": start_time,
+                        "timeIntervals.timeRange.end": end_time,
+                    },
+                )
+                data_s = resp_s.json()
+                for el in data_s.get("elements", []):
+                    stats = el.get("totalShareStatistics", {})
+                    impressions += stats.get("impressionCount", 0)
+                    engagements += stats.get("engagementCount", 0)
+                    # Use uniqueImpressionsCount as proxy for reach
+                    reach += stats.get("uniqueImpressionsCount", 0)
+        except Exception as e:
+            logger.warning(f"Error fetching linkedin account metrics: {e}")
+
+        return AccountMetrics(followers=follower_count, reach=reach, impressions=impressions, engagements=engagements)
 
     def get_user_pages(self, access_token: str) -> list[dict]:
         params = {"q": "roleAssignee", "role": "ADMINISTRATOR",

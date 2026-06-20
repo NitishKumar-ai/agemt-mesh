@@ -289,34 +289,28 @@ class FacebookProvider(SocialProvider):
         )
 
     def get_account_metrics(self, access_token: str, date_range: tuple[datetime, datetime]) -> AccountMetrics:
-        """Fetch Page-level metrics."""
         page_id = self.credentials.get("page_id", "me")
-        
+        metrics = ["page_impressions", "page_engaged_users", "page_fans"]
         resp = self._request(
             "GET",
-            f"{BASE_URL}/{page_id}",
+            f"{BASE_URL}/{page_id}/insights",
             access_token=access_token,
             params={
-                "fields": "fan_count,insights.metric(page_impressions,page_engaged_users).since({}).until({})".format(
-                    int(date_range[0].timestamp()),
-                    int(date_range[1].timestamp()),
-                ),
+                "metric": ",".join(metrics),
+                "since": int(date_range[0].timestamp()),
+                "until": int(date_range[1].timestamp()),
             },
         )
-        body = resp.json()
-        insights = body.get("insights", {}).get("data", [])
-
-        metrics_data: dict = {}
-        for insight in insights:
-            name = insight.get("name", "")
-            values = insight.get("values", [])
-            if values:
-                total = sum(v.get("value", 0) for v in values)
-                metrics_data[name] = total
+        data = resp.json()
+        values: dict = {}
+        for entry in data.get("data", []):
+            name = entry.get("name", "")
+            val = entry.get("values", [{}])[0].get("value", 0)
+            values[name] = val
 
         return AccountMetrics(
-            followers=body.get("fan_count", 0),
-            impressions=metrics_data.get("page_impressions", 0),
-            engagements=metrics_data.get("page_engaged_users", 0),
-            extra=metrics_data,
+            impressions=values.get("page_impressions", 0),
+            reach=values.get("page_engaged_users", 0),
+            followers=values.get("page_fans", 0),
+            extra={"raw_insights": values},
         )

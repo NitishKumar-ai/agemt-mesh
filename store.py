@@ -630,6 +630,17 @@ def security_list_findings() -> list:
 
 
 @DBOS.transaction()
+def security_get_finding(finding_id: int) -> Optional[dict]:
+    """Return a single security finding by id, or None."""
+    row = DBOS.sql_session.execute(text(
+        "SELECT id, source_agent, title, summary, evidence, severity, repository, "
+        "status, verified_by, verified_at, created_at "
+        "FROM security_findings WHERE id=:fid"
+    ), {"fid": finding_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+@DBOS.transaction()
 def security_create_finding(source_agent: str, title: str, summary: str,
                              evidence: str, severity: str, repository: str) -> int:
     finding_id = DBOS.sql_session.execute(text(
