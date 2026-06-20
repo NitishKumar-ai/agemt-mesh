@@ -19,6 +19,11 @@ export {
   type IEntity,
 } from './models/entity';
 export {
+  RelationSchema,
+  type Relation,
+  type IRelation,
+} from './models/relation';
+export {
   Connector,
   ConnectorConfig,
   RetryPolicy,

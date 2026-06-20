@@ -97,7 +97,7 @@ export class GitHubConnector implements Connector {
   private async fetchCommits(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
     try {
-      const data = await this.executeToolWithAuth('github_fetch_commits', {
+      const data: any = await this.executeToolWithAuth('github_fetch_commits', {
         since: since.toISOString()
       });
       const commits = data?.commits || [];
@@ -111,7 +111,7 @@ export class GitHubConnector implements Connector {
   private async fetchPullRequests(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
     try {
-      const data = await this.executeToolWithAuth('github_fetch_pull_requests', {
+      const data: any = await this.executeToolWithAuth('github_fetch_pull_requests', {
         since: since.toISOString()
       });
       const prs = data?.pull_requests || [];
@@ -125,7 +125,7 @@ export class GitHubConnector implements Connector {
   private async fetchIssues(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
     try {
-      const data = await this.executeToolWithAuth('github_fetch_issues', {
+      const data: any = await this.executeToolWithAuth('github_fetch_issues', {
         since: since.toISOString()
       });
       const issues = data?.issues || [];
@@ -137,7 +137,7 @@ export class GitHubConnector implements Connector {
   }
 
   async fetchObject(sourceId: string): Promise<IEpisode> {
-    const data = await this.executeToolWithAuth('github_fetch_commit', {
+    const data: any = await this.executeToolWithAuth('github_fetch_commit', {
       sha: sourceId
     });
     if (!data?.commit) {

@@ -13,6 +13,7 @@ export type PageKey =
   | 'connections'
   | 'chat'
   | 'ask'
+  | 'admin'
   | 'settings';
 
 export type MeshEvent = Record<string, any>;

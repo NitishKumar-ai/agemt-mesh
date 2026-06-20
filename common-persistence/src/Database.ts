@@ -282,6 +282,12 @@ export interface Database {
   connections: ConnectionTable;
   killswitch_meta: KillswitchMetaTable;
   user_access_grants: UserAccessGrantTable;
+  principals: PrincipalTable;
+  tenant_memberships: TenantMembershipTable;
+  principal_roles: PrincipalRoleTable;
+  groups: GroupTable;
+  group_memberships: GroupMembershipTable;
+  group_access_grants: GroupAccessGrantTable;
 }
 
 export interface UserAccessGrantTable {
@@ -291,4 +297,54 @@ export interface UserAccessGrantTable {
   permission_hash: string;
   is_admin: Generated<number>;
   created_at: number;
+}
+
+export interface PrincipalTable {
+  id: string;
+  tenant_id: string;
+  principal_type: string;
+  external_subject: string | null;
+  email: string | null;
+  display_name: string | null;
+  status: string;
+  created_at: number | bigint;
+}
+
+export interface TenantMembershipTable {
+  id: Generated<number>;
+  tenant_id: string;
+  principal_id: string;
+  status: string;
+  created_at: number | bigint;
+}
+
+export interface PrincipalRoleTable {
+  id: Generated<number>;
+  tenant_id: string;
+  principal_id: string;
+  role: string;
+  created_at: number | bigint;
+}
+
+export interface GroupTable {
+  id: string;
+  tenant_id: string;
+  name: string;
+  created_at: number | bigint;
+}
+
+export interface GroupMembershipTable {
+  id: Generated<number>;
+  tenant_id: string;
+  group_id: string;
+  principal_id: string;
+  created_at: number | bigint;
+}
+
+export interface GroupAccessGrantTable {
+  id: Generated<number>;
+  tenant_id: string;
+  group_id: string;
+  permission_hash: string;
+  created_at: number | bigint;
 }

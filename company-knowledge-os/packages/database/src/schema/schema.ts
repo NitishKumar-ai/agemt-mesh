@@ -7,6 +7,7 @@ export interface Database {
   episodes: EpisodeTable;
   entities: EntityTable;
   facts: FactTable;
+  relations: RelationTable;
   ingestion_jobs: IngestionJobTable;
   search_index: SearchIndexTable;
 }
@@ -84,6 +85,20 @@ export interface SearchIndexTable {
   content: string;
   metadata: Record<string, unknown>;
   created_at: Date;
+}
+
+export interface RelationTable {
+  relation_id: string;
+  tenant_id: string;
+  relation_type: string;
+  source_entity_id: string;
+  target_entity_id: string;
+  confidence: number;
+  status: 'active' | 'superseded';
+  observed_at: Date;
+  ingested_at: Date;
+  episode_ids: string[];
+  extractor_version: string;
 }
 
 export function createPostgresDatabase(

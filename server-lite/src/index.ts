@@ -1,7 +1,7 @@
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
-import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration, IdentityMigration } from '@agentmesh/common-persistence';
 import {
   SqliteExecutionDAO,
   SqliteMetadataDAO,
@@ -247,6 +247,7 @@ export async function bootstrapServer(options?: {
     await AgentRuntimeMigration.up(db as never);
     await DashboardMigration.up(db as never);
     await PermissionsMigration.up(db as never);
+    await IdentityMigration.up(db as never);
     console.log('Migrations complete.');
   } catch (err: any) {
     console.log('Migrations skipped or failed (likely already applied):', err.message);

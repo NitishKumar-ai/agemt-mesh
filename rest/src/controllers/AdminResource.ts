@@ -3,9 +3,11 @@ import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AdminService } from '../services/AdminService.js';
 import { OidcAuthGuard } from '../OidcAuthGuard.js';
+import { RolesGuard, Roles } from '../RolesGuard.js';
 
 @ApiTags('admin')
-@UseGuards(OidcAuthGuard)
+@UseGuards(OidcAuthGuard, RolesGuard)
+@Roles('admin')
 @Controller('api/admin')
 export class AdminResource {
   constructor(private readonly adminService: AdminService) {}
@@ -30,5 +32,10 @@ export class AdminResource {
   async requeueSweep(@Param('workflowId') workflowId: string, @Res() res: Response): Promise<void> {
     const result = await this.adminService.requeueSweep(workflowId);
     res.type('text/plain').send(result);
+  }
+
+  @Get('metrics')
+  async getMetrics(): Promise<any> {
+    return await this.adminService.getSystemMetrics();
   }
 }

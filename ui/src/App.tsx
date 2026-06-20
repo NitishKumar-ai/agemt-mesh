@@ -4,6 +4,7 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
+  Database,
   Files,
   Link2,
   Megaphone,
@@ -30,6 +31,7 @@ import { ConnectionsPage } from './pages/ConnectionsPage';
 import { AskPage } from './pages/AskPage';
 import { SafetyPage } from './pages/SafetyPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { connectEventStream } from './lib/events';
 import { api } from './lib/api';
 import type { GitHubStatus, KillswitchState, MeshEvent, PageKey } from './lib/types';
@@ -121,6 +123,7 @@ export function App() {
       { key: 'schedules' as const, label: 'Schedules', icon: Clock3 },
       { key: 'activity' as const, label: 'Activity', icon: Activity },
       { key: 'connections' as const, label: 'Connections', icon: Link2 },
+      { key: 'admin' as const, label: 'Admin', icon: Database },
       { key: 'settings' as const, label: 'Settings', icon: Settings },
     ],
     [events],
@@ -163,6 +166,7 @@ export function App() {
         {page === 'activity' && <ActivityPage events={events} streamState={streamState} onWorkflowSelect={handleWorkflowSelect} />}
         {page === 'safety' && <SafetyPage />}
         {page === 'connections' && <ConnectionsPage />}
+        {page === 'admin' && <AdminDashboard />}
         {page === 'settings' && <SettingsPage />}
       </AppShell>
       {activeWorkflowId && (

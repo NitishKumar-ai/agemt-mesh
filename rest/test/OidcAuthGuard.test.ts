@@ -71,11 +71,14 @@ describe('OidcAuthGuard', () => {
     const result = guard.canActivate(context);
     expect(result).toBe(true);
 
+    // normalizePrincipal produces a CanonicalPrincipal: user_id is used only
+    // as a fallback for the 'id' field, not carried through as a separate key.
     const req = context.switchToHttp().getRequest();
     expect(req.user).toBeDefined();
     expect(req.user.id).toBe(payload.id);
-    expect(req.user.user_id).toBe(payload.user_id);
     expect(req.user.sub).toBe(payload.sub);
+    expect(req.user.roles).toEqual([]);
+    expect(req.user.groups).toEqual([]);
   });
 
   it('verifies token against process.env.JWT_SECRET if set', () => {

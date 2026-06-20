@@ -1,0 +1,26 @@
+{
+  "name": "@company-knowledge-os/parser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Document parsing utilities for company knowledge OS using Microsoft MarkItDown",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts",
+    "clean": "node -e \"require('fs').rmSync('./dist', { recursive: true, force: true })\""
+  },
+  "dependencies": {
+    "@company-knowledge-os/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  }
+}

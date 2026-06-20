@@ -53,7 +53,7 @@ export class GmailConnector implements Connector {
     const episodes: IEpisode[] = [];
 
     try {
-      const data = await this.executeToolWithAuth('gmail_fetch_mails', {
+      const data: any = await this.executeToolWithAuth('gmail_fetch_mails', {
         query: `after:${Math.floor(since.getTime() / 1000)}`,
         max_results: 100,
       });
@@ -74,7 +74,7 @@ export class GmailConnector implements Connector {
 
   async fetchObject(sourceId: string): Promise<IEpisode> {
     try {
-      const data = await this.executeToolWithAuth('gmail_fetch_mail', {
+      const data: any = await this.executeToolWithAuth('gmail_fetch_mail', {
         id: sourceId,
       });
       const message = data?.message || data; // handle direct or wrapped message payload

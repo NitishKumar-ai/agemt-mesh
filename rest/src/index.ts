@@ -16,3 +16,6 @@ export { WorkflowBulkService } from './services/WorkflowBulkService.js';
 export type { DbProbe } from './controllers/HealthResource.js';
 export { START_TIME, VERSION, DB_PROBE } from './controllers/HealthResource.js';
 export { OidcAuthGuard, Public } from './OidcAuthGuard.js';
+export { RolesGuard, Roles, ROLES_KEY } from './RolesGuard.js';
+export { MEMBERSHIP_VERIFIER } from './RequestPrincipal.js';
+export type { MembershipVerifier, CanonicalPrincipal } from './RequestPrincipal.js';

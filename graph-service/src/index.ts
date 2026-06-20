@@ -26,3 +26,8 @@ export * from './search/search.config.js';
 export * from './api/graph.routes.js';
 export * from './api/temporal.routes.js';
 export * from './api/correction.routes.js';
+
+export * from './retrieval/RetrievalOrchestrator.js';
+export * from './retrieval/GraphExpansionService.js';
+export * from './retrieval/RerankingService.js';
+export * from './retrieval/ConfidenceCalibration.js';

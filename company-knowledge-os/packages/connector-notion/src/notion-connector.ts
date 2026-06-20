@@ -53,7 +53,7 @@ export class NotionConnector implements Connector {
     const episodes: IEpisode[] = [];
 
     try {
-      const data = await this.executeToolWithAuth('notion_search', {
+      const data: any = await this.executeToolWithAuth('notion_search', {
         filter: {
           timestamp: 'last_edited_time',
           last_edited_time: {
@@ -78,7 +78,7 @@ export class NotionConnector implements Connector {
   }
 
   async fetchObject(sourceId: string): Promise<IEpisode> {
-    const data = await this.executeToolWithAuth('notion_fetch_page', {
+    const data: any = await this.executeToolWithAuth('notion_fetch_page', {
       page_id: sourceId
     });
     

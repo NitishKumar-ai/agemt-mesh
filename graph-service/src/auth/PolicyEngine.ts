@@ -29,24 +29,35 @@ export interface ResolvedAccess {
 export class PolicyEngine {
   private dbInstance: any = null;
 
+  constructor(db?: any) {
+    if (db) {
+      this.dbInstance = db;
+      this.initializeSchema();
+    }
+  }
+
+  private initializeSchema() {
+    try {
+      this.dbInstance.exec(`
+        CREATE TABLE IF NOT EXISTS user_access_grants (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          tenant_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          permission_hash TEXT NOT NULL,
+          is_admin INTEGER NOT NULL DEFAULT 0,
+          created_at BIGINT NOT NULL
+        )
+      `);
+    } catch (err) {
+      // ignore
+    }
+  }
+
   private getDb() {
     if (!this.dbInstance) {
       const dbPath = process.env.DB_PATH || ':memory:';
       this.dbInstance = new DatabaseDriver(dbPath);
-      try {
-        this.dbInstance.exec(`
-          CREATE TABLE IF NOT EXISTS user_access_grants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tenant_id TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            permission_hash TEXT NOT NULL,
-            is_admin INTEGER NOT NULL DEFAULT 0,
-            created_at BIGINT NOT NULL
-          )
-        `);
-      } catch (err) {
-        // ignore
-      }
+      this.initializeSchema();
     }
     return this.dbInstance;
   }
@@ -119,16 +130,42 @@ export class PolicyEngine {
         'SELECT permission_hash, is_admin FROM user_access_grants WHERE tenant_id = ? AND user_id = ?'
       ).all(tenantId, userId) as { permission_hash: string; is_admin: number }[];
 
-      if (rows.length === 0) {
-        return { allowedPermissionHashes: [], isAdmin: false };
+      const permissionHashes = new Set<string>();
+      let isAdmin = false;
+
+      for (const r of rows) {
+        if (r.permission_hash) {
+          permissionHashes.add(r.permission_hash);
+        }
+        if (r.is_admin === 1) {
+          isAdmin = true;
+        }
       }
 
-      const permissionHashes = rows
-        .map((r) => r.permission_hash)
-        .filter((h) => h !== '');
-      const isAdmin = rows.some((r) => r.is_admin === 1);
+      // Check group memberships if tables exist
+      const hasGroups = db.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('group_memberships', 'group_access_grants')"
+      ).all().length === 2;
 
-      return { allowedPermissionHashes: permissionHashes, isAdmin };
+      if (hasGroups) {
+        const groupRows = db.prepare(`
+          SELECT gag.permission_hash 
+          FROM group_memberships gm
+          JOIN group_access_grants gag ON gm.group_id = gag.group_id AND gm.tenant_id = gag.tenant_id
+          WHERE gm.tenant_id = ? AND gm.principal_id = ?
+        `).all(tenantId, userId) as { permission_hash: string }[];
+
+        for (const r of groupRows) {
+          if (r.permission_hash) {
+            permissionHashes.add(r.permission_hash);
+          }
+        }
+      }
+
+      return { 
+        allowedPermissionHashes: Array.from(permissionHashes), 
+        isAdmin 
+      };
     } catch (err) {
       return { allowedPermissionHashes: [], isAdmin: false };
     }
@@ -148,4 +185,3 @@ export class PolicyEngine {
 }
 
 export const policyEngine = new PolicyEngine();
-

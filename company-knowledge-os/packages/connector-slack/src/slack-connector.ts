@@ -55,7 +55,7 @@ export class SlackConnector implements Connector {
     try {
       // In Scalekit, we'd query Slack channels, then messages.
       // This is a generic representation assuming a `slack_fetch_messages` tool
-      const data = await this.executeToolWithAuth('slack_fetch_messages', {
+      const data: any = await this.executeToolWithAuth('slack_fetch_messages', {
         oldest: Math.floor(since.getTime() / 1000).toString(),
         limit: 100,
       });
@@ -87,7 +87,7 @@ export class SlackConnector implements Connector {
       throw new Error(`Invalid Slack source_id "${sourceId}", expected "<channelId>:<ts>"`);
     }
 
-    const data = await this.executeToolWithAuth('slack_fetch_message', {
+    const data: any = await this.executeToolWithAuth('slack_fetch_message', {
       channel: channelId,
       timestamp: ts,
     });
