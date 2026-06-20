@@ -6,7 +6,7 @@ export interface Episode {
   tenantId: string;
   source: string;
   timestamp: Date;
-  rawPayload: any; // Immutable raw source capture
+  rawPayload: unknown; // Immutable raw source capture
 }
 
 @Injectable()
