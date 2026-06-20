@@ -80,6 +80,8 @@ const STATIC_CONNECTORS: ConnectorConfig[] = [
   { provider_id: 'tiktok', name: 'TikTok', description: 'Publish videos and ingest your TikTok activity.', category: 'social', icon: 'video', auth_type: 'oauth' },
   { provider_id: 'youtube', name: 'YouTube', description: 'Upload videos and ingest channel activity.', category: 'social', icon: 'youtube', auth_type: 'oauth' },
   { provider_id: 'scalekit', name: 'ScaleKit', description: 'Sync SSO and directory identity changes into the knowledge graph.', category: 'identity', icon: 'key-round', auth_type: 'oauth' },
+  { provider_id: 'slack', name: 'Slack', description: 'Ingest and reply to Slack messages.', category: 'collaboration', icon: 'message-square', auth_type: 'oauth' },
+  { provider_id: 'airtable', name: 'Airtable', description: 'Read and write Airtable bases.', category: 'database', icon: 'database', auth_type: 'oauth' },
 ];
 
 const BRAND_ACCENTS = [
@@ -139,11 +141,13 @@ export function ConnectionsPage() {
       const socialPlatforms: SocialPlatform[] = [
         'linkedin', 'twitter', 'instagram', 'facebook', 'threads', 'tiktok', 'youtube',
       ];
-      if (socialPlatforms.includes(provider.provider_id as SocialPlatform) || provider.provider_id === 'scalekit') {
+      if (socialPlatforms.includes(provider.provider_id as SocialPlatform)) {
         window.location.assign(`/api/social-studio/oauth/${provider.provider_id}/login`);
         return;
       }
-      setError('OAuth flow not implemented for this provider yet.');
+      
+      // For all other OAuth providers (gmail, slack, notion, and scalekit itself), route through Scalekit auth
+      window.location.assign(`/api/social-studio/oauth/scalekit/${provider.provider_id}/login`);
       return;
     }
 
@@ -318,15 +322,6 @@ export function ConnectionsPage() {
                     </>
                   )}
 
-                  <div className="form-group">
-                    <label className="form-label">Display Name (optional)</label>
-                    <input
-                      className="form-input"
-                      placeholder="e.g. Production Cluster"
-                      value={metadata.name || ''}
-                      onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
-                    />
-                  </div>
 
                   {error && <div className="error-box">{error}</div>}
 
@@ -363,11 +358,12 @@ export function ConnectionsPage() {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(10,10,10,0.3);
+          background: rgba(0,0,0,0.4);
           display: grid;
-          place-Items: center;
+          place-items: center;
           z-index: 100;
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(8px);
+          animation: fadeIn 0.2s ease-out;
         }
         .modal-content {
           background: var(--canvas);
@@ -375,9 +371,12 @@ export function ConnectionsPage() {
           padding: 32px;
           width: 440px;
           max-width: 90vw;
-          border: 1px solid var(--hairline);
-          box-shadow: 0 20px 60px rgba(10,10,10,.12);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 24px 80px rgba(0,0,0,.2);
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-header {
           display: flex;
           align-items: center;
@@ -492,18 +491,26 @@ function ConnectionCard({
 
       <style>{`
         .card {
-          border: 1px solid var(--hairline);
-          border-radius: 16px;
-          background: var(--canvas);
-          padding: 20px 22px;
+          border: 1px solid rgba(0,0,0,0.08);
+          border-radius: 20px;
+          background: linear-gradient(145deg, var(--canvas), rgba(255,255,255,0.02));
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          transition: transform 150ms, box-shadow 150ms;
+          gap: 16px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        [data-theme='dark'] .card {
+          border: 1px solid rgba(255,255,255,0.05);
         }
         .card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 30px rgba(10,10,10,.06);
+          transform: translateY(-4px) scale(1.01);
+          box-shadow: 0 12px 40px rgba(0,0,0,.08);
+          border-color: rgba(0,0,0,0.12);
+        }
+        [data-theme='dark'] .card:hover {
+          border-color: rgba(255,255,255,0.1);
         }
         .card-header {
           display: flex;
@@ -516,16 +523,21 @@ function ConnectionCard({
           gap: 12px;
         }
         .card-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
           display: grid;
           place-items: center;
+          transition: transform 0.2s;
+        }
+        .card:hover .card-icon {
+          transform: scale(1.1) rotate(-3deg);
         }
         .card-title {
-          font-weight: 600;
-          font-size: 16px;
-          letter-spacing: -0.2px;
+          font-weight: 700;
+          font-size: 17px;
+          letter-spacing: -0.3px;
+          color: var(--ink);
         }
         .card-subtitle {
           font-size: 12px;
@@ -591,22 +603,33 @@ function AvailableCard({
       <style>{`
         .card.available {
           border: 1px dashed var(--hairline);
-          opacity: 0.8;
+          background: transparent;
+          box-shadow: none;
         }
         .card.available:hover {
-          opacity: 1;
           border-style: solid;
+          background: var(--canvas);
+          box-shadow: 0 8px 30px rgba(0,0,0,.06);
         }
         .card-description {
-          font-size: 13px;
+          font-size: 14px;
           color: var(--muted);
-          line-height: 1.5;
+          line-height: 1.6;
           margin: 0;
         }
         .primary-button.compact {
-          padding: 6px 12px;
-          font-size: 12px;
-          border-radius: 10px;
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 12px;
+          transition: all 0.2s;
+          background: linear-gradient(135deg, var(--brand-blue), var(--brand-purple));
+          color: white;
+          border: none;
+        }
+        .primary-button.compact:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(var(--brand-blue-rgb), 0.3);
         }
       `}</style>
     </article>

@@ -9,6 +9,7 @@ import { HealthResource, START_TIME, VERSION, DB_PROBE } from './controllers/Hea
 import { OrchestrationController } from './controllers/OrchestrationController.js';
 import { OrchestrationService } from './services/OrchestrationService.js';
 import { VersionResource } from './controllers/VersionResource.js';
+import { SocialOAuthController } from './controllers/SocialOAuthController.js';
 
 import { WorkflowService } from './services/WorkflowService.js';
 import { TaskService } from './services/TaskService.js';
@@ -39,6 +40,7 @@ export class RestModule {
         HealthResource,
         VersionResource,
         OrchestrationController,
+        SocialOAuthController,
       ],
       providers: [
         {

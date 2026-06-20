@@ -96,23 +96,103 @@ export class InstagramProvider extends SocialProviderBase {
       throw new PublishError('Instagram requires at least one image or video URL', this.platformName);
     }
     const profile = await this.getProfile(accessToken);
+    const igAccountId = profile.platformId;
 
-    const container = await axios.post(`${BASE_URL}/${profile.platformId}/media`, null, {
-      params: {
-        access_token: accessToken,
-        image_url: content.mediaUrls[0],
-        caption: content.text ?? '',
-      },
+    if (content.postType === 'carousel') {
+      return this.publishCarousel(accessToken, igAccountId, content);
+    }
+    return this.publishSingle(accessToken, igAccountId, content);
+  }
+
+  private async publishSingle(accessToken: string, igAccountId: string, content: PublishContent): Promise<PublishResult> {
+    const payload: Record<string, any> = {};
+    if (content.text) payload.caption = content.text;
+
+    if (content.postType === 'reel') {
+      payload.media_type = 'REELS';
+      payload.video_url = content.mediaUrls![0];
+    } else if (content.postType === 'story') {
+      const url = content.mediaUrls![0].toLowerCase();
+      payload.media_type = 'STORIES';
+      if (url.endsWith('.mp4') || url.endsWith('.mov')) {
+        payload.video_url = content.mediaUrls![0];
+      } else {
+        payload.image_url = content.mediaUrls![0];
+      }
+    } else {
+      payload.image_url = content.mediaUrls![0];
+    }
+
+    const containerId = await this.createContainer(accessToken, igAccountId, payload);
+    await this.waitForContainer(accessToken, containerId);
+    return this.publishContainer(accessToken, igAccountId, containerId);
+  }
+
+  private async publishCarousel(accessToken: string, igAccountId: string, content: PublishContent): Promise<PublishResult> {
+    const childIds: string[] = [];
+
+    for (const url of content.mediaUrls!) {
+      const isVideo = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.mov');
+      const childPayload: Record<string, any> = { is_carousel_item: true };
+      if (isVideo) {
+        childPayload.media_type = 'VIDEO';
+        childPayload.video_url = url;
+      } else {
+        childPayload.image_url = url;
+      }
+
+      const childId = await this.createContainer(accessToken, igAccountId, childPayload);
+      await this.waitForContainer(accessToken, childId);
+      childIds.push(childId);
+    }
+
+    const carouselPayload: Record<string, any> = {
+      media_type: 'CAROUSEL',
+      children: childIds.join(','),
+    };
+    if (content.text) carouselPayload.caption = content.text;
+
+    const carouselId = await this.createContainer(accessToken, igAccountId, carouselPayload);
+    await this.waitForContainer(accessToken, carouselId);
+    return this.publishContainer(accessToken, igAccountId, carouselId);
+  }
+
+  private async createContainer(accessToken: string, igAccountId: string, payload: Record<string, any>): Promise<string> {
+    const { data } = await axios.post(`${BASE_URL}/${igAccountId}/media`, null, {
+      params: { access_token: accessToken, ...payload },
     });
-    const creationId = container.data?.id;
-    if (!creationId) throw new PublishError(`Instagram media container failed: ${JSON.stringify(container.data)}`, this.platformName);
+    if (!data?.id) {
+      throw new PublishError(`Instagram container creation failed: ${JSON.stringify(data)}`, this.platformName, data);
+    }
+    return data.id;
+  }
 
-    const publish = await axios.post(`${BASE_URL}/${profile.platformId}/media_publish`, null, {
-      params: { access_token: accessToken, creation_id: creationId },
+  private async waitForContainer(accessToken: string, containerId: string): Promise<void> {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const maxAttempts = 60;
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const { data } = await axios.get(`${BASE_URL}/${containerId}`, {
+        params: { access_token: accessToken, fields: 'status_code,status' },
+      });
+      const status = data?.status_code;
+
+      if (status === 'FINISHED') return;
+      if (status === 'ERROR') {
+        throw new PublishError(`Instagram container failed: ${data?.status || 'unknown'}`, this.platformName, data);
+      }
+      await delay(2000);
+    }
+    throw new PublishError('Instagram container processing timed out', this.platformName);
+  }
+
+  private async publishContainer(accessToken: string, igAccountId: string, containerId: string): Promise<PublishResult> {
+    const { data } = await axios.post(`${BASE_URL}/${igAccountId}/media_publish`, null, {
+      params: { access_token: accessToken, creation_id: containerId },
     });
-    const postId = publish.data?.id;
-    if (!postId) throw new PublishError(`Instagram publish failed: ${JSON.stringify(publish.data)}`, this.platformName);
-
-    return { platformPostId: postId, url: `https://www.instagram.com/p/${postId}/`, extra: publish.data };
+    if (!data?.id) {
+      throw new PublishError(`Instagram publish failed: ${JSON.stringify(data)}`, this.platformName, data);
+    }
+    return { platformPostId: data.id, url: `https://www.instagram.com/p/${data.id}/`, extra: data };
   }
 }

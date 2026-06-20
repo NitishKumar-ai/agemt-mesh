@@ -139,10 +139,22 @@ export const api = {
   runScheduleNow: (id: string | number) =>
     post<any>(`/api/agents/schedules/${encodeURIComponent(id)}/run`),
 
-  listConnections: () =>
-    request<any>('/api/agents/connections').then((res) => ({
-      connections: (Array.isArray(res) ? res : res?.connections || []) as ConnectionInfo[],
-    })),
+  listConnections: async () => {
+    const res = await request<any>('/api/agents/connections');
+    let connections = (Array.isArray(res) ? res : res?.connections || []) as ConnectionInfo[];
+    
+    // Also fetch Scalekit connections
+    try {
+      const scalekitRes = await request<any>('/api/social-studio/oauth/scalekit/accounts');
+      if (scalekitRes && scalekitRes.connections) {
+        connections = [...connections, ...scalekitRes.connections];
+      }
+    } catch (e) {
+      console.warn('Failed to load Scalekit connections', e);
+    }
+    
+    return { connections };
+  },
   listAvailableConnectors: () =>
     request<any>('/api/agents/connections/available').then((res) => ({
       connectors: (Array.isArray(res) ? res : res?.connectors || []) as ConnectorConfig[],

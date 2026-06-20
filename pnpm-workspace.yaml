@@ -1,12 +1,12 @@
 packages:
   - 'ui'
-  - 'agent-runtime'
   - 'common'
   - 'common-persistence'
   - 'core'
   - 'rest'
   - 'ai'
   - 'server-lite'
+  - 'agent-runtime'
   - 'telemetry'
   - 'sandbox'
   - 'secrets'

@@ -24,3 +24,4 @@ export {
   RetryPolicy,
 } from './interfaces/connector';
 export type { Connector as IConnector } from './interfaces/connector';
+export { scalekit, scalekitActions } from './scalekit-client';

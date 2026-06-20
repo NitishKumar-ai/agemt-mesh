@@ -1,61 +1,76 @@
-import { Connector, ConnectorConfig } from '@company-knowledge-os/core';
-import { IEpisode } from '@company-knowledge-os/core';
-import { google } from 'googleapis';
+import { Connector, ConnectorConfig, IEpisode, scalekitActions } from '@company-knowledge-os/core';
+import { ConnectorStatus } from '@scalekit-sdk/node/lib/pkg/grpc/scalekit/v1/connected_accounts/connected_accounts_pb';
+import crypto from 'crypto';
 
 export class GmailConnector implements Connector {
   name = 'gmail';
   supportsWebhook = true;
 
   constructor(
-    private clientId: string,
-    private clientSecret: string,
-    private refreshToken: string,
-    private config: ConnectorConfig = { enabled: true }
-  ) {}
+    public config: ConnectorConfig = { enabled: true }
+  ) {
+    if (!config.identifier) {
+      throw new Error('Gmail connector requires an identifier (User ID) in config to use Scalekit');
+    }
+  }
 
   async bootstrap(): Promise<void> {
-    // Initialize OAuth client and fetch historical emails
     console.log('Gmail connector bootstrap started');
+    // For Scalekit, we might just verify the connected account exists
+    await this.getConnectedAccount();
+  }
+
+  private async getConnectedAccount() {
+    const response = await scalekitActions.getOrCreateConnectedAccount({
+      connectionName: this.name,
+      identifier: this.config.identifier!,
+    });
+    return response.connectedAccount;
   }
 
   async fetchChanges(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
 
     try {
-      const auth = new google.auth.OAuth2(
-        this.clientId,
-        this.clientSecret,
-        'https://oauth2.googleapis.com/token'
-      );
-      auth.setCredentials({ refresh_token: this.refreshToken });
+      const connectedAccount = await this.getConnectedAccount();
+      
+      if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
+        console.warn(`Gmail is not connected for user ${this.config.identifier}. Status: ${connectedAccount?.status}`);
+        const linkResponse = await scalekitActions.getAuthorizationLink({
+          connectionName: this.name,
+          identifier: this.config.identifier!,
+        });
+        console.warn(`🔗 User must click on this link to authorize Gmail: ${linkResponse.link}`);
+        return []; // Cannot fetch until authorized
+      }
 
-      const gmail = google.gmail({ version: 'v1', auth });
-
-      // List emails since the given date
-      const response = await gmail.users.messages.list({
-        userId: 'me',
-        q: `after:${Math.floor(since.getTime() / 1000)}`,
-        maxResults: 100,
+      // Fetch emails using Scalekit Tool Call
+      const toolResponse = await scalekitActions.executeTool({
+        toolName: 'gmail_fetch_mails',
+        connectedAccountId: connectedAccount?.id,
+        toolInput: {
+          query: `after:${Math.floor(since.getTime() / 1000)}`,
+          max_results: 100,
+        },
       });
 
-      const messages = response.data.messages || [];
+      const messages: any[] = toolResponse.data?.messages || [];
       episodes.push(...messages.map((msg) => this.messageToEpisode(msg)));
 
     } catch (error) {
-      console.error('Error fetching Gmail changes:', error);
+      console.error('Error fetching Gmail changes via Scalekit:', error);
       throw error;
     }
 
     return episodes;
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    // Placeholder implementation
-    return episodes;
+  async fetchObject(sourceId: string): Promise<IEpisode> {
+    throw new Error('Method not implemented.');
   }
 
   private messageToEpisode(msg: any): IEpisode {
+    const internalDate = msg.internalDate ? new Date(parseInt(msg.internalDate)) : new Date();
     const episode: IEpisode = {
       episode_id: this.generateUUID(),
       tenant_id: '', // Set by orchestrator
@@ -70,11 +85,11 @@ export class GmailConnector implements Connector {
         labelIds: msg.labelIds,
         snippet: msg.snippet,
         historyId: msg.historyId,
-        internalDate: new Date(parseInt(msg.internalDate || '0')),
-        payload: msg.payload,
+        internalDate,
+        payload: msg.payload, // Will contain structured data from Scalekit
       },
-      author: '', // Extracted from headers
-      created_at: new Date(parseInt(msg.internalDate || '0')),
+      author: msg.sender || '', 
+      created_at: internalDate,
       ingested_at: new Date(),
     };
 
@@ -82,7 +97,6 @@ export class GmailConnector implements Connector {
   }
 
   private hashMessage(msg: any): string {
-    // Simple hash for deduplication
     const content = JSON.stringify(msg);
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
@@ -98,18 +112,14 @@ export class GmailConnector implements Connector {
   }
 
   async subscribeWebhook(): Promise<void> {
-    // Register webhook with Gmail
-    // Implementation would use Gmail API
     console.log('Gmail webhook subscription started');
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    // Placeholder implementation
     return true;
   }
 
   async processWebhook(payload: any): Promise<void> {
-    // Process incoming Gmail webhook event
     console.log('Processing Gmail webhook:', payload);
   }
 }

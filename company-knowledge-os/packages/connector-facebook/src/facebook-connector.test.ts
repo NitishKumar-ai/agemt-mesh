@@ -13,7 +13,7 @@ describe('FacebookConnector.fetchChanges', () => {
       data: { data: [{ id: '1', message: 'hi', permalink_url: 'https://facebook.com/1', created_time: new Date().toISOString() }] },
     });
 
-    const connector = new FacebookConnector({ clientId: 'x' }, 'token', 'page-1');
+    const connector = new FacebookConnector({ enabled: true, extra: { accessToken: 'mock-token', pageId: 'page-1' } });
     const episodes = await connector.fetchChanges(new Date(0));
 
     expect(episodes).toHaveLength(1);

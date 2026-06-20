@@ -1,0 +1,24 @@
+{
+  "name": "@company-knowledge-os/connector-jira",
+  "version": "1.0.0",
+  "private": true,
+  "description": "jira connector for company knowledge OS",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@company-knowledge-os/core": "workspace:*",
+    "@scalekit-sdk/node": "^2.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
+  }
+}

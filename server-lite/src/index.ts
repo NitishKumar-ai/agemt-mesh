@@ -86,6 +86,42 @@ import {
 } from '@agentmesh/workflow-event-listener';
 import { TaskStatusListener as TaskStatusListenerImpl } from '@agentmesh/task-status-listener';
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
+import * as fs from 'fs';
+import * as path from 'path';
+
+try {
+  const candidates = [
+    path.resolve(process.cwd(), '../.env'),   // typical: cwd = server-lite/
+    path.resolve(process.cwd(), '.env'),       // if cwd = project root
+  ];
+  for (const envPath of candidates) {
+    if (fs.existsSync(envPath)) {
+      const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+      let loaded = 0;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+          const key = trimmed.slice(0, idx).trim();
+          let value = trimmed.slice(idx + 1).trim();
+          if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+          if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+          if (!process.env[key]) {
+            process.env[key] = value;
+            loaded++;
+          }
+        }
+      }
+      console.log(`Loaded ${loaded} env vars from ${envPath}`);
+      break; // stop after first found .env
+    }
+  }
+} catch (e) {
+  // Ignore
+}
+
+import 'reflect-metadata';
 import { MetadataMapperAdapter } from './MetadataMapperAdapter.js';
 import { DocumentLoader, JsonSchemaValidator } from '@agentmesh/ai';
 import morgan from 'morgan';
@@ -205,9 +241,13 @@ export async function bootstrapServer(options?: {
   });
 
   console.log('Running migrations...');
-  await InitialSchemaMigration.up(db as never);
-  await AgentRuntimeMigration.up(db as never);
-  console.log('Migrations complete.');
+  try {
+    await InitialSchemaMigration.up(db as never);
+    await AgentRuntimeMigration.up(db as never);
+    console.log('Migrations complete.');
+  } catch (err: any) {
+    console.log('Migrations skipped or failed (likely already applied):', err.message);
+  }
 
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);

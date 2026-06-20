@@ -1,60 +1,92 @@
-import { Connector, ConnectorConfig } from '@company-knowledge-os/core';
-import { IEpisode } from '@company-knowledge-os/core';
-import axios from 'axios';
+import { Connector, ConnectorConfig, IEpisode, scalekitActions } from '@company-knowledge-os/core';
+import { ConnectorStatus } from '@scalekit-sdk/node/lib/pkg/grpc/scalekit/v1/connected_accounts/connected_accounts_pb';
+import crypto from 'crypto';
 
 export class NotionConnector implements Connector {
   name = 'notion';
   supportsWebhook = true;
 
   constructor(
-    private token: string,
-    private config: ConnectorConfig = { enabled: true }
-  ) {}
+    public config: ConnectorConfig = { enabled: true }
+  ) {
+    if (!config.identifier) {
+      throw new Error('Notion connector requires an identifier (User ID) in config to use Scalekit');
+    }
+  }
 
   async bootstrap(): Promise<void> {
-    // Fetch historical pages
     console.log('Notion connector bootstrap started');
+    await this.getConnectedAccount();
+  }
+
+  private async getConnectedAccount() {
+    const response = await scalekitActions.getOrCreateConnectedAccount({
+      connectionName: this.name,
+      identifier: this.config.identifier!,
+    });
+    return response.connectedAccount;
+  }
+
+  private async executeToolWithAuth(toolName: string, toolInput: any) {
+    const connectedAccount = await this.getConnectedAccount();
+    
+    if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
+      console.warn(`Notion is not connected for user ${this.config.identifier}. Status: ${connectedAccount?.status}`);
+      const linkResponse = await scalekitActions.getAuthorizationLink({
+        connectionName: this.name,
+        identifier: this.config.identifier!,
+      });
+      console.warn(`🔗 User must click on this link to authorize Notion: ${linkResponse.link}`);
+      throw new Error('Notion not authorized');
+    }
+
+    const toolResponse = await scalekitActions.executeTool({
+      toolName,
+      connectedAccountId: connectedAccount?.id,
+      toolInput,
+    });
+    
+    return toolResponse.data;
   }
 
   async fetchChanges(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
 
     try {
-      // Fetch pages modified since the given date
-      const response = await axios.get(
-        'https://api.notion.com/v1/search',
-        {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            'Notion-Version': '2022-06-28',
+      const data = await this.executeToolWithAuth('notion_search', {
+        filter: {
+          timestamp: 'last_edited_time',
+          last_edited_time: {
+            after: since.toISOString(),
           },
-          params: {
-            filter: {
-              timestamp: 'last_edited_time',
-              last_edited_time: {
-                after: since.toISOString(),
-              },
-            },
-            page_size: 100,
-          },
-        }
-      );
+        },
+        page_size: 100,
+      });
 
-      const results = response.data.results || [];
-      episodes.push(...results.map((page) => this.pageToEpisode(page)));
+      const results = data?.results || [];
+      episodes.push(...results.map((page: any) => this.pageToEpisode(page)));
 
     } catch (error) {
-      console.error('Error fetching Notion changes:', error);
+      if (error instanceof Error && error.message === 'Notion not authorized') {
+        return [];
+      }
+      console.error('Error fetching Notion changes via Scalekit:', error);
       throw error;
     }
 
     return episodes;
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    // Placeholder implementation
-    return episodes;
+  async fetchObject(sourceId: string): Promise<IEpisode> {
+    const data = await this.executeToolWithAuth('notion_fetch_page', {
+      page_id: sourceId
+    });
+    
+    if (!data?.page) {
+      throw new Error(`Notion page ${sourceId} not found`);
+    }
+
+    return this.pageToEpisode(data.page);
   }
 
   private pageToEpisode(page: any): IEpisode {
@@ -72,15 +104,15 @@ export class NotionConnector implements Connector {
         icon: page.icon,
         cover: page.cover,
         url: page.url,
-        last_edited_time: new Date(page.last_edited_time),
-        created_time: new Date(page.created_time),
+        last_edited_time: new Date(page.last_edited_time || new Date()),
+        created_time: new Date(page.created_time || new Date()),
         parent: page.parent,
         archived: page.archived,
         properties: page.properties,
         children: page.children,
       },
       author: '', // Extracted from page properties
-      created_at: new Date(page.created_time || page.last_edited_time),
+      created_at: new Date(page.created_time || page.last_edited_time || new Date()),
       ingested_at: new Date(),
     };
 
@@ -88,7 +120,6 @@ export class NotionConnector implements Connector {
   }
 
   private hashPage(page: any): string {
-    // Simple hash for deduplication
     const content = JSON.stringify(page);
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
@@ -104,18 +135,14 @@ export class NotionConnector implements Connector {
   }
 
   async subscribeWebhook(): Promise<void> {
-    // Register webhook with Notion
-    // Notion webhooks require manual setup via dashboard
     console.log('Notion webhook subscription started');
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    // Placeholder implementation
-    return true;
+    return true; // Placeholder
   }
 
   async processWebhook(payload: any): Promise<void> {
-    // Process incoming Notion webhook event
     console.log('Processing Notion webhook:', payload);
   }
 }

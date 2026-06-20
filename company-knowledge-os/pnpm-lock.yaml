@@ -21,6 +21,25 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  packages/connector-airtable:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
   packages/connector-facebook:
     dependencies:
       '@company-knowledge-os/connector-social-common':
@@ -94,6 +113,9 @@ importers:
       '@company-knowledge-os/database':
         specifier: workspace:*
         version: link:../database
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
       axios:
         specifier: ^1.6.0
         version: 1.18.0
@@ -125,12 +147,9 @@ importers:
       '@company-knowledge-os/database':
         specifier: workspace:*
         version: link:../database
-      axios:
-        specifier: ^1.6.0
-        version: 1.18.0
-      googleapis:
-        specifier: ^134.0.0
-        version: 134.0.0
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -144,6 +163,63 @@ importers:
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-gong:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-googlecalendar:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-hubspot:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -175,6 +251,44 @@ importers:
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-jira:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-linear:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -221,6 +335,9 @@ importers:
       '@company-knowledge-os/database':
         specifier: workspace:*
         version: link:../database
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
       axios:
         specifier: ^1.6.0
         version: 1.18.0
@@ -237,6 +354,44 @@ importers:
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-outlook:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
+  packages/connector-salesforce:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -280,6 +435,9 @@ importers:
       '@company-knowledge-os/database':
         specifier: workspace:*
         version: link:../database
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
       axios:
         specifier: ^1.6.0
         version: 1.18.0
@@ -461,8 +619,33 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.43)
 
+  packages/connector-zoom:
+    dependencies:
+      '@company-knowledge-os/core':
+        specifier: workspace:*
+        version: link:../core
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.43)
+
   packages/core:
     dependencies:
+      '@scalekit-sdk/node':
+        specifier: ^2.6.3
+        version: 2.6.3
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       uuid:
         specifier: ^14.0.0
         version: 14.0.0
@@ -619,6 +802,21 @@ importers:
         version: 1.6.1(@types/node@20.19.43)
 
 packages:
+
+  '@bufbuild/protobuf@2.12.0':
+    resolution: {integrity: sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA==}
+
+  '@connectrpc/connect-node@2.1.2':
+    resolution: {integrity: sha512-+i/aAOpsI8sIx1mbYp6d99zvxaUSF6t/jP9Ux9maAmjsZPgmIQ3JuIeYi0zJIP9zlCnBlJjkpPosshCgdRuThQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
+      '@connectrpc/connect': 2.1.2
+
+  '@connectrpc/connect@2.1.2':
+    resolution: {integrity: sha512-MXkBijtcX09R10Eb6sFeIetc6w6746eio6xtfuyVOH7oQAacT1X0GzMIQFux6Qy8cq3W/T5qX5Bei8YbFtmRGA==}
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -979,6 +1177,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@scalekit-sdk/node@2.6.3':
+    resolution: {integrity: sha512-PI0T7PCRWxSUXyZj9Gwuh6YcZ4BUdadHqC4kWz3ku1q42W3DCcr+WVOOn2DspwiKO4aaJSWyG1s7c4E7Nc3I4g==}
+    engines: {node: '>=18.14.1'}
+
   '@sinclair/typebox@0.27.10':
     resolution: {integrity: sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==}
 
@@ -1321,6 +1523,10 @@ packages:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
 
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -1643,6 +1849,9 @@ packages:
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
+
+  jose@6.2.3:
+    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
 
   js-tokens@9.0.1:
     resolution: {integrity: sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ==}
@@ -2302,6 +2511,17 @@ packages:
 
 snapshots:
 
+  '@bufbuild/protobuf@2.12.0': {}
+
+  '@connectrpc/connect-node@2.1.2(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.2(@bufbuild/protobuf@2.12.0))':
+    dependencies:
+      '@bufbuild/protobuf': 2.12.0
+      '@connectrpc/connect': 2.1.2(@bufbuild/protobuf@2.12.0)
+
+  '@connectrpc/connect@2.1.2(@bufbuild/protobuf@2.12.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.12.0
+
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -2518,6 +2738,18 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     optional: true
+
+  '@scalekit-sdk/node@2.6.3':
+    dependencies:
+      '@bufbuild/protobuf': 2.12.0
+      '@connectrpc/connect': 2.1.2(@bufbuild/protobuf@2.12.0)
+      '@connectrpc/connect-node': 2.1.2(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.2(@bufbuild/protobuf@2.12.0))
+      axios: 1.18.0
+      jose: 6.2.3
+      qs: 6.15.2
+    transitivePeerDependencies:
+      - debug
+      - supports-color
 
   '@sinclair/typebox@0.27.10': {}
 
@@ -2891,6 +3123,8 @@ snapshots:
   doctrine@3.0.0:
     dependencies:
       esutils: 2.0.3
+
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -3307,6 +3541,8 @@ snapshots:
   is-stream@3.0.0: {}
 
   isexe@2.0.0: {}
+
+  jose@6.2.3: {}
 
   js-tokens@9.0.1: {}
 

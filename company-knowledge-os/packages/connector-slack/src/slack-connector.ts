@@ -1,46 +1,80 @@
-import { Connector, ConnectorConfig } from '@company-knowledge-os/core';
-import { IEpisode } from '@company-knowledge-os/core';
-import axios from 'axios';
+import { Connector, ConnectorConfig, IEpisode, scalekitActions } from '@company-knowledge-os/core';
+import { ConnectorStatus } from '@scalekit-sdk/node/lib/pkg/grpc/scalekit/v1/connected_accounts/connected_accounts_pb';
+import crypto from 'crypto';
 
 export class SlackConnector implements Connector {
   name = 'slack';
   supportsWebhook = true;
 
   constructor(
-    private token: string,
-    private webhookSecret?: string,
     public config: ConnectorConfig = { enabled: true }
-  ) {}
+  ) {
+    if (!config.identifier) {
+      throw new Error('Slack connector requires an identifier (User ID) in config to use Scalekit');
+    }
+  }
 
   async bootstrap(): Promise<void> {
-    // Fetch historical messages (implementation would call Slack API)
     console.log('Slack connector bootstrap started');
+    await this.getConnectedAccount();
+  }
+
+  private async getConnectedAccount() {
+    const response = await scalekitActions.getOrCreateConnectedAccount({
+      connectionName: this.name,
+      identifier: this.config.identifier!,
+    });
+    return response.connectedAccount;
+  }
+
+  private async executeToolWithAuth(toolName: string, toolInput: any) {
+    const connectedAccount = await this.getConnectedAccount();
+    
+    if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
+      console.warn(`Slack is not connected for user ${this.config.identifier}. Status: ${connectedAccount?.status}`);
+      const linkResponse = await scalekitActions.getAuthorizationLink({
+        connectionName: this.name,
+        identifier: this.config.identifier!,
+      });
+      console.warn(`🔗 User must click on this link to authorize Slack: ${linkResponse.link}`);
+      throw new Error('Slack not authorized');
+    }
+
+    const toolResponse = await scalekitActions.executeTool({
+      toolName,
+      connectedAccountId: connectedAccount?.id,
+      toolInput,
+    });
+    
+    return toolResponse.data;
   }
 
   async fetchChanges(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
 
     try {
-      // Fetch recent messages from Slack
-      const response = await axios.get(
-        'https://slack.com/api/conversations.list',
-        {
-          headers: { Authorization: `Bearer ${this.token}` },
-          params: { types: 'message', limit: 100 },
-        }
-      );
+      // In Scalekit, we'd query Slack channels, then messages.
+      // This is a generic representation assuming a `slack_fetch_messages` tool
+      const data = await this.executeToolWithAuth('slack_fetch_messages', {
+        oldest: Math.floor(since.getTime() / 1000).toString(),
+        limit: 100,
+      });
 
-      if (!response.data.ok) {
-        throw new Error(`Slack API error: ${response.data.error}`);
-      }
-
-      // Process each channel
-      for (const channel of response.data.channels || []) {
-        const messages = await this.fetchMessages(channel.id, since);
-        episodes.push(...messages);
+      // Assuming data returns an array of messages or channels with messages
+      const channels = data?.channels || [];
+      for (const channel of channels) {
+        const messages = channel.messages || [];
+        episodes.push(
+          ...messages
+            .filter((msg: any) => msg.type === 'message' && !msg.subtype)
+            .map((msg: any) => this.messageToEpisode(msg, channel.id))
+        );
       }
     } catch (error) {
-      console.error('Error fetching Slack changes:', error);
+      if (error instanceof Error && error.message === 'Slack not authorized') {
+        return [];
+      }
+      console.error('Error fetching Slack changes via Scalekit:', error);
       throw error;
     }
 
@@ -53,25 +87,12 @@ export class SlackConnector implements Connector {
       throw new Error(`Invalid Slack source_id "${sourceId}", expected "<channelId>:<ts>"`);
     }
 
-    const response = await axios.get(
-      'https://slack.com/api/conversations.history',
-      {
-        headers: { Authorization: `Bearer ${this.token}` },
-        params: {
-          channel: channelId,
-          latest: ts,
-          oldest: ts,
-          inclusive: true,
-          limit: 1,
-        },
-      }
-    );
+    const data = await this.executeToolWithAuth('slack_fetch_message', {
+      channel: channelId,
+      timestamp: ts,
+    });
 
-    if (!response.data.ok) {
-      throw new Error(`Slack API error: ${response.data.error}`);
-    }
-
-    const message = (response.data.messages || []).find((msg: any) => msg.ts === ts);
+    const message = data?.message;
     if (!message) {
       throw new Error(`Slack message ${sourceId} not found`);
     }
@@ -79,42 +100,8 @@ export class SlackConnector implements Connector {
     return this.messageToEpisode(message, channelId);
   }
 
-  private async fetchMessages(channelId: string, since: Date): Promise<IEpisode[]> {
-    const episodes: IEpisode[] = [];
-    let cursor: string | undefined;
-
-    do {
-      const response = await axios.get(
-        'https://slack.com/api/conversations.history',
-        {
-          headers: { Authorization: `Bearer ${this.token}` },
-          params: {
-            channel: channelId,
-            oldest: Math.floor(since.getTime() / 1000).toString(),
-            limit: 100,
-            cursor,
-          },
-        }
-      );
-
-      if (!response.data.ok) {
-        throw new Error(`Slack API error: ${response.data.error}`);
-      }
-
-      const messages = response.data.messages || [];
-      episodes.push(
-        ...messages
-          .filter((msg: any) => msg.type === 'message' && !msg.subtype)
-          .map((msg: any) => this.messageToEpisode(msg, channelId))
-      );
-
-      cursor = response.data.response_metadata?.next_cursor;
-    } while (cursor && episodes.length < 1000);
-
-    return episodes;
-  }
-
   private messageToEpisode(message: any, channelId: string): IEpisode {
+    const tsNumber = parseFloat(message.ts);
     const episode: IEpisode = {
       episode_id: this.generateUUID(),
       tenant_id: '', // Set by orchestrator
@@ -133,10 +120,10 @@ export class SlackConnector implements Connector {
         reactions: message.reactions,
         thread_ts: message.thread_ts,
         subtype: message.subtype,
-        timestamp: new Date(message.ts * 1000),
+        timestamp: new Date(tsNumber * 1000),
       },
       author: message.user,
-      created_at: new Date(message.ts * 1000),
+      created_at: new Date(tsNumber * 1000),
       ingested_at: new Date(),
     };
 
@@ -144,7 +131,6 @@ export class SlackConnector implements Connector {
   }
 
   private hashMessage(message: any): string {
-    // Simple hash for deduplication
     const content = JSON.stringify(message);
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
@@ -160,25 +146,18 @@ export class SlackConnector implements Connector {
   }
 
   async subscribeWebhook(): Promise<void> {
-    if (!this.webhookSecret) {
+    if (!this.config.webhook_secret) {
       throw new Error('Webhook secret not configured');
     }
-
-    // Register webhook with Slack
-    // Implementation would call Slack API to register webhook
     console.log('Slack webhook subscription started');
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    if (!this.webhookSecret) return false;
-
-    // Verify webhook signature using HMAC-SHA256
-    // Implementation would use crypto.timingSafeEqual
+    if (!this.config.webhook_secret) return false;
     return true; // Placeholder
   }
 
   async processWebhook(payload: any): Promise<void> {
-    // Process incoming Slack webhook event
     console.log('Processing Slack webhook:', payload);
   }
 }

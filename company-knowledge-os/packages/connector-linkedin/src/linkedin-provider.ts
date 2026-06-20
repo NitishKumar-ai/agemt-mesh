@@ -105,10 +105,14 @@ export class LinkedInProvider extends SocialProviderBase {
     const profile = await this.getProfile(accessToken);
     const author = `urn:li:person:${profile.platformId}`;
 
-    const hasMedia = content.postType === 'image' && (content.mediaUrls?.length ?? 0) > 0;
-    const body = hasMedia
-      ? await this.buildImagePostBody(accessToken, author, content)
-      : this.buildTextPostBody(author, content);
+    let body: any;
+    if (content.postType === 'image' && (content.mediaUrls?.length ?? 0) > 0) {
+      body = await this.buildImagePostBody(accessToken, author, content);
+    } else if (content.postType === 'video' && (content.mediaUrls?.length ?? 0) > 0) {
+      body = await this.buildVideoPostBody(accessToken, author, content);
+    } else {
+      body = this.buildTextPostBody(author, content);
+    }
 
     const { data, status } = await axios.post(`${API_BASE}/v2/ugcPosts`, body, {
       headers: { Authorization: `Bearer ${accessToken}`, ...LINKEDIN_HEADERS },
@@ -166,6 +170,86 @@ export class LinkedInProvider extends SocialProviderBase {
           shareCommentary: { text: content.text ?? '' },
           shareMediaCategory: 'IMAGE',
           media: [{ status: 'READY', media: asset }],
+        },
+      },
+      visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
+    };
+  }
+
+  private async buildVideoPostBody(accessToken: string, author: string, content: PublishContent) {
+    const videoUrl = content.mediaUrls![0];
+    const videoBytes = await axios.get(videoUrl, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(videoBytes.data);
+    const fileSizeBytes = buffer.length;
+
+    // Step 1: Initialize
+    const initResp = await axios.post(
+      `${API_BASE}/rest/videos?action=initializeUpload`,
+      { initializeUploadRequest: { owner: author, fileSizeBytes } },
+      { headers: { Authorization: `Bearer ${accessToken}`, ...LINKEDIN_HEADERS } }
+    );
+    const { video, uploadInstructions, uploadToken } = initResp.data.value;
+
+    if (!video || !uploadInstructions) {
+      throw new PublishError(`LinkedIn video init failed: ${JSON.stringify(initResp.data)}`, this.platformName);
+    }
+
+    // Step 2: Upload chunks
+    const uploadedPartIds: string[] = [];
+    for (const instruction of uploadInstructions) {
+      const { uploadUrl, firstByte, lastByte } = instruction;
+      const chunk = buffer.slice(firstByte, lastByte + 1);
+      
+      const uploadResp = await axios.put(uploadUrl, chunk, {
+        headers: { 'Content-Type': 'application/octet-stream' },
+      });
+      
+      let etag = uploadResp.headers.etag || '';
+      if (etag.startsWith('"') && etag.endsWith('"')) {
+        etag = etag.slice(1, -1);
+      }
+      uploadedPartIds.push(etag);
+    }
+
+    // Step 3: Finalize
+    await axios.post(
+      `${API_BASE}/rest/videos?action=finalizeUpload`,
+      { finalizeUploadRequest: { video, uploadToken, uploadedPartIds } },
+      { headers: { Authorization: `Bearer ${accessToken}`, ...LINKEDIN_HEADERS } }
+    );
+
+    // Step 4: Wait for AVAILABLE status
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const maxAttempts = 60;
+    let isAvailable = false;
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      const statusResp = await axios.get(`${API_BASE}/rest/videos/${encodeURIComponent(video)}`, {
+        headers: { Authorization: `Bearer ${accessToken}`, ...LINKEDIN_HEADERS },
+      });
+      const status = statusResp.data.status;
+      if (status === 'AVAILABLE') {
+        isAvailable = true;
+        break;
+      }
+      if (status === 'PROCESSING_FAILED') {
+        throw new PublishError(`LinkedIn video processing failed: ${statusResp.data.processingFailureReason}`, this.platformName);
+      }
+      await delay(3000);
+    }
+
+    if (!isAvailable) {
+      throw new PublishError('LinkedIn video processing timed out', this.platformName);
+    }
+
+    return {
+      author,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: content.text ?? '' },
+          shareMediaCategory: 'VIDEO',
+          media: [{ status: 'READY', media: video }],
         },
       },
       visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },

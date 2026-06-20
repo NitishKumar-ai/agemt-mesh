@@ -23,7 +23,7 @@ describe('LinkedInConnector.fetchChanges', () => {
       },
     });
 
-    const connector = new LinkedInConnector({ clientId: 'x' }, 'token', 'urn:li:person:abc');
+    const connector = new LinkedInConnector({ enabled: true, extra: { accessToken: 'mock-token', authorUrn: 'urn:li:person:abc' } });
     const episodes = await connector.fetchChanges(new Date(0));
 
     expect(episodes).toHaveLength(1);
@@ -45,7 +45,7 @@ describe('LinkedInConnector.fetchChanges', () => {
       },
     });
 
-    const connector = new LinkedInConnector({ clientId: 'x' }, 'token', 'urn:li:person:abc');
+    const connector = new LinkedInConnector({ enabled: true, extra: { accessToken: 'mock-token', authorUrn: 'urn:li:person:abc' } });
     const episodes = await connector.fetchChanges(new Date('2024-01-01'));
     expect(episodes).toHaveLength(0);
   });

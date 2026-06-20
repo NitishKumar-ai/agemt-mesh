@@ -15,15 +15,14 @@
   "dependencies": {
     "@company-knowledge-os/core": "workspace:*",
     "@company-knowledge-os/database": "workspace:*",
-    "axios": "^1.6.0",
-    "googleapis": "^134.0.0"
+    "@scalekit-sdk/node": "^2.6.3"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.4.0",
-    "vitest": "^1.0.0",
-    "eslint": "^8.57.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
   }
 }

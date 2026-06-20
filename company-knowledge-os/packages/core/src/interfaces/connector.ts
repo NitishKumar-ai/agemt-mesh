@@ -5,6 +5,8 @@ export interface ConnectorConfig {
   poll_interval?: number;
   retry_policy?: RetryPolicy;
   webhook_secret?: string;
+  identifier?: string;
+  extra?: Record<string, any>;
 }
 
 export interface RetryPolicy {

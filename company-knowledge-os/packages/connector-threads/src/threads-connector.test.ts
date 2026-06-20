@@ -9,11 +9,14 @@ describe('ThreadsConnector.fetchChanges', () => {
   beforeEach(() => { vi.resetAllMocks(); });
 
   it('maps Threads posts to valid IEpisode shape', async () => {
-    (axios.get as any).mockResolvedValue({
-      data: { data: [{ id: '1', text: 'hi', permalink: 'https://threads.net/1', timestamp: new Date().toISOString() }] },
-    });
+    // First call: getProfile (returns user id), second call: /threads (returns posts)
+    (axios.get as any)
+      .mockResolvedValueOnce({ data: { id: 'user-1', username: 'testuser' } })
+      .mockResolvedValueOnce({
+        data: { data: [{ id: '1', text: 'hi', permalink: 'https://threads.net/1', timestamp: new Date().toISOString() }] },
+      });
 
-    const connector = new ThreadsConnector({ clientId: 'x' }, 'token', 'user-1');
+    const connector = new ThreadsConnector({ enabled: true, extra: { accessToken: 'mock-token' } });
     const episodes = await connector.fetchChanges(new Date(0));
 
     expect(episodes).toHaveLength(1);

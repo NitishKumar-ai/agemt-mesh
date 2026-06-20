@@ -1,32 +1,73 @@
 import axios from 'axios';
 import { Connector, ConnectorConfig, IEpisode } from '@company-knowledge-os/core';
-import { PublishContent, PublishResult, SocialCredentials } from '@company-knowledge-os/connector-social-common';
+import { PublishContent, PublishResult } from '@company-knowledge-os/connector-social-common';
 import { FacebookProvider } from './facebook-provider';
 
 const BASE_URL = 'https://graph.facebook.com/v21.0';
 
+/**
+ * Facebook connector using direct OAuth credentials.
+ *
+ * Credentials come from environment variables:
+ *   FACEBOOK_APP_ID, FACEBOOK_APP_SECRET
+ *
+ * The access token is stored in config.extra.accessToken after OAuth exchange.
+ * The page ID is stored in config.extra.pageId.
+ *
+ * OAuth callback URL (register in Facebook Developer Portal):
+ *   http://localhost:8080/api/social-studio/oauth/facebook/callback
+ */
 export class FacebookConnector implements Connector {
   name = 'facebook';
   supportsWebhook = true;
   private provider: FacebookProvider;
 
   constructor(
-    credentials: SocialCredentials,
-    private accessToken: string,
-    private pageId: string,
     public config: ConnectorConfig = { enabled: true }
   ) {
-    this.provider = new FacebookProvider(credentials);
+    this.provider = new FacebookProvider({
+      clientId: process.env.FACEBOOK_APP_ID ?? config.extra?.clientId ?? '',
+      clientSecret: process.env.FACEBOOK_APP_SECRET ?? config.extra?.clientSecret ?? '',
+    });
+  }
+
+  private getAccessToken(): string {
+    const token = this.config.extra?.accessToken;
+    if (!token) {
+      throw new Error(
+        'Facebook access token not set. ' +
+        'Complete the OAuth flow first: GET /api/social-studio/oauth/facebook'
+      );
+    }
+    return token;
+  }
+
+  /** Build the OAuth authorization URL to redirect the user to Facebook. */
+  getAuthUrl(redirectUri: string, state: string): string {
+    return this.provider.getAuthUrl(redirectUri, state);
+  }
+
+  /** Exchange the OAuth code for an access token and store it in config. */
+  async handleCallback(code: string, redirectUri: string): Promise<string> {
+    const tokens = await this.provider.exchangeCode(code, redirectUri);
+    this.config.extra = { ...this.config.extra, accessToken: tokens.accessToken };
+    return tokens.accessToken;
   }
 
   async bootstrap(): Promise<void> {
-    await this.provider.getProfile(this.accessToken, this.pageId);
+    const token = this.getAccessToken();
+    const pageId = this.config.extra?.pageId;
+    await this.provider.getProfile(token, pageId);
   }
 
   async fetchChanges(since: Date): Promise<IEpisode[]> {
-    const { data } = await axios.get(`${BASE_URL}/${this.pageId}/posts`, {
+    const token = this.getAccessToken();
+    const pageId = this.config.extra?.pageId;
+    if (!pageId) return [];
+
+    const { data } = await axios.get(`${BASE_URL}/${pageId}/posts`, {
       params: {
-        access_token: this.accessToken,
+        access_token: token,
         fields: 'id,message,created_time,permalink_url,likes.summary(true),comments.summary(true)',
         since: Math.floor(since.getTime() / 1000),
       },
@@ -36,8 +77,9 @@ export class FacebookConnector implements Connector {
   }
 
   async fetchObject(sourceId: string): Promise<IEpisode> {
+    const token = this.getAccessToken();
     const { data } = await axios.get(`${BASE_URL}/${sourceId}`, {
-      params: { access_token: this.accessToken, fields: 'id,message,created_time,permalink_url' },
+      params: { access_token: token, fields: 'id,message,created_time,permalink_url' },
     });
     return this.postToEpisode(data);
   }
@@ -55,7 +97,8 @@ export class FacebookConnector implements Connector {
   }
 
   async publish(content: PublishContent): Promise<PublishResult> {
-    return this.provider.publish(this.accessToken, content, this.pageId);
+    const token = this.getAccessToken();
+    return this.provider.publish(token, content, this.config.extra?.pageId);
   }
 
   private postToEpisode(post: any): IEpisode {

@@ -4,6 +4,7 @@
   "private": true,
   "description": "AI Native Company Knowledge Operating System - Episode and Fact Memory System",
   "scripts": {
+    "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "clean": "turbo clean"

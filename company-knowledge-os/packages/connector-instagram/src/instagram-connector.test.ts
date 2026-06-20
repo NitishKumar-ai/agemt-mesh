@@ -13,7 +13,7 @@ describe('InstagramConnector.fetchChanges', () => {
       data: { data: [{ id: '1', caption: 'hi', permalink: 'https://instagram.com/p/1', timestamp: new Date().toISOString() }] },
     });
 
-    const connector = new InstagramConnector({ clientId: 'x' }, 'token', 'ig-1');
+    const connector = new InstagramConnector({ enabled: true, extra: { accessToken: 'mock-token', igAccountId: 'ig-1' } });
     const episodes = await connector.fetchChanges(new Date(0));
 
     expect(episodes).toHaveLength(1);
