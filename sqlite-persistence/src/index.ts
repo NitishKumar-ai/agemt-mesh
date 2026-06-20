@@ -4,3 +4,4 @@ export * from './SQLitePollDataDAO.js';
 export * from './SQLiteQueueDAO.js';
 export * from './SqliteConcurrentExecutionLimitDAO.js';
 export * from './SqliteRateLimitingDAO.js';
+export * from './SQLiteUserAccessGrantDAO.js';

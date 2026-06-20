@@ -1,7 +1,12 @@
-import { Controller, Post, Body, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Post, Body, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TrustWorkflowService, trustWorkflowService } from '../services/TrustWorkflowService.js';
 import { WorkflowOutput } from '../domain/types.js';
+import {
+  RequestWithPrincipal,
+  resolveRequestUserId,
+  resolveRequestTenantId,
+} from '@agentmesh/graph-service';
 
 @ApiTags('workflows-trust')
 @Controller('api/workflows')
@@ -11,77 +16,82 @@ export class WorkflowController {
   @Post('onboarding-brief')
   async getOnboardingBrief(
     @Body() body: { user: string; team: string; role: string },
-    @Query('tenant_id') tenantId?: string,
-    @Query('user_id') userId?: string
+    @Req() request: RequestWithPrincipal,
   ): Promise<WorkflowOutput> {
     return await this.service.generateOnboardingBrief(
-      tenantId || 'org_123',
-      userId || 'user_456',
-      body
+      this.requireTenantId(resolveRequestTenantId(request)),
+      resolveRequestUserId(request),
+      body,
     );
   }
 
   @Post('weekly-digest')
   async getWeeklyDigest(
     @Body() body: { team: string; dateRange: { from: string; to: string } },
-    @Query('tenant_id') tenantId?: string,
-    @Query('user_id') userId?: string
+    @Req() request: RequestWithPrincipal,
   ): Promise<WorkflowOutput> {
     return await this.service.generateWeeklyDigest(
-      tenantId || 'org_123',
-      userId || 'user_456',
-      body
+      this.requireTenantId(resolveRequestTenantId(request)),
+      resolveRequestUserId(request),
+      body,
     );
   }
 
   @Post('incident-brief')
   async getIncidentBrief(
     @Body() body: { incidentId: string; service: string },
-    @Query('tenant_id') tenantId?: string,
-    @Query('user_id') userId?: string
+    @Req() request: RequestWithPrincipal,
   ): Promise<WorkflowOutput> {
     return await this.service.generateIncidentBrief(
-      tenantId || 'org_123',
-      userId || 'user_456',
-      body
+      this.requireTenantId(resolveRequestTenantId(request)),
+      resolveRequestUserId(request),
+      body,
     );
   }
 
   @Post('meeting-prep')
   async getMeetingPrep(
     @Body() body: { eventTitle: string; attendees: string[] },
-    @Query('tenant_id') tenantId?: string,
-    @Query('user_id') userId?: string
+    @Req() request: RequestWithPrincipal,
   ): Promise<WorkflowOutput> {
     return await this.service.generateMeetingPrep(
-      tenantId || 'org_123',
-      userId || 'user_456',
-      body
+      this.requireTenantId(resolveRequestTenantId(request)),
+      resolveRequestUserId(request),
+      body,
     );
   }
 
   @Post('account-summary')
   async getAccountSummary(
     @Body() body: { accountName: string },
-    @Query('tenant_id') tenantId?: string,
-    @Query('user_id') userId?: string
+    @Req() request: RequestWithPrincipal,
   ): Promise<WorkflowOutput> {
     return await this.service.generateAccountSummary(
-      tenantId || 'org_123',
-      userId || 'user_456',
-      body
+      this.requireTenantId(resolveRequestTenantId(request)),
+      resolveRequestUserId(request),
+      body,
     );
   }
 
   @Post('query')
   async queryAndAnswer(
     @Body() body: { query: string; projectId: string },
-    @Query('tenant_id') tenantId?: string
-  ): Promise<any> {
+    @Req() request: RequestWithPrincipal,
+  ): Promise<Awaited<ReturnType<TrustWorkflowService['retrieveAndAnswer']>>> {
+    const tenantId = resolveRequestTenantId(request);
+    const userId = resolveRequestUserId(request);
     return await this.service.retrieveAndAnswer(
-      tenantId || 'org_123',
+      this.requireTenantId(tenantId),
       body.query,
-      body.projectId
+      body.projectId,
+      userId,
     );
+  }
+
+  private requireTenantId(value: string | undefined): string {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new BadRequestException('tenant_id is required');
+    }
+    return value;
   }
 }

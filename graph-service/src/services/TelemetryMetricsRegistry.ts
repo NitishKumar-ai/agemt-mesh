@@ -63,6 +63,7 @@ export interface CalibrationMetricRecord {
 }
 
 export class TelemetryMetricsRegistry {
+  private readonly searchLatencies: number[] = [];
   private ingestion: IngestionMetrics = {
     sync_lag_seconds: 4.5,
     connector_success_rate: 0.98,
@@ -71,7 +72,7 @@ export class TelemetryMetricsRegistry {
     documents_ingested: 1240,
     documents_failed: 10,
     parse_success_rate: 0.99,
-    parse_failure_reason: { 'TimeoutError': 7, 'UnsupportedFormat': 3 },
+    parse_failure_reason: { TimeoutError: 7, UnsupportedFormat: 3 },
     chunk_count: 8400,
     embedding_success_rate: 0.998,
     duplicate_document_rate: 0.12,
@@ -143,10 +144,10 @@ export class TelemetryMetricsRegistry {
       calibrated_confidence: 0.48,
       evidence_count: 2,
       citation_fidelity: 0.75,
-      graph_support_score: 0.40,
-      retrieval_score: 0.60,
+      graph_support_score: 0.4,
+      retrieval_score: 0.6,
       human_feedback: 'pending',
-    }
+    },
   ];
 
   recordIngestion(update: Partial<IngestionMetrics>) {
@@ -159,6 +160,17 @@ export class TelemetryMetricsRegistry {
 
   recordRetrieval(update: Partial<RetrievalMetrics>) {
     this.retrieval = { ...this.retrieval, ...update };
+  }
+
+  recordSearchLatency(durationMs: number) {
+    this.searchLatencies.push(durationMs);
+    if (this.searchLatencies.length > 1000) this.searchLatencies.shift();
+    const sorted = [...this.searchLatencies].sort((left, right) => left - right);
+    this.recordRetrieval({
+      query_latency_p50: this.percentile(sorted, 0.5),
+      query_latency_p95: this.percentile(sorted, 0.95),
+      query_latency_p99: this.percentile(sorted, 0.99),
+    });
   }
 
   recordWorkflow(update: Partial<WorkflowMetrics>) {
@@ -177,6 +189,12 @@ export class TelemetryMetricsRegistry {
       workflow: this.workflow,
       calibrations: this.calibrations,
     };
+  }
+
+  private percentile(sorted: number[], percentile: number): number {
+    if (sorted.length === 0) return 0;
+    const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * percentile) - 1);
+    return sorted[index] ?? 0;
   }
 }
 

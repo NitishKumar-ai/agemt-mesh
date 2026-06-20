@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Query } from '@nestjs/common';
+import { Controller, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { WorkflowBulkService } from '../services/WorkflowBulkService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('workflows')
+@UseGuards(OidcAuthGuard)
 @Controller('api/workflow/bulk')
 export class WorkflowBulkResource {
   constructor(private readonly workflowBulkService: WorkflowBulkService) {}

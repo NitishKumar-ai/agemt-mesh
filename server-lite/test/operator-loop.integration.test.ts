@@ -18,6 +18,7 @@ describe('Operator Loop Integration with TestBarrier', () => {
       port,
       dbPath: ':memory:',
       installSignalHandlers: false,
+      trustedPrincipal: { id: 'test_user', tenant_id: 'org_123' },
     });
 
     try {

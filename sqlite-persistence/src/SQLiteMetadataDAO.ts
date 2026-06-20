@@ -1,5 +1,5 @@
 import { Kysely, Transaction, sql } from 'kysely';
-import { MetadataDAO, Database, WorkflowDefSummary } from '@agentmesh/common-persistence';
+import { MetadataDAO, Database, WorkflowDefSummary, DashboardSchedule } from '@agentmesh/common-persistence';
 import {
   TaskDef,
   WorkflowDef,
@@ -278,17 +278,97 @@ export class SqliteMetadataDAO implements MetadataDAO {
   }
 
   async getEventHandlersForEvent(event: string, activeOnly: boolean): Promise<EventHandler[]> {
-    let query = this.db
-      .selectFrom('meta_event_handler')
-      .select('json_data')
-      .where('event', '=', event);
-
+    let query = this.db.selectFrom('meta_event_handler').select('json_data').where('event', '=', event);
     if (activeOnly) {
       query = query.where('active', '=', sql<boolean>`1`);
     }
-
     const rows = await query.execute();
     return rows.map((r) => JSON.parse(r.json_data));
+  }
+
+  // ── Dashboard Schedules ───────────────────────────────────────────
+
+  async createSchedule(schedule: DashboardSchedule): Promise<void> {
+    await this.db
+      .insertInto('dashboard_schedules')
+      .values({
+        name: schedule.name,
+        prompt: schedule.prompt,
+        interval: schedule.interval,
+        enabled: schedule.enabled ? 1 : 0,
+        next_run_at: schedule.next_run_at,
+        last_run_at: schedule.last_run_at,
+        last_status: schedule.last_status,
+        created_at: schedule.created_at,
+        updated_at: schedule.updated_at,
+      })
+      .execute();
+  }
+
+  async updateSchedule(schedule: DashboardSchedule): Promise<void> {
+    await this.db
+      .updateTable('dashboard_schedules')
+      .set({
+        prompt: schedule.prompt,
+        interval: schedule.interval,
+        enabled: schedule.enabled ? 1 : 0,
+        next_run_at: schedule.next_run_at,
+        last_run_at: schedule.last_run_at,
+        last_status: schedule.last_status,
+        updated_at: schedule.updated_at,
+      })
+      .where('name', '=', schedule.name)
+      .execute();
+  }
+
+  async getSchedule(name: string): Promise<DashboardSchedule | undefined> {
+    const row = await this.db
+      .selectFrom('dashboard_schedules')
+      .selectAll()
+      .where('name', '=', name)
+      .executeTakeFirst();
+      
+    if (!row) return undefined;
+    
+    return {
+      id: row.id as number,
+      name: row.name as string,
+      prompt: row.prompt as string,
+      interval: row.interval as string,
+      enabled: row.enabled === 1,
+      next_run_at: row.next_run_at as number | undefined,
+      last_run_at: row.last_run_at as number | undefined,
+      last_status: row.last_status as string | undefined,
+      created_at: row.created_at as number,
+      updated_at: row.updated_at as number,
+    };
+  }
+
+  async getAllSchedules(): Promise<DashboardSchedule[]> {
+    const rows = await this.db
+      .selectFrom('dashboard_schedules')
+      .selectAll()
+      .execute();
+      
+    return rows.map((row) => ({
+      id: row.id as number,
+      name: row.name as string,
+      prompt: row.prompt as string,
+      interval: row.interval as string,
+      enabled: row.enabled === 1,
+      next_run_at: row.next_run_at as number | undefined,
+      last_run_at: row.last_run_at as number | undefined,
+      last_status: row.last_status as string | undefined,
+      created_at: row.created_at as number,
+      updated_at: row.updated_at as number,
+    }));
+  }
+
+  async removeSchedule(name: string): Promise<void> {
+    await this.db
+      .deleteFrom('dashboard_schedules')
+      .where('name', '=', name)
+      .execute();
   }
 
   async getWorkflowVersions(name: string): Promise<WorkflowDefSummary[]> {

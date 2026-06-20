@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { IFact } from '@company-knowledge-os/core';
-import { FactTable } from '../schema/schema';
+import { Database, FactTable } from '../schema/schema';
 
 export class FactDAO {
   constructor(private db: Kysely<Database>) {}
@@ -21,7 +21,7 @@ export class FactDAO {
       observed_at: new Date(result.observed_at),
       valid_from: new Date(result.valid_from),
       valid_to: result.valid_to ? new Date(result.valid_to) : null,
-      superseded_by: result.superseded_by ? new Date(result.superseded_by) : null,
+      superseded_by: result.superseded_by || null,
     };
   }
 
@@ -40,7 +40,7 @@ export class FactDAO {
       observed_at: new Date(result.observed_at),
       valid_from: new Date(result.valid_from),
       valid_to: result.valid_to ? new Date(result.valid_to) : null,
-      superseded_by: result.superseded_by ? new Date(result.superseded_by) : null,
+      superseded_by: result.superseded_by || null,
     };
   }
 
@@ -57,7 +57,7 @@ export class FactDAO {
     let query = this.db.selectFrom('facts').where('tenant_id', '=', tenantId);
 
     if (filters?.status && filters.status.length > 0) {
-      query = query.where('status', 'in', filters.status);
+      query = query.where('status', 'in', filters.status as any);
     }
 
     if (filters?.subject && filters.subject.length > 0) {
@@ -88,7 +88,7 @@ export class FactDAO {
       observed_at: new Date(result.observed_at),
       valid_from: new Date(result.valid_from),
       valid_to: result.valid_to ? new Date(result.valid_to) : null,
-      superseded_by: result.superseded_by ? new Date(result.superseded_by) : null,
+      superseded_by: result.superseded_by || null,
     }));
   }
 
@@ -108,7 +108,7 @@ export class FactDAO {
       observed_at: new Date(result.observed_at),
       valid_from: new Date(result.valid_from),
       valid_to: result.valid_to ? new Date(result.valid_to) : null,
-      superseded_by: result.superseded_by ? new Date(result.superseded_by) : null,
+      superseded_by: result.superseded_by || null,
     }));
   }
 
@@ -116,9 +116,9 @@ export class FactDAO {
     const result = await this.db
       .deleteFrom('facts')
       .where('fact_id', '=', factId)
-      .execute();
+      .executeTakeFirst();
 
-    return result.count > 0;
+    return Number(result.numDeletedRows) > 0;
   }
 
   async updateFactStatus(
@@ -145,7 +145,7 @@ export class FactDAO {
       observed_at: new Date(result.observed_at),
       valid_from: new Date(result.valid_from),
       valid_to: result.valid_to ? new Date(result.valid_to) : null,
-      superseded_by: result.superseded_by ? new Date(result.superseded_by) : null,
+      superseded_by: result.superseded_by || null,
     };
   }
 

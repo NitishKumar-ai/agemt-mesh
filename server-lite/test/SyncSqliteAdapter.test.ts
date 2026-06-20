@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import { InitialSchemaMigration, AgentRuntimeMigration } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration } from '@agentmesh/common-persistence';
 import { SyncSqliteAdapter } from '../src/SyncSqliteAdapter.js';
 import { createWorkflowModel, createTaskModel } from '@agentmesh/core';
 
@@ -16,6 +16,8 @@ describe('SyncSqliteAdapter', () => {
 
     await InitialSchemaMigration.up(db as never);
     await AgentRuntimeMigration.up(db as never);
+    await DashboardMigration.up(db as never);
+    await PermissionsMigration.up(db as never);
 
     const adapter = new SyncSqliteAdapter(sqliteDb as any);
     return { sqliteDb, db, adapter };

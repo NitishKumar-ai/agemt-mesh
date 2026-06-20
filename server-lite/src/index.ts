@@ -1,7 +1,7 @@
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
-import { InitialSchemaMigration, AgentRuntimeMigration } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration } from '@agentmesh/common-persistence';
 import {
   SqliteExecutionDAO,
   SqliteMetadataDAO,
@@ -169,6 +169,7 @@ export async function bootstrapServer(options?: {
   dbPath?: string;
   port?: number;
   installSignalHandlers?: boolean;
+  trustedPrincipal?: { id: string };
 }): Promise<{ app: any; close: () => Promise<void> }> {
   const cfg = loadConfig();
   if (options?.dbPath !== undefined) {
@@ -207,6 +208,8 @@ export async function bootstrapServer(options?: {
   console.log('Running migrations...');
   await InitialSchemaMigration.up(db as never);
   await AgentRuntimeMigration.up(db as never);
+  await DashboardMigration.up(db as never);
+  await PermissionsMigration.up(db as never);
   console.log('Migrations complete.');
 
   const executionDAO = new SqliteExecutionDAO(db as never);
@@ -267,13 +270,15 @@ export async function bootstrapServer(options?: {
   const cronScheduler = new CronScheduler({
     db: db as never,
     onFire: async (schedule: any) => {
-      console.log(`[Cron] Firing schedule ${schedule.name} for agent ${schedule.agentId}`);
-      const def = agentRegistry.get(schedule.agentId);
-      if (def) {
+      const workflowName = schedule.prompt; // workflowName is stored in prompt
+      console.log(`[Cron] Firing schedule ${schedule.name} with workflowName ${workflowName}`);
+      
+      // Start the workflow by name
+      if (workflowName) {
         lazyAgentExecutor.startWorkflow({
-          name: def.name,
+          name: workflowName,
           version: 1,
-          input: { agentId: schedule.agentId },
+          input: { scheduleName: schedule.name },
         });
       }
     },
@@ -463,6 +468,20 @@ export async function bootstrapServer(options?: {
   // Start sweeper loop
   const sweeperState = { running: true };
   console.log('Starting sweeper loop...');
+
+  // Recover pending/running workflows
+  try {
+    const pendingWorkflows = await db.selectFrom('workflow_pending').select('workflow_id').execute();
+    if (pendingWorkflows.length > 0) {
+      console.log(`[Bootstrap] Recovering ${pendingWorkflows.length} pending workflows into DECIDER_QUEUE...`);
+      for (const row of pendingWorkflows) {
+        await syncAdapter.push(DECIDER_QUEUE, row.workflow_id, 0, 0);
+      }
+    }
+  } catch (err) {
+    console.error(`[Bootstrap] Error recovering workflows:`, err);
+  }
+
   const sweeperPromise = sweeperLoop(syncAdapter, sweeper, sweeperState);
 
   // Start system task worker (polls queues for async system tasks: HTTP, etc.)
@@ -501,6 +520,13 @@ export async function bootstrapServer(options?: {
     }),
     { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] },
   );
+
+  if (options?.trustedPrincipal) {
+    app.use((req: any, res: any, next: any) => {
+      req.user = options.trustedPrincipal;
+      next();
+    });
+  }
 
   // OpenAPI/Swagger
   const swaggerConfig = new DocumentBuilder()

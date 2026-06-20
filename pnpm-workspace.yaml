@@ -1,5 +1,6 @@
 packages:
   - 'ui'
+  - 'ui-next'
   - 'agent-runtime'
   - 'common'
   - 'common-persistence'

@@ -10,4 +10,6 @@ export * from './BaseKyselyExecutionDAO.js';
 export * as InitialSchemaMigration from './migrations/001_initial_schema.js';
 export * as AgentRuntimeMigration from './migrations/002_agent_runtime.js';
 export * as DashboardMigration from './migrations/003_dashboard.js';
+export * as PermissionsMigration from './migrations/004_permissions.js';
 export * from './IndexDAO.js';
+export * from './UserAccessGrantDAO.js';

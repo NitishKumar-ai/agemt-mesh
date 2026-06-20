@@ -22,7 +22,7 @@ import { Helmet } from "react-helmet";
 import { useQuery } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { RUN_WORKFLOW_URL } from "utils/constants/route";
-import { api, WorkflowSummary } from "../lib/api";
+import { api, WorkflowSummary } from "lib/api";
 import { PopoverMessage } from "types/Messages";
 import { ColumnCustomType } from "components/ui/DataTable/types";
 

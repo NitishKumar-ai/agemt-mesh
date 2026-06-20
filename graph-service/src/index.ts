@@ -13,6 +13,15 @@ export * from './jobs/supersession-detection.job.js';
 
 export * from './services/GraphService.js';
 export * from './services/TelemetryMetricsRegistry.js';
+export * from './auth/PolicyEngine.js';
+export * from './auth/RequestIdentity.js';
+export * from './search/DeterministicEmbeddingProvider.js';
+export * from './search/HttpEmbeddingProviders.js';
+export * from './search/InMemoryVectorSearchStore.js';
+export * from './search/PgVectorSearchStore.js';
+export * from './search/RetrievalEvaluationService.js';
+export * from './search/VectorSearchService.js';
+export * from './search/search.config.js';
 
 export * from './api/graph.routes.js';
 export * from './api/temporal.routes.js';

@@ -10,6 +10,7 @@ import crypto from 'node:crypto';
 describe('GraphService & Temporal trust layer tests', () => {
   beforeEach(async () => {
     await neo4jClient.clear();
+    await graphService.clearSearchIndex();
   });
 
   afterAll(async () => {
@@ -101,7 +102,7 @@ describe('GraphService & Temporal trust layer tests', () => {
       ORDER BY r.confidence DESC
       LIMIT 5
       `,
-      { project_name: 'Project Atlas' }
+      { project_name: 'Project Atlas' },
     );
 
     expect(owners).toHaveLength(1);
@@ -176,11 +177,19 @@ describe('GraphService & Temporal trust layer tests', () => {
     expect(currentFacts[0].value).toBe('2026-08-01');
 
     // Verify temporal as-of queries
-    const factsAsOfJune5 = await graphService.getFactsAsOf(projectId, tenantId, '2026-06-05T00:00:00Z');
+    const factsAsOfJune5 = await graphService.getFactsAsOf(
+      projectId,
+      tenantId,
+      '2026-06-05T00:00:00Z',
+    );
     expect(factsAsOfJune5).toHaveLength(1);
     expect(factsAsOfJune5[0].value).toBe('2026-07-15');
 
-    const factsAsOfJune10 = await graphService.getFactsAsOf(projectId, tenantId, '2026-06-10T00:00:00Z');
+    const factsAsOfJune10 = await graphService.getFactsAsOf(
+      projectId,
+      tenantId,
+      '2026-06-10T00:00:00Z',
+    );
     expect(factsAsOfJune10).toHaveLength(1);
     expect(factsAsOfJune10[0].value).toBe('2026-08-01');
   });
@@ -362,5 +371,165 @@ describe('GraphService & Temporal trust layer tests', () => {
 
     expect(updatedNodeA.aliases).toContain('Atlas Migration');
     expect(updatedNodeB.status).toBe('superseded');
+  });
+
+  it('should perform tenant-isolated, permission-aware vector search', async () => {
+    const allowedTenant = 'org_allowed';
+    const otherTenant = 'org_other';
+    const now = new Date().toISOString();
+
+    const publicProject: GraphNode = {
+      id: crypto.randomUUID(),
+      tenant_id: allowedTenant,
+      type: 'Project',
+      canonical_name: 'Atlas database migration',
+      aliases: ['Postgres modernization'],
+      source_system: 'notion',
+      source_id: 'atlas-public',
+      confidence: 0.95,
+      status: 'current',
+      created_at: now,
+      updated_at: now,
+      valid_from: now,
+      valid_to: null,
+      recorded_from: now,
+      recorded_to: null,
+      last_seen_at: now,
+      permissions_hash: null,
+      source_url: null,
+      properties: {},
+    };
+    const restrictedProject: GraphNode = {
+      ...publicProject,
+      id: crypto.randomUUID(),
+      canonical_name: 'Secret acquisition plan',
+      aliases: [],
+      source_id: 'secret-plan',
+      permissions_hash: 'executive',
+    };
+    const otherTenantProject: GraphNode = {
+      ...publicProject,
+      id: crypto.randomUUID(),
+      tenant_id: otherTenant,
+      canonical_name: 'Atlas database migration confidential',
+      source_id: 'other-atlas',
+    };
+
+    await graphService.ingestNode(publicProject);
+    await graphService.ingestNode(restrictedProject);
+    await graphService.ingestNode(otherTenantProject);
+
+    const publicResults = await graphService.search(allowedTenant, 'database migration', {
+      minScore: 0.1,
+    });
+    expect(publicResults.map((hit) => hit.document.resourceId)).toContain(publicProject.id);
+    expect(publicResults.map((hit) => hit.document.resourceId)).not.toContain(
+      otherTenantProject.id,
+    );
+
+    const deniedResults = await graphService.search(allowedTenant, 'secret acquisition');
+    expect(deniedResults.map((hit) => hit.document.resourceId)).not.toContain(restrictedProject.id);
+
+    const allowedResults = await graphService.search(allowedTenant, 'secret acquisition', {
+      allowedPermissionHashes: ['executive'],
+    });
+    expect(allowedResults[0].document.resourceId).toBe(restrictedProject.id);
+  });
+
+  it('should normalize schema-defaulted node fields at the service boundary', async () => {
+    const now = new Date().toISOString();
+    const node = {
+      id: crypto.randomUUID(),
+      tenant_id: 'org_defaults',
+      type: 'Document',
+      canonical_name: 'Minimal REST document',
+      source_system: 'api',
+      source_id: 'minimal-rest-document',
+      confidence: 0.9,
+      status: 'current',
+      created_at: now,
+      updated_at: now,
+      valid_from: now,
+      valid_to: null,
+      recorded_from: now,
+      recorded_to: null,
+      last_seen_at: now,
+    } as GraphNode;
+
+    await graphService.ingestNode(node);
+    const results = await graphService.search('org_defaults', 'minimal REST document');
+    expect(results[0]?.document.resourceId).toBe(node.id);
+    expect(node.aliases).toEqual([]);
+    expect(node.properties).toEqual({});
+  });
+
+  it('should index current facts and remove superseded facts from vector search', async () => {
+    const tenantId = 'org_search';
+    const entityId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const sourceBase: GraphNode = {
+      id: crypto.randomUUID(),
+      tenant_id: tenantId,
+      type: 'Source',
+      canonical_name: 'Roadmap',
+      aliases: [],
+      source_system: 'notion',
+      source_id: 'roadmap-old',
+      confidence: 1,
+      status: 'current',
+      created_at: now,
+      updated_at: now,
+      valid_from: now,
+      valid_to: null,
+      recorded_from: now,
+      recorded_to: null,
+      last_seen_at: now,
+      permissions_hash: null,
+      source_url: null,
+      properties: {},
+    };
+    await graphService.ingestNode(sourceBase);
+    await graphService.ingestNode({
+      ...sourceBase,
+      id: crypto.randomUUID(),
+      source_id: 'roadmap-new',
+    });
+
+    const firstFact: Fact = {
+      id: crypto.randomUUID(),
+      tenant_id: tenantId,
+      entity_id: entityId,
+      predicate: 'launch deadline',
+      value: 'July 15',
+      confidence: 0.8,
+      status: 'current',
+      valid_from: '2026-06-01T00:00:00Z',
+      valid_to: null,
+      recorded_from: '2026-06-02T00:00:00Z',
+      recorded_to: null,
+      source_id: 'roadmap-old',
+      evidence_spans: ['Launch deadline is July 15'],
+      last_seen_at: now,
+    };
+    const secondFact: Fact = {
+      ...firstFact,
+      id: crypto.randomUUID(),
+      value: 'August 1',
+      confidence: 0.95,
+      valid_from: '2026-06-10T00:00:00Z',
+      recorded_from: '2026-06-11T00:00:00Z',
+      source_id: 'roadmap-new',
+      evidence_spans: ['Launch deadline moved to August 1'],
+    };
+
+    await graphService.ingestFact(firstFact, { 'roadmap-old': 0.5 });
+    await graphService.ingestFact(secondFact, { 'roadmap-old': 0.5, 'roadmap-new': 0.9 });
+
+    const results = await graphService.search(tenantId, 'launch deadline August', {
+      resourceTypes: ['Fact'],
+      minScore: 0.1,
+    });
+    expect(results.map((hit) => hit.document.resourceId)).toContain(secondFact.id);
+    expect(results.map((hit) => hit.document.resourceId)).not.toContain(firstFact.id);
   });
 });

@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { ITenant } from '@company-knowledge-os/core';
-import { TenantTable } from '../schema/schema';
+import { Database, TenantTable } from '../schema/schema';
 
 export class TenantDAO {
   constructor(private db: Kysely<Database>) {}
@@ -11,14 +11,17 @@ export class TenantDAO {
       .values({
         tenant_id: tenant.tenant_id,
         name: tenant.name,
-        region: tenant.region,
-        policy_profile: tenant.policy_profile,
+        region: tenant.region ?? null,
+        policy_profile: tenant.policy_profile ?? null,
+        created_at: new Date(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
 
     return {
       ...result,
+      region: result.region ?? undefined,
+      policy_profile: (result.policy_profile as any) ?? undefined,
       created_at: new Date(result.created_at),
       updated_at: result.updated_at ? new Date(result.updated_at) : undefined,
     };
@@ -35,6 +38,8 @@ export class TenantDAO {
 
     return {
       ...result,
+      region: result.region ?? undefined,
+      policy_profile: (result.policy_profile as any) ?? undefined,
       created_at: new Date(result.created_at),
       updated_at: result.updated_at ? new Date(result.updated_at) : undefined,
     };
@@ -48,6 +53,8 @@ export class TenantDAO {
 
     return results.map((result) => ({
       ...result,
+      region: result.region ?? undefined,
+      policy_profile: (result.policy_profile as any) ?? undefined,
       created_at: new Date(result.created_at),
       updated_at: result.updated_at ? new Date(result.updated_at) : undefined,
     }));
@@ -60,7 +67,9 @@ export class TenantDAO {
     const result = await this.db
       .updateTable('tenants')
       .set({
-        ...updates,
+        name: updates.name,
+        region: updates.region ?? undefined,
+        policy_profile: updates.policy_profile ?? undefined,
         updated_at: new Date(),
       })
       .where('tenant_id', '=', tenantId)
@@ -71,6 +80,8 @@ export class TenantDAO {
 
     return {
       ...result,
+      region: result.region ?? undefined,
+      policy_profile: (result.policy_profile as any) ?? undefined,
       created_at: new Date(result.created_at),
       updated_at: result.updated_at ? new Date(result.updated_at) : undefined,
     };
@@ -80,8 +91,8 @@ export class TenantDAO {
     const result = await this.db
       .deleteFrom('tenants')
       .where('tenant_id', '=', tenantId)
-      .execute();
+      .executeTakeFirst();
 
-    return result.count > 0;
+    return Number(result.numDeletedRows) > 0;
   }
 }

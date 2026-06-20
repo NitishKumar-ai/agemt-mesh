@@ -9,11 +9,14 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MetadataService } from '../services/MetadataService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('metadata')
+@UseGuards(OidcAuthGuard)
 @Controller('api/metadata')
 export class MetadataResource {
   constructor(private readonly metadataService: MetadataService) {}

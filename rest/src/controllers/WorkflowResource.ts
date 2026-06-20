@@ -10,13 +10,16 @@ import {
   HttpException,
   HttpStatus,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { WorkflowModel } from '@agentmesh/common';
 import { NotFoundException, ConflictException } from '@agentmesh/common';
 import { WorkflowService } from '../services/WorkflowService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('workflows')
+@UseGuards(OidcAuthGuard)
 @Controller('api/workflow')
 export class WorkflowResource {
   constructor(private readonly workflowService: WorkflowService) {}

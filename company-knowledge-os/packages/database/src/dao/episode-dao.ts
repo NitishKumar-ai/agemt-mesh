@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely';
 import { IEpisode } from '@company-knowledge-os/core';
-import { EpisodeTable } from '../schema/schema';
+import { Database, EpisodeTable } from '../schema/schema';
 
 export class EpisodeDAO {
   constructor(private db: Kysely<Database>) {}
@@ -17,6 +17,9 @@ export class EpisodeDAO {
 
     return {
       ...result,
+      parsed_hash: result.parsed_hash ?? undefined,
+      parsed_content: (result.parsed_content as any) ?? undefined,
+      author: result.author ?? undefined,
       created_at: new Date(result.created_at),
       ingested_at: new Date(result.ingested_at),
     };
@@ -33,6 +36,9 @@ export class EpisodeDAO {
 
     return {
       ...result,
+      parsed_hash: result.parsed_hash ?? undefined,
+      parsed_content: (result.parsed_content as any) ?? undefined,
+      author: result.author ?? undefined,
       created_at: new Date(result.created_at),
       ingested_at: new Date(result.ingested_at),
     };
@@ -73,6 +79,9 @@ export class EpisodeDAO {
 
     return results.map((result) => ({
       ...result,
+      parsed_hash: result.parsed_hash ?? undefined,
+      parsed_content: (result.parsed_content as any) ?? undefined,
+      author: result.author ?? undefined,
       created_at: new Date(result.created_at),
       ingested_at: new Date(result.ingested_at),
     }));
@@ -95,6 +104,9 @@ export class EpisodeDAO {
 
     return {
       ...result,
+      parsed_hash: result.parsed_hash ?? undefined,
+      parsed_content: (result.parsed_content as any) ?? undefined,
+      author: result.author ?? undefined,
       created_at: new Date(result.created_at),
       ingested_at: new Date(result.ingested_at),
     };
@@ -104,9 +116,9 @@ export class EpisodeDAO {
     const result = await this.db
       .deleteFrom('episodes')
       .where('episode_id', '=', episodeId)
-      .execute();
+      .executeTakeFirst();
 
-    return result.count > 0;
+    return Number(result.numDeletedRows) > 0;
   }
 
   async countEpisodes(tenantId: string): Promise<number> {

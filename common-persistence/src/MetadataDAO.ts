@@ -1,5 +1,18 @@
 import { TaskDef, WorkflowDef, EventHandler } from '@agentmesh/common';
 
+export interface DashboardSchedule {
+  id?: number;
+  name: string;
+  prompt: string;
+  interval: string;
+  enabled: boolean;
+  next_run_at?: number;
+  last_run_at?: number;
+  last_status?: string;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface WorkflowDefSummary {
   name?: string;
   version?: number;
@@ -29,4 +42,11 @@ export interface MetadataDAO {
   removeEventHandlerStatus(name: string): Promise<void>;
   getAllEventHandlers(): Promise<EventHandler[]>;
   getEventHandlersForEvent(event: string, activeOnly: boolean): Promise<EventHandler[]>;
+
+  // Dashboard Schedules
+  createSchedule(schedule: DashboardSchedule): Promise<void>;
+  updateSchedule(schedule: DashboardSchedule): Promise<void>;
+  getSchedule(name: string): Promise<DashboardSchedule | undefined>;
+  getAllSchedules(): Promise<DashboardSchedule[]>;
+  removeSchedule(name: string): Promise<void>;
 }

@@ -9,7 +9,7 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "lint": "eslint src/",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.27",

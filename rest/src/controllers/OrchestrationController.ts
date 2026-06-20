@@ -1,11 +1,13 @@
 import {
   Controller, Get, Post, Put, Delete,
-  Param, Query, Body, HttpException, HttpStatus,
+  Param, Query, Body, HttpException, HttpStatus, UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OrchestrationService, StoredSchedule } from '../services/OrchestrationService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('orchestration')
+@UseGuards(OidcAuthGuard)
 @Controller('api/orchestration')
 export class OrchestrationController {
   constructor(private readonly svc: OrchestrationService) {}
