@@ -2,6 +2,7 @@ import type {
   AgentSession,
   AppSettings,
   ApprovalEvent,
+  AskAnswer,
   ConnectionInfo,
   ConnectorConfig,
   GitHubStatus,
@@ -108,6 +109,9 @@ export const api = {
   runWorkflow: (input: unknown) => post<any>('/api/workflow', input),
   approveWorkflow: (workflowId: string, input?: unknown) =>
     post<any>(`/api/agents/workflows/${encodeURIComponent(workflowId)}/approve`, input),
+
+  askQuestion: (query: string, projectId: string) =>
+    post<AskAnswer>('/api/workflows/query', { query, projectId }),
 
   listTasks: () =>
     request<any>('/api/agents/tasks').then((res) => ({

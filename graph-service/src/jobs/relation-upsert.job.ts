@@ -9,7 +9,7 @@ export class RelationUpsertJob {
    * between the same source and target nodes, it supersedes it.
    */
   async upsertRelationship(rel: GraphRelationship): Promise<void> {
-    const existingRels = Array.from(this.neo4jClient.getInMemoryRelationships().values());
+    const existingRels = await this.neo4jClient.listRelationships(rel.tenant_id);
 
     const now = new Date().toISOString();
     const validFrom = rel.valid_from || now;

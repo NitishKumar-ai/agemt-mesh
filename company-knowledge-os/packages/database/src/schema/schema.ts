@@ -1,7 +1,6 @@
-import { Kysely, PostgresDialect, SQLiteDatabase } from 'kysely';
-import { PostgresJsQueryCompiler } from 'kysely-postgres-js';
+import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
 import { Pool } from 'pg';
-import { SQLite3Dialect } from 'kysely-dialect-sqlite3';
+import DatabaseConstructor from 'better-sqlite3';
 
 export interface Database {
   tenants: TenantTable;
@@ -94,8 +93,7 @@ export function createPostgresDatabase(
 
   return new Kysely<Database>({
     dialect: new PostgresDialect({
-      database: pool,
-      queryCompiler: PostgresJsQueryCompiler,
+      pool,
     }),
   });
 }
@@ -104,8 +102,8 @@ export function createSQLiteDatabase(
   path: string
 ): Kysely<Database> {
   return new Kysely<Database>({
-    dialect: new SQLite3Dialect({
-      database: path,
+    dialect: new SqliteDialect({
+      database: new DatabaseConstructor(path),
     }),
   });
 }

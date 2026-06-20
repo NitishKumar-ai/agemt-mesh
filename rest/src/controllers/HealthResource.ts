@@ -1,5 +1,6 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { OidcAuthGuard, Public } from '../OidcAuthGuard.js';
 
 export const START_TIME = 'START_TIME';
 export const VERSION = 'VERSION';
@@ -7,6 +8,8 @@ export const DB_PROBE = 'DB_PROBE';
 export type DbProbe = () => Promise<void>;
 
 @ApiTags('health')
+@UseGuards(OidcAuthGuard)
+@Public()
 @Controller('health')
 export class HealthResource {
   constructor(

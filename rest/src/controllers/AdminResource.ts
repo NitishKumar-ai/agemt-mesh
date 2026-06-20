@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AdminService } from '../services/AdminService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('admin')
+@UseGuards(OidcAuthGuard)
 @Controller('api/admin')
 export class AdminResource {
   constructor(private readonly adminService: AdminService) {}

@@ -40,7 +40,7 @@ import { featureFlags, FEATURES } from "utils/flags";
 import useCustomPagination from "utils/hooks/useCustomPagination";
 import { usePushHistory } from "utils/hooks/usePushHistory";
 import { logger } from "utils/logger";
-import { api } from "../../lib/api";
+import { api } from "lib/api";
 import { createSearchableTags, tryToJson } from "utils/utils";
 import { getUniqueWorkflows } from "utils/workflow";
 import CloneWorkflowDialog from "./dialog/CloneWorkflowDialog";

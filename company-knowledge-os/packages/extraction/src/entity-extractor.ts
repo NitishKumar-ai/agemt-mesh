@@ -53,6 +53,7 @@ export class EntityExtractor {
       // Extract people mentions
       if (episode.parsed_content.user) {
         entities.push({
+          entity_id: crypto.randomUUID(),
           tenant_id: episode.tenant_id,
           name: episode.parsed_content.user,
           entity_type: 'person',
@@ -64,6 +65,7 @@ export class EntityExtractor {
       // Extract team mentions
       if (episode.parsed_content.channel) {
         entities.push({
+          entity_id: crypto.randomUUID(),
           tenant_id: episode.tenant_id,
           name: episode.parsed_content.channel,
           entity_type: 'team',
@@ -78,6 +80,7 @@ export class EntityExtractor {
       let match;
       while ((match = projectPatterns.exec(content)) !== null) {
         entities.push({
+          entity_id: crypto.randomUUID(),
           tenant_id: episode.tenant_id,
           name: match[2],
           entity_type: 'project',
@@ -150,7 +153,7 @@ export class EntityExtractor {
       const key = `${entity.name}:${entity.entity_type}`;
       if (canonicalMap.has(key)) {
         const existing = canonicalMap.get(key)!;
-        existing.source_refs.push(...entity.source_refs);
+        existing.source_refs = [...(existing.source_refs ?? []), ...(entity.source_refs ?? [])];
       } else {
         canonicalMap.set(key, entity);
       }

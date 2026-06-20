@@ -34,6 +34,7 @@ export class SqliteQueueDAO implements QueueDAO {
       .updateTable('queue_message')
       .set({
         deliver_on: sql`datetime('now', '+' || ${offsetTimeInSecond} || ' seconds')`,
+        popped: sql<boolean>`0`,
       })
       .where('queue_name', '=', queueName)
       .where('message_id', '=', id)
@@ -53,6 +54,7 @@ export class SqliteQueueDAO implements QueueDAO {
         .onConflict((oc) =>
           oc.columns(['queue_name', 'message_id']).doUpdateSet({
             deliver_on: (eb) => eb.ref('excluded.deliver_on'),
+            popped: sql<boolean>`0`,
           }),
         )
         .execute();
@@ -77,6 +79,7 @@ export class SqliteQueueDAO implements QueueDAO {
           oc.columns(['queue_name', 'message_id']).doUpdateSet({
             payload: (eb) => eb.ref('excluded.payload'),
             deliver_on: (eb) => eb.ref('excluded.deliver_on'),
+            popped: sql<boolean>`0`,
           }),
         )
         .execute();
@@ -101,7 +104,11 @@ export class SqliteQueueDAO implements QueueDAO {
         offset_time_seconds: offsetTimeInSecond.toString(),
         deliver_on: sql`datetime('now', '+' || ${offsetTimeInSecond} || ' seconds')`,
       })
-      .onConflict((oc) => oc.columns(['queue_name', 'message_id']).doNothing())
+      .onConflict((oc) =>
+        oc.columns(['queue_name', 'message_id']).doUpdateSet({
+          popped: sql<boolean>`0`,
+        }).where('popped', '=', sql<boolean>`1`)
+      )
       .executeTakeFirst();
 
     return result.numInsertedOrUpdatedRows !== undefined && result.numInsertedOrUpdatedRows > 0n;
@@ -330,6 +337,7 @@ export class SqliteQueueDAO implements QueueDAO {
       .set({
         priority,
         deliver_on: sql`datetime('now', '+' || ${postponeDurationInSeconds} || ' seconds')`,
+        popped: sql<boolean>`0`,
       })
       .where('queue_name', '=', queueName)
       .where('message_id', '=', messageId)

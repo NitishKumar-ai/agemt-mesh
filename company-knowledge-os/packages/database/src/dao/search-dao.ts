@@ -1,6 +1,6 @@
-import { Kysely } from 'kysely';
-import { IFact } from '@company-knowledge-os/core';
-import { SearchIndexTable } from '../schema/schema';
+import { Kysely, sql } from 'kysely';
+import { IFact, IEpisode } from '@company-knowledge-os/core';
+import { Database, SearchIndexTable } from '../schema/schema';
 
 export class SearchDAO {
   constructor(private db: Kysely<Database>) {}
@@ -25,9 +25,8 @@ export class SearchDAO {
         },
         created_at: new Date(),
       })
-      .onConflictDoUpdate({
-        target: ['id', 'tenant_id'],
-        set: {
+      .onConflict((oc) =>
+        oc.columns(['id', 'tenant_id']).doUpdateSet({
           embedding,
           content: `${fact.subject} ${fact.predicate} ${fact.object}`,
           metadata: {
@@ -39,12 +38,12 @@ export class SearchDAO {
             status: fact.status,
           },
           created_at: new Date(),
-        },
-      })
+        })
+      )
       .execute();
   }
 
-  async indexEpisode(episode: IFact, embedding: number[]): Promise<void> {
+  async indexEpisode(episode: IEpisode, embedding: number[]): Promise<void> {
     await this.db
       .insertInto('search_index')
       .values({
@@ -58,24 +57,23 @@ export class SearchDAO {
           episode_id: episode.episode_id,
           source_system: episode.source_system,
           source_id: episode.source_id,
-          author: episode.author,
+          author: episode.author || null,
         },
         created_at: new Date(),
       })
-      .onConflictDoUpdate({
-        target: ['id', 'tenant_id'],
-        set: {
+      .onConflict((oc) =>
+        oc.columns(['id', 'tenant_id']).doUpdateSet({
           embedding,
           content: JSON.stringify(episode.parsed_content || {}),
           metadata: {
             episode_id: episode.episode_id,
             source_system: episode.source_system,
             source_id: episode.source_id,
-            author: episode.author,
+            author: episode.author || null,
           },
           created_at: new Date(),
-        },
-      })
+        })
+      )
       .execute();
   }
 
@@ -91,24 +89,24 @@ export class SearchDAO {
   ): Promise<Array<{ id: string; fact_id?: string; episode_id?: string; score: number; content: string }>> {
     const limit = filters?.limit || 10;
 
-    const results = await this.db
+    let query = this.db
       .selectFrom('search_index')
-      .where('tenant_id', '=', tenantId)
-      .where((eb) =>
-        eb.and([
-          eb('fact_id', 'is', filters?.fact_id ? eb.ref('fact_id').equals(filters.fact_id) : undefined),
-          eb('episode_id', 'is', filters?.episode_id ? eb.ref('episode_id').equals(filters.episode_id) : undefined),
-        ])
-      )
+      .where('tenant_id', '=', tenantId);
+
+    if (filters?.fact_id) {
+      query = query.where('fact_id', '=', filters.fact_id);
+    }
+
+    if (filters?.episode_id) {
+      query = query.where('episode_id', '=', filters.episode_id);
+    }
+
+    const results = await query
       .select((eb) => [
         'id',
         'fact_id',
         'episode_id',
-        eb
-          .fn
-          .number('pgvector')
-          .withArgs('cosine_similarity', eb.ref('embedding'), queryEmbedding)
-          .as('score'),
+        sql<number>`1 - (embedding <=> ${'[' + queryEmbedding.join(',') + ']'}::vector)`.as('score'),
         'content',
       ])
       .orderBy('score', 'desc')
@@ -139,28 +137,29 @@ export class SearchDAO {
     let queryBuilder = this.db
       .selectFrom('search_index')
       .where('tenant_id', '=', tenantId)
-      .where((eb) =>
-        eb.and([
-          eb('fact_id', 'is', filters?.fact_id ? eb.ref('fact_id').equals(filters.fact_id) : undefined),
-          eb('episode_id', 'is', filters?.episode_id ? eb.ref('episode_id').equals(filters.episode_id) : undefined),
-        ])
-      )
-      .select((eb) => [
+      .select([
         'id',
         'fact_id',
         'episode_id',
-        eb.fn('ts_rank', eb.ref('content'), eb.fn('plainto_tsquery', 'english', query)).as('score'),
+        sql<number>`ts_rank(to_tsvector('english', content), plainto_tsquery('english', ${query}))`.as('score'),
         'content',
-      ])
+      ]);
+
+    if (filters?.fact_id) {
+      queryBuilder = queryBuilder.where('fact_id', '=', filters.fact_id);
+    }
+
+    if (filters?.episode_id) {
+      queryBuilder = queryBuilder.where('episode_id', '=', filters.episode_id);
+    }
+
+    queryBuilder = queryBuilder
       .orderBy('score', 'desc')
       .limit(limit);
 
-    if (filters?.status && filters.status.length > 0) {
-      queryBuilder = queryBuilder.where((eb) =>
-        eb.and(
-          filters.status.map((status) => eb('metadata->>status', '=', status))
-        )
-      );
+    const statusFilters = filters?.status;
+    if (statusFilters && statusFilters.length > 0) {
+      queryBuilder = queryBuilder.where(sql`metadata->>'status'`, 'in', statusFilters);
     }
 
     const results = await queryBuilder.execute();

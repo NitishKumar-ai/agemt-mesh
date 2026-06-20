@@ -40,7 +40,6 @@ export class SyncSqliteAdapter {
   private readonly stmtResetOffsetTime: Stmt;
   private readonly stmtPostpone: Stmt;
   private readonly stmtPopMessage: Stmt;
-  private readonly stmtMarkPopped: Stmt;
 
   constructor(db: RawDb) {
     this.stmtGetWorkflow = db.prepare('SELECT json_data FROM workflow WHERE workflow_id = ?');
@@ -96,8 +95,12 @@ export class SyncSqliteAdapter {
     );
     this.stmtEnsureQueue = db.prepare('INSERT OR IGNORE INTO queue (queue_name) VALUES (?)');
     this.stmtPushQueueMessage = db.prepare(
-      `INSERT OR IGNORE INTO queue_message (queue_name, message_id, priority, popped, deliver_on)
-       VALUES (?, ?, ?, 0, datetime('now', '+' || ? || ' seconds'))`,
+      `INSERT INTO queue_message (queue_name, message_id, priority, popped, deliver_on)
+       VALUES (?, ?, ?, 0, datetime('now', '+' || ? || ' seconds'))
+       ON CONFLICT(queue_name, message_id) DO UPDATE SET
+         popped = 0,
+         deliver_on = excluded.deliver_on,
+         priority = excluded.priority`,
     );
     this.stmtRemoveQueueMessage = db.prepare(
       'DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?',
@@ -109,15 +112,10 @@ export class SyncSqliteAdapter {
       'UPDATE queue_message SET deliver_on = CURRENT_TIMESTAMP WHERE queue_name = ? AND message_id = ?',
     );
     this.stmtPostpone = db.prepare(
-      `UPDATE queue_message SET deliver_on = datetime('now', '+' || ? || ' seconds') WHERE queue_name = ? AND message_id = ?`,
+      `UPDATE queue_message SET deliver_on = datetime('now', '+' || ? || ' seconds'), popped = 0 WHERE queue_name = ? AND message_id = ?`,
     );
     this.stmtPopMessage = db.prepare(
-      `SELECT message_id FROM queue_message
-       WHERE queue_name = ? AND popped = 0 AND deliver_on <= CURRENT_TIMESTAMP
-       ORDER BY priority DESC, created_on ASC LIMIT 1`,
-    );
-    this.stmtMarkPopped = db.prepare(
-      'UPDATE queue_message SET popped = 1 WHERE queue_name = ? AND message_id = ?',
+      `UPDATE queue_message SET popped = 1 WHERE rowid = (SELECT rowid FROM queue_message WHERE queue_name = ? AND popped = 0 AND deliver_on <= CURRENT_TIMESTAMP ORDER BY priority DESC, created_on ASC LIMIT 1) RETURNING message_id`,
     );
   }
 
@@ -334,7 +332,6 @@ export class SyncSqliteAdapter {
     const row = this.stmtPopMessage.get(queueName) as { message_id: string } | undefined;
     if (row) {
       console.log(`[SyncSqliteAdapter] Popped: queue=${queueName}, id=${row.message_id}`);
-      this.stmtMarkPopped.run(queueName, row.message_id);
       return row.message_id;
     }
     return null;

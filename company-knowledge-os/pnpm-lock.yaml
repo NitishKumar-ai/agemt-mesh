@@ -775,6 +775,9 @@ importers:
       '@company-knowledge-os/database':
         specifier: workspace:*
         version: link:../database
+      '@company-knowledge-os/extraction':
+        specifier: workspace:*
+        version: link:../extraction
       bull:
         specifier: ^4.12.0
         version: 4.16.5

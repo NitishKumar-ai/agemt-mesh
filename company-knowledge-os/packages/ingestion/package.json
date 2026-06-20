@@ -15,6 +15,7 @@
   "dependencies": {
     "@company-knowledge-os/core": "workspace:*",
     "@company-knowledge-os/database": "workspace:*",
+    "@company-knowledge-os/extraction": "workspace:*",
     "@company-knowledge-os/connector-slack": "workspace:*",
     "@company-knowledge-os/connector-gdrive": "workspace:*",
     "@company-knowledge-os/connector-gmail": "workspace:*",

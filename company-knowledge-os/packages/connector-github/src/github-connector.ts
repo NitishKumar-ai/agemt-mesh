@@ -2,6 +2,12 @@ import { Connector, ConnectorConfig, IEpisode, scalekitActions } from '@company-
 import { ConnectorStatus } from '@scalekit-sdk/node/lib/pkg/grpc/scalekit/v1/connected_accounts/connected_accounts_pb';
 import crypto from 'crypto';
 
+function getRepoFromUrl(url?: string): string {
+  if (!url) return 'unknown-repo';
+  const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
+  return match ? match[1] : 'unknown-repo';
+}
+
 export interface GitHubWebhookPayload {
   event_type: string;
   delivery_id: string;
@@ -77,7 +83,6 @@ export class GitHubConnector implements Connector {
 
       const issues = await this.fetchIssues(since);
       episodes.push(...issues);
-
     } catch (error) {
       if (error instanceof Error && error.message === 'GitHub not authorized') {
         return [];
@@ -109,7 +114,8 @@ export class GitHubConnector implements Connector {
       const data = await this.executeToolWithAuth('github_fetch_pull_requests', {
         since: since.toISOString()
       });
-      // Placeholder for mapping PRs
+      const prs = data?.pull_requests || [];
+      episodes.push(...prs.map((pr: any) => this.pullRequestToEpisode(pr)));
     } catch (e) {
       console.error('Error fetching PRs via Scalekit', e);
     }
@@ -122,7 +128,8 @@ export class GitHubConnector implements Connector {
       const data = await this.executeToolWithAuth('github_fetch_issues', {
         since: since.toISOString()
       });
-      // Placeholder for mapping Issues
+      const issues = data?.issues || [];
+      episodes.push(...issues.map((issue: any) => this.issueToEpisode(issue)));
     } catch (e) {
       console.error('Error fetching issues via Scalekit', e);
     }
@@ -141,16 +148,19 @@ export class GitHubConnector implements Connector {
 
   private commitToEpisode(commit: any): IEpisode {
     const dateStr = commit.commit?.author?.date || new Date().toISOString();
+    const repo = commit.repository?.full_name || getRepoFromUrl(commit.html_url || commit.url);
     const episode: IEpisode = {
       episode_id: this.generateUUID(),
       tenant_id: '', // Set by orchestrator
       source_system: 'github',
-      source_id: `${commit.sha}`,
+      source_id: `${repo}@${commit.sha}`,
       source_version: commit.sha,
       raw_pointer: commit.html_url || '',
-      parsed_hash: this.hashCommit(commit),
+      parsed_hash: this.hashObject(commit),
       parsed_content: {
+        repo,
         sha: commit.sha,
+        text: commit.commit?.message,
         message: commit.commit?.message,
         author: commit.commit?.author?.name,
         author_email: commit.commit?.author?.email,
@@ -162,7 +172,7 @@ export class GitHubConnector implements Connector {
         files: commit.files,
         timestamp: new Date(dateStr),
       },
-      author: commit.commit?.author?.name || '',
+      author: commit.commit?.author?.name ?? commit.author?.login ?? 'unknown',
       created_at: new Date(dateStr),
       ingested_at: new Date(),
     };
@@ -170,8 +180,66 @@ export class GitHubConnector implements Connector {
     return episode;
   }
 
-  private hashCommit(commit: any): string {
-    const content = JSON.stringify(commit);
+  private pullRequestToEpisode(pr: any): IEpisode {
+    const repo = pr.repository?.full_name || getRepoFromUrl(pr.html_url || pr.url);
+    return {
+      episode_id: this.generateUUID(),
+      tenant_id: '',
+      source_system: 'github',
+      source_id: `${repo}#pr-${pr.number}`,
+      source_version: pr.updated_at,
+      raw_pointer: pr.html_url || '',
+      parsed_hash: this.hashObject(pr),
+      parsed_content: {
+        repo,
+        number: pr.number,
+        title: pr.title,
+        text: `${pr.title}\n\n${pr.body ?? ''}`,
+        body: pr.body,
+        state: pr.state,
+        merged: pr.merged_at != null,
+        user: pr.user?.login,
+        url: pr.html_url,
+        html_url: pr.html_url,
+        timestamp: new Date(pr.updated_at),
+      },
+      author: pr.user?.login ?? 'unknown',
+      created_at: new Date(pr.created_at ?? pr.updated_at),
+      ingested_at: new Date(),
+    };
+  }
+
+  private issueToEpisode(issue: any): IEpisode {
+    const repo = issue.repository?.full_name || getRepoFromUrl(issue.html_url || issue.url);
+    return {
+      episode_id: this.generateUUID(),
+      tenant_id: '',
+      source_system: 'github',
+      source_id: `${repo}#issue-${issue.number}`,
+      source_version: issue.updated_at,
+      raw_pointer: issue.html_url || '',
+      parsed_hash: this.hashObject(issue),
+      parsed_content: {
+        repo,
+        number: issue.number,
+        title: issue.title,
+        text: `${issue.title}\n\n${issue.body ?? ''}`,
+        body: issue.body,
+        state: issue.state,
+        user: issue.user?.login,
+        labels: (issue.labels || []).map((l: any) => (typeof l === 'string' ? l : l.name)),
+        url: issue.html_url,
+        html_url: issue.html_url,
+        timestamp: new Date(issue.updated_at),
+      },
+      author: issue.user?.login ?? 'unknown',
+      created_at: new Date(issue.created_at ?? issue.updated_at),
+      ingested_at: new Date(),
+    };
+  }
+
+  private hashObject(obj: any): string {
+    const content = JSON.stringify(obj);
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
@@ -193,8 +261,16 @@ export class GitHubConnector implements Connector {
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    if (!this.config.webhook_secret) return false;
-    return true; // Placeholder
+    if (!this.config.webhook_secret || !signature) return false;
+
+    const expected =
+      'sha256=' + crypto.createHmac('sha256', this.config.webhook_secret).update(payload).digest('hex');
+
+    const expectedBuf = Buffer.from(expected);
+    const signatureBuf = Buffer.from(signature);
+    if (expectedBuf.length !== signatureBuf.length) return false;
+
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf);
   }
 
   async processWebhook(payload: any): Promise<void> {

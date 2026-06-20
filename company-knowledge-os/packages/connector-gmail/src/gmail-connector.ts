@@ -16,7 +16,6 @@ export class GmailConnector implements Connector {
 
   async bootstrap(): Promise<void> {
     console.log('Gmail connector bootstrap started');
-    // For Scalekit, we might just verify the connected account exists
     await this.getConnectedAccount();
   }
 
@@ -28,36 +27,44 @@ export class GmailConnector implements Connector {
     return response.connectedAccount;
   }
 
+  private async executeToolWithAuth(toolName: string, toolInput: any) {
+    const connectedAccount = await this.getConnectedAccount();
+    
+    if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
+      console.warn(`Gmail is not connected for user ${this.config.identifier}. Status: ${connectedAccount?.status}`);
+      const linkResponse = await scalekitActions.getAuthorizationLink({
+        connectionName: this.name,
+        identifier: this.config.identifier!,
+      });
+      console.warn(`🔗 User must click on this link to authorize Gmail: ${linkResponse.link}`);
+      throw new Error('Gmail not authorized');
+    }
+
+    const toolResponse = await scalekitActions.executeTool({
+      toolName,
+      connectedAccountId: connectedAccount?.id,
+      toolInput,
+    });
+    
+    return toolResponse.data;
+  }
+
   async fetchChanges(since: Date): Promise<IEpisode[]> {
     const episodes: IEpisode[] = [];
 
     try {
-      const connectedAccount = await this.getConnectedAccount();
-      
-      if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
-        console.warn(`Gmail is not connected for user ${this.config.identifier}. Status: ${connectedAccount?.status}`);
-        const linkResponse = await scalekitActions.getAuthorizationLink({
-          connectionName: this.name,
-          identifier: this.config.identifier!,
-        });
-        console.warn(`🔗 User must click on this link to authorize Gmail: ${linkResponse.link}`);
-        return []; // Cannot fetch until authorized
-      }
-
-      // Fetch emails using Scalekit Tool Call
-      const toolResponse = await scalekitActions.executeTool({
-        toolName: 'gmail_fetch_mails',
-        connectedAccountId: connectedAccount?.id,
-        toolInput: {
-          query: `after:${Math.floor(since.getTime() / 1000)}`,
-          max_results: 100,
-        },
+      const data = await this.executeToolWithAuth('gmail_fetch_mails', {
+        query: `after:${Math.floor(since.getTime() / 1000)}`,
+        max_results: 100,
       });
 
-      const messages: any[] = toolResponse.data?.messages || [];
+      const messages: any[] = data?.messages || [];
       episodes.push(...messages.map((msg) => this.messageToEpisode(msg)));
 
     } catch (error) {
+      if (error instanceof Error && error.message === 'Gmail not authorized') {
+        return [];
+      }
       console.error('Error fetching Gmail changes via Scalekit:', error);
       throw error;
     }
@@ -66,7 +73,22 @@ export class GmailConnector implements Connector {
   }
 
   async fetchObject(sourceId: string): Promise<IEpisode> {
-    throw new Error('Method not implemented.');
+    try {
+      const data = await this.executeToolWithAuth('gmail_fetch_mail', {
+        id: sourceId,
+      });
+      const message = data?.message || data; // handle direct or wrapped message payload
+      if (!message) {
+        throw new Error(`Gmail message ${sourceId} not found`);
+      }
+      return this.messageToEpisode(message);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Gmail not authorized') {
+        throw new Error('Gmail not authorized');
+      }
+      console.error('Error fetching Gmail object via Scalekit:', error);
+      throw error;
+    }
   }
 
   private messageToEpisode(msg: any): IEpisode {

@@ -1,15 +1,20 @@
 import { Kysely } from 'kysely';
+import { randomUUID } from 'crypto';
 import { IEntity } from '@company-knowledge-os/core';
-import { EntityTable } from '../schema/schema';
+import { Database, EntityTable } from '../schema/schema';
 
 export class EntityDAO {
   constructor(private db: Kysely<Database>) {}
 
-  async createEntity(entity: Omit<IEntity, 'created_at'>): Promise<IEntity> {
+  async createEntity(entity: Omit<IEntity, 'created_at' | 'entity_id'> & { entity_id?: string }): Promise<IEntity> {
+    const entityId = entity.entity_id || randomUUID();
     const result = await this.db
       .insertInto('entities')
       .values({
         ...entity,
+        entity_id: entityId,
+        aliases: entity.aliases || [],
+        source_refs: entity.source_refs || [],
         created_at: new Date(),
       })
       .returningAll()
@@ -17,6 +22,8 @@ export class EntityDAO {
 
     return {
       ...result,
+      aliases: result.aliases || [],
+      source_refs: (result.source_refs || []) as Record<string, any>[],
       created_at: new Date(result.created_at),
     };
   }
@@ -32,6 +39,8 @@ export class EntityDAO {
 
     return {
       ...result,
+      aliases: result.aliases || [],
+      source_refs: (result.source_refs || []) as Record<string, any>[],
       created_at: new Date(result.created_at),
     };
   }
@@ -56,6 +65,8 @@ export class EntityDAO {
 
     return {
       ...result,
+      aliases: result.aliases || [],
+      source_refs: (result.source_refs || []) as Record<string, any>[],
       created_at: new Date(result.created_at),
     };
   }
@@ -84,6 +95,8 @@ export class EntityDAO {
 
     return results.map((result) => ({
       ...result,
+      aliases: result.aliases || [],
+      source_refs: (result.source_refs || []) as Record<string, any>[],
       created_at: new Date(result.created_at),
     }));
   }
@@ -112,7 +125,12 @@ export class EntityDAO {
   ): Promise<IEntity | null> {
     const result = await this.db
       .updateTable('entities')
-      .set(updates)
+      .set({
+        name: updates.name,
+        entity_type: updates.entity_type,
+        aliases: updates.aliases,
+        source_refs: updates.source_refs,
+      })
       .where('entity_id', '=', entityId)
       .returningAll()
       .executeTakeFirst();
@@ -121,6 +139,8 @@ export class EntityDAO {
 
     return {
       ...result,
+      aliases: result.aliases || [],
+      source_refs: (result.source_refs || []) as Record<string, any>[],
       created_at: new Date(result.created_at),
     };
   }
@@ -129,9 +149,9 @@ export class EntityDAO {
     const result = await this.db
       .deleteFrom('entities')
       .where('entity_id', '=', entityId)
-      .execute();
+      .executeTakeFirst();
 
-    return result.count > 0;
+    return Number(result.numDeletedRows) > 0;
   }
 
   async countEntities(tenantId: string): Promise<number> {

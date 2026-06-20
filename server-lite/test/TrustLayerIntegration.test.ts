@@ -1,20 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { bootstrapServer } from '../src/index.js';
+import { policyEngine } from '@agentmesh/graph-service';
 import crypto from 'node:crypto';
 
 describe('Phase 3 Trust Layer E2E Integration tests', () => {
   it('should support graph ingestion, bitemporal facts, human corrections, and trust workflows', async () => {
     const port = 18081;
     const serverUrl = `http://localhost:${port}`;
+    const tenantId = 'org_trust_e2e';
+    const principalId = 'user_staff';
+
+    policyEngine.grantAccess({
+      tenant_id: tenantId,
+      user_id: principalId,
+      permission_hashes: ['correction-submit'],
+      is_admin: true,
+    });
 
     const { close } = await bootstrapServer({
       port,
       dbPath: ':memory:',
       installSignalHandlers: false,
+      trustedPrincipal: { id: principalId, tenant_id: tenantId },
     });
 
     try {
-      const tenantId = 'org_trust_e2e';
       const projectId = crypto.randomUUID();
       const sourceId1 = 'source_notion_roadmap';
       const sourceId2 = 'source_meeting_note';
@@ -150,7 +160,7 @@ describe('Phase 3 Trust Layer E2E Integration tests', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tenant_id: tenantId,
-          user_id: 'user_staff',
+          user_id: 'caller-controlled-user',
           correction_type: 'FACT_INVALIDATE',
           target_type: 'fact',
           target_id: currentFacts2[0].id,
@@ -172,7 +182,7 @@ describe('Phase 3 Trust Layer E2E Integration tests', () => {
       const auditLog = await auditRes.json();
       expect(auditLog).toHaveLength(1);
       expect(auditLog[0].correction_type).toBe('FACT_INVALIDATE');
-      expect(auditLog[0].user_id).toBe('user_staff');
+      expect(auditLog[0].user_id).toBe(principalId);
 
       // 5. Test Trust Workflows: Weekly Digest
       const weeklyDigestRes = await fetch(`${serverUrl}/api/workflows/weekly-digest?tenant_id=${tenantId}`, {
@@ -207,6 +217,7 @@ describe('Phase 3 Trust Layer E2E Integration tests', () => {
 
     } finally {
       await close();
+      policyEngine.revokeAccess(tenantId, principalId);
     }
   }, 25000);
 });

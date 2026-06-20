@@ -82,11 +82,11 @@ export class NotionConnector implements Connector {
       page_id: sourceId
     });
     
-    if (!data?.page) {
+    if (!data?.page && !data) {
       throw new Error(`Notion page ${sourceId} not found`);
     }
 
-    return this.pageToEpisode(data.page);
+    return this.pageToEpisode(data.page || data);
   }
 
   private pageToEpisode(page: any): IEpisode {

@@ -1,5 +1,6 @@
 packages:
   - 'ui'
+  - 'ui-next'
   - 'common'
   - 'common-persistence'
   - 'core'

@@ -281,4 +281,14 @@ export interface Database {
   dashboard_schedules: DashboardScheduleTable;
   connections: ConnectionTable;
   killswitch_meta: KillswitchMetaTable;
+  user_access_grants: UserAccessGrantTable;
+}
+
+export interface UserAccessGrantTable {
+  id: Generated<number>;
+  tenant_id: string;
+  user_id: string;
+  permission_hash: string;
+  is_admin: Generated<number>;
+  created_at: number;
 }

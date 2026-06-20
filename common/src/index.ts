@@ -22,4 +22,5 @@ export * from './models/Workflow.js';
 export * from './models/WorkflowDef.js';
 export * from './models/WorkflowModel.js';
 export * from './models/WorkflowTask.js';
+export * from './models/VectorSearch.js';
 export * from './utils/EnvUtils.js';

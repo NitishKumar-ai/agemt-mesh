@@ -27,7 +27,7 @@ import SectionHeaderActions from "components/ui/layout/SectionHeaderActions";
 import NoDataComponent from "components/ui/NoDataComponent";
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
-import { api, Agent } from "../lib/api";
+import { api, Agent } from "lib/api";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { PopoverMessage } from "types/Messages";
 

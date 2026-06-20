@@ -15,3 +15,4 @@ export { AdminService } from './services/AdminService.js';
 export { WorkflowBulkService } from './services/WorkflowBulkService.js';
 export type { DbProbe } from './controllers/HealthResource.js';
 export { START_TIME, VERSION, DB_PROBE } from './controllers/HealthResource.js';
+export { OidcAuthGuard, Public } from './OidcAuthGuard.js';

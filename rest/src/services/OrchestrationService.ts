@@ -18,8 +18,6 @@ export interface StoredSchedule {
 }
 
 export class OrchestrationService {
-  private readonly schedules = new Map<string, StoredSchedule>();
-
   constructor(
     private readonly executionDAO: ExecutionDAO,
     private readonly metadataDAO: MetadataDAO,
@@ -145,14 +143,33 @@ export class OrchestrationService {
     await this.metadataDAO.removeEventHandlerStatus(name);
   }
 
-  // ── Schedulers (in-memory v1) ─────────────────────────────────────
+  // ── Schedulers (DAO backed) ─────────────────────────────────────
 
   async listSchedules(): Promise<StoredSchedule[]> {
-    return [...this.schedules.values()];
+    const schedules = await (this.metadataDAO as any).getAllSchedules();
+    return schedules.map((s: any) => ({
+      name: s.name,
+      workflowName: s.prompt, // Mapping prompt to workflowName
+      workflowVersion: 1,
+      cronExpression: s.interval,
+      enabled: s.enabled,
+      createTime: s.created_at,
+      updatedTime: s.updated_at,
+    }));
   }
 
   async getSchedule(name: string): Promise<StoredSchedule | undefined> {
-    return this.schedules.get(name);
+    const s = await (this.metadataDAO as any).getSchedule(name);
+    if (!s) return undefined;
+    return {
+      name: s.name,
+      workflowName: s.prompt,
+      workflowVersion: 1,
+      cronExpression: s.interval,
+      enabled: s.enabled,
+      createTime: s.created_at,
+      updatedTime: s.updated_at,
+    };
   }
 
   async saveSchedule(schedule: {
@@ -166,23 +183,33 @@ export class OrchestrationService {
     createdBy?: string;
   }): Promise<void> {
     const now = Date.now();
-    const existing = this.schedules.get(schedule.name);
-    this.schedules.set(schedule.name, {
-      name: schedule.name,
-      workflowName: schedule.workflowName,
-      workflowVersion: schedule.workflowVersion ?? 1,
-      cronExpression: schedule.cronExpression,
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
-      enabled: schedule.enabled ?? true,
-      createdBy: schedule.createdBy,
-      createTime: existing?.createTime ?? now,
-      updatedTime: now,
-    });
+    const existing = await (this.metadataDAO as any).getSchedule(schedule.name);
+    
+    if (existing) {
+      await (this.metadataDAO as any).updateSchedule({
+        ...existing,
+        prompt: schedule.workflowName,
+        interval: schedule.cronExpression,
+        enabled: schedule.enabled ?? true,
+        updated_at: now,
+      });
+    } else {
+      await (this.metadataDAO as any).createSchedule({
+        name: schedule.name,
+        prompt: schedule.workflowName,
+        interval: schedule.cronExpression,
+        enabled: schedule.enabled ?? true,
+        created_at: now,
+        updated_at: now,
+      });
+    }
   }
 
   async deleteSchedule(name: string): Promise<boolean> {
-    return this.schedules.delete(name);
+    const existing = await (this.metadataDAO as any).getSchedule(name);
+    if (!existing) return false;
+    await (this.metadataDAO as any).removeSchedule(name);
+    return true;
   }
 
   // ── Task Queue Search ─────────────────────────────────────────────

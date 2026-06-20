@@ -1,107 +1,132 @@
-# CLAUDE.md — AgentMesh
+# CLAUDE.md — AgentMesh CLI Context
 
-Instructions for AI coding agents working on the AgentMesh monorepo.
+Use [`AGENTS.md`](AGENTS.md) as the canonical engineering instructions. This file is the compact context for CLI sessions.
 
-## Project Overview
+## Mission
 
-AgentMesh is pivoting from a pure workflow orchestration engine into a **"company brain"**: a permission-aware, temporal memory graph that ingests internal sources (docs, Slack, email, calendar, GitHub PRs) and serves deduplicated, cited answers to humans and AI agents. The original orchestration engine is retained as the durable execution substrate underneath the new memory/ingestion pipelines.
+AgentMesh is a permission-aware temporal company brain backed by a durable workflow engine. It ingests company sources, builds a Neo4j fact/entity graph, indexes retrievable evidence, and serves cited workflows and natural-language answers.
 
-It consists of:
+## Read First
 
-- **Backend**: NestJS REST API + SQLite persistence (server-lite on port 3000/8080)
-- **Memory graph**: `graph-service` — NestJS service backed by Neo4j (in-memory fallback), bitemporal fact storage, entity correction loop
-- **Retrieval/answer layer**: `workflow-service` — `TrustWorkflowService`, confidence calibration, citation validation, abstention-on-contradiction
-- **Knowledge OS**: `company-knowledge-os/` — separate pnpm/turbo workspace defining `Fact`/`Episode`/`Entity` Zod models and the `Connector` interface for source ingestion (Slack/email/Gdrive/calendar/PRs) — connectors are not yet implemented
-- **Frontends**: 
-  - `ui/` — Agent Mesh OS (React 19 + Vite + Tauri 2 desktop app)
-  - `ui-next/` — Conductor UI (React 18 + MUI + React Router, legacy)
-- **Agent runtime**: In-process agent execution with LLM providers (Anthropic, Gemini)
+1. [`AGENTS.md`](AGENTS.md) — coding rules, architecture, security boundaries, commands, known defects.
+2. [`passes.md`](passes.md) — current production-readiness roadmap and next priorities.
+3. [`pivot.md`](pivot.md) — product requirements and completed capability slices.
+4. `git status --short` — this repository commonly has concurrent uncommitted work.
 
-## Key Source Locations
+## Current Source of Truth
 
-| Content | Where to look |
-|---------|---------------|
-| REST API controllers | `rest/src/controllers/*.ts` (NestJS `@Controller`) |
-| Orchestration API | `rest/src/controllers/OrchestrationController.ts` (`/api/orchestration/*`) |
-| Temporal fact graph | `graph-service/src/` — `GraphService.ingestNode()`, `ingestFact()`, `getFactsCurrent()`, `getFactsAsOf()`, `applyCorrection()` |
-| Company-brain retrieval workflows | `workflow-service/src/` — `TrustWorkflowService`, `retrieveAndAnswer()` |
-| Knowledge models + connectors | `company-knowledge-os/packages/*` — `Fact`/`Episode`/`Entity` schemas, `Connector` interface (stub only) |
-| Vector store / Hyper DAO interfaces | `common-persistence/src/interfaces/` — `VectorStoreDAO`, `HyperDAO` (interfaces only, no implementation yet) |
-| Agent Mesh OS frontend | `ui/src/` (React 19, custom CSS, lucide icons) |
-| Conductor UI frontend | `ui-next/src/` (React 18, MUI v7, React Router v7) |
-| API client (ui) | `ui/src/lib/api.ts` (Agent API) + `ui/src/lib/conductorApi.ts` (orchestration) |
-| Server entry point | `server-lite/src/index.ts` (NestJS bootstrap) |
-| Storage interfaces | `common-persistence/src/` |
-| Domain models | `common/src/models/` (Zod schemas) |
-| Storage implementations | `sqlite-persistence/` (only active backend; postgres/mysql/redis/cassandra/es7/es8 backends were removed as unused scaffolding) |
-| Workflow engine (execution substrate) | `core/src/execution/` |
-| Agent runtime | `agent-runtime/src/` |
-| Chaos tests | `chaos-suite/chaos.test.ts` (crash-recovery test) |
+Completed:
 
-## Company-Brain Build Status
+- Vector/embedding search with pgvector, HNSW, provider abstraction, evaluation, and permission filtering.
+- Persisted tenant-scoped Neo4j temporal reads and correction operations.
+- Automatic cross-source entity resolution and merge reassignment.
+- Graph/workflow source-permission enforcement, fail-closed ACLs, trusted `request.user`, and admin-gated graph writes.
+- Cited trust workflows with no-evidence and contradiction abstention.
 
-What exists vs. what's missing for the memory-graph pivot (see `graph-service`, `workflow-service`, `company-knowledge-os`):
+Not completed:
 
-- **Done**: bitemporal fact graph, fact supersession, human correction/entity-merge loop, confidence-calibrated retrieval workflows, citation validation, abstention on contradiction.
-- **Missing**: real source connectors (Slack/email/Gdrive/calendar/GitHub PR ingestion is unimplemented), vector/embedding search (`VectorStoreDAO` has no backing implementation), permission enforcement (only a `permissions_hash` field exists, no policy engine), cross-source deduplication/entity-resolution beyond manual correction.
-- **Build order**: (1) one real connector end-to-end, (2) wire `VectorStoreDAO` to a vector store, (3) permission evaluation in `graph-service` query paths, (4) automated dedup/entity-resolution orchestrator.
+- Production OAuth/OIDC/JWT middleware.
+- Durable users, tenant membership, roles, groups, policy grants, and connector service identities.
+- Connector ACL synchronization.
+- A compiling nested `company-knowledge-os` database/ingestion workspace.
+- End-to-end real connector ingestion.
+- Fully durable queue leases, unack recovery, and dashboard schedules.
+- Data-driven confidence calibration and full admin telemetry UI.
 
-## Build & Test Commands
+Do not claim vector search, permissions, or automatic dedup are missing. Do not claim the whole auth system is complete merely because graph-level enforcement exists.
 
-| Command | Description |
-|---------|-------------|
-| `pnpm build` | Build all 37+ workspace packages |
-| `pnpm test` | Run all unit tests (contract tests need Docker) |
-| `pnpm --filter <pkg> test` | Test a single package |
-| `pnpm lint` | Lint all packages |
-| `cd ui && pnpm dev` | Start frontend dev server (port 5173) |
-| `node server-lite/dist/index.js` | Start backend (port 3000, or `PORT=8080`) |
+## Next Work Order
 
-## Architecture Decisions
+1. Production identity and durable authorization.
+2. Repair/consolidate `company-knowledge-os`.
+3. Real connectors and ingestion.
+4. Queue, scheduler, and restart recovery.
+5. Retrieval calibration and admin operations UI.
+6. Scale, chaos, security, and release hardening.
 
-- **Storage backends**: DAO interfaces in `common-persistence`, impls in `*-persistence` packages
-- **Storage backends (files)**: `ExternalPayloadStorage` + `FileStorage` interfaces in `common-storage`, impls in `*-storage` packages
-- **Protobuf**: `@agentmesh/annotations` decorators + `annotations-processor` for class-based models; `zod-proto-gen` (scaffolded) for Zod-based models
-- **Queues**: `QueueDAO` interface with 7+ implementations (SQLite, Postgres, Redis, Kafka, NATS, AMQP, Cassandra)
-- **Frontend routing**: Legacy Agent Mesh pages use `useState<PageKey>`; new Conductor pages use `react-router-dom` under `/workflows`, `/tasks`, `/events`, `/schedulers`
+Passes 1 and 2 can proceed in parallel.
 
-## Writing Documentation
+## Key Locations
 
-Documentation is **derived from source**, not composed from memory. Open the source first, read it, then write.
+| Concern | Location |
+| --- | --- |
+| Temporal graph and corrections | `graph-service/src/services/GraphService.ts` |
+| Neo4j persisted primitives | `graph-service/src/infra/neo4j.client.ts` |
+| Graph HTTP policy | `graph-service/src/api/*.routes.ts` |
+| Policy and request identity | `graph-service/src/auth/` |
+| Vector search | `graph-service/src/search/`, `common/src/models/VectorSearch.ts` |
+| Entity resolution | `graph-service/src/jobs/entity-resolution.job.ts` |
+| Trust workflows and NL query | `workflow-service/src/services/TrustWorkflowService.ts`, `workflow-service/src/api/workflow.controller.ts` |
+| Server bootstrap | `server-lite/src/index.ts` |
+| SQLite queue paths | `sqlite-persistence/src/SQLiteQueueDAO.ts`, `server-lite/src/SyncSqliteAdapter.ts` |
+| Orchestration scheduler API | `rest/src/services/OrchestrationService.ts` |
+| Nested connectors and ingestion | `company-knowledge-os/packages/` |
+| Primary frontend | `ui/src/` |
+| Legacy frontend | `ui-next/src/` |
 
-### Workflow for each content type
+## Commands
 
-**REST API endpoint or curl example**
-1. Open the controller: `rest/src/controllers/` — TypeScript NestJS `@Controller('api/...')`
-2. Copy the path from the decorator literally.
-3. Read `@Get`, `@Post`, `@Param`, `@Query`, `@Body` for the signature.
-4. Write the curl from what you just read.
+Windows PowerShell:
 
-**Expected output block**
-1. Get real output: run the command locally, or find it in test fixtures or CI logs.
-2. Paste verbatim. Do not construct output that "looks right."
+```powershell
+pnpm.cmd build
+pnpm.cmd turbo run test --filter=!@agentmesh/nats --filter=!@agentmesh/kafka
+pnpm.cmd --filter @agentmesh/graph-service test
+pnpm.cmd --filter @agentmesh/workflow-service test
+pnpm.cmd --filter @agentmesh/server-lite test
+git diff --check
+```
 
-## Modifying the CLAUDE.md
+Nested workspace:
 
-This file should be kept in sync with the actual project structure. When adding major new packages or changing the architecture, update the source locations and commands above.
+```powershell
+Set-Location company-knowledge-os
+pnpm.cmd exec turbo run build
+```
 
-See [AGENTS.md](AGENTS.md) for full project conventions.
+The nested workspace builds cleanly (18/18 packages, verified June 20, 2026). The `@company-knowledge-os/database` package compiles; the prior build blockers were missing `tsconfig.json` (gmail), missing `Connector.fetchObject` implementations (github/gmail/gdrive/notion), and an unwired ingestion orchestrator — all now resolved.
 
-## Skill routing
+## Security Invariants
 
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+- Use only verified `request.user` identity.
+- Never trust tenant/user/role/permission values supplied by body, query, or arbitrary headers.
+- Keep all graph reads and writes tenant-scoped.
+- Unknown source permissions fail closed.
+- Persist ACL metadata before exposing ingested facts.
+- Separate connector/service identities from tenant-admin human identities.
+- Never restore arbitrary tenant-facing Cypher.
 
-Key routing rules:
-- Product ideas/brainstorming → invoke /office-hours
-- Strategy/scope → invoke /plan-ceo-review
-- Architecture → invoke /plan-eng-review
-- Design system/plan review → invoke /design-consultation or /plan-design-review
-- Full review pipeline → invoke /autoplan
-- Bugs/errors → invoke /investigate
-- QA/testing site behavior → invoke /qa or /qa-only
-- Code review/diff check → invoke /review
-- Visual polish → invoke /design-review
-- Ship/deploy/PR → invoke /ship or /land-and-deploy
-- Save progress → invoke /context-save
-- Resume context → invoke /context-restore
-- Author a backlog-ready spec/issue → invoke /spec
+## Verification Baseline
+
+Last verified June 20, 2026:
+
+- Root build: 31/31 tasks.
+- Broad non-Docker tests: 57/57 tasks.
+- Graph service: 56 passed, 4 skipped live/environment contracts.
+- Server-lite: 8 passed.
+- Live Neo4j contracts passed for corrections, ingestion jobs, and entity resolution.
+
+Re-run relevant checks after changes; this baseline is context, not proof for a future diff.
+
+## CLI Working Rules
+
+- Preserve unrelated dirty-tree changes.
+- Use focused searches and inspect source before editing.
+- Use `pnpm.cmd` when PowerShell blocks `pnpm.ps1`.
+- Do not stage, commit, push, or open a PR unless asked.
+- Do not include generated `ui/dist/index.html` hash changes unless UI output intentionally changed.
+- Report known pre-existing failures separately from regressions caused by the current change.
+- When documentation and source disagree, source wins and documentation must be updated.
+
+## Skill Routing
+
+Use an available skill when explicitly requested or when the task directly matches its purpose. Common routes:
+
+- Bugs/root cause: `/investigate`
+- Architecture: `/plan-eng-review`
+- Code review: `/review`
+- QA: `/qa` or `/qa-only`
+- Ship/PR: `/ship`
+- Deploy: `/land-and-deploy`
+- Save/restore context: `/context-save`, `/context-restore`
+- Backlog-ready specification: `/spec`

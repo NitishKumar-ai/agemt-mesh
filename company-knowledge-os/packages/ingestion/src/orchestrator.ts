@@ -1,7 +1,9 @@
 import { Connector, ConnectorConfig } from '@company-knowledge-os/core';
 import { IEpisode } from '@company-knowledge-os/core';
 import { EpisodeDAO, FactDAO, EntityDAO } from '@company-knowledge-os/database';
-import { Queue, Worker, Job } from 'bull';
+import { EntityExtractor } from '@company-knowledge-os/extraction';
+import Queue, { Job } from 'bull';
+import { ConnectorRegistry } from './connector-registry';
 
 export interface IngestionJob {
   job_id: string;
@@ -18,26 +20,23 @@ export interface IngestionJob {
 }
 
 export class IngestionOrchestrator {
-  private queue: Queue<IngestionJob>;
-  private worker: Worker<IngestionJob>;
+  private queue: Queue.Queue<IngestionJob>;
 
   constructor(
     private redisUrl: string,
     private episodeDAO: EpisodeDAO,
     private factDAO: FactDAO,
-    private entityDAO: EntityDAO
+    private entityDAO: EntityDAO,
+    private connectorRegistry: ConnectorRegistry,
+    private entityExtractor: EntityExtractor
   ) {
-    this.queue = new Queue<IngestionJob>('ingestion-jobs', { redis: { url: redisUrl } });
+    this.queue = new Queue<IngestionJob>('ingestion-jobs', redisUrl);
 
-    this.worker = new Worker<IngestionJob>(
-      this.queue,
-      async (job: Job<IngestionJob>) => {
-        return await this.processIngestionJob(job.data);
-      },
-      { connection: { url: redisUrl } }
-    );
+    this.queue.process(async (job: Job<IngestionJob>) => {
+      return await this.processIngestionJob(job.data);
+    });
 
-    this.worker.on('failed', (job, err) => {
+    this.queue.on('failed', (job: Job<IngestionJob>, err: Error) => {
       console.error(`Job ${job?.id} failed:`, err);
     });
   }
@@ -83,33 +82,35 @@ export class IngestionOrchestrator {
     await this.updateJobStatus(job.job_id, 'processing');
 
     try {
-      // TODO: Get connector instance from connector registry
-      // const connector = this.connectorRegistry.getConnector(job.source_system);
-      // const episodes = await connector.fetchChanges(job.event_time);
+      let episode: IEpisode;
 
-      // Placeholder: Create episode directly
-      const episode: IEpisode = {
-        episode_id: crypto.randomUUID(),
-        tenant_id: job.tenant_id,
-        source_system: job.source_system,
-        source_id: job.source_id,
-        source_version: job.source_version,
-        raw_pointer: `https://example.com/${job.source_system}/${job.source_id}`,
-        parsed_hash: crypto.randomUUID(),
-        parsed_content: {},
-        author: 'system',
-        created_at: job.event_time,
-        ingested_at: new Date(),
-      };
+      const connector = this.connectorRegistry.get(job.source_system);
+      if (connector) {
+        // Resolve the episode via the registered connector
+        episode = await connector.fetchObject(job.source_id);
+        episode.tenant_id = job.tenant_id;
+      } else {
+        // No connector registered: degrade gracefully with a placeholder episode
+        episode = {
+          episode_id: crypto.randomUUID(),
+          tenant_id: job.tenant_id,
+          source_system: job.source_system,
+          source_id: job.source_id,
+          source_version: job.source_version,
+          raw_pointer: `https://example.com/${job.source_system}/${job.source_id}`,
+          parsed_hash: crypto.randomUUID(),
+          parsed_content: {},
+          author: 'system',
+          created_at: job.event_time,
+          ingested_at: new Date(),
+        };
+      }
 
       // Store episode
       await this.episodeDAO.createEpisode(episode);
 
-      // TODO: Trigger entity extraction
-      // await this.entityExtractor.extract(episode);
-
-      // TODO: Trigger fact extraction
-      // await this.factExtractor.extract(episode);
+      // Trigger entity + fact extraction
+      await this.entityExtractor.extract(episode);
 
       // Update job status to completed
       await this.updateJobStatus(job.job_id, 'completed', new Date());
@@ -156,7 +157,6 @@ export class IngestionOrchestrator {
   }
 
   async stop(): Promise<void> {
-    await this.worker.close();
     await this.queue.close();
   }
 }

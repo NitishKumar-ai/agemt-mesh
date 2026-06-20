@@ -18,6 +18,7 @@
     "declaration": true,
     "declarationDir": "./dist",
     "paths": {
+      "lib/*": ["../ui/src/lib/*"],
       "commonServices": ["./src/commonServices/index.ts"],
       "components": ["./src/components/index.ts"],
       "queryClient": ["./src/queryClient.ts"],

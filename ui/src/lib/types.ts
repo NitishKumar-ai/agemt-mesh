@@ -12,6 +12,7 @@ export type PageKey =
   | 'activity'
   | 'connections'
   | 'chat'
+  | 'ask'
   | 'settings';
 
 export type MeshEvent = Record<string, any>;
@@ -35,3 +36,19 @@ export type SessionMessage = Record<string, any>;
 export type SuggestedTask = Record<string, any>;
 export type WorkflowRun = Record<string, any>;
 export type GitHubRepository = Record<string, any>;
+
+export interface Citation {
+  id: string;
+  source_id: string;
+  title: string;
+  url: string | null;
+  exact_text?: string;
+  confidence: number;
+}
+
+export interface AskAnswer {
+  answer: string;
+  confidence: number;
+  level: 'high' | 'medium' | 'low' | 'abstain';
+  citations: Citation[];
+}

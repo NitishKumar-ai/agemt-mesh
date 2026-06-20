@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { EventService } from '../services/EventService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('event')
+@UseGuards(OidcAuthGuard)
 @Controller('api/event')
 export class EventResource {
   constructor(private readonly eventService: EventService) {}

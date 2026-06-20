@@ -9,11 +9,14 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TaskService } from '../services/TaskService.js';
+import { OidcAuthGuard } from '../OidcAuthGuard.js';
 
 @ApiTags('tasks')
+@UseGuards(OidcAuthGuard)
 @Controller('api/tasks')
 export class TaskResource {
   constructor(private readonly taskService: TaskService) {}

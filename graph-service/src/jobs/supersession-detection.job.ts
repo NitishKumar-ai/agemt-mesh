@@ -12,27 +12,33 @@ export class SupersessionDetectionJob {
    * it marks the previous current facts as superseded and creates FACT_SUPERSEDES_FACT.
    * If there is an unresolved conflict, it marks both as contradicted.
    */
-  async detectSupersession(newFact: Fact, sourceAuthorityMap: Record<string, number> = {}): Promise<void> {
+  async detectSupersession(
+    newFact: Fact,
+    sourceAuthorityMap: Record<string, number> = {},
+  ): Promise<void> {
     const tenantId = newFact.tenant_id;
     const entityId = newFact.entity_id;
     const predicate = newFact.predicate;
 
-    const allFacts = Array.from(this.neo4jClient.getInMemoryFacts().values());
-    const existingFacts = allFacts.filter(
+    const tenantFacts = await this.neo4jClient.listFacts(tenantId);
+    const existingFacts = tenantFacts.filter(
       (f) =>
         f.tenant_id === tenantId &&
         f.entity_id === entityId &&
         f.predicate === predicate &&
         f.id !== newFact.id &&
-        f.status === 'current'
+        f.status === 'current',
     );
 
     const newValidFrom = newFact.valid_from ? new Date(newFact.valid_from).getTime() : Date.now();
+    const pendingRelationships: GraphRelationship[] = [];
 
     for (const oldFact of existingFacts) {
       const oldValidFrom = oldFact.valid_from ? new Date(oldFact.valid_from).getTime() : 0;
-      const oldVal = typeof oldFact.value === 'object' ? JSON.stringify(oldFact.value) : String(oldFact.value);
-      const newVal = typeof newFact.value === 'object' ? JSON.stringify(newFact.value) : String(newFact.value);
+      const oldVal =
+        typeof oldFact.value === 'object' ? JSON.stringify(oldFact.value) : String(oldFact.value);
+      const newVal =
+        typeof newFact.value === 'object' ? JSON.stringify(newFact.value) : String(newFact.value);
 
       if (oldVal === newVal) {
         // Same value: just update recorded/valid boundaries or last_seen
@@ -73,7 +79,7 @@ export class SupersessionDetectionJob {
           correction_state: 'uncorrected',
           properties: {},
         };
-        await this.neo4jClient.upsertRelationship(rel);
+        pendingRelationships.push(rel);
       } else if (isOverlapping && Math.abs(newAuth - oldAuth) < 0.05) {
         // Both are active, recent, and have similar authority: contradiction!
         oldFact.status = 'contradicted';
@@ -99,7 +105,7 @@ export class SupersessionDetectionJob {
           correction_state: 'uncorrected',
           properties: {},
         };
-        await this.neo4jClient.upsertRelationship(rel);
+        pendingRelationships.push(rel);
       } else {
         // New fact is older or has lower authority: it is marked as superseded from inception
         newFact.status = 'superseded';
@@ -108,6 +114,11 @@ export class SupersessionDetectionJob {
       }
     }
 
+    // Persist the incoming fact before creating fact-to-fact edges because
+    // Neo4j relationship upserts require both endpoint nodes to already exist.
     await this.neo4jClient.upsertFact(newFact);
+    for (const relationship of pendingRelationships) {
+      await this.neo4jClient.upsertRelationship(relationship);
+    }
   }
 }
