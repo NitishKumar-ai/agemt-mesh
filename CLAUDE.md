@@ -33,7 +33,7 @@ It consists of:
 | Server entry point | `server-lite/src/index.ts` (NestJS bootstrap) |
 | Storage interfaces | `common-persistence/src/` |
 | Domain models | `common/src/models/` (Zod schemas) |
-| Storage implementations | `sqlite-persistence/`, `postgres-persistence/`, `cassandra-persistence/`, etc. |
+| Storage implementations | `sqlite-persistence/` (only active backend; postgres/mysql/redis/cassandra/es7/es8 backends were removed as unused scaffolding) |
 | Workflow engine (execution substrate) | `core/src/execution/` |
 | Agent runtime | `agent-runtime/src/` |
 | Chaos tests | `chaos-suite/chaos.test.ts` (crash-recovery test) |

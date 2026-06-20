@@ -44,13 +44,11 @@ It is a TypeScript monorepo managed by `pnpm` with 38+ workspace packages. Note:
 | **AI** | `ai` | LLM providers (Anthropic, Gemini), model routing |
 | **REST API** | `rest` | NestJS controllers + services, Swagger |
 | **Server** | `server-lite` | NestJS bootstrap, SQLite + sync adapter |
-| **Persistence** | `*-persistence` | DAO implementations (sqlite, postgres, mysql, redis, cassandra, kafka, nats) |
+| **Persistence** | `*-persistence` | DAO implementations — only `sqlite-persistence` is currently wired into `server-lite`'s bootstrap; other backends (postgres, mysql, redis, cassandra, es7/es8) were removed as unused scaffolding |
 | **Queue** | `amqp-queue` | Pure AMQP QueueDAO (no DB delegate) |
 | **Queue** | `amqp` | Hybrid AMQP QueueDAO (delegates to DB for state) |
 | **Storage** | `*-storage` | ExternalPayloadStorage + FileStorage impls (gcs, local, postgres) |
 | **Proto** | `annotations` | @ProtoMessage/@ProtoField decorators |
-| **Proto** | `annotations-processor` | Protogen code generator (class-based models) |
-| **Proto** | `zod-proto-gen` | Zod-to-proto generator (scaffolded) |
 | **Frontend** | `ui` | Agent Mesh OS — React 19 + Vite + Tauri 2 + custom CSS |
 | **Frontend** | `ui-next` | Conductor UI — React 18 + MUI v7 + React Router v7 |
 | **Testing** | `chaos-suite` | Crash-recovery integration test (SIGKILL + restart) |

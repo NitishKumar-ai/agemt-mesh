@@ -1,0 +1,1 @@
+export { GitHubConnector, GitHubWebhookPayload } from './github-connector';

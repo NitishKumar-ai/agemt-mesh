@@ -1,0 +1,1 @@
+export { EntityExtractor, ExtractionResult } from './entity-extractor';

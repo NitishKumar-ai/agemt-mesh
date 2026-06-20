@@ -50,3 +50,6 @@ build/
 agent-runtime/
 .claude/worktrees/
 .gstack/
+
+# Local run logs
+*.log

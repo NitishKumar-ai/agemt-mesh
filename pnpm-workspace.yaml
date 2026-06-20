@@ -23,8 +23,6 @@ packages:
   - 'amqp'
   - 'amqp-queue'
   - 'annotations'
-  - 'annotations-processor'
-  - 'zod-proto-gen'
   - 'graph-service'
   - 'workflow-service'
   - 'knowledge-os'

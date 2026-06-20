@@ -37,7 +37,6 @@ COPY sandbox/package.json             sandbox/tsconfig.json         sandbox/tsco
 
 # Packages with tsconfig.json only:
 COPY sqlite-persistence/package.json  sqlite-persistence/tsconfig.json  ./sqlite-persistence/
-COPY postgres-persistence/package.json postgres-persistence/tsconfig.json ./postgres-persistence/
 COPY rest/package.json                rest/tsconfig.json            ./rest/
 COPY http-task/package.json           http-task/tsconfig.json       ./http-task/
 COPY json-jq-task/package.json        json-jq-task/tsconfig.json    ./json-jq-task/
@@ -53,7 +52,6 @@ COPY common/src                 ./common/src
 COPY common/test                ./common/test
 COPY common-persistence/src     ./common-persistence/src
 COPY sqlite-persistence/src     ./sqlite-persistence/src
-COPY postgres-persistence/src   ./postgres-persistence/src
 COPY core/src                   ./core/src
 COPY core/test                  ./core/test
 COPY rest/src                   ./rest/src
@@ -93,8 +91,6 @@ COPY --from=builder /build/common-persistence/dist          ./common-persistence
 COPY --from=builder /build/common-persistence/package.json  ./common-persistence/package.json
 COPY --from=builder /build/sqlite-persistence/dist          ./sqlite-persistence/dist
 COPY --from=builder /build/sqlite-persistence/package.json  ./sqlite-persistence/package.json
-COPY --from=builder /build/postgres-persistence/dist        ./postgres-persistence/dist
-COPY --from=builder /build/postgres-persistence/package.json ./postgres-persistence/package.json
 COPY --from=builder /build/core/dist                        ./core/dist
 COPY --from=builder /build/core/package.json                ./core/package.json
 COPY --from=builder /build/rest/dist                        ./rest/dist

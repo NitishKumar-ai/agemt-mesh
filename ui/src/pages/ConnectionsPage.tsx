@@ -27,6 +27,11 @@ import {
   Database,
   Users,
   CloudLightning,
+  Facebook,
+  Instagram,
+  Youtube,
+  Video,
+  KeyRound,
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { api } from '../lib/api';
@@ -52,7 +57,30 @@ const ICONS: Record<string, typeof PenTool> = {
   database: Database,
   users: Users,
   'cloud-lightning': CloudLightning,
+  facebook: Facebook,
+  instagram: Instagram,
+  youtube: Youtube,
+  video: Video,
+  'key-round': KeyRound,
 };
+
+/**
+ * Social and identity connectors ported from the Python social_studio
+ * providers and the new ScaleKit connector. These aren't yet served by a
+ * backend /connections/available registry, so they're merged in client-side
+ * — `connect()` below special-cases their auth_type === 'oauth' the same
+ * way it already does for GitHub.
+ */
+const STATIC_CONNECTORS: ConnectorConfig[] = [
+  { provider_id: 'linkedin', name: 'LinkedIn', description: 'Publish posts and ingest your company page activity.', category: 'social', icon: 'linkedin', auth_type: 'oauth' },
+  { provider_id: 'twitter', name: 'Twitter / X', description: 'Publish tweets and ingest mentions and replies.', category: 'social', icon: 'twitter', auth_type: 'oauth' },
+  { provider_id: 'instagram', name: 'Instagram', description: 'Publish to and ingest posts from an Instagram Business account.', category: 'social', icon: 'instagram', auth_type: 'oauth' },
+  { provider_id: 'facebook', name: 'Facebook', description: 'Publish to and ingest posts from a Facebook Page.', category: 'social', icon: 'facebook', auth_type: 'oauth' },
+  { provider_id: 'threads', name: 'Threads', description: 'Publish and ingest Threads posts.', category: 'social', icon: 'message-square', auth_type: 'oauth' },
+  { provider_id: 'tiktok', name: 'TikTok', description: 'Publish videos and ingest your TikTok activity.', category: 'social', icon: 'video', auth_type: 'oauth' },
+  { provider_id: 'youtube', name: 'YouTube', description: 'Upload videos and ingest channel activity.', category: 'social', icon: 'youtube', auth_type: 'oauth' },
+  { provider_id: 'scalekit', name: 'ScaleKit', description: 'Sync SSO and directory identity changes into the knowledge graph.', category: 'identity', icon: 'key-round', auth_type: 'oauth' },
+];
 
 const BRAND_ACCENTS = [
   { bg: 'rgba(255,77,139,.08)', fg: 'var(--brand-pink)' },
@@ -75,18 +103,24 @@ export function ConnectionsPage() {
 
   async function load() {
     setLoading(true);
-    try {
-      const [availRes, activeRes] = await Promise.all([
-        api.listAvailableConnectors(),
-        api.listConnections(),
-      ]);
-      setAvailable(availRes.connectors);
-      setActive(activeRes.connections);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load connections');
-    } finally {
-      setLoading(false);
+    setError(null);
+    // The two calls are independent — a missing/erroring backend connector
+    // registry shouldn't hide the locally-known social/identity connectors,
+    // and vice versa.
+    const [availRes, activeRes] = await Promise.allSettled([
+      api.listAvailableConnectors(),
+      api.listConnections(),
+    ]);
+
+    const backendConnectors = availRes.status === 'fulfilled' ? availRes.value.connectors : [];
+    const known = new Set(backendConnectors.map((c) => c.provider_id));
+    setAvailable([...backendConnectors, ...STATIC_CONNECTORS.filter((c) => !known.has(c.provider_id))]);
+    setActive(activeRes.status === 'fulfilled' ? activeRes.value.connections : []);
+
+    if (availRes.status === 'rejected' && activeRes.status === 'rejected') {
+      setError('Failed to load connections');
     }
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -100,6 +134,13 @@ export function ConnectionsPage() {
     if (provider?.auth_type === 'oauth') {
       if (provider.provider_id === 'github') {
         window.location.assign('/api/github/connect');
+        return;
+      }
+      const socialPlatforms: SocialPlatform[] = [
+        'linkedin', 'twitter', 'instagram', 'facebook', 'threads', 'tiktok', 'youtube',
+      ];
+      if (socialPlatforms.includes(provider.provider_id as SocialPlatform) || provider.provider_id === 'scalekit') {
+        window.location.assign(`/api/social-studio/oauth/${provider.provider_id}/login`);
         return;
       }
       setError('OAuth flow not implemented for this provider yet.');
