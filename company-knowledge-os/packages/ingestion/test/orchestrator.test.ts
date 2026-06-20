@@ -64,6 +64,12 @@ describe('IngestionOrchestrator.processIngestionJob', () => {
     const registry = {
       get: vi.fn().mockReturnValue(connector),
     } as any;
+    const mockIngestionJobDAO = {
+      createJob: vi.fn(),
+      updateJobStatus: vi.fn(),
+      getJob: vi.fn(),
+      getJobStats: vi.fn(),
+    } as any;
 
     const orchestrator = new IngestionOrchestrator(
       'redis://localhost:6379',
@@ -71,7 +77,8 @@ describe('IngestionOrchestrator.processIngestionJob', () => {
       factDAO,
       entityDAO,
       registry,
-      extractor as any
+      extractor as any,
+      mockIngestionJobDAO
     );
 
     await orchestrator.processIngestionJob(makeJob());
@@ -87,6 +94,12 @@ describe('IngestionOrchestrator.processIngestionJob', () => {
 
   it('falls back to a placeholder episode when no connector is registered', async () => {
     const registry = { get: vi.fn().mockReturnValue(undefined) } as any;
+    const mockIngestionJobDAO = {
+      createJob: vi.fn(),
+      updateJobStatus: vi.fn(),
+      getJob: vi.fn(),
+      getJobStats: vi.fn(),
+    } as any;
 
     const orchestrator = new IngestionOrchestrator(
       'redis://localhost:6379',
@@ -94,7 +107,8 @@ describe('IngestionOrchestrator.processIngestionJob', () => {
       factDAO,
       entityDAO,
       registry,
-      extractor as any
+      extractor as any,
+      mockIngestionJobDAO
     );
 
     await orchestrator.processIngestionJob(makeJob({ source_system: 'unknown' }));

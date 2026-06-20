@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { LandingPage } from './pages/LandingPage';
 import { ConductorLayout } from './conductor/ConductorLayout';
 import { WorkflowDefs } from './pages/conductor/WorkflowDefs';
 import { WorkflowDefDetail } from './pages/conductor/WorkflowDefDetail';
@@ -16,6 +17,8 @@ import { TaskQueue } from './pages/conductor/TaskQueue';
 import { EventQueues } from './pages/conductor/EventQueues';
 import './styles/app.css';
 import './styles/codex.css';
+import './styles/production-ui.css';
+import './styles/landing.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,9 +34,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <Routes>
-          {/* Legacy Agent Mesh pages — unchanged */}
-          <Route path="/*" element={<App />} />
-
+          <Route path="/" element={<LandingPage />} />
           {/* New orchestration pages under Conductor layout */}
           <Route path="/workflows" element={<ConductorLayout />}>
             <Route index element={<WorkflowDefs />} />
@@ -61,6 +62,8 @@ createRoot(document.getElementById('root')!).render(
             <Route index element={<Schedulers />} />
             <Route path=":name" element={<SchedulerDetail />} />
           </Route>
+
+          <Route path="/*" element={<App />} />
         </Routes>
       </QueryClientProvider>
     </BrowserRouter>

@@ -55,21 +55,25 @@ export class SlackConnector implements Connector {
     try {
       // In Scalekit, we'd query Slack channels, then messages.
       // This is a generic representation assuming a `slack_fetch_messages` tool
-      const data: any = await this.executeToolWithAuth('slack_fetch_messages', {
-        oldest: Math.floor(since.getTime() / 1000).toString(),
-        limit: 100,
-      });
+      let cursor: string | undefined = undefined;
+      do {
+        const data: any = await this.executeToolWithAuth('slack_fetch_messages', {
+          oldest: Math.floor(since.getTime() / 1000).toString(),
+          limit: 100,
+          cursor: cursor,
+        });
 
-      // Assuming data returns an array of messages or channels with messages
-      const channels = data?.channels || [];
-      for (const channel of channels) {
-        const messages = channel.messages || [];
-        episodes.push(
-          ...messages
-            .filter((msg: any) => msg.type === 'message' && !msg.subtype)
-            .map((msg: any) => this.messageToEpisode(msg, channel.id))
-        );
-      }
+        const channels = data?.channels || [];
+        for (const channel of channels) {
+          const messages = channel.messages || [];
+          episodes.push(
+            ...messages
+              .filter((msg: any) => msg.type === 'message' && !msg.subtype)
+              .map((msg: any) => this.messageToEpisode(msg, channel.id))
+          );
+        }
+        cursor = data?.response_metadata?.next_cursor;
+      } while (cursor);
     } catch (error) {
       if (error instanceof Error && error.message === 'Slack not authorized') {
         return [];
@@ -154,7 +158,19 @@ export class SlackConnector implements Connector {
 
   validateWebhookSignature(payload: string, signature: string): boolean {
     if (!this.config.webhook_secret) return false;
-    return true; // Placeholder
+    try {
+      const expected = crypto
+        .createHmac('sha256', this.config.webhook_secret)
+        .update(payload)
+        .digest('hex');
+      // Assume signature is provided without prefix, or compare properly
+      const sigBuf = Buffer.from(signature.replace(/^v0=/, ''));
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) return false;
+      return crypto.timingSafeEqual(sigBuf, expBuf);
+    } catch {
+      return false;
+    }
   }
 
   async processWebhook(payload: any): Promise<void> {

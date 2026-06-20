@@ -1,4 +1,10 @@
 export type PageKey =
+  | 'home'
+  | 'briefs'
+  | 'knowledge'
+  | 'sources'
+  | 'automation'
+  | 'audit'
   | 'session'
   | 'sessions'
   | 'workflows'

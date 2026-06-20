@@ -126,6 +126,8 @@ nav:
           - documentation/advanced/redis.md
           - documentation/advanced/postgresql.md
           - documentation/advanced/opensearch.md
+  # TODO: replace with the production app URL when deployed
+  - Open App: http://localhost:8080/
 
 theme:
   name: material

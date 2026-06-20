@@ -53,13 +53,18 @@ export class GmailConnector implements Connector {
     const episodes: IEpisode[] = [];
 
     try {
-      const data: any = await this.executeToolWithAuth('gmail_fetch_mails', {
-        query: `after:${Math.floor(since.getTime() / 1000)}`,
-        max_results: 100,
-      });
+      let pageToken: string | undefined = undefined;
+      do {
+        const data: any = await this.executeToolWithAuth('gmail_fetch_mails', {
+          query: `after:${Math.floor(since.getTime() / 1000)}`,
+          max_results: 100,
+          page_token: pageToken,
+        });
 
-      const messages: any[] = data?.messages || [];
-      episodes.push(...messages.map((msg) => this.messageToEpisode(msg)));
+        const messages: any[] = data?.messages || [];
+        episodes.push(...messages.map((msg) => this.messageToEpisode(msg)));
+        pageToken = data?.nextPageToken;
+      } while (pageToken);
 
     } catch (error) {
       if (error instanceof Error && error.message === 'Gmail not authorized') {
@@ -138,7 +143,9 @@ export class GmailConnector implements Connector {
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    return true;
+    if (!this.config.webhook_secret) return false;
+    // For Gmail (Pub/Sub), the signature could be a verification token
+    return signature === this.config.webhook_secret;
   }
 
   async processWebhook(payload: any): Promise<void> {

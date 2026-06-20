@@ -1,313 +1,261 @@
-import { useState } from 'react';
-import { AlertTriangle, ExternalLink, Search, Sparkles } from 'lucide-react';
-import { PageHeader } from '../components/PageHeader';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowUp,
+  CheckCircle2,
+  Clock3,
+  Quote,
+  Search,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { EvidenceInspector } from '../components/EvidenceInspector';
 import { api } from '../lib/api';
-import type { AskAnswer } from '../lib/types';
+import type { AskAnswer, Citation } from '../lib/types';
 
-const LEVEL_META: Record<AskAnswer['level'], { label: string; bg: string; fg: string }> = {
-  high: { label: 'High confidence', bg: 'rgba(34,197,94,.1)', fg: 'var(--success)' },
-  medium: { label: 'Medium confidence', bg: 'rgba(232,185,74,.1)', fg: 'var(--brand-ochre)' },
-  low: { label: 'Low confidence', bg: 'rgba(239,68,68,.08)', fg: 'var(--error)' },
-  abstain: { label: 'Abstained', bg: 'rgba(239,68,68,.08)', fg: 'var(--error)' },
+const LEVEL_META: Record<
+  AskAnswer['level'],
+  { label: string; description: string; icon: typeof CheckCircle2 }
+> = {
+  high: {
+    label: 'High confidence',
+    description: 'Multiple strong signals support this answer.',
+    icon: CheckCircle2,
+  },
+  medium: {
+    label: 'Medium confidence',
+    description: 'Useful evidence exists, but some context may be incomplete.',
+    icon: ShieldCheck,
+  },
+  low: {
+    label: 'Low confidence',
+    description: 'Evidence is limited or contains unresolved uncertainty.',
+    icon: AlertTriangle,
+  },
+  abstain: {
+    label: 'AgentMesh abstained',
+    description: 'There is not enough reliable evidence to answer safely.',
+    icon: AlertTriangle,
+  },
 };
 
+const suggestions = [
+  'What changed in this project this week?',
+  'Which decision is the current source of truth?',
+  'Who owns the open risks and follow-ups?',
+];
+
 export function AskPage() {
-  const [entityId, setEntityId] = useState('');
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [scope, setScope] = useState(searchParams.get('scope') || '');
+  const [query, setQuery] = useState(searchParams.get('q') || '');
   const [answer, setAnswer] = useState<AskAnswer | null>(null);
+  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<Array<{ query: string; entityId: string; answer: AskAnswer }>>([]);
 
-  async function ask() {
-    if (!query.trim() || !entityId.trim()) {
-      setError('Both a question and an entity/project scope are required.');
+  const citationIndex = useMemo(
+    () => answer?.citations.findIndex((citation) => citation.id === selectedCitation?.id) ?? -1,
+    [answer, selectedCitation],
+  );
+
+  useEffect(() => {
+    const initialQuestion = searchParams.get('q');
+    const initialScope = searchParams.get('scope');
+    if (initialQuestion) setQuery(initialQuestion);
+    if (initialScope) setScope(initialScope);
+  }, [searchParams]);
+
+  async function ask(question = query) {
+    const cleanQuestion = question.trim();
+    const cleanScope = scope.trim();
+    if (!cleanQuestion) {
+      setError('Enter a question for AgentMesh.');
       return;
     }
+    if (!cleanScope) {
+      setError('Add a project or entity scope while global semantic search is being connected.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setAnswer(null);
+    setSelectedCitation(null);
+    setSearchParams({ q: cleanQuestion, scope: cleanScope });
     try {
-      const result = await api.askQuestion(query.trim(), entityId.trim());
+      const result = await api.askQuestion(cleanQuestion, cleanScope);
       setAnswer(result);
-      setHistory((h) => [{ query: query.trim(), entityId: entityId.trim(), answer: result }, ...h].slice(0, 10));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Query failed');
-      setAnswer(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'AgentMesh could not complete the query.');
     } finally {
       setLoading(false);
     }
   }
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit(event: FormEvent) {
+    event.preventDefault();
     void ask();
   }
 
+  const level = answer ? LEVEL_META[answer.level] : null;
+  const LevelIcon = level?.icon;
+
   return (
-    <div className="page">
-      <PageHeader
-        eyebrow="Company brain"
-        title="Ask"
-        description="Ask a question about an entity or project and get a cited, confidence-scored answer from the knowledge graph."
-      />
+    <div className={`ask-workspace ${selectedCitation ? 'ask-workspace--evidence-open' : ''}`}>
+      <main className="ask-main">
+        <header className="ask-header">
+          <span>Company brain</span>
+          <h1>Ask AgentMesh</h1>
+          <p>Answers are grounded in evidence visible to your current identity.</p>
+        </header>
 
-      <form className="ask-form" onSubmit={onSubmit}>
-        <div className="form-group">
-          <label className="form-label">Entity / Project scope</label>
-          <input
-            className="form-input"
-            placeholder="e.g. project_payments, team_platform"
-            value={entityId}
-            onChange={(e) => setEntityId(e.target.value)}
-          />
-          <p className="form-hint">
-            The answer is scoped to facts recorded against this exact entity ID — the query below is not yet
-            semantically searched across the whole graph.
-          </p>
-        </div>
+        {!answer && !loading && (
+          <section className="ask-intro" aria-label="Suggested questions">
+            <div className="ask-intro__mark"><Sparkles size={24} /></div>
+            <h2>What do you need to know?</h2>
+            <p>
+              Ask about a project, decision, incident, account, or team. AgentMesh will abstain
+              when the available evidence is not strong enough.
+            </p>
+            <div className="ask-suggestions">
+              {suggestions.map((suggestion) => (
+                <button type="button" key={suggestion} onClick={() => setQuery(suggestion)}>
+                  {suggestion}
+                  <ArrowUp size={14} />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <div className="form-group">
-          <label className="form-label">Question</label>
-          <textarea
-            className="form-input"
-            rows={3}
-            placeholder="What changed in this project this week?"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+        {loading && (
+          <section className="retrieval-progress" aria-live="polite">
+            <div className="retrieval-progress__pulse"><Search size={18} /></div>
+            <div>
+              <span>Building a permission-safe answer</span>
+              <h2>{query}</h2>
+              <ol>
+                <li className="is-complete"><CheckCircle2 size={14} /> Interpreting scope</li>
+                <li className="is-active"><span /> Checking current facts and conflicts</li>
+                <li><span /> Verifying evidence and composing</li>
+              </ol>
+            </div>
+          </section>
+        )}
 
-        {error && <div className="error-box">{error}</div>}
+        {answer && level && LevelIcon && (
+          <article className="answer-surface">
+            <div className={`answer-trust answer-trust--${answer.level}`}>
+              <LevelIcon size={16} />
+              <strong>{level.label}</strong>
+              <span>{Math.round(answer.confidence * 100)}%</span>
+              <p>{level.description}</p>
+            </div>
 
-        <button className="primary-button" type="submit" disabled={loading}>
-          <Search size={14} /> {loading ? 'Asking…' : 'Ask'}
-        </button>
-      </form>
+            <div className="answer-question">
+              <span><Clock3 size={13} /> Current answer</span>
+              <h2>{searchParams.get('q') || query}</h2>
+            </div>
 
-      {answer && (
-        <div className="answer-card">
-          <div className="answer-header">
-            <Sparkles size={16} />
-            <span
-              className="level-badge"
-              style={{ background: LEVEL_META[answer.level].bg, color: LEVEL_META[answer.level].fg }}
-            >
-              {LEVEL_META[answer.level].label} · {Math.round(answer.confidence * 100)}%
-            </span>
+            <div className="answer-copy">{answer.answer}</div>
+
+            {answer.level === 'abstain' && (
+              <div className="answer-abstention">
+                <AlertTriangle size={17} />
+                <div>
+                  <strong>No reliable answer was produced.</strong>
+                  <span>Connect more sources, broaden the scope, or ask about a shorter time range.</span>
+                </div>
+              </div>
+            )}
+
+            <section className="answer-evidence" aria-labelledby="sources-heading">
+              <div>
+                <span>Verification</span>
+                <h3 id="sources-heading">Sources used</h3>
+              </div>
+              {answer.citations.length === 0 ? (
+                <div className="answer-no-sources">No visible citations were returned.</div>
+              ) : (
+                <div className="citation-grid">
+                  {answer.citations.map((citation, index) => (
+                    <button
+                      type="button"
+                      key={citation.id}
+                      onClick={() => setSelectedCitation(citation)}
+                      className={selectedCitation?.id === citation.id ? 'is-selected' : ''}
+                    >
+                      <span className="citation-number">{index + 1}</span>
+                      <span>
+                        <strong>{citation.title}</strong>
+                        <small>
+                          {citation.exact_text || 'Open to inspect source metadata and evidence.'}
+                        </small>
+                      </span>
+                      <Quote size={15} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          </article>
+        )}
+
+        {error && (
+          <div className="product-error" role="alert">
+            <AlertTriangle size={17} />
+            <div>
+              <strong>AgentMesh could not answer</strong>
+              <span>{error}</span>
+            </div>
           </div>
+        )}
 
-          {answer.level === 'abstain' && (
-            <div className="abstain-notice">
-              <AlertTriangle size={14} />
-              The system abstained rather than guess — treat this answer as informational only.
-            </div>
-          )}
-
-          <p className="answer-text">{answer.answer}</p>
-
-          {answer.citations.length > 0 && (
-            <div className="citations">
-              <h4 className="citations-title">Sources ({answer.citations.length})</h4>
-              <ul className="citation-list">
-                {answer.citations.map((c) => (
-                  <li key={c.id} className="citation-item">
-                    <div className="citation-main">
-                      <span className="citation-title">{c.title}</span>
-                      {c.url && (
-                        <a href={c.url} target="_blank" rel="noreferrer" className="citation-link">
-                          <ExternalLink size={12} />
-                        </a>
-                      )}
-                    </div>
-                    {c.exact_text && <p className="citation-quote">"{c.exact_text}"</p>}
-                    <span className="citation-confidence">{Math.round(c.confidence * 100)}% confidence</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {history.length > 1 && (
-        <div className="history">
-          <h3 className="section-title">Recent questions</h3>
-          {history.slice(1).map((h, i) => (
-            <button
-              key={i}
-              className="history-item"
-              onClick={() => {
-                setEntityId(h.entityId);
-                setQuery(h.query);
-                setAnswer(h.answer);
+        <form className="ask-composer" onSubmit={submit}>
+          <div className="ask-scope">
+            <label htmlFor="ask-scope">Scope</label>
+            <input
+              id="ask-scope"
+              value={scope}
+              onChange={(event) => setScope(event.target.value)}
+              placeholder="Project, team, account, or entity ID"
+            />
+            <span>Semantic scope picker is the next backend integration.</span>
+          </div>
+          <div className="ask-question-input">
+            <label className="sr-only" htmlFor="ask-question">Question</label>
+            <textarea
+              id="ask-question"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Ask a question about your company"
+              rows={2}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  void ask();
+                }
               }}
-            >
-              <span className="history-query">{h.query}</span>
-              <span className="history-scope">{h.entityId}</span>
+            />
+            <button type="submit" disabled={loading || !query.trim()} aria-label="Ask AgentMesh">
+              <ArrowUp size={17} />
             </button>
-          ))}
-        </div>
-      )}
+          </div>
+          <div className="ask-composer__note">
+            <ShieldCheck size={13} /> Unknown source permissions fail closed.
+          </div>
+        </form>
+      </main>
 
-      <style>{`
-        .ask-form {
-          max-width: 640px;
-          margin-bottom: 28px;
-        }
-        .form-group {
-          margin-bottom: 16px;
-        }
-        .form-label {
-          display: block;
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 6px;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .form-hint {
-          font-size: 12px;
-          color: var(--muted);
-          margin: 6px 0 0;
-          line-height: 1.4;
-        }
-        .form-input {
-          width: 100%;
-          padding: 10px 14px;
-          border-radius: 12px;
-          border: 1px solid var(--hairline);
-          font-size: 14px;
-          background: var(--canvas);
-          color: var(--ink);
-          font-family: inherit;
-          resize: vertical;
-        }
-        .error-box {
-          padding: 10px 14px;
-          border-radius: 12px;
-          background: rgba(239,68,68,.06);
-          color: var(--error);
-          font-size: 13px;
-          font-weight: 600;
-          margin-bottom: 14px;
-          border: 1px solid rgba(239,68,68,.2);
-        }
-        .answer-card {
-          max-width: 720px;
-          border: 1px solid var(--hairline);
-          border-radius: 16px;
-          padding: 22px 24px;
-          margin-bottom: 28px;
-        }
-        .answer-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 14px;
-        }
-        .level-badge {
-          padding: 4px 10px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .abstain-notice {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          color: var(--error);
-          background: rgba(239,68,68,.06);
-          border: 1px solid rgba(239,68,68,.2);
-          border-radius: 10px;
-          padding: 8px 12px;
-          margin-bottom: 14px;
-        }
-        .answer-text {
-          font-size: 15px;
-          line-height: 1.6;
-          margin: 0 0 18px;
-        }
-        .citations-title {
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: var(--muted);
-          margin: 0 0 10px;
-        }
-        .citation-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .citation-item {
-          border: 1px solid var(--hairline);
-          border-radius: 10px;
-          padding: 10px 12px;
-        }
-        .citation-main {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          justify-content: space-between;
-        }
-        .citation-title {
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .citation-link {
-          color: var(--muted);
-        }
-        .citation-quote {
-          font-size: 12px;
-          color: var(--muted);
-          margin: 6px 0 0;
-          font-style: italic;
-        }
-        .citation-confidence {
-          display: block;
-          font-size: 11px;
-          color: var(--muted);
-          margin-top: 6px;
-        }
-        .section-title {
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          color: var(--muted);
-          margin-bottom: 12px;
-          letter-spacing: 1.5px;
-        }
-        .history {
-          max-width: 720px;
-        }
-        .history-item {
-          display: flex;
-          justify-content: space-between;
-          width: 100%;
-          text-align: left;
-          padding: 10px 14px;
-          border: 1px solid var(--hairline);
-          border-radius: 10px;
-          background: var(--canvas);
-          color: var(--ink);
-          cursor: pointer;
-          margin-bottom: 8px;
-          font-size: 13px;
-        }
-        .history-item:hover {
-          border-color: var(--brand-teal);
-        }
-        .history-scope {
-          color: var(--muted);
-          font-size: 12px;
-        }
-      `}</style>
+      {selectedCitation && (
+        <EvidenceInspector
+          citation={selectedCitation}
+          index={Math.max(0, citationIndex)}
+          onClose={() => setSelectedCitation(null)}
+        />
+      )}
     </div>
   );
 }

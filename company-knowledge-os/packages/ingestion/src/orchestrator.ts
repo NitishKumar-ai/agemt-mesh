@@ -1,6 +1,6 @@
 import { Connector, ConnectorConfig } from '@company-knowledge-os/core';
 import { IEpisode } from '@company-knowledge-os/core';
-import { EpisodeDAO, FactDAO, EntityDAO } from '@company-knowledge-os/database';
+import { EpisodeDAO, FactDAO, EntityDAO, IngestionJobDAO } from '@company-knowledge-os/database';
 import { EntityExtractor } from '@company-knowledge-os/extraction';
 import Queue, { Job } from 'bull';
 import { ConnectorRegistry } from './connector-registry';
@@ -28,7 +28,8 @@ export class IngestionOrchestrator {
     private factDAO: FactDAO,
     private entityDAO: EntityDAO,
     private connectorRegistry: ConnectorRegistry,
-    private entityExtractor: EntityExtractor
+    private entityExtractor: EntityExtractor,
+    private ingestionJobDAO: IngestionJobDAO
   ) {
     this.queue = new Queue<IngestionJob>('ingestion-jobs', redisUrl);
 
@@ -50,21 +51,25 @@ export class IngestionOrchestrator {
   ): Promise<string> {
     const jobId = crypto.randomUUID();
 
+    const jobData: IngestionJob = {
+      job_id: jobId,
+      tenant_id: tenantId,
+      source_system: sourceSystem,
+      source_id: sourceId,
+      source_version: sourceVersion,
+      event_time: eventTime,
+      arrival_time: new Date(),
+      status: 'pending',
+      retry_count: 0,
+      error_message: null,
+      processed_at: null,
+    };
+
+    await this.ingestionJobDAO.createJob(jobData);
+
     await this.queue.add(
       'ingest',
-      {
-        job_id: jobId,
-        tenant_id: tenantId,
-        source_system: sourceSystem,
-        source_id: sourceId,
-        source_version: sourceVersion,
-        event_time: eventTime,
-        arrival_time: new Date(),
-        status: 'pending',
-        retry_count: 0,
-        error_message: null,
-        processed_at: null,
-      },
+      jobData,
       {
         attempts: 3,
         backoff: {
@@ -136,13 +141,13 @@ export class IngestionOrchestrator {
     processedAt?: Date,
     errorMessage?: string
   ): Promise<void> {
-    // TODO: Update ingestion_jobs table
+    await this.ingestionJobDAO.updateJobStatus(jobId, status, processedAt || null, errorMessage || null);
     console.log(`Job ${jobId} status updated to ${status}`);
   }
 
   async getJobStatus(jobId: string): Promise<IngestionJob | null> {
-    // TODO: Query ingestion_jobs table
-    return null;
+    const job = await this.ingestionJobDAO.getJob(jobId);
+    return job as IngestionJob | null;
   }
 
   async getJobStats(): Promise<{
@@ -152,8 +157,7 @@ export class IngestionOrchestrator {
     completed: number;
     failed: number;
   }> {
-    // TODO: Query ingestion_jobs table
-    return { total: 0, pending: 0, processing: 0, completed: 0, failed: 0 };
+    return await this.ingestionJobDAO.getJobStats();
   }
 
   async stop(): Promise<void> {

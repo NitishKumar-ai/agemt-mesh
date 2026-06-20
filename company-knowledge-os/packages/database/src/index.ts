@@ -5,3 +5,4 @@ export { FactDAO } from './dao/fact-dao';
 export { EntityDAO } from './dao/entity-dao';
 export { RelationDAO } from './dao/relation-dao';
 export { SearchDAO } from './dao/search-dao';
+export { IngestionJobDAO } from './dao/ingestion-job-dao';

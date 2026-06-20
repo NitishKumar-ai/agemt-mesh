@@ -1,179 +1,203 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
-  Bot,
-  CheckCircle2,
-  Clock3,
-  Database,
-  Files,
-  Link2,
-  Megaphone,
-  MessageCircleQuestion,
+  BookOpenCheck,
+  Cable,
+  ChartNoAxesCombined,
+  Home,
+  Network,
   PlayCircle,
   Settings,
-  Shield,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
-import { SessionPage } from './pages/SessionPage';
-import { SessionsPage } from './pages/SessionsPage';
-import { WorkflowsPage } from './pages/WorkflowsPage';
-import { ApprovalsPage } from './pages/ApprovalsPage';
-import { TasksPage } from './pages/TasksPage';
-import { SchedulesPage } from './pages/SchedulesPage';
-import { ActivityPage } from './pages/ActivityPage';
-import { MarketingPage } from './pages/MarketingPage';
-import { CommitGuardPage } from './pages/CommitGuardPage';
-import { AgentsPage } from './pages/AgentsPage';
-import { ConnectionsPage } from './pages/ConnectionsPage';
-import { AskPage } from './pages/AskPage';
-import { SafetyPage } from './pages/SafetyPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { AdminDashboard } from './pages/AdminDashboard';
+import { WorkflowInspector } from './components/WorkflowInspector';
 import { connectEventStream } from './lib/events';
 import { api } from './lib/api';
 import type { GitHubStatus, KillswitchState, MeshEvent, PageKey } from './lib/types';
-import { WorkflowInspector } from './components/WorkflowInspector';
+import { ActivityPage } from './pages/ActivityPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AgentsPage } from './pages/AgentsPage';
+import { ApprovalsPage } from './pages/ApprovalsPage';
+import { AskPage } from './pages/AskPage';
+import { CommitGuardPage } from './pages/CommitGuardPage';
+import { ConnectionsPage } from './pages/ConnectionsPage';
+import { HomePage } from './pages/HomePage';
+import { KnowledgePage } from './pages/KnowledgePage';
+import { MarketingPage } from './pages/MarketingPage';
+import { SafetyPage } from './pages/SafetyPage';
+import { SchedulesPage } from './pages/SchedulesPage';
+import { SessionPage } from './pages/SessionPage';
+import { SessionsPage } from './pages/SessionsPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { TasksPage } from './pages/TasksPage';
+import { WorkflowsPage } from './pages/WorkflowsPage';
+
+const PATHS: Partial<Record<PageKey, string>> = {
+  home: '/home',
+  ask: '/ask',
+  briefs: '/briefs',
+  knowledge: '/knowledge',
+  activity: '/activity',
+  sources: '/admin/sources',
+  admin: '/admin',
+  automation: '/admin/automation',
+  audit: '/admin/audit',
+  settings: '/settings',
+  session: '/labs/session',
+  sessions: '/labs/sessions',
+  approvals: '/labs/approvals',
+  agents: '/labs/agents',
+  tasks: '/labs/tasks',
+  schedules: '/labs/schedules',
+  safety: '/labs/safety',
+  commitguard: '/labs/commitguard',
+  marketing: '/labs/marketing',
+};
+
+export function pageForPath(pathname: string): PageKey {
+  if (pathname === '/' || pathname.startsWith('/home')) return 'home';
+  if (pathname.startsWith('/ask')) return 'ask';
+  if (pathname.startsWith('/briefs')) return 'briefs';
+  if (pathname.startsWith('/knowledge')) return 'knowledge';
+  if (pathname.startsWith('/activity')) return 'activity';
+  if (pathname.startsWith('/admin/sources')) return 'sources';
+  if (pathname.startsWith('/admin/automation')) return 'automation';
+  if (pathname.startsWith('/admin/audit')) return 'audit';
+  if (pathname === '/admin' || pathname.startsWith('/admin/overview')) return 'admin';
+  if (pathname.startsWith('/settings')) return 'settings';
+  const lab = pathname.split('/')[2] as PageKey | undefined;
+  return lab || 'home';
+}
 
 export function App() {
-  const [page, setPage] = useState<PageKey>('session');
-  const [sessionKey, setSessionKey] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = pageForPath(location.pathname);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('workflow');
-  });
   const [events, setEvents] = useState<MeshEvent[]>([]);
-  const [streamState, setStreamState] = useState<'connected' | 'reconnecting' | 'closed'>(
-    'reconnecting',
-  );
+  const [streamState, setStreamState] = useState<'connected' | 'reconnecting' | 'closed'>('reconnecting');
   const [githubStatus, setGithubStatus] = useState<GitHubStatus>();
   const [killswitch, setKillswitch] = useState<KillswitchState>();
+  const activeWorkflowId = searchParams.get('workflow');
 
-  function handlePageChange(next: PageKey) {
-    if (next === 'session') {
-      setSessionKey((k) => k + 1);
-      setActiveSessionId(null); // Clear active session for fresh start
-    }
-    setPage(next);
-  }
-
-  function handleSessionSelect(runId: string) {
-    setActiveSessionId(runId);
-    setPage('session');
-  }
-
-  const handleWorkflowSelect = (workflowId: string | null) => {
-    setActiveWorkflowId(workflowId);
-    const url = new URL(window.location.href);
-    if (workflowId) {
-      url.searchParams.set('workflow', workflowId);
-    } else {
-      url.searchParams.delete('workflow');
-    }
-    window.history.pushState({}, '', url.toString());
-  };
+  useEffect(() => connectEventStream(
+    (event) => setEvents((current) => [event, ...current].slice(0, 200)),
+    setStreamState,
+  ), []);
 
   useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      setActiveWorkflowId(params.get('workflow'));
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
-    return connectEventStream(
-      (event) => setEvents((current) => [event, ...current].slice(0, 200)),
-      setStreamState,
-    );
-  }, []);
-
-  useEffect(() => {
-    void api
-      .githubStatus()
-      .then(setGithubStatus)
-      .catch(() => undefined);
-    void api
-      .getKillswitchState()
-      .then(setKillswitch)
-      .catch(() => undefined);
+    void api.githubStatus().then(setGithubStatus).catch(() => undefined);
+    void api.getKillswitchState().then(setKillswitch).catch(() => undefined);
   }, []);
 
   const navItems = useMemo(
     () => [
-      { key: 'session' as const, label: 'Session', icon: Sparkles },
-      { key: 'sessions' as const, label: 'Sessions', icon: Files },
-      { key: 'workflows' as const, label: 'Workflows', icon: PlayCircle },
-      {
-        key: 'approvals' as const,
-        label: 'Approvals',
-        icon: ShieldAlert,
-        badge: events.some((e) => e.eventType.includes('approval')),
-      },
-      { key: 'agents' as const, label: 'Agents', icon: Bot },
-      { key: 'ask' as const, label: 'Ask', icon: MessageCircleQuestion },
-      { key: 'safety' as const, label: 'Safety', icon: Shield },
-      { key: 'commitguard' as const, label: 'CommitGuard', icon: ShieldCheck },
-      { key: 'marketing' as const, label: 'Marketing', icon: Megaphone },
-      { key: 'tasks' as const, label: 'Tasks', icon: CheckCircle2 },
-      { key: 'schedules' as const, label: 'Schedules', icon: Clock3 },
+      { key: 'home' as const, label: 'Home', icon: Home },
+      { key: 'ask' as const, label: 'Ask', icon: Sparkles },
+      { key: 'briefs' as const, label: 'Briefs', icon: BookOpenCheck },
+      { key: 'knowledge' as const, label: 'Knowledge', icon: Network },
       { key: 'activity' as const, label: 'Activity', icon: Activity },
-      { key: 'connections' as const, label: 'Connections', icon: Link2 },
-      { key: 'admin' as const, label: 'Admin', icon: Database },
+      { key: 'admin' as const, label: 'Overview', icon: ChartNoAxesCombined },
+      { key: 'sources' as const, label: 'Sources', icon: Cable },
+      { key: 'automation' as const, label: 'Automation', icon: PlayCircle },
+      {
+        key: 'audit' as const,
+        label: 'Audit and safety',
+        icon: ShieldCheck,
+        badge: events.some((event) => event.eventType?.includes('approval')),
+      },
       { key: 'settings' as const, label: 'Settings', icon: Settings },
     ],
     [events],
   );
 
+  function changePage(next: PageKey) {
+    navigate(PATHS[next] || '/home');
+  }
+
+  function selectWorkflow(workflowId: string | null) {
+    const next = new URLSearchParams(searchParams);
+    if (workflowId) next.set('workflow', workflowId);
+    else next.delete('workflow');
+    setSearchParams(next);
+  }
+
+  function renderPage() {
+    switch (page) {
+      case 'home':
+        return <HomePage />;
+      case 'ask':
+        return <AskPage />;
+      case 'briefs':
+      case 'automation':
+        return <WorkflowsPage activeWorkflowId={activeWorkflowId} onWorkflowSelect={selectWorkflow} />;
+      case 'knowledge':
+        return <KnowledgePage />;
+      case 'activity':
+        return <ActivityPage events={events} streamState={streamState} onWorkflowSelect={selectWorkflow} />;
+      case 'sources':
+        return <ConnectionsPage />;
+      case 'admin':
+        return <AdminDashboard />;
+      case 'audit':
+        return <SafetyPage />;
+      case 'settings':
+        return <SettingsPage />;
+      case 'session':
+        return (
+          <SessionPage
+            events={events}
+            streamState={streamState}
+            githubStatus={githubStatus}
+            onGitHubStatusChange={setGithubStatus}
+            activeSessionId={activeSessionId}
+            onWorkflowSelect={selectWorkflow}
+            activeWorkflowId={activeWorkflowId}
+          />
+        );
+      case 'sessions':
+        return <SessionsPage />;
+      case 'approvals':
+        return <ApprovalsPage events={events} />;
+      case 'agents':
+        return <AgentsPage onWorkflowSelect={selectWorkflow} />;
+      case 'tasks':
+        return <TasksPage />;
+      case 'schedules':
+        return <SchedulesPage />;
+      case 'commitguard':
+        return <CommitGuardPage />;
+      case 'marketing':
+        return <MarketingPage />;
+      default:
+        return <HomePage />;
+    }
+  }
+
   return (
     <>
       <AppShell
         page={page}
-        onPageChange={handlePageChange}
+        onPageChange={changePage}
         navItems={navItems}
         streamState={streamState}
         githubStatus={githubStatus}
         killswitch={killswitch}
         onKillswitchChange={setKillswitch}
         activeSessionId={activeSessionId}
-        onSessionSelect={handleSessionSelect}
+        onSessionSelect={(runId) => {
+          setActiveSessionId(runId);
+          navigate('/labs/session');
+        }}
       >
-        {page === 'session' && (
-          <SessionPage
-            key={sessionKey}
-            events={events}
-            streamState={streamState}
-            githubStatus={githubStatus}
-            onGitHubStatusChange={setGithubStatus}
-            activeSessionId={activeSessionId}
-            onWorkflowSelect={handleWorkflowSelect}
-            activeWorkflowId={activeWorkflowId}
-          />
-        )}
-        {page === 'sessions' && <SessionsPage />}
-        {page === 'workflows' && <WorkflowsPage activeWorkflowId={activeWorkflowId} onWorkflowSelect={handleWorkflowSelect} />}
-        {page === 'approvals' && <ApprovalsPage events={events} />}
-        {page === 'agents' && <AgentsPage onWorkflowSelect={handleWorkflowSelect} />}
-        {page === 'ask' && <AskPage />}
-        {page === 'commitguard' && <CommitGuardPage />}
-        {page === 'marketing' && <MarketingPage />}
-        {page === 'tasks' && <TasksPage />}
-        {page === 'schedules' && <SchedulesPage />}
-        {page === 'activity' && <ActivityPage events={events} streamState={streamState} onWorkflowSelect={handleWorkflowSelect} />}
-        {page === 'safety' && <SafetyPage />}
-        {page === 'connections' && <ConnectionsPage />}
-        {page === 'admin' && <AdminDashboard />}
-        {page === 'settings' && <SettingsPage />}
+        {renderPage()}
       </AppShell>
       {activeWorkflowId && (
-        <WorkflowInspector
-          workflowId={activeWorkflowId}
-          onClose={() => handleWorkflowSelect(null)}
-        />
+        <WorkflowInspector workflowId={activeWorkflowId} onClose={() => selectWorkflow(null)} />
       )}
     </>
   );

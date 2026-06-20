@@ -2,16 +2,16 @@
 hide:
   - navigation
   - toc
-description: AgentMesh is an open source workflow engine and durable execution platform for workflow orchestration, microservice orchestration, and AI agent orchestration. Self-hosted, Apache 2.0 licensed. 14+ native LLM providers, MCP tool calling, and built-in vector database support. Build distributed workflows with saga pattern compensation, at-least-once task delivery, human-in-the-loop approval, and polyglot workers. The workflow automation platform for teams that need LLM orchestration and durable execution at scale.
+description: AgentMesh is a permission-aware, temporal company brain built on a durable workflow engine. Ingest company sources, build a self-maintaining knowledge graph, and serve cited answers and first-party workflows with source-level permission enforcement.
 ---
 
 <div class="home-wrapper">
 
 <div class="hero">
-  <div class="hero-badge">Apache 2.0 Licensed &middot; Originally created at Netflix</div>
-  <h1 class="hero-title">Code breaks. Infrastructure fails.<br/><span class="hero-highlight">Your workflows don't.</span></h1>
-  <p class="hero-subtitle">Crash-proof workflows and AI agents that finish what they start &mdash; powered by durable execution at massive scale.</p>
-  <p class="hero-differentiators">No SDK restrictions. No non-determinism bugs. No cloud lock-in.</p>
+  <div class="hero-badge">Apache 2.0 Licensed &middot; Company brain on durable execution</div>
+  <h1 class="hero-title">A living memory<br/><span class="hero-highlight">for your company.</span></h1>
+  <p class="hero-subtitle">Ingest sources, build a temporal knowledge graph, and answer complex questions with permission-safe, cited evidence.</p>
+  <p class="hero-differentiators">No source left behind. No permission bypass. No black-box answers.</p>
   <div class="hero-actions">
     <a href="quickstart/index.html" class="btn-primary">Get Started<span class="btn-arrow">&rarr;</span></a>
     <a href="https://github.com/agentmesh-oss/agentmesh" class="repo-link" id="hero-repo-link">
@@ -32,141 +32,105 @@ description: AgentMesh is an open source workflow engine and durable execution p
         }).catch(function(){});
     </script>
   </div>
-  <div class="hero-install"><code>$ npm install -g @agentmesh-oss/agentmesh-cli</code></div>
+  <div class="hero-install"><code>$ pnpm install && pnpm build</code></div>
   <div class="hero-ai-card">
     <div class="hero-ai-header">
       <div class="hero-ai-icon">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 1.5 3 1.5 5h5c0-2 1.5-3 1.5-5a4 4 0 0 0-4-4z"/><line x1="10" y1="17" x2="14" y2="17"/><line x1="10" y1="20" x2="14" y2="20"/><line x1="11" y1="23" x2="13" y2="23"/></svg>
       </div>
-      <h3>Build with AI Agents</h3>
+      <h3>Built for trusted AI answers</h3>
     </div>
     <div class="hero-ai-body">
       <div class="hero-ai-item">
-        <a href="devguide/how-tos/agentmesh-skills.html" class="hero-ai-link" title="AgentMesh Skills for AI agent orchestration">AgentMesh Skills &rarr;</a>
-        <span class="hero-ai-sub">Install AgentMesh Skills for your AI Agent</span>
+        <a href="devguide/ai/index.html" class="hero-ai-link" title="AI Cookbook — retrieval, citations, and trust workflows">AI Cookbook &rarr;</a>
+        <span class="hero-ai-sub">Retrieval, citations, abstention, and confidence calibration.</span>
       </div>
       <div class="hero-ai-item">
-        <a href="devguide/ai/index.html" class="hero-ai-link" title="AI Cookbook — LLM orchestration, MCP tools, and durable agents">AI Cookbook &rarr;</a>
-        <span class="hero-ai-sub">14+ LLM providers, MCP tool calling, human-in-the-loop, and durable agent execution.</span>
+        <a href="architecture/trust-workflows.html" class="hero-ai-link" title="Trust workflows — cited, permission-safe answers">Trust Workflows &rarr;</a>
+        <span class="hero-ai-sub">Onboarding briefs, digests, incident briefs, meeting prep, account summaries.</span>
       </div>
     </div>
   </div>
 </div>
 
 <div class="value-strip">
-  <div class="value-item"><div class="value-metric">Guaranteed at-least-once</div><div class="value-label">Task Delivery</div></div>
+  <div class="value-item"><div class="value-metric">Tenant-scoped</div><div class="value-label">Graph & vector reads</div></div>
   <div class="value-divider"></div>
-  <div class="value-item"><div class="value-metric">Any language</div><div class="value-label">Worker Support</div></div>
+  <div class="value-item"><div class="value-metric">Bitemporal</div><div class="value-label">Fact tracking</div></div>
   <div class="value-divider"></div>
-  <div class="value-item"><div class="value-metric">Millions</div><div class="value-label">Concurrent Workflows</div></div>
+  <div class="value-item"><div class="value-metric">Automatic</div><div class="value-label">Entity resolution</div></div>
   <div class="value-divider"></div>
-  <div class="value-item"><div class="value-metric">Billions of workflows</div><div class="value-label">Internet Scale Execution</div></div>
-</div>
-
-<div class="logo-wall hero-logos">
-  <p class="logo-wall-label">Trusted by engineering teams at</p>
-  <div class="logo-marquee">
-    <div class="logo-track">
-      <span class="logo-name">AgentMesh</span>
-      <span class="logo-name">Tesla</span>
-      <span class="logo-name">LinkedIn</span>
-      <span class="logo-name">JP Morgan</span>
-      <span class="logo-name">Freshworks</span>
-      <span class="logo-name">American Express</span>
-      <span class="logo-name">Redfin</span>
-      <span class="logo-name">VMware</span>
-      <span class="logo-name">Coupang</span>
-      <span class="logo-name">Swiggy</span>
-      <span class="logo-name">AgentMesh</span>
-      <span class="logo-name">Tesla</span>
-      <span class="logo-name">LinkedIn</span>
-      <span class="logo-name">JP Morgan</span>
-      <span class="logo-name">Freshworks</span>
-      <span class="logo-name">American Express</span>
-      <span class="logo-name">Redfin</span>
-      <span class="logo-name">VMware</span>
-      <span class="logo-name">Coupang</span>
-      <span class="logo-name">Swiggy</span>
-    </div>
-  </div>
+  <div class="value-item"><div class="value-metric">Cited</div><div class="value-label">Every answer</div></div>
 </div>
 
 <div class="features-section">
   <div class="section-header-inline">
-    <h2>Built for workflows that can't afford to fail.</h2>
+    <h2>Built for answers you can trust.</h2>
   </div>
   <div class="features-grid">
     <div class="feature-card feature-accent">
-      <div class="feature-tag">Core</div>
-      <h3>Durable execution by default</h3>
-      <p>Workflow state is persisted at every step. Survive server restarts, worker crashes, and network failures. Durable execution with at-least-once task delivery, configurable retries, timeouts, and compensation flows. Build durable agents that never lose progress.</p>
-      <a href="architecture/durable-execution.html" class="feature-link">Failure semantics &rarr;</a>
+      <div class="feature-tag">Graph</div>
+      <h3>First-class temporal knowledge graph</h3>
+      <p>People, teams, projects, documents, meetings, incidents, customers, and facts are stored as a property graph in Neo4j. Every node and relationship carries provenance, valid time, and recorded time so the system knows what is true now, what used to be true, and which source changed it.</p>
+      <a href="architecture/knowledge-graph.html" class="feature-link">Graph layer &rarr;</a>
     </div>
     <div class="feature-card">
-      <div class="feature-tag">JSON superpower</div>
-      <h3>JSON native &mdash; deterministic by default</h3>
-      <p>JSON definitions separate orchestration from implementation &mdash; no side effects, no hidden state, every run is deterministic. Generate workflows at runtime with LLMs, modify per-execution, and use dynamic forks, dynamic tasks, and dynamic sub-workflows for more flexibility than code-based engines. Code via SDKs when you need it.</p>
-      <a href="architecture/json-native.html" class="feature-link">Why JSON wins &rarr;</a>
+      <div class="feature-tag">Permissions</div>
+      <h3>Source visibility by default</h3>
+      <p>Graph reads, vector search, and workflow answers are filtered by source ACLs. Unknown source state fails closed. Administrative mutations require a verified tenant admin. Identity is accepted only from verified middleware-populated <code>request.user</code>.</p>
+      <a href="architecture/permissions.html" class="feature-link">Permission model &rarr;</a>
     </div>
     <div class="feature-card">
-      <div class="feature-tag">Primitives</div>
-      <h3>Replay, Restart, Pause, Resume</h3>
-      <p>Pause workflows on time, external signals, webhooks, or human approval. Resume safely after minutes, hours, or days. Replay any workflow from the beginning, from a specific task, or retry just the failed step &mdash; even months later. Full execution history is always preserved.</p>
-      <a href="architecture/durable-execution.html#replay-and-recovery" class="feature-link">How it works &rarr;</a>
+      <div class="feature-tag">Retrieval</div>
+      <h3>Hybrid vector + graph retrieval</h3>
+      <p>pgvector with HNSW indexes stores embeddings alongside permission metadata. Retrieval combines vector similarity, graph expansion, reranking, and confidence signals to return evidence the requesting user is allowed to see.</p>
+      <a href="architecture/retrieval.html" class="feature-link">Retrieval stack &rarr;</a>
     </div>
     <div class="feature-card">
-      <div class="feature-tag">AI</div>
-      <h3>AI agent orchestration &amp; LLM orchestration</h3>
-      <p>Orchestrate AI agents with 14+ native LLM providers (Anthropic, OpenAI, Gemini, Bedrock, Mistral, and more), MCP tool calling, function calling, human-in-the-loop approval, and structured output. Built-in vector database support (Pinecone, pgvector, MongoDB Atlas) for RAG pipelines.</p>
-      <a href="devguide/ai/index.html" class="feature-link">AI Cookbook &rarr;</a>
+      <div class="feature-tag">Trust</div>
+      <h3>Cited workflows with abstention</h3>
+      <p>First-party workflows such as onboarding briefs, weekly digests, incident briefs, meeting prep, and account summaries cite every material claim. When evidence is missing or contradictory, the workflow abstains rather than hallucinating.</p>
+      <a href="architecture/trust-workflows.html" class="feature-link">Trust workflows &rarr;</a>
     </div>
     <div class="feature-card">
-      <div class="feature-tag">Workers</div>
-      <h3>Polyglot workers</h3>
-      <p>Write task workers in any language. Workers poll for tasks, execute your logic, and report results&mdash;run them anywhere.</p>
-      <div class="lang-logos">
-        <a href="https://github.com/agentmesh-oss/java-sdk" title="Java"><img src="https://orkes.io/content/img/java.svg" alt="Java"></a>
-        <a href="https://github.com/agentmesh-oss/python-sdk" title="Python"><img src="https://orkes.io/content/img/Python_logo.svg" alt="Python"></a>
-        <a href="https://github.com/agentmesh-oss/go-sdk" title="Go"><img src="https://orkes.io/content/img/Go_Logo_Blue.svg" alt="Go"></a>
-        <a href="https://github.com/agentmesh-oss/csharp-sdk" title="C#"><img src="https://orkes.io/content/img/csharp.png" alt="C#"></a>
-        <a href="https://github.com/agentmesh-oss/javascript-sdk" title="JavaScript"><img src="https://orkes.io/content/img/JavaScript_logo_2.svg" alt="JavaScript"></a>
-        <a href="https://github.com/agentmesh-oss/ruby-sdk" title="Ruby"><img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg" alt="Ruby"></a>
-        <a href="https://github.com/agentmesh-oss/rust-sdk" title="Rust"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg" alt="Rust"></a>
-      </div>
+      <div class="feature-tag">Connectors</div>
+      <h3>Live source ingestion</h3>
+      <p>Connector packages ingest Slack, Gmail, Google Drive, Notion, GitHub, and other sources. Raw payloads, parsed content, extracted entities, and source ACL metadata are persisted before facts become retrievable.</p>
+      <a href="devguide/architecture/index.html" class="feature-link">Connectors &rarr;</a>
     </div>
     <div class="feature-card">
-      <div class="feature-tag">Reliability</div>
-      <h3>Saga pattern &amp; compensation</h3>
-      <p>Model distributed transactions as sagas. When a step fails, AgentMesh automatically runs undo logic in reverse order&mdash;no manual intervention.</p>
-      <a href="devguide/how-tos/Workflows/handling-errors.html" class="feature-link">Error handling &rarr;</a>
+      <div class="feature-tag">Engine</div>
+      <h3>Durable execution substrate</h3>
+      <p>The retained workflow engine provides long-running execution, retries, sagas, human-in-the-loop approval, and polyglot workers. Workflows survive restarts, worker crashes, and network failures.</p>
+      <a href="architecture/durable-execution.html" class="feature-link">Durable execution &rarr;</a>
     </div>
   </div>
 </div>
 
 <div class="arch-section">
   <div class="section-header-inline">
-    <h2>Understand the engine.</h2>
+    <h2>Understand the system.</h2>
   </div>
   <div class="arch-grid">
-    <a href="architecture/durable-execution.html" class="arch-card">
+    <a href="architecture/knowledge-graph.html" class="arch-card">
       <div class="arch-number">01</div>
-      <h3>Durable Execution</h3>
-      <p>What persists, what gets retried, failure matrix, and state transitions.</p>
+      <h3>Knowledge Graph</h3>
+      <p>Temporal facts, entities, relationships, corrections, and entity resolution.</p>
+    </a>
+    <a href="architecture/retrieval.html" class="arch-card">
+      <div class="arch-number">02</div>
+      <h3>Retrieval</h3>
+      <p>Vector search, graph expansion, reranking, and permission filtering.</p>
     </a>
     <a href="devguide/ai/index.html" class="arch-card">
-      <div class="arch-number">02</div>
-      <h3>AI Cookbook</h3>
-      <p>LLM tasks, tool calls, human approval, dynamic workflows, MCP tools.</p>
-    </a>
-    <a href="architecture/json-native.html" class="arch-card">
       <div class="arch-number">03</div>
-      <h3>JSON + Code Native</h3>
-      <p>Runtime generation, versioning, dynamic definitions, API/SDK parity.</p>
+      <h3>Trust Workflows</h3>
+      <p>Cited answers, confidence scoring, contradiction handling, and abstention.</p>
     </a>
-    <a href="devguide/architecture/index.html" class="arch-card">
+    <a href="architecture/system-architecture.html" class="arch-card">
       <div class="arch-number">04</div>
       <h3>System Architecture</h3>
-      <p>Worker-task queues, persistence, polling, distributed consistency.</p>
+      <p>Services, queues, persistence, connectors, and the admin dashboard.</p>
     </a>
   </div>
 </div>
@@ -177,104 +141,52 @@ description: AgentMesh is an open source workflow engine and durable execution p
   </div>
   <div class="faq-grid">
     <details class="faq-item">
-      <summary>How do I run AgentMesh with Docker?</summary>
-      <p>Run <code>docker run -p 8080:8080 agentmeshoss/agentmesh:latest</code> to start AgentMesh with all dependencies included. The server will be available at <code>http://localhost:8080</code>. For production deployments with external persistence, see the <a href="devguide/running/deploy.html">Docker deployment guide</a>.</p>
+      <summary>What is AgentMesh?</summary>
+      <p>AgentMesh is an open-source, permission-aware company brain. It connects to company sources, extracts entities and facts, stores them in a temporal graph, and answers questions through cited, permission-safe workflows.</p>
     </details>
     <details class="faq-item">
       <summary>Is AgentMesh open source?</summary>
-      <p>Yes. AgentMesh is a fully open source workflow engine, Apache 2.0 licensed. You can self-host it on your own infrastructure with no vendor lock-in. It supports 5 persistence backends, 6 message brokers, and runs anywhere Docker runs.</p>
+      <p>Yes. AgentMesh is Apache 2.0 licensed and self-hostable, built on a battle-tested durable workflow substrate maintained under the AgentMesh OSS organization.</p>
     </details>
     <details class="faq-item">
-      <summary>Is this the same as Netflix Conductor?</summary>
-      <p>Yes. AgentMesh is the continuation of the original Netflix Conductor project under the community-led AgentMesh OSS organization.</p>
+      <summary>How does permission enforcement work?</summary>
+      <p>Source ACL metadata is persisted with every fact. Graph reads, vector search, and workflow answers filter results by the caller's visible permission hashes. Unknown source state fails closed, and graph mutations require a verified tenant administrator.</p>
     </details>
     <details class="faq-item">
-      <summary>Is this project actively maintained?</summary>
-      <p>Yes. AgentMesh is actively maintained by the open-source community under the AgentMesh OSS organization, ensuring a fully open road map, regular releases, and clean dependency management.</p>
+      <summary>What does "temporal" mean here?</summary>
+      <p>Every fact tracks valid time (when it was true in the real world) and recorded time (when the system learned it). This lets AgentMesh answer questions about current belief, historical belief, and what changed when.</p>
     </details>
     <details class="faq-item">
-      <summary>Can AgentMesh scale to handle my workload?</summary>
-      <p>AgentMesh was built at Netflix to handle massive scale and has been battle-tested in production environments processing millions of workflows. It scales horizontally to meet virtually any demand.</p>
+      <summary>Which sources can AgentMesh ingest?</summary>
+      <p>The nested <code>company-knowledge-os</code> workspace contains connectors for Slack, Gmail, Google Drive, Notion, GitHub, and more. Connector implementation and ACL synchronization are active areas of work; see <code>passes.md</code> Pass 3.</p>
     </details>
     <details class="faq-item">
-      <summary>Does AgentMesh support durable execution?</summary>
-      <p>Yes. AgentMesh pioneered durable execution patterns, ensuring workflows and durable agents complete reliably even in the face of infrastructure failures, process crashes, or network issues.</p>
+      <summary>What are trust workflows?</summary>
+      <p>First-party workflows such as onboarding briefs, weekly digests, incident briefs, meeting prep, and account summaries. Each answer is grounded in source evidence and cites its sources; the workflow abstains when evidence is insufficient or contradictory.</p>
     </details>
     <details class="faq-item">
-      <summary>Can I replay a workflow after it completes or fails?</summary>
-      <p>Yes. AgentMesh preserves full execution history indefinitely. You can restart from the beginning, rerun from any specific task, or retry just the failed step &mdash; even months later. Use the API (<code>/restart</code>, <code>/rerun</code>, <code>/retry</code>) or the UI.</p>
+      <summary>Can AgentMesh run durable workflows?</summary>
+      <p>Yes. The retained orchestration engine supports long-running workflows, retries, sagas, human approval, dynamic tasks, and polyglot workers. State is persisted at every step so workflows survive restarts and crashes.</p>
     </details>
     <details class="faq-item">
-      <summary>Are workflows always asynchronous?</summary>
-      <p>No. While AgentMesh excels at asynchronous orchestration, it also supports synchronous workflow execution when immediate results are required.</p>
+      <summary>How do I run AgentMesh locally?</summary>
+      <p>Run <code>pnpm install && pnpm build</code> in the root, then <code>cd server-lite && pnpm start</code>. The server starts on <code>http://localhost:8080</code>. See the <a href="quickstart/index.html">quickstart guide</a> for Docker, PostgreSQL, and Neo4j options.</p>
     </details>
     <details class="faq-item">
-      <summary>Do I need to use a AgentMesh-specific framework?</summary>
-      <p>No. AgentMesh is language and framework agnostic. Use your preferred language and framework&mdash;SDKs provide native integration for Java, Python, JavaScript, Go, C#, and more.</p>
+      <summary>What is the current production readiness?</summary>
+      <p>The graph, vector search, entity resolution, and permission enforcement layers are implemented and tested. The active blockers are production identity, durable authorization, nested Knowledge OS repair, real connectors, queue recovery, and admin operations. See <a href="https://github.com/agentmesh-oss/agentmesh/blob/main/passes.md">passes.md</a> for the full roadmap.</p>
     </details>
     <details class="faq-item">
-      <summary>Isn't JSON too limited for complex workflows?</summary>
-      <p>The opposite. JSON separates orchestration from implementation, making every workflow deterministic by construction &mdash; no side effects, no hidden state. Dynamic forks, dynamic tasks, and dynamic sub-workflows let you build workflows that are more flexible than code-based engines. JSON is also AI-native: LLMs can generate and modify workflow definitions at runtime without a compile/deploy cycle. Code-based engines require redeployment for every change.</p>
+      <summary>How do I contribute?</summary>
+      <p>Start with <a href="resources/contributing.html">Contributing guide</a> and <code>AGENTS.md</code>. Run the focused test set before opening a PR and keep changes scoped to one logical concern.</p>
     </details>
-    <details class="faq-item">
-      <summary>Is AgentMesh a low-code/no-code platform?</summary>
-      <p>No. AgentMesh is designed for developers who write code. While workflows can be defined in JSON, the power comes from building workers and tasks in your preferred programming language.</p>
-    </details>
-    <details class="faq-item">
-      <summary>Can AgentMesh handle complex workflows?</summary>
-      <p>AgentMesh was specifically designed for complex orchestration. It supports advanced patterns including nested loops, dynamic branching, sub-workflows, and workflows with thousands of tasks.</p>
-    </details>
-    <details class="faq-item">
-      <summary>Is Netflix Conductor abandoned?</summary>
-      <p>No. The original Netflix Conductor repository has transitioned to AgentMesh OSS, which is the new home for the active open source project. Development continues here.</p>
-    </details>
-    <details class="faq-item">
-      <summary>How can I deploy AgentMesh in production?</summary>
-      <p>AgentMesh is designed for easy containerized deployments. You can deploy it using our official Docker Compose configurations, Kubernetes Helm charts, or host it directly on cloud VM instances.</p>
-    </details>
-    <details class="faq-item">
-      <summary>Can AgentMesh orchestrate AI agents and LLMs?</summary>
-      <p>Yes. AgentMesh provides AI agent orchestration and LLM orchestration as native capabilities. 14+ LLM providers (Anthropic, OpenAI, Azure OpenAI, Google Gemini, AWS Bedrock, Mistral, Cohere, HuggingFace, Ollama, and more), MCP tool calling and function calling (LIST_MCP_TOOLS, CALL_MCP_TOOL), vector database integration (Pinecone, pgvector, MongoDB Atlas) for RAG, and content generation (image, audio, video, PDF). All with the same durability guarantees as any other workflow task.</p>
-    </details>
-    <details class="faq-item">
-      <summary>How does AgentMesh compare to other workflow engines?</summary>
-      <p>AgentMesh is the only open source workflow engine with native LLM task types for 14+ providers, built-in MCP integration, and vector database support. Combined with durable execution, 7+ language SDKs (Java, Python, Go, JavaScript, C#, Ruby, Rust), 6 message brokers, 5 persistence backends, and battle-tested scale at Netflix, Tesla, LinkedIn, and JP Morgan, AgentMesh provides the most complete workflow orchestration platform available. Unlike Temporal, Step Functions, or Airflow, AgentMesh is fully self-hosted, supports both code-first and JSON workflow definitions, and provides native AI agent orchestration out of the box.</p>
-    </details>
-  </div>
-</div>
-
-<div class="logo-wall">
-  <p class="logo-wall-label">Trusted by engineering teams at</p>
-  <div class="logo-marquee">
-    <div class="logo-track">
-      <span class="logo-name">Netflix</span>
-      <span class="logo-name">Tesla</span>
-      <span class="logo-name">LinkedIn</span>
-      <span class="logo-name">JP Morgan</span>
-      <span class="logo-name">Freshworks</span>
-      <span class="logo-name">American Express</span>
-      <span class="logo-name">Redfin</span>
-      <span class="logo-name">VMware</span>
-      <span class="logo-name">Coupang</span>
-      <span class="logo-name">Swiggy</span>
-      <span class="logo-name">Netflix</span>
-      <span class="logo-name">Tesla</span>
-      <span class="logo-name">LinkedIn</span>
-      <span class="logo-name">JP Morgan</span>
-      <span class="logo-name">Freshworks</span>
-      <span class="logo-name">American Express</span>
-      <span class="logo-name">Redfin</span>
-      <span class="logo-name">VMware</span>
-      <span class="logo-name">Coupang</span>
-      <span class="logo-name">Swiggy</span>
-    </div>
   </div>
 </div>
 
 <div class="cta-section">
   <div class="cta-content">
-    <h2>Open source workflow engine. Community driven.</h2>
-    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Originally created at Netflix, now maintained by the community.</p>
+    <h2>Open source company brain. Community driven.</h2>
+    <p>Apache-2.0 licensed. Self-hosted, no vendor lock-in. Build a knowledge layer your agents and employees can trust.</p>
     <div class="cta-actions">
       <a href="https://github.com/agentmesh-oss/agentmesh" class="btn-primary">Star on GitHub<span class="btn-arrow">&rarr;</span></a>
       <a href="resources/contributing.html" class="btn-ghost">Contributing guide</a>

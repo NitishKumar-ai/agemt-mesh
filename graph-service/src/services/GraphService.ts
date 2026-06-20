@@ -636,6 +636,33 @@ export class GraphService {
     return report;
   }
 
+  async storeSourceACLs(tenantId: string, connectorId: string, aclData: any): Promise<void> {
+    const node = await this.n4j.getNode(connectorId, tenantId);
+    if (!node) {
+      console.warn(`Source node ${connectorId} not found for tenant ${tenantId}. Cannot store ACLs.`);
+      return;
+    }
+    
+    // Hash the ACL data to generate a permissions hash
+    const permissionsHash = crypto.createHash('sha256').update(JSON.stringify(aclData)).digest('hex');
+    
+    node.permissions_hash = permissionsHash;
+    node.updated_at = new Date().toISOString();
+    await this.n4j.upsertNode(node);
+    this.cacheSourcePermissionNode(node);
+    await this.syncNodeIndex(node);
+  }
+
+  async updatePermissionHashes(tenantId: string, aclData: any): Promise<void> {
+    // Reindex vector search documents that may have changed permissions
+    // The sourcePermissionHashes map is already updated in storeSourceACLs
+    const facts = await this.n4j.listFacts(tenantId);
+    const affectedFacts = facts.filter(f => 
+      this.sourcePermissionHashes.has(this.sourcePermissionKey(tenantId, f.source_id))
+    );
+    await Promise.all(affectedFacts.map(fact => this.syncFactIndex(fact)));
+  }
+
   private async syncFactIndex(fact: Fact): Promise<void> {
     const indexId = `fact:${fact.id}`;
     if (fact.status !== 'current') {

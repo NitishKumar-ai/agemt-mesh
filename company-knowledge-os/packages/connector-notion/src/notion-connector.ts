@@ -53,18 +53,27 @@ export class NotionConnector implements Connector {
     const episodes: IEpisode[] = [];
 
     try {
-      const data: any = await this.executeToolWithAuth('notion_search', {
-        filter: {
-          timestamp: 'last_edited_time',
-          last_edited_time: {
-            after: since.toISOString(),
-          },
-        },
-        page_size: 100,
-      });
+      let hasMore = true;
+      let startCursor: string | undefined = undefined;
 
-      const results = data?.results || [];
-      episodes.push(...results.map((page: any) => this.pageToEpisode(page)));
+      while (hasMore) {
+        const data: any = await this.executeToolWithAuth('notion_search', {
+          filter: {
+            timestamp: 'last_edited_time',
+            last_edited_time: {
+              after: since.toISOString(),
+            },
+          },
+          page_size: 100,
+          start_cursor: startCursor,
+        });
+
+        const results = data?.results || [];
+        episodes.push(...results.map((page: any) => this.pageToEpisode(page)));
+        
+        hasMore = data?.has_more || false;
+        startCursor = data?.next_cursor;
+      }
 
     } catch (error) {
       if (error instanceof Error && error.message === 'Notion not authorized') {
@@ -139,7 +148,19 @@ export class NotionConnector implements Connector {
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    return true; // Placeholder
+    if (!this.config.webhook_secret) return false;
+    try {
+      const expected = crypto
+        .createHmac('sha256', this.config.webhook_secret)
+        .update(payload)
+        .digest('hex');
+      const sigBuf = Buffer.from(signature);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) return false;
+      return crypto.timingSafeEqual(sigBuf, expBuf);
+    } catch {
+      return false;
+    }
   }
 
   async processWebhook(payload: any): Promise<void> {
