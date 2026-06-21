@@ -326,6 +326,6 @@ export async function runGrowthDemoSeed(): Promise<void> {
     `[GrowthSeed] Seeded "${GROWTH_CAMPAIGN_ID}" for tenant "${DEMO_TENANT}": ` +
       `4-channel funnel, ${featureFacts.length} feature facts, user-response insights, a ` +
       `superseded report verdict, and a sales-restricted MRR fact. Ask scope ` +
-      `"${GROWTH_CAMPAIGN_ID}" and switch identities to see permission-aware growth answers.`,
+      `"${GROWTH_CAMPAIGN_ID}" to see permission-aware growth answers.`,
   );
 }

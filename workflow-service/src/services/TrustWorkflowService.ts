@@ -1000,6 +1000,18 @@ export class TrustWorkflowService {
       ? `For "${query}", the permission-visible cited evidence says: ${facts.map((fact) => this.formatFact(fact)).join(', ')}.`
       : 'I found related information, but not enough evidence visible to this caller to answer confidently.';
 
+    // Do not let an external model answer from general knowledge when no
+    // permission-visible evidence exists. The trust boundary requires a
+    // deterministic abstention in this case.
+    if (facts.length === 0) {
+      return {
+        answer,
+        confidence: 0.15,
+        level: 'abstain',
+        citations: [],
+      };
+    }
+
     let usedOpenAi = false;
     if (this.connectionDAO || process.env.OPENAI_API_KEY) {
       try {
@@ -1047,15 +1059,6 @@ export class TrustWorkflowService {
       } catch (err) {
         console.error('[TrustWorkflowService] Failed to call OpenAI API:', err);
       }
-    }
-
-    if (facts.length === 0 && !usedOpenAi) {
-      return {
-        answer,
-        confidence: 0.15,
-        level: 'abstain',
-        citations: [],
-      };
     }
 
     return {
@@ -1126,6 +1129,18 @@ export class TrustWorkflowService {
             .join(', ')}.`
         : 'I found related information, but not enough evidence visible to this caller to answer confidently.';
 
+    if (facts.length === 0) {
+      yield { type: 'token', text: deterministic };
+      yield {
+        type: 'done',
+        answer: deterministic,
+        confidence: 0.15,
+        level: 'abstain',
+        citations: [],
+      };
+      return;
+    }
+
     let streamedText = '';
     let usedOpenAi = false;
     const apiKey = await this.resolveOpenAiKey();
@@ -1179,10 +1194,6 @@ export class TrustWorkflowService {
       // No streamed tokens — emit the deterministic, evidence-derived answer in
       // one chunk. With zero permitted facts this is a clean abstention.
       yield { type: 'token', text: deterministic };
-      if (facts.length === 0) {
-        yield { type: 'done', answer: deterministic, confidence: 0.15, level: 'abstain', citations: [] };
-        return;
-      }
     }
 
     const answer = usedOpenAi ? streamedText : deterministic;

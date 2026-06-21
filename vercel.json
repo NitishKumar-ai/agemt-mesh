@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter agent-mesh-frontend build",
+  "outputDirectory": "ui/dist",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!api/|health).*)", "destination": "/index.html" }
+  ]
+}

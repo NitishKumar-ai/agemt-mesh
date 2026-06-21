@@ -127,6 +127,27 @@ export function LandingPage() {
           <Link className="atlas-button" to="/home">
             Explore AgentMesh <ArrowRight size={15} />
           </Link>
+          <div className="atlas-hero-media" data-reveal>
+            <div className="atlas-hero-media__bar">
+              <span><i /> AgentMesh in action</span>
+              <span>37 second overview</span>
+            </div>
+            <div className="atlas-hero-media__screen">
+              <video
+                autoPlay
+                controls
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                poster="/agentmesh-demo-poster.jpg"
+                aria-label="AgentMesh product overview"
+              >
+                <source src="/agentmesh-demo.mp4" type="video/mp4" />
+                Your browser does not support embedded video.
+              </video>
+            </div>
+          </div>
           <a className="atlas-scroll-cue" href="#story" aria-label="Continue to the story">
             <ChevronDown size={19} />
           </a>

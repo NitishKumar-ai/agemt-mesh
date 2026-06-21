@@ -28,12 +28,6 @@ import {
   type ChatMessage,
   type ChatSession,
 } from '../lib/chatSessions';
-import {
-  loadDemoIdentities,
-  setActiveIdentity,
-  getActiveIdentityKey,
-  type DemoIdentity,
-} from '../lib/demoIdentity';
 
 const LEVEL_META: Record<
   AskAnswer['level'],
@@ -79,25 +73,6 @@ export function HomePage() {
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const [identities, setIdentities] = useState<DemoIdentity[]>([]);
-  const [activeIdentityKey, setActiveIdentityKey] = useState<string | null>(getActiveIdentityKey());
-
-  // Load demo identities for the permission-aware "View as" switcher. Selecting
-  // one sets the Bearer token the api client injects, so the same question
-  // returns evidence scoped to that identity.
-  useEffect(() => {
-    loadDemoIdentities()
-      .then((list) => {
-        setIdentities(list);
-        setActiveIdentityKey(getActiveIdentityKey());
-      })
-      .catch(() => setIdentities([]));
-  }, []);
-
-  function switchIdentity(identity: DemoIdentity) {
-    setActiveIdentity(identity);
-    setActiveIdentityKey(identity.key);
-  }
 
   // Resume a session from `?session=<id>` if present; otherwise keep the fresh one.
   const sessionParam = searchParams.get('session');
@@ -360,26 +335,6 @@ export function HomePage() {
               </button>
             )}
           </header>
-
-          {identities.length > 0 && (
-            <div className="identity-switcher" role="group" aria-label="View as identity">
-              <span className="identity-switcher__label"><Users size={13} /> View as</span>
-              <div className="identity-switcher__options">
-                {identities.map((identity) => (
-                  <button
-                    type="button"
-                    key={identity.key}
-                    className={`identity-chip ${activeIdentityKey === identity.key ? 'is-active' : ''}`}
-                    onClick={() => switchIdentity(identity)}
-                    title={identity.description}
-                  >
-                    <strong>{identity.name}</strong>
-                    <small>{identity.role}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {!hasMessages && composer}
 

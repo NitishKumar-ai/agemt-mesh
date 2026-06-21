@@ -40,6 +40,7 @@ function read(): InterfacePreferences {
 }
 
 function apply(prefs: InterfacePreferences): void {
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
   // Theme: when 'system', remove the override so prefers-color-scheme wins.
   if (prefs.theme === 'system') {

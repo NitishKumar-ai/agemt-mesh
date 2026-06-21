@@ -235,6 +235,25 @@ export class GraphService {
     return result[0] || null;
   }
 
+  /**
+   * All current source/entity nodes for a tenant. Used by the knowledge UI to
+   * list provenance documents. Permission filtering is applied by the caller
+   * using each node's permissions_hash, so this returns the full tenant set.
+   */
+  async listNodesForTenant(tenantId: string): Promise<GraphNode[]> {
+    return (await this.n4j.listNodes(tenantId)).filter((node) => node.status === 'current');
+  }
+
+  /**
+   * All current facts for a tenant, with source permission hashes hydrated so
+   * the caller can filter by the viewing principal's access grant.
+   */
+  async listFactsForTenant(tenantId: string): Promise<Fact[]> {
+    const facts = (await this.n4j.listFacts(tenantId)).filter((fact) => fact.status === 'current');
+    await this.hydrateFactSourcePermissions(tenantId, facts);
+    return facts;
+  }
+
   async findCurrentEntityIds(
     tenantId: string,
     entityType: GraphNode['type'],
@@ -259,7 +278,14 @@ export class GraphService {
   // -- Temporal Fact Lookups --
 
   async getFactsCurrent(entityId: string, tenantId: string): Promise<Fact[]> {
-    const currentFacts = await this.n4j.listFactsByEntity(tenantId, entityId, 'current');
+    // A blank scope means "search everything this caller may see" rather than a
+    // literal entity whose id is the empty string (which matches nothing). Pull
+    // every current fact in the tenant; the caller still applies ACL filtering
+    // downstream, so this never widens what an individual principal can read.
+    const currentFacts =
+      entityId && entityId.trim()
+        ? await this.n4j.listFactsByEntity(tenantId, entityId, 'current')
+        : (await this.n4j.listFacts(tenantId)).filter((fact) => fact.status === 'current');
     await this.hydrateFactSourcePermissions(tenantId, currentFacts);
     return currentFacts;
   }
@@ -293,6 +319,12 @@ export class GraphService {
   }
 
   async getFactsConflicts(entityId: string, tenantId: string): Promise<Fact[]> {
+    // Contradiction-driven abstention is a per-scope signal: it only makes sense
+    // when the caller named a specific entity. A blank scope is a broad search,
+    // so we do not surface unrelated contradictions from elsewhere in the tenant
+    // (otherwise a single contradicted entity would make every scopeless ask
+    // abstain). Returning no conflicts lets the broad current-fact answer stand.
+    if (!entityId || !entityId.trim()) return [];
     const conflictingFacts = await this.n4j.listFactsByEntity(tenantId, entityId, 'contradicted');
     await this.hydrateFactSourcePermissions(tenantId, conflictingFacts);
     return conflictingFacts;

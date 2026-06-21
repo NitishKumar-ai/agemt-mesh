@@ -129,52 +129,6 @@ export function principalFromAuthHeader(
   };
 }
 
-/**
- * Mint an HS256 token for a demo identity. Inverse of
- * {@link principalFromAuthHeader} — the payload carries the principal's key as
- * `id`/`sub` (matching the PolicyEngine grants seeded in {@link runDemoSeed}),
- * its tenant, and its roles, so the normal guard + PolicyEngine path applies.
- */
-function signDemoToken(identity: DemoPrincipalFixture): string {
-  const secret = process.env.JWT_SECRET || 'super-secret-key-change-me';
-  const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const iat = Math.floor(Date.now() / 1000);
-  const payload = base64url(
-    JSON.stringify({
-      iat,
-      exp: iat + 7 * 24 * 60 * 60,
-      sub: identity.key,
-      id: identity.key,
-      tenant_id: DEMO_TENANT,
-      email: `${identity.key}@globex.example`,
-      roles: identity.isAdmin ? ['admin'] : ['member'],
-    }),
-  );
-  const sig = base64url(crypto.createHmac('sha256', secret).update(`${header}.${payload}`).digest());
-  return `${header}.${payload}.${sig}`;
-}
-
-/**
- * Demo identities plus a freshly-minted Bearer token each, for the UI's
- * "View as" switcher (`GET /api/demo/identities`). Tokens are re-signed per call
- * so they never expire mid-demo.
- */
-export function demoIdentitiesWithTokens(): Array<{
-  key: string;
-  name: string;
-  role: string;
-  description: string;
-  token: string;
-}> {
-  return DEMO_PRINCIPALS.map((identity) => ({
-    key: identity.key,
-    name: identity.name,
-    role: identity.role,
-    description: identity.description,
-    token: signDemoToken(identity),
-  }));
-}
-
 const now = new Date().toISOString();
 const recent = (daysAgo: number) =>
   new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();

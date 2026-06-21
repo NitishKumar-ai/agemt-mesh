@@ -22,15 +22,7 @@ import type {
   GitHubRepository,
 } from './types';
 
-import { getAuthToken } from './demoIdentity';
-
 type Query = Record<string, string | number | boolean | undefined>;
-
-/** Bearer header for the active "View as" identity, if one is selected. */
-function authHeader(): Record<string, string> {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 function queryString(query?: Query): string {
   if (!query) return '';
@@ -51,7 +43,6 @@ async function request<T>(
     headers: {
       Accept: 'application/json',
       ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...authHeader(),
       ...options?.headers,
     },
   });
@@ -287,7 +278,7 @@ async function askQuestionStream(
 ): Promise<void> {
   const response = await fetch('/api/workflows/query/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...authHeader() },
+    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
     body: JSON.stringify({ query, projectId }),
     signal,
   });

@@ -10,6 +10,7 @@ import {
 } from '@agentmesh/sqlite-persistence';
 import { AMQPQueueDAO } from '@agentmesh/amqp';
 import { createRedisAdapter, type RedisAdapter } from '@agentmesh/redis-lock';
+import { graphService, policyEngine } from '@agentmesh/graph-service';
 import { WorkflowService, TaskService, ConnectionService } from '@agentmesh/rest';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -92,9 +93,10 @@ import {
 import { TaskStatusListener as TaskStatusListenerImpl } from '@agentmesh/task-status-listener';
 import {
   DEMO_PRINCIPAL,
+  DEMO_TENANT,
+  DEMO_USER,
   runDemoSeed,
   principalFromAuthHeader,
-  demoIdentitiesWithTokens,
 } from './demoSeed.js';
 import { runGrowthDemoSeed } from './demoGrowthSeed.js';
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
@@ -373,6 +375,35 @@ export async function bootstrapServer(options?: {
     pollIntervalMs: CRON_POLL_MS,
   });
 
+  // Permission-aware knowledge reads for /api/agents/context/*. Resolves the
+  // viewing principal's access grant so the Knowledge page shows only
+  // facts/sources that principal is allowed to see.
+  const resolvePrincipalAccess = (principal: any) => {
+    const tenantId = principal?.tenant_id ?? principal?.tenantId ?? DEMO_TENANT;
+    const userId = principal?.id ?? principal?.sub ?? principal?.user_id ?? DEMO_USER;
+    return { tenantId, access: policyEngine.resolveAccess(tenantId, userId) };
+  };
+  const knowledgeContext = {
+    async listDocuments(principal: unknown) {
+      const { tenantId, access } = resolvePrincipalAccess(principal);
+      const nodes = await graphService.listNodesForTenant(tenantId);
+      return nodes.filter((node) => policyEngine.isVisible(node.permissions_hash ?? null, access));
+    },
+    async listFacts(principal: unknown) {
+      const { tenantId, access } = resolvePrincipalAccess(principal);
+      const facts = await graphService.listFactsForTenant(tenantId);
+      return facts.filter((fact) =>
+        policyEngine.isVisible(
+          graphService.getSourcePermissionHash(tenantId, fact.source_id) ?? null,
+          access,
+        ),
+      );
+    },
+    async resolveConflict(_id: string, _principal: unknown, _body: unknown) {
+      return { success: true };
+    },
+  };
+
   const agentRouter = createAgentRouter(
     agentRegistry,
     eventBus,
@@ -383,7 +414,9 @@ export async function bootstrapServer(options?: {
     // so it owns /api/agents/connections*. Hand it the real ConnectionService
     // (which implements the ConnectionStore contract) so the Connections page is
     // backed by live SQLite data instead of the empty-store stub fallbacks.
-    connectionService as any
+    connectionService as any,
+    knowledgeContext,
+    db,
   );
 
   // --- Sync Engine Adapters ---
@@ -655,15 +688,6 @@ export async function bootstrapServer(options?: {
 
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.use(morgan(cfg.logFormat));
-
-  // Public demo route powering the UI "View as" switcher. Mounted on the
-  // underlying Express app after the Nest router, so it resolves for this
-  // unmatched path. Demo-gated so it never ships in production.
-  if (demoEnabled('DEMO_AUTH')) {
-    expressApp.get('/api/demo/identities', (_req: any, res: any) => {
-      res.json({ identities: demoIdentitiesWithTokens() });
-    });
-  }
 
   // --- Agent Runtime Wiring ---
   console.log('Initializing agent runtime wiring...');
@@ -963,6 +987,44 @@ export async function bootstrapServer(options?: {
       console.log('[DemoSeed] Seeded demo connections for the Connections page.');
     } catch (err) {
       console.error('[DemoSeed] Failed to seed demo connections:', err);
+    }
+    try {
+      // Seed a couple of pending human-in-the-loop approvals so the Audit/Approvals
+      // queue (and its nav badge) demonstrates the decide flow out of the box.
+      const existing = await db.selectFrom('approvals').select('id').limit(1).execute();
+      if (existing.length === 0) {
+        const seedNow = Date.now();
+        await db
+          .insertInto('approvals')
+          .values([
+            {
+              run_id: 'wf-demo-marketing-001',
+              payload: JSON.stringify({
+                summary: 'Publish the Atlas GA launch post to LinkedIn and Twitter.',
+                action: 'social_publish',
+              }),
+              status: 'pending',
+              risk_level: 'medium',
+              requesting_agent: 'Marketing Agent',
+              created_at: seedNow - 5 * 60_000,
+            },
+            {
+              run_id: 'wf-demo-security-002',
+              payload: JSON.stringify({
+                summary: 'Open a high-severity issue for the auth gap found by CommitGuard.',
+                action: 'create_issue',
+              }),
+              status: 'pending',
+              risk_level: 'high',
+              requesting_agent: 'CommitGuard',
+              created_at: seedNow - 2 * 60_000,
+            },
+          ])
+          .execute();
+        console.log('[DemoSeed] Seeded demo approvals for the Audit/Approvals queue.');
+      }
+    } catch (err) {
+      console.error('[DemoSeed] Failed to seed demo approvals:', err);
     }
   }
 

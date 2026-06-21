@@ -53,3 +53,4 @@ agent-runtime/
 
 # Local run logs
 *.log
+.vercel
