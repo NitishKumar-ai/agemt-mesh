@@ -4,9 +4,12 @@ import {
   BookOpenCheck,
   Cable,
   ChartNoAxesCombined,
-  Home,
+  History,
+  Rocket,
+  MessageSquarePlus,
   Network,
   PlayCircle,
+  Repeat,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -24,9 +27,11 @@ import { ApprovalsPage } from './pages/ApprovalsPage';
 import { AskPage } from './pages/AskPage';
 import { CommitGuardPage } from './pages/CommitGuardPage';
 import { ConnectionsPage } from './pages/ConnectionsPage';
+import { GrowthBriefPage } from './pages/GrowthBriefPage';
 import { HomePage } from './pages/HomePage';
 import { KnowledgePage } from './pages/KnowledgePage';
 import { MarketingPage } from './pages/MarketingPage';
+import { RoutinesPage } from './pages/RoutinesPage';
 import { SafetyPage } from './pages/SafetyPage';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { SessionPage } from './pages/SessionPage';
@@ -39,6 +44,8 @@ const PATHS: Partial<Record<PageKey, string>> = {
   home: '/home',
   ask: '/ask',
   briefs: '/briefs',
+  growth: '/growth',
+  routines: '/routines',
   knowledge: '/knowledge',
   activity: '/activity',
   sources: '/admin/sources',
@@ -61,6 +68,8 @@ export function pageForPath(pathname: string): PageKey {
   if (pathname === '/' || pathname.startsWith('/home')) return 'home';
   if (pathname.startsWith('/ask')) return 'ask';
   if (pathname.startsWith('/briefs')) return 'briefs';
+  if (pathname.startsWith('/growth')) return 'growth';
+  if (pathname.startsWith('/routines')) return 'routines';
   if (pathname.startsWith('/knowledge')) return 'knowledge';
   if (pathname.startsWith('/activity')) return 'activity';
   if (pathname.startsWith('/admin/sources')) return 'sources';
@@ -96,9 +105,11 @@ export function App() {
 
   const navItems = useMemo(
     () => [
-      { key: 'home' as const, label: 'Home', icon: Home },
-      { key: 'ask' as const, label: 'Ask', icon: Sparkles },
+      { key: 'home' as const, label: 'New chat', icon: MessageSquarePlus },
+      { key: 'ask' as const, label: 'History', icon: History },
       { key: 'briefs' as const, label: 'Briefs', icon: BookOpenCheck },
+      { key: 'growth' as const, label: 'Growth Brief', icon: Rocket },
+      { key: 'routines' as const, label: 'Routines', icon: Repeat },
       { key: 'knowledge' as const, label: 'Knowledge', icon: Network },
       { key: 'activity' as const, label: 'Activity', icon: Activity },
       { key: 'admin' as const, label: 'Overview', icon: ChartNoAxesCombined },
@@ -128,6 +139,7 @@ export function App() {
 
   function renderPage() {
     switch (page) {
+      // `/` and `/home` start a new working chat session; `/ask` is the history list.
       case 'home':
         return <HomePage />;
       case 'ask':
@@ -135,6 +147,10 @@ export function App() {
       case 'briefs':
       case 'automation':
         return <WorkflowsPage activeWorkflowId={activeWorkflowId} onWorkflowSelect={selectWorkflow} />;
+      case 'growth':
+        return <GrowthBriefPage />;
+      case 'routines':
+        return <RoutinesPage />;
       case 'knowledge':
         return <KnowledgePage />;
       case 'activity':

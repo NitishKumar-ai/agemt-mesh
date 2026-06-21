@@ -3,6 +3,7 @@ import type {
   AppSettings,
   ApprovalEvent,
   AskAnswer,
+  Citation,
   ConnectionInfo,
   ConnectorConfig,
   GitHubStatus,
@@ -13,13 +14,23 @@ import type {
   SafetyStats,
   SafetyVerdict,
   ScheduledTask,
+  Routine,
+  RoutineRun,
   SecurityFinding,
   SuggestedTask,
   WorkflowRun,
   GitHubRepository,
 } from './types';
 
+import { getAuthToken } from './demoIdentity';
+
 type Query = Record<string, string | number | boolean | undefined>;
+
+/** Bearer header for the active "View as" identity, if one is selected. */
+function authHeader(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 function queryString(query?: Query): string {
   if (!query) return '';
@@ -40,6 +51,7 @@ async function request<T>(
     headers: {
       Accept: 'application/json',
       ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
+      ...authHeader(),
       ...options?.headers,
     },
   });
@@ -113,6 +125,17 @@ export const api = {
   askQuestion: (query: string, projectId: string) =>
     post<AskAnswer>('/api/workflows/query', { query, projectId }),
 
+  // Streamed variant of askQuestion. Tokens arrive incrementally over SSE; the
+  // final `done` event carries the authoritative confidence/level/citations.
+  // Pass an AbortSignal to support a Stop button. Falls back to throwing if the
+  // server rejects the request before the stream opens.
+  askQuestionStream: askQuestionStream,
+
+  // Growth Memory: structured founder growth brief (campaign + funnel + feature
+  // + user response + superseded report + recommended actions).
+  founderGrowthBrief: (input: { campaign: string; feature?: string; channels?: string[] }) =>
+    post<any>('/api/workflows/founder-growth-brief', input),
+
   listTasks: () =>
     request<any>('/api/agents/tasks').then((res) => ({
       tasks: (Array.isArray(res) ? res : res?.tasks || []) as SuggestedTask[],
@@ -143,22 +166,27 @@ export const api = {
   runScheduleNow: (id: string | number) =>
     post<any>(`/api/agents/schedules/${encodeURIComponent(id)}/run`),
 
-  listConnections: async () => {
-    const res = await request<any>('/api/agents/connections');
-    let connections = (Array.isArray(res) ? res : res?.connections || []) as ConnectionInfo[];
-    
-    // Also fetch Scalekit connections
-    try {
-      const scalekitRes = await request<any>('/api/social-studio/oauth/scalekit/accounts');
-      if (scalekitRes && scalekitRes.connections) {
-        connections = [...connections, ...scalekitRes.connections];
-      }
-    } catch (e) {
-      console.warn('Failed to load Scalekit connections', e);
-    }
-    
-    return { connections };
-  },
+  // Routines: scheduled multi-agent orchestrations that deliver a finished report.
+  listRoutines: () =>
+    request<any>('/api/routines').then((res) => ({
+      routines: (Array.isArray(res) ? res : res?.routines || []) as Routine[],
+    })),
+  createRoutine: (input: unknown) => post<Routine>('/api/routines', input),
+  updateRoutine: (id: string, input: unknown) =>
+    put<Routine>(`/api/routines/${encodeURIComponent(id)}`, input),
+  deleteRoutine: (id: string) => del<void>(`/api/routines/${encodeURIComponent(id)}`),
+  runRoutineNow: (id: string) => post<RoutineRun>(`/api/routines/${encodeURIComponent(id)}/run`),
+  listRoutineRuns: (id?: string) =>
+    request<any>(id ? `/api/routines/${encodeURIComponent(id)}/runs` : '/api/routines/runs').then(
+      (res) => ({ runs: (Array.isArray(res) ? res : res?.runs || []) as RoutineRun[] }),
+    ),
+  getRoutineRun: (runId: string) =>
+    request<RoutineRun>(`/api/routines/runs/${encodeURIComponent(runId)}`),
+
+  listConnections: () =>
+    request<any>('/api/agents/connections').then((res) => ({
+      connections: (Array.isArray(res) ? res : res?.connections || []) as ConnectionInfo[],
+    })),
   listAvailableConnectors: () =>
     request<any>('/api/agents/connections/available').then((res) => ({
       connectors: (Array.isArray(res) ? res : res?.connectors || []) as ConnectorConfig[],
@@ -166,6 +194,13 @@ export const api = {
   createConnection: (input: unknown) => post<ConnectionInfo>('/api/agents/connections', input),
   deleteConnection: (id: string | number) =>
     del<void>(`/api/agents/connections/${encodeURIComponent(id)}`),
+
+  socialStatus: () =>
+    request<{
+      platforms: Record<string, { connected: boolean; expired?: boolean; connectedAt?: number | null; metadata?: any }>;
+    }>('/api/social-studio/status'),
+  disconnectSocial: (platform: string) =>
+    del<void>(`/api/social-studio/token/${encodeURIComponent(platform)}`),
 
   listMarketingCampaigns: () =>
     request<any>('/api/agents/marketing/campaigns').then((res) => ({
@@ -220,6 +255,97 @@ export const api = {
   getSettings: () => request<AppSettings>('/api/agents/settings'),
   updateSettings: (input: AppSettings) => put<AppSettings>('/api/agents/settings', input),
 };
+
+/** Callbacks for a streamed answer. {@link onDone} always fires on success. */
+export interface AnswerStreamHandlers {
+  /** Citations resolved before generation starts (permission-filtered). */
+  onMeta?: (citations: Citation[]) => void;
+  /** An incremental chunk of answer text. */
+  onToken: (text: string) => void;
+  /** The completed answer with authoritative confidence/level/citations. */
+  onDone: (answer: AskAnswer) => void;
+  /** A server-side error surfaced mid-stream. */
+  onError?: (message: string) => void;
+}
+
+type StreamFrame =
+  | { type: 'meta'; citations: Citation[] }
+  | { type: 'token'; text: string }
+  | { type: 'done'; answer: string; confidence: number; level: AskAnswer['level']; citations: Citation[] }
+  | { type: 'error'; message: string };
+
+/**
+ * POST a query and consume the SSE answer stream. Resolves once the stream ends.
+ * Aborting via `signal` stops reading and rejects with an AbortError, which the
+ * caller can detect with `signal.aborted` to preserve partial text.
+ */
+async function askQuestionStream(
+  query: string,
+  projectId: string,
+  handlers: AnswerStreamHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  const response = await fetch('/api/workflows/query/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...authHeader() },
+    body: JSON.stringify({ query, projectId }),
+    signal,
+  });
+
+  if (!response.ok || !response.body) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Agent Mesh streaming request failed with status ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const dispatch = (frame: StreamFrame) => {
+    switch (frame.type) {
+      case 'meta':
+        handlers.onMeta?.(frame.citations);
+        break;
+      case 'token':
+        handlers.onToken(frame.text);
+        break;
+      case 'done':
+        handlers.onDone({
+          answer: frame.answer,
+          confidence: frame.confidence,
+          level: frame.level,
+          citations: frame.citations,
+        });
+        break;
+      case 'error':
+        handlers.onError?.(frame.message);
+        break;
+    }
+  };
+
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // SSE frames are separated by a blank line.
+      let sep: number;
+      while ((sep = buffer.indexOf('\n\n')) >= 0) {
+        const raw = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        const dataLine = raw.split('\n').find((line) => line.startsWith('data:'));
+        if (!dataLine) continue;
+        try {
+          dispatch(JSON.parse(dataLine.slice(5).trim()) as StreamFrame);
+        } catch {
+          /* ignore malformed frame */
+        }
+      }
+    }
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+}
 
 export const fetchDocuments = () => request<any[]>('/api/agents/context/documents');
 export const fetchFacts = (entityId?: string) =>

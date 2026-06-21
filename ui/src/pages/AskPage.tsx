@@ -1,261 +1,234 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  AlertTriangle,
-  ArrowUp,
-  CheckCircle2,
-  Clock3,
-  Quote,
-  Search,
+  ArrowRight,
+  MessageSquareText,
+  Plus,
   ShieldCheck,
-  Sparkles,
+  Trash2,
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import { EvidenceInspector } from '../components/EvidenceInspector';
-import { api } from '../lib/api';
-import type { AskAnswer, Citation } from '../lib/types';
+import { useNavigate } from 'react-router-dom';
+import {
+  deleteSession,
+  listSessions,
+  timeAgo,
+  type ChatSession,
+} from '../lib/chatSessions';
 
-const LEVEL_META: Record<
-  AskAnswer['level'],
-  { label: string; description: string; icon: typeof CheckCircle2 }
-> = {
-  high: {
-    label: 'High confidence',
-    description: 'Multiple strong signals support this answer.',
-    icon: CheckCircle2,
-  },
-  medium: {
-    label: 'Medium confidence',
-    description: 'Useful evidence exists, but some context may be incomplete.',
-    icon: ShieldCheck,
-  },
-  low: {
-    label: 'Low confidence',
-    description: 'Evidence is limited or contains unresolved uncertainty.',
-    icon: AlertTriangle,
-  },
-  abstain: {
-    label: 'AgentMesh abstained',
-    description: 'There is not enough reliable evidence to answer safely.',
-    icon: AlertTriangle,
-  },
-};
-
-const suggestions = [
-  'What changed in this project this week?',
-  'Which decision is the current source of truth?',
-  'Who owns the open risks and follow-ups?',
-];
-
+/**
+ * "Session history" — the list of past chat sessions. Sessions are persisted by
+ * the New session chat page (HomePage) in the chatSessions store. Opening one
+ * deep-links back into the chat (`/home?session=<id>`) with the full transcript,
+ * citations, and confidence restored.
+ */
 export function AskPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [scope, setScope] = useState(searchParams.get('scope') || '');
-  const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [answer, setAnswer] = useState<AskAnswer | null>(null);
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const citationIndex = useMemo(
-    () => answer?.citations.findIndex((citation) => citation.id === selectedCitation?.id) ?? -1,
-    [answer, selectedCitation],
-  );
+  const navigate = useNavigate();
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
 
   useEffect(() => {
-    const initialQuestion = searchParams.get('q');
-    const initialScope = searchParams.get('scope');
-    if (initialQuestion) setQuery(initialQuestion);
-    if (initialScope) setScope(initialScope);
-  }, [searchParams]);
+    setSessions(listSessions());
+  }, []);
 
-  async function ask(question = query) {
-    const cleanQuestion = question.trim();
-    const cleanScope = scope.trim();
-    if (!cleanQuestion) {
-      setError('Enter a question for AgentMesh.');
-      return;
-    }
-    if (!cleanScope) {
-      setError('Add a project or entity scope while global semantic search is being connected.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setAnswer(null);
-    setSelectedCitation(null);
-    setSearchParams({ q: cleanQuestion, scope: cleanScope });
-    try {
-      const result = await api.askQuestion(cleanQuestion, cleanScope);
-      setAnswer(result);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'AgentMesh could not complete the query.');
-    } finally {
-      setLoading(false);
-    }
+  function open(id: string) {
+    navigate(`/home?session=${encodeURIComponent(id)}`);
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    void ask();
+  function remove(event: React.MouseEvent, id: string) {
+    event.stopPropagation();
+    deleteSession(id);
+    setSessions(listSessions());
   }
 
-  const level = answer ? LEVEL_META[answer.level] : null;
-  const LevelIcon = level?.icon;
+  function preview(session: ChatSession): string {
+    const lastAssistant = [...session.messages].reverse().find((m) => m.role === 'assistant' && !m.error);
+    if (lastAssistant) return lastAssistant.text;
+    const lastUser = [...session.messages].reverse().find((m) => m.role === 'user');
+    return lastUser?.text ?? 'No messages yet.';
+  }
 
   return (
-    <div className={`ask-workspace ${selectedCitation ? 'ask-workspace--evidence-open' : ''}`}>
-      <main className="ask-main">
-        <header className="ask-header">
-          <span>Company brain</span>
-          <h1>Ask AgentMesh</h1>
-          <p>Answers are grounded in evidence visible to your current identity.</p>
-        </header>
+    <div className="history-page">
+      <header className="history-head">
+        <div>
+          <span className="history-head__eyebrow"><MessageSquareText size={13} /> Session history</span>
+          <h1>Your conversations</h1>
+          <p>Every chat with the company brain — reopen one to continue, with its citations and confidence intact.</p>
+        </div>
+        <button type="button" className="history-new" onClick={() => navigate('/home')}>
+          <Plus size={16} /> New chat
+        </button>
+      </header>
 
-        {!answer && !loading && (
-          <section className="ask-intro" aria-label="Suggested questions">
-            <div className="ask-intro__mark"><Sparkles size={24} /></div>
-            <h2>What do you need to know?</h2>
-            <p>
-              Ask about a project, decision, incident, account, or team. AgentMesh will abstain
-              when the available evidence is not strong enough.
-            </p>
-            <div className="ask-suggestions">
-              {suggestions.map((suggestion) => (
-                <button type="button" key={suggestion} onClick={() => setQuery(suggestion)}>
-                  {suggestion}
-                  <ArrowUp size={14} />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {loading && (
-          <section className="retrieval-progress" aria-live="polite">
-            <div className="retrieval-progress__pulse"><Search size={18} /></div>
-            <div>
-              <span>Building a permission-safe answer</span>
-              <h2>{query}</h2>
-              <ol>
-                <li className="is-complete"><CheckCircle2 size={14} /> Interpreting scope</li>
-                <li className="is-active"><span /> Checking current facts and conflicts</li>
-                <li><span /> Verifying evidence and composing</li>
-              </ol>
-            </div>
-          </section>
-        )}
-
-        {answer && level && LevelIcon && (
-          <article className="answer-surface">
-            <div className={`answer-trust answer-trust--${answer.level}`}>
-              <LevelIcon size={16} />
-              <strong>{level.label}</strong>
-              <span>{Math.round(answer.confidence * 100)}%</span>
-              <p>{level.description}</p>
-            </div>
-
-            <div className="answer-question">
-              <span><Clock3 size={13} /> Current answer</span>
-              <h2>{searchParams.get('q') || query}</h2>
-            </div>
-
-            <div className="answer-copy">{answer.answer}</div>
-
-            {answer.level === 'abstain' && (
-              <div className="answer-abstention">
-                <AlertTriangle size={17} />
-                <div>
-                  <strong>No reliable answer was produced.</strong>
-                  <span>Connect more sources, broaden the scope, or ask about a shorter time range.</span>
-                </div>
-              </div>
-            )}
-
-            <section className="answer-evidence" aria-labelledby="sources-heading">
-              <div>
-                <span>Verification</span>
-                <h3 id="sources-heading">Sources used</h3>
-              </div>
-              {answer.citations.length === 0 ? (
-                <div className="answer-no-sources">No visible citations were returned.</div>
-              ) : (
-                <div className="citation-grid">
-                  {answer.citations.map((citation, index) => (
-                    <button
-                      type="button"
-                      key={citation.id}
-                      onClick={() => setSelectedCitation(citation)}
-                      className={selectedCitation?.id === citation.id ? 'is-selected' : ''}
-                    >
-                      <span className="citation-number">{index + 1}</span>
-                      <span>
-                        <strong>{citation.title}</strong>
-                        <small>
-                          {citation.exact_text || 'Open to inspect source metadata and evidence.'}
-                        </small>
+      {sessions.length === 0 ? (
+        <button type="button" className="history-empty" onClick={() => navigate('/home')}>
+          <MessageSquareText size={22} />
+          <span>
+            <strong>No conversations yet</strong>
+            <small>Start a new session and your chats will show up here.</small>
+          </span>
+          <ArrowRight size={16} />
+        </button>
+      ) : (
+        <ul className="history-list">
+          {sessions.map((session) => {
+            const turns = session.messages.filter((m) => m.role === 'user').length;
+            return (
+              <li key={session.id}>
+                <button type="button" className="history-card" onClick={() => open(session.id)}>
+                  <div className="history-card__main">
+                    <strong className="history-card__title">{session.title}</strong>
+                    <p className="history-card__preview">{preview(session)}</p>
+                    <div className="history-card__tags">
+                      {session.scope && <span className="history-tag">{session.scope}</span>}
+                      <span className="history-tag history-tag--soft">
+                        {turns} {turns === 1 ? 'question' : 'questions'}
                       </span>
-                      <Quote size={15} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
-          </article>
-        )}
-
-        {error && (
-          <div className="product-error" role="alert">
-            <AlertTriangle size={17} />
-            <div>
-              <strong>AgentMesh could not answer</strong>
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
-
-        <form className="ask-composer" onSubmit={submit}>
-          <div className="ask-scope">
-            <label htmlFor="ask-scope">Scope</label>
-            <input
-              id="ask-scope"
-              value={scope}
-              onChange={(event) => setScope(event.target.value)}
-              placeholder="Project, team, account, or entity ID"
-            />
-            <span>Semantic scope picker is the next backend integration.</span>
-          </div>
-          <div className="ask-question-input">
-            <label className="sr-only" htmlFor="ask-question">Question</label>
-            <textarea
-              id="ask-question"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Ask a question about your company"
-              rows={2}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  void ask();
-                }
-              }}
-            />
-            <button type="submit" disabled={loading || !query.trim()} aria-label="Ask AgentMesh">
-              <ArrowUp size={17} />
-            </button>
-          </div>
-          <div className="ask-composer__note">
-            <ShieldCheck size={13} /> Unknown source permissions fail closed.
-          </div>
-        </form>
-      </main>
-
-      {selectedCitation && (
-        <EvidenceInspector
-          citation={selectedCitation}
-          index={Math.max(0, citationIndex)}
-          onClose={() => setSelectedCitation(null)}
-        />
+                    </div>
+                  </div>
+                  <div className="history-card__side">
+                    <span className="history-card__time">{timeAgo(session.updatedAt)}</span>
+                    <span
+                      className="history-card__delete"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Delete session"
+                      onClick={(event) => remove(event, session.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          remove(event as unknown as React.MouseEvent, session.id);
+                        }
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </span>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
+
+      <footer className="history-foot">
+        <ShieldCheck size={13} /> Conversations are stored locally on this device for the demo.
+      </footer>
+
+      <style>{`
+        .history-page {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          max-width: 820px;
+        }
+        .history-head {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        .history-head__eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--muted);
+        }
+        .history-head__eyebrow svg { color: var(--brand-purple); }
+        .history-head h1 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -0.5px; }
+        .history-head p { margin: 0; font-size: 13.5px; color: var(--muted); max-width: 520px; line-height: 1.5; }
+        .history-new {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 9px 15px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, var(--brand-purple), var(--brand-blue, var(--brand-purple)));
+          color: #fff;
+          font-weight: 600;
+          font-size: 13px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: transform 0.15s ease;
+        }
+        .history-new:hover { transform: translateY(-1px); }
+        .history-empty {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: 100%;
+          text-align: left;
+          padding: 22px;
+          border: 1px dashed var(--hairline);
+          border-radius: 16px;
+          background: var(--surface-card);
+          cursor: pointer;
+          color: var(--ink);
+        }
+        .history-empty:hover { border-color: color-mix(in srgb, var(--brand-purple) 45%, var(--hairline)); }
+        .history-empty svg:first-child { color: var(--brand-purple); flex-shrink: 0; }
+        .history-empty span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .history-empty strong { font-size: 15px; }
+        .history-empty small { font-size: 13px; color: var(--muted); }
+        .history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+        .history-card {
+          display: flex;
+          align-items: stretch;
+          justify-content: space-between;
+          gap: 16px;
+          width: 100%;
+          text-align: left;
+          padding: 16px 18px;
+          border: 1px solid var(--hairline);
+          border-radius: 16px;
+          background: var(--surface-card);
+          cursor: pointer;
+          transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .history-card:hover {
+          border-color: color-mix(in srgb, var(--brand-purple) 45%, var(--hairline));
+          transform: translateY(-1px);
+          box-shadow: 0 10px 30px -22px color-mix(in srgb, var(--brand-purple) 70%, transparent);
+        }
+        .history-card__main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .history-card__title {
+          font-size: 15px; font-weight: 650; color: var(--ink);
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .history-card__preview {
+          margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .history-card__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+        .history-tag {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 11px; font-weight: 600;
+          padding: 3px 9px; border-radius: 999px;
+          background: var(--canvas); color: var(--muted);
+          border: 1px solid var(--hairline);
+        }
+        .history-tag--identity { color: var(--brand-purple); border-color: color-mix(in srgb, var(--brand-purple) 35%, var(--hairline)); }
+        .history-tag--soft { background: transparent; }
+        .history-card__side {
+          display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px;
+          flex-shrink: 0;
+        }
+        .history-card__time { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+        .history-card__delete {
+          display: inline-grid; place-items: center;
+          width: 30px; height: 30px; border-radius: 9px;
+          color: var(--muted); cursor: pointer;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .history-card__delete:hover { background: color-mix(in srgb, var(--error) 10%, transparent); color: var(--error); }
+        .history-foot {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 11.5px; color: var(--muted);
+        }
+        .history-foot svg { color: var(--brand-teal); }
+      `}</style>
     </div>
   );
 }

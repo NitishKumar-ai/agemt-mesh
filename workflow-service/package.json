@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@agentmesh/common": "workspace:*",
+    "@agentmesh/common-persistence": "workspace:*",
     "@agentmesh/graph-service": "workspace:*",
     "@nestjs/common": "^11.1.27",
     "@nestjs/core": "^11.1.27",

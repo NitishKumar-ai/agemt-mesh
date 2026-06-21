@@ -37,7 +37,7 @@ type Props = {
 };
 
 // Group nav items by section
-const WORKSPACE_KEYS: PageKey[] = ['home', 'ask', 'briefs', 'knowledge', 'activity'];
+const WORKSPACE_KEYS: PageKey[] = ['home', 'ask', 'briefs', 'growth', 'routines', 'knowledge', 'activity'];
 const ADMIN_KEYS: PageKey[] = ['admin', 'sources', 'automation', 'audit'];
 
 export function AppShell({

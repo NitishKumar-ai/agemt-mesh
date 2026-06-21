@@ -32,6 +32,17 @@ export const NodeTypeEnum = z.enum([
   'Fact',
   'Source',
   'Correction',
+  // Growth Memory domain pack: campaign/feature intelligence entities. Additive;
+  // existing company-brain types above are unchanged.
+  'Campaign',
+  'Channel',
+  'Creative',
+  'Feature',
+  'Lead',
+  'Payment',
+  'Report',
+  'Insight',
+  'Action',
 ]);
 
 export type NodeType = z.infer<typeof NodeTypeEnum>;

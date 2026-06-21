@@ -19,6 +19,8 @@ import './styles/app.css';
 import './styles/codex.css';
 import './styles/production-ui.css';
 import './styles/landing.css';
+// Applies persisted theme/motion preferences before first paint.
+import './lib/preferences';
 
 const queryClient = new QueryClient({
   defaultOptions: {

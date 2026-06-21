@@ -34,11 +34,18 @@ services:
       - VECTOR_STORE=pgvector
       - VECTOR_DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/${DB_NAME:-agentmesh}
       - VECTOR_HNSW_EF_SEARCH=${VECTOR_HNSW_EF_SEARCH:-100}
+      # Durable graph "memory": NEO4J_URI drives Neo4jClient to the real backend.
+      # When unset the client falls back to its in-memory store (see Neo4jClient).
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-agentmesh-dev}
       - JWT_SECRET=${JWT_SECRET:-}
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     volumes:
       - ./data:/app/data
@@ -80,6 +87,25 @@ services:
       retries: 5
     restart: unless-stopped
 
+  neo4j:
+    image: neo4j:5
+    environment:
+      # Single-user dev auth; NEO4J_PASSWORD must match the server's NEO4J_PASSWORD.
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-agentmesh-dev}
+    ports:
+      - '7474:7474'
+      - '7687:7687'
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:7474 >/dev/null 2>&1 || exit 1']
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
+  neo4j_data:

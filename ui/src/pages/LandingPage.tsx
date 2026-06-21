@@ -90,7 +90,7 @@ export function LandingPage() {
           <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs</a>
         </div>
         <div className="atlas-nav__actions">
-          <Link to="/home">Sign in</Link>
+          <a href="/api/social-studio/oauth/scalekit/scalekit/login">Sign in</a>
           <Link className="atlas-button atlas-button--small" to="/home">
             Open AgentMesh <ArrowRight size={13} />
           </Link>

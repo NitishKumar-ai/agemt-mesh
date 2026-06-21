@@ -5,7 +5,7 @@
       "name": "agentmesh-ui",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "agent-mesh-frontend", "run", "dev"],
-      "port": 1234,
+      "port": 5173,
       "autoPort": false
     },
     {
@@ -13,7 +13,14 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@agentmesh/server-lite", "run", "dev"],
       "port": 8080,
-      "autoPort": false
+      "autoPort": false,
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "development",
+        "DB_PATH": ":memory:",
+        "DEMO_AUTH": "true",
+        "DEMO_SEED": "true"
+      }
     }
   ]
 }

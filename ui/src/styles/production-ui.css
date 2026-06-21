@@ -34,6 +34,52 @@
   }
 }
 
+/*
+ * Explicit theme overrides driven by the Settings → Appearance control
+ * (lib/preferences.ts sets data-theme on <html>). The attribute selectors
+ * outrank the bare :root in the media query above, so they win regardless of
+ * the OS color scheme. Absence of data-theme falls back to system preference.
+ */
+:root[data-theme='light'] {
+  --pm-canvas: #f6f2ea;
+  --pm-surface: #fffcf7;
+  --pm-surface-strong: #eae3d8;
+  --pm-ink: #181715;
+  --pm-muted: #6d675f;
+  --pm-border: #d9d1c5;
+  --pm-brand: #f04419;
+  --pm-brand-hover: #d83a12;
+  --pm-success: #18794e;
+  --pm-warning: #a15c00;
+  --pm-danger: #b42318;
+  --pm-info: #175cd3;
+}
+
+:root[data-theme='dark'] {
+  --pm-canvas: #141311;
+  --pm-surface: #1d1b19;
+  --pm-surface-strong: #292622;
+  --pm-ink: #faf7f1;
+  --pm-muted: #aaa39a;
+  --pm-border: #393530;
+  --pm-brand: #ff5a2a;
+  --pm-brand-hover: #ff7047;
+  --pm-success: #55c892;
+  --pm-warning: #e7ad55;
+  --pm-danger: #f27972;
+  --pm-info: #76a9fa;
+}
+
+/* Reduce-motion preference (Settings → Appearance). */
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
 :root {
   --canvas: var(--pm-canvas);
   --surface-soft: color-mix(in srgb, var(--pm-surface) 78%, var(--pm-canvas));
@@ -56,6 +102,12 @@
   --brand-ochre: var(--pm-warning);
   --brand-teal: var(--pm-success);
   --brand-lavender: var(--pm-info);
+  /* Accent aliases used by the chat/history/connections surfaces. No dedicated
+     purple/blue tokens exist, so map them onto the coral brand to keep buttons
+     and gradients on-brand instead of collapsing to transparent. */
+  --brand-purple: var(--pm-brand);
+  --brand-blue: var(--pm-brand-hover);
+  --brand-blue-rgb: 240, 68, 25;
   font-family: Geist, "Segoe UI", sans-serif;
   color-scheme: light dark;
 }
@@ -91,6 +143,64 @@ a:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Permission-aware "View as" switcher (chat header). */
+.identity-switcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.identity-switcher__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.identity-switcher__label svg {
+  color: var(--brand-purple);
+}
+.identity-switcher__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.identity-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.identity-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--brand-purple) 45%, var(--hairline));
+}
+.identity-chip strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+.identity-chip small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.identity-chip.is-active {
+  border-color: var(--brand-purple);
+  background: color-mix(in srgb, var(--brand-purple) 10%, var(--surface-card));
+}
+.identity-chip.is-active strong {
+  color: var(--brand-purple);
 }
 
 .app,

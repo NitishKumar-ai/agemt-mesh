@@ -22,6 +22,7 @@
     "@agentmesh/graph-service": "workspace:*",
     "@agentmesh/http-task": "workspace:*",
     "@agentmesh/json-jq-task": "workspace:*",
+    "@agentmesh/redis-lock": "workspace:*",
     "@agentmesh/rest": "workspace:*",
     "@agentmesh/sandbox": "workspace:*",
     "@agentmesh/sqlite-persistence": "workspace:*",

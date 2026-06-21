@@ -30,6 +30,19 @@ export const RelationshipTypeEnum = z.enum([
   'ACCOUNT_HAS_MEETING',
   'ENTITY_ALIAS_OF',
   'ENTITY_MERGED_INTO',
+  // Growth Memory domain pack: campaign/feature intelligence edges. Additive.
+  'CAMPAIGN_PROMOTES_FEATURE',
+  'CAMPAIGN_RUNS_ON_CHANNEL',
+  'CAMPAIGN_USES_CREATIVE',
+  'CHANNEL_GENERATED_LEAD',
+  'LEAD_BECAME_USER',
+  'USER_PERFORMED_EVENT',
+  'USER_GAVE_FEEDBACK',
+  'USER_MADE_PAYMENT',
+  'FEEDBACK_MENTIONS_FEATURE',
+  'FEATURE_INFLUENCED_PAYMENT',
+  'REPORT_CLAIMS_INSIGHT',
+  'INSIGHT_SUPERSEDES_INSIGHT',
 ]);
 
 export type RelationshipType = z.infer<typeof RelationshipTypeEnum>;
