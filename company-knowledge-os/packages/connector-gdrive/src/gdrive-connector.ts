@@ -34,16 +34,20 @@ export class GoogleDriveConnector implements Connector {
 
       const drive = google.drive({ version: 'v3', auth });
 
-      // Get changes since the given date
-      const response = await drive.files.list({
-        orderBy: 'modifiedTime',
-        includeItemsFromAllDrives: true,
-        supportsAllDrives: true,
-        // Note: Actual implementation would use page token for pagination
-      });
+      let pageToken: string | undefined = undefined;
+      do {
+        const response: any = await drive.files.list({
+          orderBy: 'modifiedTime',
+          includeItemsFromAllDrives: true,
+          supportsAllDrives: true,
+          pageToken,
+          pageSize: 100,
+        });
 
-      const files = response.data.files || [];
-      episodes.push(...files.map((file: any) => this.fileToEpisode(file)));
+        const files = response.data.files || [];
+        episodes.push(...files.map((file: any) => this.fileToEpisode(file)));
+        pageToken = response.data.nextPageToken;
+      } while (pageToken);
 
     } catch (error) {
       console.error('Error fetching Google Drive changes:', error);
@@ -131,8 +135,9 @@ export class GoogleDriveConnector implements Connector {
   }
 
   validateWebhookSignature(payload: string, signature: string): boolean {
-    // Placeholder implementation
-    return true;
+    if (!this.config.webhook_secret) return false;
+    // For Google Drive push notifications, a channel token is often used
+    return signature === this.config.webhook_secret;
   }
 
   async processWebhook(payload: any): Promise<void> {

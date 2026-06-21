@@ -2,16 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AgentMesh OSS | Open Source Workflow Orchestration</title>
+    <title>AgentMesh — Company brain on durable execution</title>
     <meta
       name="description"
-      content="Open-source workflow orchestration and durable execution for long-running workflows, microservices, and AI agents. Self-hosted, JSON-native, and polyglot."
+      content="AgentMesh ingests company sources, builds a permission-aware temporal knowledge graph, and serves cited answers and first-party workflows on a durable execution engine."
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:title" content="AgentMesh OSS | Open Source Workflow Orchestration" />
+    <meta property="og:title" content="AgentMesh — Company brain on durable execution" />
     <meta
       property="og:description"
-      content="Open-source workflow orchestration and durable execution for long-running workflows, microservices, and AI agents."
+      content="AgentMesh ingests company sources, builds a permission-aware temporal knowledge graph, and serves cited answers and first-party workflows."
     />
     <meta property="og:type" content="website" />
     <link
@@ -55,12 +55,12 @@
         --bg-surface: #111111;
         --bg-card: #222222;
         --bg-card-h: #2b2b2b;
-        --accent: #e47c6e; /* Coral/terracotta */
-        --accent-dim: rgba(228, 124, 110, 0.1);
-        --accent-glow: rgba(228, 124, 110, 0.22);
-        --accent-hi: #ffb084;
-        --blue: #ffb084;
-        --blue-dim: rgba(255, 176, 132, 0.1);
+        --accent: #a9a3da; /* Lavender */
+        --accent-dim: rgba(169, 163, 218, 0.1);
+        --accent-glow: rgba(169, 163, 218, 0.22);
+        --accent-hi: #e8b94a; /* Ochre */
+        --blue: #d6e4e1;
+        --blue-dim: rgba(214, 228, 225, 0.1);
         --t1: #f2f2f2;
         --t2: #d0d0d0;
         --t3: #9b9b9b;
@@ -80,12 +80,12 @@
         --bg-surface: #faf5e8;
         --bg-card: #ffffff;
         --bg-card-h: #f5f0e0;
-        --accent: #d97757; /* Terracotta */
-        --accent-dim: rgba(217, 119, 87, 0.08);
-        --accent-glow: rgba(217, 119, 87, 0.16);
-        --accent-hi: #c05638;
-        --blue: #ff6b5a; /* Coral links */
-        --blue-dim: rgba(255, 107, 90, 0.08);
+        --accent: #b8a4ed; /* Lavender */
+        --accent-dim: rgba(184, 164, 237, 0.08);
+        --accent-glow: rgba(184, 164, 237, 0.16);
+        --accent-hi: #e8b94a; /* Ochre */
+        --blue: #1a3a3a; /* Teal links */
+        --blue-dim: rgba(26, 58, 58, 0.08);
         --t1: #1a1a1a;
         --t2: #3a3a3a;
         --t3: #6a6a6a;
@@ -824,8 +824,8 @@
         transition: all var(--dur) var(--ease);
       }
       .btn-primary:hover {
-        background: var(--teal-bright);
-        border-color: var(--teal-bright);
+        background: var(--accent-hi);
+        border-color: var(--accent-hi);
         box-shadow: 0 0 28px var(--accent-glow);
         transform: translateY(-2px);
       }
@@ -1542,6 +1542,8 @@
           <a href="https://github.com/agentmesh-oss/agentmesh" target="_blank" class="nav-link"
             >GitHub</a
           >
+          <!-- TODO: replace with the production app URL when deployed -->
+          <a href="http://localhost:8080/" target="_blank" class="nav-link">Open App</a>
         </div>
 
         <div class="nav-right">
@@ -1634,6 +1636,8 @@
         class="nav-link"
         >Community</a
       >
+      <!-- TODO: replace with the production app URL when deployed -->
+      <a href="http://localhost:8080/" target="_blank" class="nav-link">Open App</a>
     </div>
 
     <!-- ═══════════════════════ HERO ═══════════════════════ -->
@@ -1644,16 +1648,16 @@
       <canvas id="hero-canvas"></canvas>
 
       <div class="hero-content">
-        <div class="hero-badge">Apache 2.0 Licensed · Originally created at AgentMesh</div>
+        <div class="hero-badge">Apache 2.0 Licensed · Ingest · Connect · Ask · Automate</div>
 
         <h1 class="hero-h1">
-          Code breaks. Infrastructure fails.<br />
-          <span class="hi">Your workflows don't.</span>
+          Your company's brain,<br />
+          <span class="hi">built on durable execution.</span>
         </h1>
 
         <p class="hero-p">
-          Ship workflow changes without redeploying workers. Write your code in any language — the
-          engine guarantees durability, not your coding discipline.
+          Ingest sources, unify entities across connectors, search with evidence, and run
+          permission-safe workflows that cite the graph instead of guessing.
         </p>
 
         <div class="hero-ctas">
@@ -1697,15 +1701,15 @@
         </div>
 
         <div class="hero-trust">
-          <span class="trust-label">Built for change</span>
+          <span class="trust-label">Built for knowledge work</span>
           <div class="trust-names">
-            <span class="trust-name">Independent workflow upgrades</span>
-            <span class="trust-name">Runtime-defined workflows</span>
-            <span class="trust-name">Dynamic forks and tasks</span>
-            <span class="trust-name">Native LLM + MCP</span>
-            <span class="trust-name">Human-in-the-loop</span>
-            <span class="trust-name">Any-language workers</span>
-            <span class="trust-name">Replayable history</span>
+            <span class="trust-name">Permission-aware facts</span>
+            <span class="trust-name">Temporal graph</span>
+            <span class="trust-name">Vector + evidence retrieval</span>
+            <span class="trust-name">Cited answers</span>
+            <span class="trust-name">First-party workflows</span>
+            <span class="trust-name">Entity resolution</span>
+            <span class="trust-name">Durable execution</span>
           </div>
         </div>
       </div>
@@ -2586,10 +2590,10 @@
         const ctx = canvas.getContext('2d');
 
         function tc() {
-          /* Clay/coral accent matching the new theme design */
+          /* Lavender accent matching the production UI theme */
           return document.documentElement.dataset.theme === 'light'
-            ? [217, 119, 87] /* #d97757 — terracotta on light bg */
-            : [228, 124, 110]; /* #e47c6e — coral on dark bg */
+            ? [184, 164, 237] /* #b8a4ed — lavender on light bg */
+            : [169, 163, 218]; /* #a9a3da — lavender on dark bg */
         }
         let W, H, raf;
 

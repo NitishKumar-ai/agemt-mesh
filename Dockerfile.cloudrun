@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# AgentMesh single-container image for Google Cloud Run.
+#
+# Unlike the root Dockerfile (backend-only, used by docker-compose), this image
+# ALSO builds the frontend and ships it at /app/ui/dist, which is where
+# server-lite's ServeStaticModule (AppModule.ts) serves it from. The result is
+# one container that serves the UI and the /api routes on a single $PORT —
+# matching the app's single-port design, so the UI's relative /api calls work
+# with no CORS or separate frontend host.
+#
+# Build:  docker build -f Dockerfile.cloudrun -t agentmesh:cloudrun .
+# Run:    docker run -p 8080:8080 -e DEMO_AUTH=true -e DEMO_SEED=true agentmesh:cloudrun
+# ---------------------------------------------------------------------------
+
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+WORKDIR /app
+
+# ---- Builder: install all workspace deps, build backend + frontend ----
+FROM base AS builder
+# Build toolchain for native modules (better-sqlite3 compiles from source here).
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+COPY . .
+RUN pnpm install --frozen-lockfile
+# server-lite and its dependency graph, plus the frontend (not in that graph).
+# --concurrency=1 serializes the composite `tsc -b` builds: running them in
+# parallel races on shared dist output and emits partial .d.ts files, which
+# breaks downstream type resolution (e.g. core can't find @agentmesh/common).
+RUN pnpm turbo run build --filter=@agentmesh/server-lite... --filter=agent-mesh-frontend --concurrency=1
+
+# ---- Runner: copy the built tree, incl. the compiled native better-sqlite3 ----
+# We keep the full node_modules from the builder: `pnpm prune --prod` rewrites
+# the workspace symlink layout and breaks runtime resolution of better-sqlite3.
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app .
+
+# Security: run as non-root; /app/data is the only writable path the app needs
+# (only used when DB_PATH points at a file; the demo runs in-memory).
+RUN addgroup --gid 1001 agentmesh \
+  && adduser --uid 1001 --gid 1001 --disabled-password agentmesh \
+  && mkdir -p /app/data && chown -R agentmesh:agentmesh /app/data
+USER agentmesh
+
+# Cloud Run injects PORT (defaults to 8080); the server reads process.env.PORT.
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["node", "server-lite/dist/index.js"]

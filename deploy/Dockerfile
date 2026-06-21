@@ -38,7 +38,6 @@ COPY core/package.json                core/tsconfig.json            core/tsconfi
 COPY ai/package.json                  ai/tsconfig.json              ai/tsconfig.build.json              ./ai/
 COPY agent-runtime/package.json       agent-runtime/tsconfig.json   agent-runtime/tsconfig.build.json   ./agent-runtime/
 COPY telemetry/package.json           telemetry/tsconfig.json       telemetry/tsconfig.build.json       ./telemetry/
-COPY secrets/package.json             secrets/tsconfig.json         secrets/tsconfig.build.json         ./secrets/
 COPY sandbox/package.json             sandbox/tsconfig.json         sandbox/tsconfig.build.json         ./sandbox/
 
 # -- packages with tsconfig.json only --
@@ -65,7 +64,6 @@ COPY rest/src                   ./rest/src
 COPY ai/src                     ./ai/src
 COPY agent-runtime/src          ./agent-runtime/src
 COPY telemetry/src              ./telemetry/src
-COPY secrets/src                ./secrets/src
 COPY sandbox/src                ./sandbox/src
 COPY http-task/src              ./http-task/src
 COPY json-jq-task/src           ./json-jq-task/src
@@ -109,8 +107,6 @@ COPY --from=builder /build/agent-runtime/dist       ./agent-runtime/dist
 COPY --from=builder /build/agent-runtime/package.json  ./agent-runtime/package.json
 COPY --from=builder /build/telemetry/dist           ./telemetry/dist
 COPY --from=builder /build/telemetry/package.json   ./telemetry/package.json
-COPY --from=builder /build/secrets/dist             ./secrets/dist
-COPY --from=builder /build/secrets/package.json     ./secrets/package.json
 COPY --from=builder /build/sandbox/dist             ./sandbox/dist
 COPY --from=builder /build/sandbox/package.json     ./sandbox/package.json
 COPY --from=builder /build/http-task/dist           ./http-task/dist

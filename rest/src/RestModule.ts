@@ -10,6 +10,8 @@ import { OrchestrationController } from './controllers/OrchestrationController.j
 import { OrchestrationService } from './services/OrchestrationService.js';
 import { VersionResource } from './controllers/VersionResource.js';
 import { SocialOAuthController } from './controllers/SocialOAuthController.js';
+import { ConnectionsController } from './controllers/ConnectionsController.js';
+import { WebhookController } from './controllers/WebhookController.js';
 
 import { WorkflowService } from './services/WorkflowService.js';
 import { TaskService } from './services/TaskService.js';
@@ -18,6 +20,8 @@ import { AdminService } from './services/AdminService.js';
 import { EventService } from './services/EventService.js';
 import { WorkflowBulkService } from './services/WorkflowBulkService.js';
 import { VersionService } from './services/VersionService.js';
+import { CONNECTION_SERVICE, ConnectionService } from './services/ConnectionService.js';
+import { WebhookService } from './services/WebhookService.js';
 
 export const EXECUTION_DAO = 'EXECUTION_DAO';
 export const METADATA_DAO = 'METADATA_DAO';
@@ -27,7 +31,7 @@ export const WORKFLOW_EXECUTOR = 'WORKFLOW_EXECUTOR';
 
 @Module({})
 export class RestModule {
-  static forRoot(): DynamicModule {
+  static forRoot(options?: { connectionService?: ConnectionService }): DynamicModule {
     return {
       module: RestModule,
       controllers: [
@@ -41,8 +45,13 @@ export class RestModule {
         VersionResource,
         OrchestrationController,
         SocialOAuthController,
+        ConnectionsController,
+        WebhookController,
       ],
       providers: [
+        ...(options?.connectionService
+          ? [{ provide: CONNECTION_SERVICE, useValue: options.connectionService }]
+          : []),
         {
           provide: MetadataService,
           useFactory: (metadataDAO) => new MetadataService(metadataDAO),
@@ -87,6 +96,12 @@ export class RestModule {
           useFactory: (workflowService) => new WorkflowBulkService(workflowService),
           inject: [WorkflowService],
         },
+        {
+          provide: WebhookService,
+          useFactory: (eventService, workflowService) =>
+            new WebhookService(eventService, workflowService),
+          inject: [EventService, WorkflowService],
+        },
       ],
       exports: [
         MetadataService,
@@ -96,6 +111,7 @@ export class RestModule {
         VersionService,
         AdminService,
         WorkflowBulkService,
+        WebhookService,
       ],
     };
   }

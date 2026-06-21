@@ -12,6 +12,8 @@ export * as AgentRuntimeMigration from './migrations/002_agent_runtime.js';
 export * as DashboardMigration from './migrations/003_dashboard.js';
 export * as PermissionsMigration from './migrations/004_permissions.js';
 export * as IdentityMigration from './migrations/005_identity.js';
+export * from './migrations/006_connections.js';
 export * from './IndexDAO.js';
 export * from './UserAccessGrantDAO.js';
 export * from './IdentityDAO.js';
+export * from './ConnectionDAO.js';

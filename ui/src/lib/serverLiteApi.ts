@@ -18,7 +18,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const serverLiteApi = {
-  listAgents: () => request<AgentSummary[]>('/api/agents'),
+  listAgents: () =>
+    request<any>('/api/agents').then(
+      (res) => (Array.isArray(res) ? res : res?.agents ?? []) as AgentSummary[],
+    ),
   getWorkflow: (workflowId: string) =>
     request<WorkflowDetail>(`/api/workflow/${encodeURIComponent(workflowId)}`),
   getWorkflowTasks: (workflowId: string) =>

@@ -1,28 +1,47 @@
-import { Controller, Get, Query, Redirect, Param, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Delete, Query, Redirect, Param, Res, Inject, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import axios from 'axios';
 import { ConnectorStatus } from '@scalekit-sdk/node/lib/pkg/grpc/scalekit/v1/connected_accounts/connected_accounts_pb.js';
-
-const TOKEN_STORE: Map<string, { accessToken: string; refreshToken?: string; expiresAt?: number }> = new Map();
+import { CONNECTION_SERVICE, ConnectionService } from '../services/ConnectionService.js';
 
 /**
  * Social Studio OAuth Controller
  *
  * Handles OAuth 2.0 authorization and callbacks for social platforms.
- * Endpoints:
- *   GET /api/social-studio/oauth/:platform         - Start OAuth flow (redirects to platform)
- *   GET /api/social-studio/oauth/:platform/callback - Handle OAuth callback
- *   GET /api/social-studio/token/:platform          - Retrieve stored access token
+ * Connected account state is persisted in SQLite via ConnectionService.
  */
 @Controller('api/social-studio')
 export class SocialOAuthController {
+  constructor(
+    @Inject(CONNECTION_SERVICE) private readonly connections: ConnectionService,
+  ) {}
+
   private getBaseUrl(req: any): string {
     const host = req?.headers?.host ?? 'localhost:8080';
     const proto = req?.headers?.['x-forwarded-proto'] ?? 'http';
     return `${proto}://${host}`;
   }
 
-  private renderSuccessHtml(platform: string): string {
+  private getReturnUrl(state: string | undefined, platform: string): string {
+    if (state && state.startsWith('return:')) {
+      try {
+        const encoded = state.slice('return:'.length);
+        const url = Buffer.from(encoded, 'base64url').toString('utf8');
+        if (URL.canParse(url)) {
+          const parsed = new URL(url);
+          parsed.searchParams.set('connected', platform);
+          return parsed.toString();
+        }
+      } catch {
+        /* fall back to default */
+      }
+    }
+    const base = process.env.PUBLIC_URL || 'http://localhost:5173';
+    return `${base}/admin/sources?connected=${encodeURIComponent(platform)}`;
+  }
+
+  private renderSuccessHtml(platform: string, state?: string): string {
+    const returnUrl = this.getReturnUrl(state, platform);
     return `
       <!DOCTYPE html>
       <html>
@@ -38,7 +57,7 @@ export class SocialOAuthController {
             a:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4); }
             @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
           </style>
-          <script>setTimeout(() => window.location.href = '/', 3000);</script>
+          <script>setTimeout(() => window.location.href = '${returnUrl.replace(/'/g, "\\'")}', 3000);</script>
         </head>
         <body>
           <div class="card">
@@ -46,34 +65,34 @@ export class SocialOAuthController {
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
             <h1>${platform.charAt(0).toUpperCase() + platform.slice(1)} Connected</h1>
-            <p>Your account has been successfully linked to AgentMesh. Redirecting you back to the dashboard...</p>
-            <a href="/">Return to Dashboard</a>
+            <p>Your account has been successfully linked to AgentMesh. Redirecting you back to Sources...</p>
+            <a href="${returnUrl.replace(/"/g, '&quot;')}">Return to Sources</a>
           </div>
         </body>
       </html>
     `;
   }
 
-
-  // ---------------------------------------------------------------------------
-  // LinkedIn
-  // ---------------------------------------------------------------------------
-
   @Get('oauth/linkedin/login')
   @Redirect()
   startLinkedIn(@Query('state') state = 'linkedin-auth') {
     const clientId = process.env.LINKEDIN_CLIENT_ID;
     if (!clientId) throw new HttpException('LINKEDIN_CLIENT_ID not configured', HttpStatus.SERVICE_UNAVAILABLE);
-    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+    const port = process.env.PORT?.trim() ?? 8080;
+    const baseUrl = `http://localhost:${port}`;
     const redirectUri = `${baseUrl}/api/social-studio/oauth/linkedin/callback`;
-    // Use the exact scopes shown in the user's LinkedIn portal screenshot
     const scopes = 'openid profile w_member_social email';
     const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${encodeURIComponent(scopes)}`;
     return { url };
   }
 
   @Get('oauth/linkedin/callback')
-  async linkedInCallback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+  async linkedInCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
     if (error) {
       return res.status(400).json({ error, message: 'LinkedIn OAuth denied' });
     }
@@ -83,7 +102,8 @@ export class SocialOAuthController {
     try {
       const clientId = process.env.LINKEDIN_CLIENT_ID!;
       const clientSecret = process.env.LINKEDIN_CLIENT_SECRET!;
-      const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+      const port = process.env.PORT?.trim() ?? 8080;
+      const baseUrl = `http://localhost:${port}`;
       const redirectUri = `${baseUrl}/api/social-studio/oauth/linkedin/callback`;
 
       const params = new URLSearchParams({
@@ -98,28 +118,44 @@ export class SocialOAuthController {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      TOKEN_STORE.set('linkedin', {
+      let metadata: Record<string, unknown> | undefined;
+      try {
+        const { data: profile } = await axios.get('https://api.linkedin.com/v2/userinfo', {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+            'LinkedIn-Version': '202604',
+            'X-Restli-Protocol-Version': '2.0.0',
+          },
+        });
+        metadata = {
+          name: profile.name || `${profile.given_name || ''} ${profile.family_name || ''}`.trim() || 'LinkedIn User',
+          urn: `urn:li:person:${profile.sub}`,
+          avatarUrl: profile.picture,
+        };
+      } catch (err: any) {
+        console.error('Failed to fetch LinkedIn profile', err?.message);
+      }
+
+      await this.connections.upsertSocialToken('linkedin', {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
         expiresAt: Date.now() + (data.expires_in ?? 5184000) * 1000,
+        metadata,
       });
 
-      return res.send(this.renderSuccessHtml('linkedin'));
+      return res.send(this.renderSuccessHtml('linkedin', state));
     } catch (err: any) {
       return res.status(500).json({ error: 'Token exchange failed', detail: err?.response?.data ?? err.message });
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Threads
-  // ---------------------------------------------------------------------------
 
   @Get('oauth/threads/login')
   @Redirect()
   startThreads(@Query('state') state = 'threads-auth') {
     const appId = process.env.THREADS_APP_ID;
     if (!appId) throw new HttpException('THREADS_APP_ID not configured', HttpStatus.SERVICE_UNAVAILABLE);
-    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+    const port = process.env.PORT?.trim() ?? 8080;
+    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${port}`;
     const redirectUri = `${baseUrl}/api/social-studio/oauth/threads/callback`;
     const scopes = 'threads_basic,threads_content_publish,threads_manage_replies,threads_manage_insights';
     const url = `https://www.threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&state=${state}`;
@@ -127,7 +163,12 @@ export class SocialOAuthController {
   }
 
   @Get('oauth/threads/callback')
-  async threadsCallback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+  async threadsCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
     if (error) {
       return res.status(400).json({ error, message: 'Threads OAuth denied' });
     }
@@ -137,10 +178,10 @@ export class SocialOAuthController {
     try {
       const appId = process.env.THREADS_APP_ID!;
       const appSecret = process.env.THREADS_APP_SECRET!;
-      const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+      const port = process.env.PORT?.trim() ?? 8080;
+      const baseUrl = process.env.PUBLIC_URL || `http://localhost:${port}`;
       const redirectUri = `${baseUrl}/api/social-studio/oauth/threads/callback`;
 
-      // Step 1: Exchange code for short-lived token
       const params = new URLSearchParams({
         client_id: appId,
         client_secret: appSecret,
@@ -152,7 +193,6 @@ export class SocialOAuthController {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      // Step 2: Exchange for long-lived token
       const { data: longData } = await axios.get('https://graph.threads.net/v1.0/access_token', {
         params: {
           grant_type: 'th_exchange_token',
@@ -161,42 +201,55 @@ export class SocialOAuthController {
         },
       });
 
-      TOKEN_STORE.set('threads', {
+      let metadata: Record<string, unknown> | undefined;
+      try {
+        const { data: profile } = await axios.get('https://graph.threads.net/v1.0/me', {
+          params: {
+            fields: 'id,username,name',
+            access_token: longData.access_token ?? shortData.access_token,
+          },
+        });
+        metadata = {
+          name: profile.name || profile.username || 'Threads User',
+          urn: profile.id,
+        };
+      } catch (err: any) {
+        console.error('Failed to fetch Threads profile', err?.message);
+      }
+
+      await this.connections.upsertSocialToken('threads', {
         accessToken: longData.access_token ?? shortData.access_token,
         expiresAt: Date.now() + (longData.expires_in ?? 5184000) * 1000,
+        metadata,
       });
 
-      return res.send(this.renderSuccessHtml('threads'));
+      return res.send(this.renderSuccessHtml('threads', state));
     } catch (err: any) {
       return res.status(500).json({ error: 'Token exchange failed', detail: err?.response?.data ?? err.message });
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // ScaleKit Auth
-  // ---------------------------------------------------------------------------
-
   @Get('oauth/scalekit/:provider/login')
   @Redirect()
-  async startScalekitAuth(@Param('provider') provider: string, @Query('identifier') identifier = 'default-user') {
+  async startScalekitAuth(
+    @Param('provider') provider: string,
+    @Query('identifier') identifier?: string,
+    @Query('state') state?: string,
+  ) {
     const envUrl = process.env.SCALEKIT_ENVIRONMENT_URL;
     const clientId = process.env.SCALEKIT_CLIENT_ID;
     const clientSecret = process.env.SCALEKIT_CLIENT_SECRET;
-
-    console.log(`[Scalekit] provider=${provider}, envUrl=${envUrl ? 'SET' : 'MISSING'}, clientId=${clientId ? 'SET' : 'MISSING'}, clientSecret=${clientSecret ? 'SET' : 'MISSING'}, orgId=${process.env.SCALEKIT_ORGANIZATION_ID ?? 'MISSING'}`);
 
     if (!envUrl || !clientId || !clientSecret) {
       throw new HttpException('Scalekit credentials not configured', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    // Dynamically import to avoid missing dependencies if the SDK isn't fully installed yet during compilation
     const { ScalekitClient } = await import('@scalekit-sdk/node');
     const scalekit = new ScalekitClient(envUrl, clientId, clientSecret);
 
     if (provider === 'scalekit') {
       let orgId = process.env.SCALEKIT_ORGANIZATION_ID;
       if (!orgId) {
-        // Auto-discover the first organization if no explicit org ID is configured
         try {
           const listResult = await scalekit.organization.listOrganization({});
           const orgs: any[] = (listResult as any).organizations ?? (listResult as any).data ?? [];
@@ -210,99 +263,66 @@ export class SocialOAuthController {
       if (!orgId) {
         throw new HttpException(
           'No Scalekit organization found. Set SCALEKIT_ORGANIZATION_ID in your .env or create an organization in your Scalekit dashboard.',
-          HttpStatus.SERVICE_UNAVAILABLE
+          HttpStatus.SERVICE_UNAVAILABLE,
         );
       }
-      try {
-        const portalLinkResponse = await scalekit.organization.generatePortalLink(orgId);
-        try {
-          console.log('Scalekit generatePortalLink response:', JSON.stringify(portalLinkResponse, (_key, value) =>
-            typeof value === 'bigint' ? value.toString() : value, 2));
-        } catch (logErr) {
-          // If logging fails for any reason, log what we can and continue
-          console.log('Scalekit generatePortalLink response (raw):', portalLinkResponse);
-        }
-        // The SDK may return a string, or an object with .link, .url, .portalLink, .location, or nested under .data
-        let url: string | undefined;
-        if (typeof portalLinkResponse === 'string') {
-          url = portalLinkResponse;
-        } else if (portalLinkResponse && typeof portalLinkResponse === 'object') {
-          const res = portalLinkResponse as any;
-          url = res.location || res.link || res.url || res.portalLink ||
-                (res.data && (res.data.location || res.data.link || res.data.url || res.data.portalLink));
-        }
-
-        if (!url) {
-          console.error('Scalekit generatePortalLink returned no usable URL. Full response:', portalLinkResponse);
-          throw new HttpException(
-            'Scalekit returned an empty portal link. Check your Scalekit dashboard configuration.',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-        return { url };
-      } catch (err: any) {
-        if (err instanceof HttpException) throw err;
-        console.error('Scalekit generatePortalLink error:', err);
-        throw new HttpException('Failed to generate Scalekit portal link', HttpStatus.INTERNAL_SERVER_ERROR);
+      const portalLinkResponse = await scalekit.organization.generatePortalLink(orgId);
+      let url: string | undefined;
+      if (typeof portalLinkResponse === 'string') {
+        url = portalLinkResponse;
+      } else if (portalLinkResponse && typeof portalLinkResponse === 'object') {
+        const res = portalLinkResponse as any;
+        url =
+          res.location ||
+          res.link ||
+          res.url ||
+          res.portalLink ||
+          (res.data && (res.data.location || res.data.link || res.data.url || res.data.portalLink));
       }
+      if (!url) {
+        throw new HttpException(
+          'Scalekit returned an empty portal link. Check your Scalekit dashboard configuration.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      return { url };
     }
 
+    const connectionName = this.connections.getScalekitConnectionName(provider);
+    const targetIdentifier = identifier || this.connections.defaultScalekitIdentifier();
+    const port = process.env.PORT?.trim() ?? 8080;
+    const baseUrl = `http://localhost:${port}`;
+
     try {
-      // Map generic names to the actual Scalekit connection IDs
-      let connectionName = provider;
-      let targetIdentifier = identifier;
-
-      if (provider === 'slack') {
-        connectionName = 'slack-SudvXvwi';
-      }
-      if (provider === 'airtable') {
-        connectionName = 'airtable-QvhprOUU';
-        targetIdentifier = 'shreeharshastark@gmail.com';
-      }
-
-      // 1. Create or retrieve the connected account for this user
       const accountResponse = await scalekit.actions.getOrCreateConnectedAccount({
-        connectionName: connectionName,
+        connectionName,
         identifier: targetIdentifier,
       });
       const connectedAccount = accountResponse.connectedAccount;
 
-      // 2. Generate the authorization link if the account is not yet active
-      // In @scalekit-sdk/node, ConnectorStatus.ACTIVE usually maps to a specific enum or string, but typically it's just 'ACTIVE'
       if (connectedAccount?.status !== ConnectorStatus.ACTIVE) {
-        const baseUrl = `http://localhost:${process.env.PORT ?? 8080}`;
         const linkResponse = await scalekit.actions.getAuthorizationLink({
-          connectionName: connectionName,
+          connectionName,
           identifier: targetIdentifier,
-          userVerifyUrl: `${baseUrl}/api/social-studio/status`,
+          userVerifyUrl: `${baseUrl}/api/social-studio/status?provider=${encodeURIComponent(provider)}&state=${encodeURIComponent(state || '')}`,
         });
         return { url: linkResponse.link };
-      } else {
-        // If it's already active, we shouldn't redirect to auth again. 
-        // We can just redirect back to the app with a success state.
-        const baseUrl = `http://localhost:${process.env.PORT ?? 8080}`;
-        return { url: `${baseUrl}/api/social-studio/status?status=already_active&provider=${provider}` };
       }
+
+      await this.connections.syncScalekitAccounts();
+      const returnUrl = this.getReturnUrl(state, provider);
+      return { url: returnUrl };
     } catch (err: any) {
       console.error('Scalekit getAuthorizationLink error:', err);
-      // Log the full error details if available from the SDK
-      if (err._unpackedDetails || err.details) {
-        console.error('Scalekit error details:', JSON.stringify(err._unpackedDetails || err.details, null, 2));
-      }
       throw new HttpException('Failed to get Scalekit authorization link', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Facebook
-  // ---------------------------------------------------------------------------
 
   @Get('oauth/facebook/login')
   @Redirect()
   startFacebook(@Query('state') state = 'facebook-auth') {
     const appId = process.env.FACEBOOK_APP_ID;
     if (!appId) throw new HttpException('FACEBOOK_APP_ID not configured', HttpStatus.SERVICE_UNAVAILABLE);
-    // User requested specifically to use localhost for Facebook to avoid App Domain errors
     const baseUrl = `http://localhost:${process.env.PORT ?? 8080}`;
     const redirectUri = `${baseUrl}/api/social-studio/oauth/facebook/callback`;
     const scopes = 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging';
@@ -311,7 +331,12 @@ export class SocialOAuthController {
   }
 
   @Get('oauth/facebook/callback')
-  async facebookCallback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+  async facebookCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
     if (error) {
       return res.status(400).json({ error, message: 'Facebook OAuth denied' });
     }
@@ -321,7 +346,6 @@ export class SocialOAuthController {
     try {
       const appId = process.env.FACEBOOK_APP_ID!;
       const appSecret = process.env.FACEBOOK_APP_SECRET!;
-      // Force localhost as requested
       const baseUrl = `http://localhost:${process.env.PORT ?? 8080}`;
       const redirectUri = `${baseUrl}/api/social-studio/oauth/facebook/callback`;
 
@@ -329,36 +353,41 @@ export class SocialOAuthController {
         params: { client_id: appId, redirect_uri: redirectUri, client_secret: appSecret, code },
       });
 
-      TOKEN_STORE.set('facebook', {
+      let fbMetadata: Record<string, unknown> | undefined;
+      try {
+        const { data: profile } = await axios.get('https://graph.facebook.com/v21.0/me', {
+          params: { fields: 'id,name,picture', access_token: data.access_token },
+        });
+        fbMetadata = {
+          name: profile.name || 'Facebook User',
+          urn: profile.id,
+          avatarUrl: profile.picture?.data?.url,
+        };
+      } catch (err: any) {
+        console.error('Failed to fetch Facebook profile', err?.message);
+      }
+
+      const tokenPayload = {
         accessToken: data.access_token,
         expiresAt: Date.now() + (data.expires_in ?? 5184000) * 1000,
-      });
-      TOKEN_STORE.set('instagram', {
-        accessToken: data.access_token, // Same token used for Instagram via Graph API
-        expiresAt: Date.now() + (data.expires_in ?? 5184000) * 1000,
-      });
+        metadata: fbMetadata,
+      };
+      await this.connections.upsertSocialToken('facebook', tokenPayload);
+      await this.connections.upsertSocialToken('instagram', tokenPayload);
 
-      return res.json({
-        platform: 'facebook',
-        status: 'connected',
-        message: 'Facebook (and Instagram) connected successfully',
-        expiresIn: data.expires_in,
-      });
+      return res.send(this.renderSuccessHtml('facebook', state));
     } catch (err: any) {
       return res.status(500).json({ error: 'Token exchange failed', detail: err?.response?.data ?? err.message });
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Instagram
-  // ---------------------------------------------------------------------------
 
   @Get('oauth/instagram/login')
   @Redirect()
   startInstagram(@Query('state') state = 'instagram-auth') {
     const appId = process.env.INSTAGRAM_APP_ID;
     if (!appId) throw new HttpException('INSTAGRAM_APP_ID not configured', HttpStatus.SERVICE_UNAVAILABLE);
-    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+    const port = process.env.PORT?.trim() ?? 8080;
+    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${port}`;
     const redirectUri = `${baseUrl}/api/social-studio/oauth/instagram/callback`;
     const scopes = 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_messages';
     const url = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&state=${state}`;
@@ -366,7 +395,12 @@ export class SocialOAuthController {
   }
 
   @Get('oauth/instagram/callback')
-  async instagramCallback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+  async instagramCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
     if (error) {
       return res.status(400).json({ error, message: 'Instagram OAuth denied' });
     }
@@ -376,10 +410,10 @@ export class SocialOAuthController {
     try {
       const appId = process.env.INSTAGRAM_APP_ID!;
       const appSecret = process.env.INSTAGRAM_APP_SECRET!;
-      const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT ?? 8080}`;
+      const port = process.env.PORT?.trim() ?? 8080;
+      const baseUrl = process.env.PUBLIC_URL || `http://localhost:${port}`;
       const redirectUri = `${baseUrl}/api/social-studio/oauth/instagram/callback`;
 
-      // 1. Get short-lived token
       const params = new URLSearchParams({
         client_id: appId,
         client_secret: appSecret,
@@ -388,12 +422,10 @@ export class SocialOAuthController {
         code,
       });
 
-      // Instagram access_token expects url-encoded body, not query params
       const { data: shortData } = await axios.post('https://api.instagram.com/oauth/access_token', params.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      // 2. Exchange for long-lived token
       const { data: longData } = await axios.get('https://graph.instagram.com/access_token', {
         params: {
           grant_type: 'ig_exchange_token',
@@ -402,89 +434,79 @@ export class SocialOAuthController {
         },
       });
 
-      TOKEN_STORE.set('instagram', {
+      let metadata: Record<string, unknown> | undefined;
+      try {
+        const { data: profile } = await axios.get('https://graph.instagram.com/me', {
+          params: { fields: 'id,username', access_token: longData.access_token ?? shortData.access_token },
+        });
+        metadata = {
+          name: profile.username || 'Instagram User',
+          urn: profile.id,
+        };
+      } catch (err: any) {
+        console.error('Failed to fetch Instagram profile', err?.message);
+      }
+
+      await this.connections.upsertSocialToken('instagram', {
         accessToken: longData.access_token ?? shortData.access_token,
         expiresAt: Date.now() + (longData.expires_in ?? 5184000) * 1000,
+        metadata,
       });
 
-      return res.send(this.renderSuccessHtml('instagram'));
+      return res.send(this.renderSuccessHtml('instagram', state));
     } catch (err: any) {
       return res.status(500).json({ error: 'Token exchange failed', detail: err?.response?.data ?? err.message });
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Token retrieval (for connectors to call at runtime)
-  // ---------------------------------------------------------------------------
-
   @Get('token/:platform')
-  getToken(@Param('platform') platform: string) {
-    const entry = TOKEN_STORE.get(platform);
+  async getToken(@Param('platform') platform: string) {
+    const entry = await this.connections.getSocialToken(platform);
     if (!entry) {
       throw new HttpException(`No token stored for platform: ${platform}. Complete OAuth first.`, HttpStatus.NOT_FOUND);
     }
-    const isExpired = entry.expiresAt && Date.now() > entry.expiresAt;
+    const expiresAt = typeof entry.config.expiresAt === 'number' ? entry.config.expiresAt : undefined;
+    const isExpired = typeof expiresAt === 'number' && Date.now() > expiresAt;
     return {
       platform,
-      accessToken: entry.accessToken,
-      hasRefreshToken: !!entry.refreshToken,
-      expiresAt: entry.expiresAt ? new Date(entry.expiresAt).toISOString() : null,
+      accessToken: entry.config.accessToken,
+      hasRefreshToken: !!entry.config.refreshToken,
+      expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
       expired: !!isExpired,
     };
   }
 
   @Get('status')
-  getStatus() {
-    const platforms = ['linkedin', 'threads', 'facebook', 'instagram'];
+  async getStatus(
+    @Query('provider') provider: string | undefined,
+    @Query('state') state: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.connections.syncScalekitAccounts();
+
+    if (provider) {
+      const returnUrl = this.getReturnUrl(state, provider);
+      res.redirect(returnUrl);
+      return;
+    }
+
     return {
-      platforms: Object.fromEntries(
-        platforms.map((p) => {
-          const entry = TOKEN_STORE.get(p);
-          return [p, entry
-            ? { connected: true, expired: !!(entry.expiresAt && Date.now() > entry.expiresAt) }
-            : { connected: false }
-          ];
-        })
-      ),
+      platforms: await this.connections.getSocialStatus(),
     };
+  }
+
+  @Delete('token/:platform')
+  async disconnectToken(@Param('platform') platform: string) {
+    const disconnected = await this.connections.removeSocialToken(platform);
+    return { ok: true, platform, disconnected };
   }
 
   @Get('oauth/scalekit/accounts')
   async listScalekitAccounts() {
-    const envUrl = process.env.SCALEKIT_ENVIRONMENT_URL;
-    const clientId = process.env.SCALEKIT_CLIENT_ID;
-    const clientSecret = process.env.SCALEKIT_CLIENT_SECRET;
-    const orgId = process.env.SCALEKIT_ORGANIZATION_ID;
-
-    if (!envUrl || !clientId || !clientSecret || !orgId) {
-      return { connections: [] };
-    }
-
-    try {
-      const { ScalekitClient } = await import('@scalekit-sdk/node');
-      const scalekit = new ScalekitClient(envUrl, clientId, clientSecret);
-      
-      const accountsRes = await scalekit.actions.listConnectedAccounts({ organizationId: orgId });
-      // Filter for accounts with status 3 (ACTIVE) and map to a UI-friendly format
-      const connections = (accountsRes.connectedAccounts || []).filter(a => a.status === 3).map((acc) => {
-        // Reverse map the connector name back to the UI provider id
-        let providerId = acc.connector;
-        if (acc.connector === 'slack-SudvXvwi') providerId = 'slack';
-        if (acc.connector === 'airtable-QvhprOUU') providerId = 'airtable';
-        
-        return {
-          id: acc.id,
-          provider_id: providerId,
-          status: 'connected',
-          created_at: acc.updatedAt?.seconds ? new Date(Number(acc.updatedAt.seconds) * 1000).toISOString() : new Date().toISOString(),
-          connector_type: 'scalekit',
-          metadata: { name: acc.identifier },
-        };
-      });
-      return { connections };
-    } catch (err) {
-      console.error('Failed to list Scalekit accounts:', err);
-      return { connections: [] };
-    }
+    await this.connections.syncScalekitAccounts();
+    const connections = (await this.connections.listConnections()).filter(
+      (conn) => conn.connector_type === 'scalekit',
+    );
+    return { connections };
   }
 }

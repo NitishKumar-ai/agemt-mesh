@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import {
+  AlertTriangle,
   Command,
   Github,
   Menu,
@@ -36,9 +37,8 @@ type Props = {
 };
 
 // Group nav items by section
-const PRIMARY_KEYS: PageKey[] = ['sessions', 'workflows', 'approvals'];
-const TOOLS_KEYS: PageKey[] = ['agents', 'ask', 'tasks', 'schedules', 'commitguard', 'marketing'];
-const SYSTEM_KEYS: PageKey[] = ['connections', 'safety', 'activity'];
+const WORKSPACE_KEYS: PageKey[] = ['home', 'ask', 'briefs', 'growth', 'routines', 'knowledge', 'activity'];
+const ADMIN_KEYS: PageKey[] = ['admin', 'sources', 'automation', 'audit'];
 
 export function AppShell({
   children,
@@ -54,6 +54,8 @@ export function AppShell({
 }: Props) {
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [confirmKillswitch, setConfirmKillswitch] = useState(false);
+  const [killswitchError, setKillswitchError] = useState('');
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 860px)');
@@ -71,21 +73,16 @@ export function AppShell({
 
   const toggleKillswitch = async () => {
     if (!killswitch) return;
-
-    const msg = killswitch.engaged
-      ? 'Are you sure you want to DISENGAGE the global killswitch? Agents will resume work.'
-      : 'Are you sure you want to ENGAGE the global killswitch? All running workflows will be halted.';
-
-    if (!window.confirm(msg)) return;
-
+    setKillswitchError('');
     setLoading(true);
     try {
       const res = killswitch.engaged
         ? await api.disengageKillswitch()
         : await api.engageKillswitch('Manual emergency stop');
       onKillswitchChange?.(res.state);
+      setConfirmKillswitch(false);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to toggle killswitch');
+      setKillswitchError(e instanceof Error ? e.message : 'Failed to toggle killswitch');
     } finally {
       setLoading(false);
     }
@@ -94,9 +91,9 @@ export function AppShell({
   const isSessionView = page === 'session' || page === 'chat';
 
   // Filter nav items into sections
-  const primaryNav = navItems.filter((item) => PRIMARY_KEYS.includes(item.key));
-  const toolsNav = navItems.filter((item) => TOOLS_KEYS.includes(item.key));
-  const systemNav = navItems.filter((item) => SYSTEM_KEYS.includes(item.key));
+  const workspaceNav = navItems.filter((item) => WORKSPACE_KEYS.includes(item.key));
+  const adminNav = navItems.filter((item) => ADMIN_KEYS.includes(item.key));
+  const utilityNav = navItems.filter((item) => !WORKSPACE_KEYS.includes(item.key) && !ADMIN_KEYS.includes(item.key));
   const activeItem = navItems.find((item) => item.key === page);
 
   function renderNavButton(item: NavItem) {
@@ -151,9 +148,9 @@ export function AppShell({
           </button>
         </div>
 
-        <button className="new-task-button" type="button" onClick={() => onPageChange('session')}>
+        <button className="new-task-button" type="button" onClick={() => onPageChange('ask')}>
           <Plus size={17} />
-          New task
+          Ask AgentMesh
         </button>
 
         {/* Session history — shown when on session/chat page */}
@@ -164,21 +161,20 @@ export function AppShell({
         {/* Navigation sections */}
         <nav className="sidebar-nav">
           <span className="nav-section-label">Workspace</span>
-          {primaryNav.map(renderNavButton)}
+          {workspaceNav.map(renderNavButton)}
 
-          {toolsNav.length > 0 && (
+          {adminNav.length > 0 && (
             <>
               <div className="nav-section-divider" />
-              <span className="nav-section-label">Agents and tools</span>
-              {toolsNav.map(renderNavButton)}
+              <span className="nav-section-label">Administration</span>
+              {adminNav.map(renderNavButton)}
             </>
           )}
 
-          {systemNav.length > 0 && (
+          {utilityNav.length > 0 && (
             <>
               <div className="nav-section-divider" />
-              <span className="nav-section-label">System</span>
-              {systemNav.map(renderNavButton)}
+              {utilityNav.map(renderNavButton)}
             </>
           )}
         </nav>
@@ -248,7 +244,7 @@ export function AppShell({
           <button
             className={`header-killswitch ${killswitch?.engaged ? 'header-killswitch--engaged' : ''}`}
             type="button"
-            onClick={toggleKillswitch}
+            onClick={() => setConfirmKillswitch(true)}
             disabled={loading}
           >
             <Power size={14} />
@@ -258,6 +254,43 @@ export function AppShell({
 
         <main className="content">{children}</main>
       </section>
+
+      {confirmKillswitch && (
+        <div className="product-dialog-backdrop" role="presentation">
+          <section
+            className="product-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="killswitch-dialog-title"
+            aria-describedby="killswitch-dialog-description"
+          >
+            <div className="product-dialog__icon"><AlertTriangle size={21} /></div>
+            <span>Privileged operation</span>
+            <h2 id="killswitch-dialog-title">
+              {killswitch?.engaged ? 'Resume all agent activity?' : 'Stop all agent activity?'}
+            </h2>
+            <p id="killswitch-dialog-description">
+              {killswitch?.engaged
+                ? 'Disengaging the global killswitch allows paused agents and workflows to resume.'
+                : 'Engaging the global killswitch halts running agent workflows across this deployment.'}
+            </p>
+            {killswitchError && <div className="product-dialog__error" role="alert">{killswitchError}</div>}
+            <div className="product-dialog__actions">
+              <button type="button" className="secondary-button" onClick={() => setConfirmKillswitch(false)} disabled={loading}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={killswitch?.engaged ? 'primary-button' : 'danger-button'}
+                onClick={() => void toggleKillswitch()}
+                disabled={loading}
+              >
+                {loading ? 'Updating…' : killswitch?.engaged ? 'Resume agents' : 'Engage killswitch'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

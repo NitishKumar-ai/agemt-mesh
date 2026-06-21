@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import {
   RestModule,
+  CONNECTION_SERVICE,
   EXECUTION_DAO,
   METADATA_DAO,
   QUEUE_DAO,
@@ -20,8 +21,10 @@ import type { WorkflowExecutor } from '@agentmesh/core';
 
 import { GraphController, TemporalController, CorrectionController } from '@agentmesh/graph-service';
 import { WorkflowController } from '@agentmesh/workflow-service';
+import { GrowthIngestController } from './controllers/GrowthIngestController.js';
 
 export const WORKFLOW_EXECUTOR = WORKFLOW_EXECUTOR_TOKEN;
+export { CONNECTION_SERVICE };
 
 export interface AppModuleOptions {
   executionDAO: any;
@@ -33,6 +36,7 @@ export interface AppModuleOptions {
   startTime: number;
   workflowExecutor?: WorkflowExecutor;
   agentRouter?: any;
+  connectionService?: any;
 }
 
 @Global()
@@ -46,7 +50,7 @@ export class AppModule implements NestModule {
     return {
       module: AppModule,
       imports: [
-        RestModule.forRoot(),
+        RestModule.forRoot({ connectionService: options.connectionService }),
         ServeStaticModule.forRoot({
           rootPath: path.resolve(__dirname, '../../ui/dist'),
           exclude: ['/api/*path', '/swagger-ui/*path', '/health', '/api-docs/*path'],
@@ -57,6 +61,7 @@ export class AppModule implements NestModule {
         TemporalController,
         CorrectionController,
         WorkflowController,
+        GrowthIngestController,
       ],
       providers: [
         { provide: EXECUTION_DAO, useValue: options.executionDAO },

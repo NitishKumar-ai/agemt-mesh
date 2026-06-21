@@ -84,7 +84,7 @@ Set-Location company-knowledge-os
 pnpm.cmd exec turbo run build
 ```
 
-The nested workspace builds cleanly (18/18 packages, verified June 20, 2026). The `@company-knowledge-os/database` package compiles; the prior build blockers were missing `tsconfig.json` (gmail), missing `Connector.fetchObject` implementations (github/gmail/gdrive/notion), and an unwired ingestion orchestrator — all now resolved.
+The nested workspace currently fails to build. The first failing package is `@company-knowledge-os/database`; confirmed problems include missing `Database` imports, invalid Kysely dialect usage, incorrect DAO result typing, invalid conflict APIs, and conversion of `superseded_by` identifiers into `Date` objects. This is the active Pass 2 repair target.
 
 ## Security Invariants
 

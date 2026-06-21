@@ -1,312 +1,233 @@
-import { useState } from 'react';
-import { AlertTriangle, ExternalLink, Search, Sparkles } from 'lucide-react';
-import { PageHeader } from '../components/PageHeader';
-import { api } from '../lib/api';
-import type { AskAnswer } from '../lib/types';
+import { useEffect, useState } from 'react';
+import {
+  ArrowRight,
+  MessageSquareText,
+  Plus,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  deleteSession,
+  listSessions,
+  timeAgo,
+  type ChatSession,
+} from '../lib/chatSessions';
 
-const LEVEL_META: Record<AskAnswer['level'], { label: string; bg: string; fg: string }> = {
-  high: { label: 'High confidence', bg: 'rgba(34,197,94,.1)', fg: 'var(--success)' },
-  medium: { label: 'Medium confidence', bg: 'rgba(232,185,74,.1)', fg: 'var(--brand-ochre)' },
-  low: { label: 'Low confidence', bg: 'rgba(239,68,68,.08)', fg: 'var(--error)' },
-  abstain: { label: 'Abstained', bg: 'rgba(239,68,68,.08)', fg: 'var(--error)' },
-};
-
+/**
+ * "Session history" — the list of past chat sessions. Sessions are persisted by
+ * the New session chat page (HomePage) in the chatSessions store. Opening one
+ * deep-links back into the chat (`/home?session=<id>`) with the full transcript,
+ * citations, and confidence restored.
+ */
 export function AskPage() {
-  const [entityId, setEntityId] = useState('');
-  const [query, setQuery] = useState('');
-  const [answer, setAnswer] = useState<AskAnswer | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<Array<{ query: string; entityId: string; answer: AskAnswer }>>([]);
+  const navigate = useNavigate();
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
 
-  async function ask() {
-    if (!query.trim() || !entityId.trim()) {
-      setError('Both a question and an entity/project scope are required.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await api.askQuestion(query.trim(), entityId.trim());
-      setAnswer(result);
-      setHistory((h) => [{ query: query.trim(), entityId: entityId.trim(), answer: result }, ...h].slice(0, 10));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Query failed');
-      setAnswer(null);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    setSessions(listSessions());
+  }, []);
+
+  function open(id: string) {
+    navigate(`/home?session=${encodeURIComponent(id)}`);
   }
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    void ask();
+  function remove(event: React.MouseEvent, id: string) {
+    event.stopPropagation();
+    deleteSession(id);
+    setSessions(listSessions());
+  }
+
+  function preview(session: ChatSession): string {
+    const lastAssistant = [...session.messages].reverse().find((m) => m.role === 'assistant' && !m.error);
+    if (lastAssistant) return lastAssistant.text;
+    const lastUser = [...session.messages].reverse().find((m) => m.role === 'user');
+    return lastUser?.text ?? 'No messages yet.';
   }
 
   return (
-    <div className="page">
-      <PageHeader
-        eyebrow="Company brain"
-        title="Ask"
-        description="Ask a question about an entity or project and get a cited, confidence-scored answer from the knowledge graph."
-      />
-
-      <form className="ask-form" onSubmit={onSubmit}>
-        <div className="form-group">
-          <label className="form-label">Entity / Project scope</label>
-          <input
-            className="form-input"
-            placeholder="e.g. project_payments, team_platform"
-            value={entityId}
-            onChange={(e) => setEntityId(e.target.value)}
-          />
-          <p className="form-hint">
-            The answer is scoped to facts recorded against this exact entity ID — the query below is not yet
-            semantically searched across the whole graph.
-          </p>
+    <div className="history-page">
+      <header className="history-head">
+        <div>
+          <span className="history-head__eyebrow"><MessageSquareText size={13} /> Session history</span>
+          <h1>Your conversations</h1>
+          <p>Every chat with the company brain — reopen one to continue, with its citations and confidence intact.</p>
         </div>
-
-        <div className="form-group">
-          <label className="form-label">Question</label>
-          <textarea
-            className="form-input"
-            rows={3}
-            placeholder="What changed in this project this week?"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-
-        {error && <div className="error-box">{error}</div>}
-
-        <button className="primary-button" type="submit" disabled={loading}>
-          <Search size={14} /> {loading ? 'Asking…' : 'Ask'}
+        <button type="button" className="history-new" onClick={() => navigate('/home')}>
+          <Plus size={16} /> New chat
         </button>
-      </form>
+      </header>
 
-      {answer && (
-        <div className="answer-card">
-          <div className="answer-header">
-            <Sparkles size={16} />
-            <span
-              className="level-badge"
-              style={{ background: LEVEL_META[answer.level].bg, color: LEVEL_META[answer.level].fg }}
-            >
-              {LEVEL_META[answer.level].label} · {Math.round(answer.confidence * 100)}%
-            </span>
-          </div>
-
-          {answer.level === 'abstain' && (
-            <div className="abstain-notice">
-              <AlertTriangle size={14} />
-              The system abstained rather than guess — treat this answer as informational only.
-            </div>
-          )}
-
-          <p className="answer-text">{answer.answer}</p>
-
-          {answer.citations.length > 0 && (
-            <div className="citations">
-              <h4 className="citations-title">Sources ({answer.citations.length})</h4>
-              <ul className="citation-list">
-                {answer.citations.map((c) => (
-                  <li key={c.id} className="citation-item">
-                    <div className="citation-main">
-                      <span className="citation-title">{c.title}</span>
-                      {c.url && (
-                        <a href={c.url} target="_blank" rel="noreferrer" className="citation-link">
-                          <ExternalLink size={12} />
-                        </a>
-                      )}
+      {sessions.length === 0 ? (
+        <button type="button" className="history-empty" onClick={() => navigate('/home')}>
+          <MessageSquareText size={22} />
+          <span>
+            <strong>No conversations yet</strong>
+            <small>Start a new session and your chats will show up here.</small>
+          </span>
+          <ArrowRight size={16} />
+        </button>
+      ) : (
+        <ul className="history-list">
+          {sessions.map((session) => {
+            const turns = session.messages.filter((m) => m.role === 'user').length;
+            return (
+              <li key={session.id}>
+                <button type="button" className="history-card" onClick={() => open(session.id)}>
+                  <div className="history-card__main">
+                    <strong className="history-card__title">{session.title}</strong>
+                    <p className="history-card__preview">{preview(session)}</p>
+                    <div className="history-card__tags">
+                      {session.scope && <span className="history-tag">{session.scope}</span>}
+                      <span className="history-tag history-tag--soft">
+                        {turns} {turns === 1 ? 'question' : 'questions'}
+                      </span>
                     </div>
-                    {c.exact_text && <p className="citation-quote">"{c.exact_text}"</p>}
-                    <span className="citation-confidence">{Math.round(c.confidence * 100)}% confidence</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+                  </div>
+                  <div className="history-card__side">
+                    <span className="history-card__time">{timeAgo(session.updatedAt)}</span>
+                    <span
+                      className="history-card__delete"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Delete session"
+                      onClick={(event) => remove(event, session.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          remove(event as unknown as React.MouseEvent, session.id);
+                        }
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </span>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {history.length > 1 && (
-        <div className="history">
-          <h3 className="section-title">Recent questions</h3>
-          {history.slice(1).map((h, i) => (
-            <button
-              key={i}
-              className="history-item"
-              onClick={() => {
-                setEntityId(h.entityId);
-                setQuery(h.query);
-                setAnswer(h.answer);
-              }}
-            >
-              <span className="history-query">{h.query}</span>
-              <span className="history-scope">{h.entityId}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <footer className="history-foot">
+        <ShieldCheck size={13} /> Conversations are stored locally on this device for the demo.
+      </footer>
 
       <style>{`
-        .ask-form {
-          max-width: 640px;
-          margin-bottom: 28px;
-        }
-        .form-group {
-          margin-bottom: 16px;
-        }
-        .form-label {
-          display: block;
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 6px;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .form-hint {
-          font-size: 12px;
-          color: var(--muted);
-          margin: 6px 0 0;
-          line-height: 1.4;
-        }
-        .form-input {
-          width: 100%;
-          padding: 10px 14px;
-          border-radius: 12px;
-          border: 1px solid var(--hairline);
-          font-size: 14px;
-          background: var(--canvas);
-          color: var(--ink);
-          font-family: inherit;
-          resize: vertical;
-        }
-        .error-box {
-          padding: 10px 14px;
-          border-radius: 12px;
-          background: rgba(239,68,68,.06);
-          color: var(--error);
-          font-size: 13px;
-          font-weight: 600;
-          margin-bottom: 14px;
-          border: 1px solid rgba(239,68,68,.2);
-        }
-        .answer-card {
-          max-width: 720px;
-          border: 1px solid var(--hairline);
-          border-radius: 16px;
-          padding: 22px 24px;
-          margin-bottom: 28px;
-        }
-        .answer-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 14px;
-        }
-        .level-badge {
-          padding: 4px 10px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .abstain-notice {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          color: var(--error);
-          background: rgba(239,68,68,.06);
-          border: 1px solid rgba(239,68,68,.2);
-          border-radius: 10px;
-          padding: 8px 12px;
-          margin-bottom: 14px;
-        }
-        .answer-text {
-          font-size: 15px;
-          line-height: 1.6;
-          margin: 0 0 18px;
-        }
-        .citations-title {
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: var(--muted);
-          margin: 0 0 10px;
-        }
-        .citation-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
+        .history-page {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 20px;
+          max-width: 820px;
         }
-        .citation-item {
-          border: 1px solid var(--hairline);
-          border-radius: 10px;
-          padding: 10px 12px;
-        }
-        .citation-main {
+        .history-head {
           display: flex;
-          align-items: center;
-          gap: 8px;
+          align-items: flex-start;
           justify-content: space-between;
+          gap: 16px;
         }
-        .citation-title {
-          font-size: 13px;
-          font-weight: 600;
-        }
-        .citation-link {
-          color: var(--muted);
-        }
-        .citation-quote {
-          font-size: 12px;
-          color: var(--muted);
-          margin: 6px 0 0;
-          font-style: italic;
-        }
-        .citation-confidence {
-          display: block;
-          font-size: 11px;
-          color: var(--muted);
-          margin-top: 6px;
-        }
-        .section-title {
+        .history-head__eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
           font-size: 12px;
           font-weight: 600;
           text-transform: uppercase;
+          letter-spacing: 0.04em;
           color: var(--muted);
-          margin-bottom: 12px;
-          letter-spacing: 1.5px;
         }
-        .history {
-          max-width: 720px;
+        .history-head__eyebrow svg { color: var(--brand-purple); }
+        .history-head h1 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -0.5px; }
+        .history-head p { margin: 0; font-size: 13.5px; color: var(--muted); max-width: 520px; line-height: 1.5; }
+        .history-new {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 9px 15px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, var(--brand-purple), var(--brand-blue, var(--brand-purple)));
+          color: #fff;
+          font-weight: 600;
+          font-size: 13px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: transform 0.15s ease;
         }
-        .history-item {
+        .history-new:hover { transform: translateY(-1px); }
+        .history-empty {
           display: flex;
-          justify-content: space-between;
+          align-items: center;
+          gap: 14px;
           width: 100%;
           text-align: left;
-          padding: 10px 14px;
-          border: 1px solid var(--hairline);
-          border-radius: 10px;
-          background: var(--canvas);
-          color: var(--ink);
+          padding: 22px;
+          border: 1px dashed var(--hairline);
+          border-radius: 16px;
+          background: var(--surface-card);
           cursor: pointer;
-          margin-bottom: 8px;
-          font-size: 13px;
+          color: var(--ink);
         }
-        .history-item:hover {
-          border-color: var(--brand-teal);
+        .history-empty:hover { border-color: color-mix(in srgb, var(--brand-purple) 45%, var(--hairline)); }
+        .history-empty svg:first-child { color: var(--brand-purple); flex-shrink: 0; }
+        .history-empty span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .history-empty strong { font-size: 15px; }
+        .history-empty small { font-size: 13px; color: var(--muted); }
+        .history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+        .history-card {
+          display: flex;
+          align-items: stretch;
+          justify-content: space-between;
+          gap: 16px;
+          width: 100%;
+          text-align: left;
+          padding: 16px 18px;
+          border: 1px solid var(--hairline);
+          border-radius: 16px;
+          background: var(--surface-card);
+          cursor: pointer;
+          transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .history-scope {
-          color: var(--muted);
-          font-size: 12px;
+        .history-card:hover {
+          border-color: color-mix(in srgb, var(--brand-purple) 45%, var(--hairline));
+          transform: translateY(-1px);
+          box-shadow: 0 10px 30px -22px color-mix(in srgb, var(--brand-purple) 70%, transparent);
         }
+        .history-card__main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .history-card__title {
+          font-size: 15px; font-weight: 650; color: var(--ink);
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .history-card__preview {
+          margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .history-card__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+        .history-tag {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 11px; font-weight: 600;
+          padding: 3px 9px; border-radius: 999px;
+          background: var(--canvas); color: var(--muted);
+          border: 1px solid var(--hairline);
+        }
+        .history-tag--identity { color: var(--brand-purple); border-color: color-mix(in srgb, var(--brand-purple) 35%, var(--hairline)); }
+        .history-tag--soft { background: transparent; }
+        .history-card__side {
+          display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px;
+          flex-shrink: 0;
+        }
+        .history-card__time { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+        .history-card__delete {
+          display: inline-grid; place-items: center;
+          width: 30px; height: 30px; border-radius: 9px;
+          color: var(--muted); cursor: pointer;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .history-card__delete:hover { background: color-mix(in srgb, var(--error) 10%, transparent); color: var(--error); }
+        .history-foot {
+          display: inline-flex; align-items: center; gap: 6px;
+          font-size: 11.5px; color: var(--muted);
+        }
+        .history-foot svg { color: var(--brand-teal); }
       `}</style>
     </div>
   );

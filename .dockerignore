@@ -31,6 +31,10 @@
 !ui-next/dist
 **/coverage
 
+# Incremental tsc state — must NOT be copied in, or `tsc -b` skips emitting
+# declarations (it trusts the buildinfo while dist/ above is excluded).
+**/*.tsbuildinfo
+
 # Python
 venv
 **/__pycache__/
@@ -44,4 +48,17 @@ venv
 **/.eslintcache
 **/.parcel-cache
 **/.next
+
+# Secrets — never bake env files into an image (runtime env is injected)
+.env
+.env.*
+!.env.example
+.vercel
+
+# Large media / scratch not needed at runtime (UI public assets are kept)
+/*.mp4
+scratch
+
+# Nested workspace not part of server-lite build graph
+company-knowledge-os
 

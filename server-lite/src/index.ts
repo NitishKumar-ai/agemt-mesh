@@ -1,14 +1,17 @@
 import DatabaseDriver from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
 import type { Database } from '@agentmesh/common-persistence';
-import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration, IdentityMigration } from '@agentmesh/common-persistence';
+import { InitialSchemaMigration, AgentRuntimeMigration, DashboardMigration, PermissionsMigration, IdentityMigration, ConnectionsMigration } from '@agentmesh/common-persistence';
 import {
   SqliteExecutionDAO,
   SqliteMetadataDAO,
   SqliteQueueDAO,
+  SqliteConnectionDAO,
 } from '@agentmesh/sqlite-persistence';
 import { AMQPQueueDAO } from '@agentmesh/amqp';
-import { WorkflowService, TaskService } from '@agentmesh/rest';
+import { createRedisAdapter, type RedisAdapter } from '@agentmesh/redis-lock';
+import { graphService, policyEngine } from '@agentmesh/graph-service';
+import { WorkflowService, TaskService, ConnectionService } from '@agentmesh/rest';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './AppModule.js';
@@ -29,6 +32,9 @@ import {
   createSchedulerTools,
   createSelfHealTools,
   createResearchTools,
+  RoutineStore,
+  RoutineOrchestrator,
+  createRoutinesRouter,
 } from '@agentmesh/agent-runtime';
 import {
   LLMs,
@@ -85,6 +91,14 @@ import {
   WorkflowEventListener,
 } from '@agentmesh/workflow-event-listener';
 import { TaskStatusListener as TaskStatusListenerImpl } from '@agentmesh/task-status-listener';
+import {
+  DEMO_PRINCIPAL,
+  DEMO_TENANT,
+  DEMO_USER,
+  runDemoSeed,
+  principalFromAuthHeader,
+} from './demoSeed.js';
+import { runGrowthDemoSeed } from './demoGrowthSeed.js';
 import { SyncSqliteAdapter } from './SyncSqliteAdapter.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -144,12 +158,28 @@ interface Config {
   // Queue Provider Configuration
   queueProvider?: string;
   rabbitmqUrl?: string;
+  // Redis (distributed lock / cache). Unset -> single-node in-process fallback.
+  redisUrl?: string;
+}
+
+/**
+ * Demo flags (DEMO_AUTH / DEMO_SEED) default ON outside production so the local
+ * single-port app is demoable out of the box. Explicit "true"/"false" always
+ * wins; in production they are off unless explicitly set to "true".
+ */
+function demoEnabled(flag: 'DEMO_AUTH' | 'DEMO_SEED'): boolean {
+  const value = process.env[flag];
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return process.env.NODE_ENV !== 'production';
 }
 
 function loadConfig(): Config {
   return {
     port: parseInt(process.env.PORT ?? '8080', 10),
-    dbPath: process.env.DB_PATH ?? ':memory:',
+    // Treat an unset OR empty DB_PATH as in-memory so a stray empty env var does
+    // not point better-sqlite3 at an invalid (non-existent) path.
+    dbPath: process.env.DB_PATH && process.env.DB_PATH.trim() ? process.env.DB_PATH : ':memory:',
     version: process.env.AGENTMESH_VERSION ?? '0.0.0',
     corsOrigins: (process.env.CORS_ORIGINS ?? '*').split(',').map((s) => s.trim()),
     logFormat: process.env.LOG_FORMAT ?? 'dev',
@@ -161,6 +191,7 @@ function loadConfig(): Config {
     e2bApiKey: process.env.E2B_API_KEY,
     queueProvider: process.env.QUEUE_PROVIDER,
     rabbitmqUrl: process.env.RABBITMQ_URL,
+    redisUrl: process.env.REDIS_URL,
   };
 }
 
@@ -248,6 +279,7 @@ export async function bootstrapServer(options?: {
     await DashboardMigration.up(db as never);
     await PermissionsMigration.up(db as never);
     await IdentityMigration.up(db as never);
+    await ConnectionsMigration.up(db as never);
     console.log('Migrations complete.');
   } catch (err: any) {
     console.log('Migrations skipped or failed (likely already applied):', err.message);
@@ -255,6 +287,11 @@ export async function bootstrapServer(options?: {
 
   const executionDAO = new SqliteExecutionDAO(db as never);
   const metadataDAO = new SqliteMetadataDAO(db as never);
+  const connectionDAO = new SqliteConnectionDAO(db as never);
+  const connectionService = new ConnectionService(connectionDAO);
+  await connectionService.migrateTokenFile();
+  const { trustWorkflowService } = await import('@agentmesh/workflow-service');
+  trustWorkflowService.connectionDAO = connectionDAO;
   const baseQueueDAO = new SqliteQueueDAO(db as never);
   
   // Use hybrid AMQPQueueDAO if QUEUE_PROVIDER=amqp is specified
@@ -308,23 +345,64 @@ export async function bootstrapServer(options?: {
   const killswitch = new DbKillswitch(db as never);
   const agentRegistry = new AgentRegistry();
 
+  // Redis-backed distributed lock (REDIS_URL gated). Without it, an in-process
+  // lock keeps single-node behavior identical to before.
+  const redisAdapter: RedisAdapter = await createRedisAdapter(cfg.redisUrl);
+
+  const CRON_POLL_MS = 10000;
   const cronScheduler = new CronScheduler({
     db: db as never,
     onFire: async (schedule: any) => {
       const workflowName = schedule.prompt; // workflowName is stored in prompt
-      console.log(`[Cron] Firing schedule ${schedule.name} with workflowName ${workflowName}`);
-      
-      // Start the workflow by name
-      if (workflowName) {
+      if (!workflowName) return;
+
+      // Dedupe concurrent fires of the same due schedule across instances. The
+      // bucket ties the lock to one poll window so the next due fire is allowed.
+      const bucket = Math.floor(Date.now() / CRON_POLL_MS);
+      const lockKey = `cron:fire:${schedule.name}:${bucket}`;
+      const outcome = await redisAdapter.lock.withLock(lockKey, CRON_POLL_MS * 3, async () => {
+        console.log(`[Cron] Firing schedule ${schedule.name} with workflowName ${workflowName}`);
         lazyAgentExecutor.startWorkflow({
           name: workflowName,
           version: 1,
           input: { scheduleName: schedule.name },
         });
+      });
+      if (!outcome.ran) {
+        console.log(`[Cron] Skipped duplicate fire for ${schedule.name} (held by another instance)`);
       }
     },
-    pollIntervalMs: 10000,
+    pollIntervalMs: CRON_POLL_MS,
   });
+
+  // Permission-aware knowledge reads for /api/agents/context/*. Resolves the
+  // viewing principal's access grant so the Knowledge page shows only
+  // facts/sources that principal is allowed to see.
+  const resolvePrincipalAccess = (principal: any) => {
+    const tenantId = principal?.tenant_id ?? principal?.tenantId ?? DEMO_TENANT;
+    const userId = principal?.id ?? principal?.sub ?? principal?.user_id ?? DEMO_USER;
+    return { tenantId, access: policyEngine.resolveAccess(tenantId, userId) };
+  };
+  const knowledgeContext = {
+    async listDocuments(principal: unknown) {
+      const { tenantId, access } = resolvePrincipalAccess(principal);
+      const nodes = await graphService.listNodesForTenant(tenantId);
+      return nodes.filter((node) => policyEngine.isVisible(node.permissions_hash ?? null, access));
+    },
+    async listFacts(principal: unknown) {
+      const { tenantId, access } = resolvePrincipalAccess(principal);
+      const facts = await graphService.listFactsForTenant(tenantId);
+      return facts.filter((fact) =>
+        policyEngine.isVisible(
+          graphService.getSourcePermissionHash(tenantId, fact.source_id) ?? null,
+          access,
+        ),
+      );
+    },
+    async resolveConflict(_id: string, _principal: unknown, _body: unknown) {
+      return { success: true };
+    },
+  };
 
   const agentRouter = createAgentRouter(
     agentRegistry,
@@ -332,6 +410,13 @@ export async function bootstrapServer(options?: {
     killswitch,
     cronScheduler,
     lazyAgentExecutor as any,
+    // The agentRouter is mounted on /api/agents BEFORE Nest controllers resolve,
+    // so it owns /api/agents/connections*. Hand it the real ConnectionService
+    // (which implements the ConnectionStore contract) so the Connections page is
+    // backed by live SQLite data instead of the empty-store stub fallbacks.
+    connectionService as any,
+    knowledgeContext,
+    db,
   );
 
   // --- Sync Engine Adapters ---
@@ -558,13 +643,32 @@ export async function bootstrapServer(options?: {
       startTime,
       workflowExecutor: executorOps as any,
       agentRouter,
+      connectionService,
     }),
-    { cors: { origin: cfg.corsOrigins }, logger: ['log', 'error', 'warn', 'debug', 'verbose'] },
+    {
+      cors: { origin: cfg.corsOrigins },
+      logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+      // Preserve the raw request body so inbound webhook routes can verify HMAC
+      // signatures (Slack/GitHub) over the exact received bytes.
+      rawBody: true,
+    },
   );
 
   if (options?.trustedPrincipal) {
+    // Identity resolution for local demo mode:
+    //  - A valid Bearer token sets the verified request identity.
+    //  - No token falls back to the trusted admin so the app still works.
+    //  - An invalid token is left unset for the guard to reject.
     app.use((req: any, res: any, next: any) => {
-      req.user = options.trustedPrincipal;
+      if (!req.user) {
+        const auth = req.headers['authorization'];
+        if (auth) {
+          const fromToken = principalFromAuthHeader(auth);
+          if (fromToken) req.user = fromToken;
+        } else {
+          req.user = options.trustedPrincipal;
+        }
+      }
       next();
     });
   }
@@ -838,12 +942,91 @@ export async function bootstrapServer(options?: {
   agentWorkerPool.start();
   cronScheduler.start();
 
+  // --- Routines: scheduled multi-agent orchestration -------------------------
+  // A routine fires a pipeline of agents and synthesises an owner-ready report.
+  // Reuses the same agentLlm (real when keys are set, deterministic demo output
+  // otherwise) and the in-process event bus so runs stream onto the Activity feed.
+  console.log('Initializing routines orchestrator...');
+  const routineStore = new RoutineStore();
+  const routineOrchestrator = new RoutineOrchestrator(
+    routineStore,
+    agentLlm,
+    eventBus as any,
+    cfg.anthropicApiKey ? (process.env.MODEL_EXECUTE || 'claude-3-7-sonnet-20250219') : 'claude-3-7-sonnet-20250219',
+  );
+  // Mounted directly on the Express instance so it
+  // is owned outside the Nest controller surface.
+  expressApp.use('/api/routines', createRoutinesRouter(routineStore, routineOrchestrator));
+  routineOrchestrator.start();
+
   console.log('Initializing NestJS app...');
   await app.init();
   app.getHttpServer();
   console.log('Starting HTTP server...');
   await app.listen(cfg.port);
   console.log(`Listening on http://localhost:${cfg.port}`);
+
+  // Demo bootstrap: seed an in-memory company brain so the permission-aware
+  // Ask/query pipeline returns real cited answers locally. On by default outside
+  // production; set DEMO_SEED=false to disable.
+  if (demoEnabled('DEMO_SEED')) {
+    try {
+      await runDemoSeed();
+    } catch (err) {
+      console.error('[DemoSeed] Failed to seed demo data:', err);
+    }
+    try {
+      // Growth Memory domain pack: layers the Atlas AI campaign dataset on top
+      // of the same demo tenant/identities so the founder-growth brief demos.
+      await runGrowthDemoSeed();
+    } catch (err) {
+      console.error('[GrowthSeed] Failed to seed growth demo data:', err);
+    }
+    try {
+      await connectionService.seedDemoConnections();
+      console.log('[DemoSeed] Seeded demo connections for the Connections page.');
+    } catch (err) {
+      console.error('[DemoSeed] Failed to seed demo connections:', err);
+    }
+    try {
+      // Seed a couple of pending human-in-the-loop approvals so the Audit/Approvals
+      // queue (and its nav badge) demonstrates the decide flow out of the box.
+      const existing = await db.selectFrom('approvals').select('id').limit(1).execute();
+      if (existing.length === 0) {
+        const seedNow = Date.now();
+        await db
+          .insertInto('approvals')
+          .values([
+            {
+              run_id: 'wf-demo-marketing-001',
+              payload: JSON.stringify({
+                summary: 'Publish the Atlas GA launch post to LinkedIn and Twitter.',
+                action: 'social_publish',
+              }),
+              status: 'pending',
+              risk_level: 'medium',
+              requesting_agent: 'Marketing Agent',
+              created_at: seedNow - 5 * 60_000,
+            },
+            {
+              run_id: 'wf-demo-security-002',
+              payload: JSON.stringify({
+                summary: 'Open a high-severity issue for the auth gap found by CommitGuard.',
+                action: 'create_issue',
+              }),
+              status: 'pending',
+              risk_level: 'high',
+              requesting_agent: 'CommitGuard',
+              created_at: seedNow - 2 * 60_000,
+            },
+          ])
+          .execute();
+        console.log('[DemoSeed] Seeded demo approvals for the Audit/Approvals queue.');
+      }
+    } catch (err) {
+      console.error('[DemoSeed] Failed to seed demo approvals:', err);
+    }
+  }
 
   const processManager = new ProcessManager();
 
@@ -887,6 +1070,11 @@ export async function bootstrapServer(options?: {
   });
 
   processManager.register({
+    name: 'routine-orchestrator',
+    shutdown: async () => routineOrchestrator.stop(),
+  });
+
+  processManager.register({
     name: 'event-listeners',
     shutdown: async () => {
       workflowEventListener.stop();
@@ -909,12 +1097,18 @@ export async function bootstrapServer(options?: {
     app,
     close: async () => {
       await processManager.shutdown();
+      await redisAdapter.close();
     },
   };
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  bootstrapServer().catch((err) => {
+  bootstrapServer({
+    // Demo affordance: install a trusted identity so the local UI can call the
+    // permission-aware API without a full OAuth/OIDC login. On by default outside
+    // production; set DEMO_AUTH=false to disable.
+    trustedPrincipal: demoEnabled('DEMO_AUTH') ? DEMO_PRINCIPAL : undefined,
+  }).catch((err) => {
     console.error('Failed to start server:', err);
     process.exit(1);
   });

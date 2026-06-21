@@ -53,3 +53,9 @@ agent-runtime/
 
 # Local run logs
 *.log
+.vercel
+
+# Local environment files and credentials
+.env
+.env.*
+!.env.example

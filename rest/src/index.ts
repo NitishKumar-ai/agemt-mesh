@@ -13,6 +13,8 @@ export { EventService } from './services/EventService.js';
 export { VersionService } from './services/VersionService.js';
 export { AdminService } from './services/AdminService.js';
 export { WorkflowBulkService } from './services/WorkflowBulkService.js';
+export { WebhookService } from './services/WebhookService.js';
+export { ConnectionService, CONNECTION_SERVICE } from './services/ConnectionService.js';
 export type { DbProbe } from './controllers/HealthResource.js';
 export { START_TIME, VERSION, DB_PROBE } from './controllers/HealthResource.js';
 export { OidcAuthGuard, Public } from './OidcAuthGuard.js';
