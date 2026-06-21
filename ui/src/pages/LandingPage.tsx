@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const DOCS_URL = 'http://localhost:8000/';
+const DOCS_URL = '/api/docs';
 
 const sourceNames = ['Slack', 'Drive', 'Gmail', 'GitHub', 'Notion', 'Calendar'];
 
